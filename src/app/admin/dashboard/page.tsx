@@ -271,8 +271,30 @@ export default function AdminDashboard() {
   };
 
   // Helpers
-  const findName = (arr: any[], id: number, field = "name") =>
-    arr.find((x) => x.id === id)?.[field] || "-";
+  // 1. Overloads for different lookups
+  function findName(arr: { id: number; name: string }[], id: number): string;
+  function findName(
+    arr: { id: number; code: string }[],
+    id: number,
+    field: "code"
+  ): string;
+  function findName(
+    arr: { id: number; configName: string }[],
+    id: number,
+    field: "configName"
+  ): string;
+
+  // 2. Implementation
+  function findName(
+    arr: Array<{ id: number } & Record<string, any>>,
+    id: number,
+    field: string = "name"
+  ): string {
+    const item = arr.find((x) => x.id === id);
+    if (!item) return "-";
+    return typeof item[field] === "string" ? item[field] : "-";
+  }
+
   const formatDate = (iso?: string) => {
     if (!iso) return "-";
     const [y, m, d] = iso.split("T")[0].split("-");
@@ -286,12 +308,6 @@ export default function AdminDashboard() {
     "px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center";
 
   const totalPages = Math.max(1, Math.ceil(totalOrders / pageSize));
-
-  // For DatePicker dark mode
-  const isDark =
-    typeof window !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false;
 
   if (loading)
     return (

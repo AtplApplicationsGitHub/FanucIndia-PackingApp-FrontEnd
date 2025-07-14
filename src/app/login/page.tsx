@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import AnimatedPage from "@/app/components/AnimatedPage";
 import { Eye, EyeClosed } from "lucide-react";
@@ -17,14 +17,18 @@ type LoginForm = {
   password: string;
 };
 
-function extractErrorMessage(err: any) {
-  const data = err?.response?.data;
-  if (!data) return "Login failed. Please try again.";
-  if (typeof data === "string") return data;
-  if (typeof data.message === "string") return data.message;
-  if (Array.isArray(data.message)) return data.message.join(", ");
-  if (data.error) return data.error;
-  return "Invalid Email/Password, Please try again.";
+function extractErrorMessage(err: unknown) {
+  // AxiosError type check
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data;
+    if (!data) return "Login failed. Please try again.";
+    if (typeof data === "string") return data;
+    if (typeof data.message === "string") return data.message;
+    if (Array.isArray(data.message)) return data.message.join(", ");
+    if (data.error) return data.error;
+    return "Invalid Email/Password, Please try again.";
+  }
+  return "Login failed. Please try again.";
 }
 
 export default function LoginPage() {
@@ -56,7 +60,7 @@ export default function LoginPage() {
       } else {
         setErrorMsg("Unknown user role.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg(extractErrorMessage(err));
     } finally {
       setLoading(false);
@@ -135,7 +139,7 @@ export default function LoginPage() {
               </p>
             </form>
             <p className="text-center pt-2 text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a href="/signup" className="text-primary hover:text-primary/80">
                 Sign up
               </a>

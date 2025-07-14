@@ -163,8 +163,11 @@ export default function SalesDashboard() {
       fetchOrders();
       setShowForm(false);
       setEditingOrder(null);
-    } catch (err: any) {
-      const data = err.response?.data;
+    } catch (err: unknown) {
+      let data: any = undefined;
+      if (axios.isAxiosError(err)) {
+        data = err.response?.data;
+      }
       let msg = "Bulk upload failed. Check your file and try again.";
 
       if (typeof data === "string") {
@@ -189,7 +192,7 @@ export default function SalesDashboard() {
         msg += "\n" + data.error;
       }
 
-      toast.error(msg); 
+      toast.error(msg);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -231,7 +234,6 @@ export default function SalesDashboard() {
       .catch(() => setError("Failed to load lookups."));
 
     fetchOrders();
-    // eslint-disable-next-line
   }, []);
 
   const fetchOrders = () => {
@@ -255,8 +257,27 @@ export default function SalesDashboard() {
     "px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center";
 
   // Helpers
-  const findName = (arr: any[], id: number, field = "name") =>
-    arr.find((x) => x.id === id)?.[field] || "-";
+  function findName(arr: { id: number; name: string }[], id: number): string;
+  function findName(
+    arr: { id: number; code: string }[],
+    id: number,
+    field: "code"
+  ): string;
+  function findName(
+    arr: { id: number; configName: string }[],
+    id: number,
+    field: "configName"
+  ): string;
+  function findName(
+    arr: Array<{ id: number } & Record<string, any>>,
+    id: number,
+    field: string = "name"
+  ): string {
+    const item = arr.find((x) => x.id === id);
+    if (!item) return "-";
+    return typeof item[field] === "string" ? item[field] : "-";
+  }
+
   const formatDate = (iso: string) => {
     const [y, m, d] = iso.split("T")[0].split("-");
     return `${d}-${m}-${y}`;
@@ -536,10 +557,12 @@ export default function SalesDashboard() {
                     });
                     setDeletingId(null);
                     fetchOrders();
-                  } catch (err: any) {
-                    setDeleteError(
-                      err.response?.data?.message || "Delete failed. Try again."
-                    );
+                  } catch (err: unknown) {
+                    let errorMsg = "Delete failed. Try again.";
+                    if (axios.isAxiosError(err)) {
+                      errorMsg = err.response?.data?.message || errorMsg;
+                    }
+                    setDeleteError(errorMsg);
                   } finally {
                     setDeleteLoading(false);
                   }

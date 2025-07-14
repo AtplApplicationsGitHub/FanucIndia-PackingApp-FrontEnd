@@ -64,7 +64,8 @@ export default function SignupPage() {
   // Password validation logic
   const passwordStatus = passwordChecks.map(({ check }) => check(password));
   const allSatisfied = passwordStatus.every(Boolean);
-  const passwordsMatch = password && confirmPassword && password === confirmPassword;
+  const passwordsMatch =
+    password && confirmPassword && password === confirmPassword;
 
   // Success toast effect
   useEffect(() => {
@@ -89,12 +90,10 @@ export default function SignupPage() {
     debounceRef.current = setTimeout(async () => {
       try {
         // Your backend API to check email existence. (Adjust endpoint as per your API.)
-        const res = await axios.get(
-          API.AUTH.CHECK_EMAIL(email)
-        );
+        const res = await axios.get(API.AUTH.CHECK_EMAIL(email));
         if (res.data.exists) setEmailStatus("exists");
         else setEmailStatus("available");
-      } catch (e) {
+      } catch {
         setEmailStatus("error");
       }
     }, 500);
@@ -118,9 +117,13 @@ export default function SignupPage() {
       const { accessToken } = res.data;
       Cookies.set("token", accessToken, { expires: 1 });
       localStorage.setItem("token", accessToken);
-      setSuccess(true); 
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Signup failed");
+      setSuccess(true);
+    } catch (err: unknown) {
+      let errorMsg = "Signup failed";
+      if (axios.isAxiosError(err)) {
+        errorMsg = err.response?.data?.message || errorMsg;
+      }
+      setErrorMsg(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -166,26 +169,40 @@ export default function SignupPage() {
                     disabled={loading}
                   />
                   {/* Status icon/label right side */}
-                  {email &&
+                  {email && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                      {emailStatus === "checking" && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                      {emailStatus === "available" && <CheckCircle className="w-4 h-4 text-green-600" />}
-                      {emailStatus === "exists" && <XCircle className="w-4 h-4 text-destructive" />}
-                      {emailStatus === "error" && <XCircle className="w-4 h-4 text-orange-500" />}
+                      {emailStatus === "checking" && (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                      )}
+                      {emailStatus === "available" && (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      )}
+                      {emailStatus === "exists" && (
+                        <XCircle className="w-4 h-4 text-destructive" />
+                      )}
+                      {emailStatus === "error" && (
+                        <XCircle className="w-4 h-4 text-orange-500" />
+                      )}
                     </span>
-                  }
+                  )}
                 </div>
                 {errors.email && (
                   <p className="text-sm text-destructive">Email is required</p>
                 )}
                 {emailStatus === "exists" && (
-                  <p className="text-sm text-destructive">Email already exists</p>
+                  <p className="text-sm text-destructive">
+                    Email already exists
+                  </p>
                 )}
                 {emailStatus === "available" && (
-                  <p className="text-sm text-green-600">Email can be registered</p>
+                  <p className="text-sm text-green-600">
+                    Email can be registered
+                  </p>
                 )}
                 {emailStatus === "error" && (
-                  <p className="text-sm text-orange-600">Could not validate email</p>
+                  <p className="text-sm text-orange-600">
+                    Could not validate email
+                  </p>
                 )}
               </div>
 
@@ -298,10 +315,7 @@ export default function SignupPage() {
 
             <p className="text-center pt-2 text-sm text-muted-foreground">
               Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-primary hover:text-primary/80"
-              >
+              <a href="/login" className="text-primary hover:text-primary/80">
                 Log in
               </a>
             </p>

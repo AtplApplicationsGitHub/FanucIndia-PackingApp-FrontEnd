@@ -169,19 +169,22 @@ export const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
 
     try {
       if (initialData && initialData.id) {
-        await axios.put(
-          API.SALES.CRUD_BY_ID(initialData.id),
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(API.SALES.CRUD_BY_ID(initialData.id), payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
         await axios.post(API.SALES.CRUD, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
       onSuccess();
-    } catch (err: any) {
-      let errorMsg = err.response?.data?.message || "Submission failed";
+    } catch (err: unknown) {
+      let errorMsg = "Submission failed";
+      if (axios.isAxiosError(err)) {
+        if (err.response?.data?.message) {
+          errorMsg = err.response.data.message;
+        }
+      }
       if (typeof errorMsg !== "string") {
         errorMsg = JSON.stringify(errorMsg, null, 2); // pretty print
       }
