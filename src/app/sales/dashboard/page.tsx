@@ -164,34 +164,53 @@ export default function SalesDashboard() {
       setShowForm(false);
       setEditingOrder(null);
     } catch (err: unknown) {
-      let data: any = undefined;
+      let msg = "Bulk upload failed. Check your file and try again.";
+      let data: unknown = undefined;
       if (axios.isAxiosError(err)) {
         data = err.response?.data;
       }
-      let msg = "Bulk upload failed. Check your file and try again.";
 
       if (typeof data === "string") {
         msg = data;
-      } else if (data?.message) {
-        if (typeof data.message === "string") {
-          msg = data.message;
-        } else if (typeof data.message === "object" && data.message.message) {
-          msg = data.message.message;
-        } else if (typeof data.message === "object") {
-          msg = JSON.stringify(data.message);
+      } else if (typeof data === "object" && data !== null) {
+        // Check if 'message' property exists
+        if ("message" in data) {
+          const message = (data as { message?: unknown }).message;
+          if (typeof message === "string") {
+            msg = message;
+          } else if (
+            typeof message === "object" &&
+            message !== null &&
+            "message" in message &&
+            typeof (message as any).message === "string"
+          ) {
+            msg = (message as any).message;
+          } else if (typeof message === "object") {
+            msg = JSON.stringify(message);
+          }
         }
-      } else if (data?.error) {
-        msg = data.error;
+        // Check if 'error' property exists
+        if (
+          "error" in data &&
+          typeof (data as { error?: unknown }).error === "string"
+        ) {
+          msg = (data as { error: string }).error;
+        }
+        // Check for 'errors' array
+        if (
+          "errors" in data &&
+          Array.isArray((data as { errors?: unknown }).errors)
+        ) {
+          msg += "\n" + (data as { errors: string[] }).errors.join(", ");
+        }
+        if (
+          "error" in data &&
+          typeof (data as { error?: unknown }).error === "string" &&
+          (data as { error: string }).error !== msg
+        ) {
+          msg += "\n" + (data as { error: string }).error;
+        }
       }
-
-      if (Array.isArray(data?.errors)) {
-        msg += "\n" + data.errors.join(", ");
-      }
-
-      if (data?.error && data?.error !== msg) {
-        msg += "\n" + data.error;
-      }
-
       toast.error(msg);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
