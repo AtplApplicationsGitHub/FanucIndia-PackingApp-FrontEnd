@@ -135,7 +135,7 @@ export default function LoginPage() {
 
               <p className="text-xs text-center text-muted-foreground pt-2">
                 Admin Demo: admin@fanuc.com / FanucAdmin123 <br /> Sales Demo:
-                user1@example.com / testpass123
+                user1@example.com / Demo123!@#
               </p>
             </form>
             <p className="text-center pt-2 text-sm text-muted-foreground">
