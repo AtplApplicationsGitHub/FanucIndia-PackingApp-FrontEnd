@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://fanuc.goval.app:3010";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3010";
 
 export const API = {
   LOOKUP: {
