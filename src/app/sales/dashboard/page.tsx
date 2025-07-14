@@ -269,13 +269,14 @@ export default function SalesDashboard() {
     field: "configName"
   ): string;
   function findName(
-    arr: Array<{ id: number } & Record<string, any>>,
+    arr: Array<{ id: number } & Record<string, unknown>>,
     id: number,
     field: string = "name"
   ): string {
     const item = arr.find((x) => x.id === id);
     if (!item) return "-";
-    return typeof item[field] === "string" ? item[field] : "-";
+    const value = item[field as keyof typeof item];
+    return typeof value === "string" ? value : "-";
   }
 
   const formatDate = (iso: string) => {
