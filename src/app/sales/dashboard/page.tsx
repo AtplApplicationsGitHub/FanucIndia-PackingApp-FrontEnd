@@ -182,9 +182,9 @@ export default function SalesDashboard() {
             typeof message === "object" &&
             message !== null &&
             "message" in message &&
-            typeof (message as any).message === "string"
+            typeof (message as Record<string, unknown>).message === "string"
           ) {
-            msg = (message as any).message;
+            msg = (message as Record<string, unknown>).message as string;
           } else if (typeof message === "object") {
             msg = JSON.stringify(message);
           }
