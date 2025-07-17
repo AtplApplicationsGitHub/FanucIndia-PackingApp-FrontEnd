@@ -29,7 +29,6 @@ import { API } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogFooter,
@@ -166,7 +165,7 @@ export default function AdminDashboard() {
     packConfigs: [],
     terminals: [],
   });
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -358,7 +357,7 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMasterLookupData(res.data || []);
-    } catch (err) {
+    } catch (error: unknown) {
       setMasterLookupError("Failed to load lookup.");
     }
     setMasterLookupLoading(false);
@@ -367,7 +366,6 @@ export default function AdminDashboard() {
     if (view === "master" && selectedMasterLookup) {
       fetchMasterLookup(selectedMasterLookup);
     }
-    // eslint-disable-next-line
   }, [view, selectedMasterLookup]);
 
   // -- CRUD Actions for Lookup Master --
@@ -704,7 +702,7 @@ export default function AdminDashboard() {
       setEditingCell(null);
       setEditValue("");
       fetchOrders();
-    } catch (err) {
+    } catch (error: unknown) {
       toast.error("Update failed.");
       setLoading(false);
     }
@@ -1388,7 +1386,6 @@ type LookupCrudTableProps = {
 function LookupCrudTable({
   type,
   data,
-  refresh,
   editingId,
   onEdit,
   editObj,
@@ -1409,8 +1406,6 @@ function LookupCrudTable({
   const columns = Object.keys(data[0]).filter(
     (col) => col !== "createdAt" && col !== "updatedAt"
   );
-  // For add/edit, these fields should NOT be editable/inputted:
-  const editableColumns = columns.filter((col) => col !== "id");
 
   return (
     <table className="w-full border mt-4 text-[15px]">
