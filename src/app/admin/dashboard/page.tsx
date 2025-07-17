@@ -357,7 +357,7 @@ export default function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMasterLookupData(res.data || []);
-    } catch (error: unknown) {
+    } catch {
       setMasterLookupError("Failed to load lookup.");
     }
     setMasterLookupLoading(false);
@@ -373,7 +373,10 @@ export default function AdminDashboard() {
     setMasterEditingId(id);
     setMasterEditObj(row);
   };
-  const handleMasterEditChange = (key: string, value: string | number | boolean | null | undefined) => {
+  const handleMasterEditChange = (
+    key: string,
+    value: string | number | boolean | null | undefined
+  ) => {
     setMasterEditObj((obj) => ({ ...obj, [key]: value }));
   };
   const handleMasterEditSave = async (type: string, id: number) => {
@@ -462,15 +465,15 @@ export default function AdminDashboard() {
     } catch (error: unknown) {
       let message = "Delete failed.";
       if (axios.isAxiosError(error)) {
-        message =
+        const msg =
           error.response?.data?.message ||
           error.response?.data?.error ||
-          error.message ||
-          message;
+          error.message;
+        message = typeof msg === "string" ? msg : JSON.stringify(msg);
       } else if (error instanceof Error) {
         message = error.message;
       }
-      toast.error(`An error occured`);
+      toast.error(message);
     }
     setMasterLookupLoading(false);
   };
@@ -521,15 +524,16 @@ export default function AdminDashboard() {
     } catch (error: unknown) {
       let message = "Create failed.";
       if (axios.isAxiosError(error)) {
-        message =
+        const msg =
           error.response?.data?.message ||
           error.response?.data?.error ||
-          error.message ||
-          message;
+          error.message;
+        // Always ensure message is a string
+        message = typeof msg === "string" ? msg : JSON.stringify(msg);
       } else if (error instanceof Error) {
         message = error.message;
       }
-      toast.error(`An error occurred`);
+      toast.error(message);
     }
     setMasterAdding(false);
   };
@@ -702,7 +706,7 @@ export default function AdminDashboard() {
       setEditingCell(null);
       setEditValue("");
       fetchOrders();
-    } catch (error: unknown) {
+    } catch {
       toast.error("Update failed.");
       setLoading(false);
     }
