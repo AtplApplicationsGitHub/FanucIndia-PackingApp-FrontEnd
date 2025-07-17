@@ -400,7 +400,7 @@ export default function SalesDashboard() {
               <>
                 <table className="w-full text-left text-[15px] border-collapse">
                   <thead>
-                    <tr className="bg-blue-400 dark:bg-blue-400">
+                    <tr className="bg-[#5781e9] dark:bg-[#3b579d]">
                       {[
                         "S.I No",
                         "Product",
