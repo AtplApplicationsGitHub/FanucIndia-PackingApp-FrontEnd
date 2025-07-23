@@ -17,7 +17,6 @@ function normalizeInputValue(val: unknown): string | number {
   return val as string | number;
 }
 
-
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -143,16 +142,6 @@ export default function AdminOrderEditModal({
           } else if (Array.isArray(field.options)) {
             options = field.options;
           }
-
-          // All <select> values must be string or number
-          const value =
-            field.type === "select"
-              ? form[field.key] === true
-                ? "true"
-                : form[field.key] === false
-                  ? "false"
-                  : form[field.key] ?? ""
-              : form[field.key] ?? "";
 
           return (
             <div key={field.key} className="flex flex-col gap-1">

@@ -130,10 +130,15 @@ export default function AdminMasterLookupPanel() {
     } catch (err: unknown) {
       let errorMsg =
         "Failed to save. Ensure all required fields are filled as strings.";
-      if (err && typeof err === "object" && "message" in err) {
-        // @ts-ignore
-        errorMsg = (err as { message?: string }).message || errorMsg;
+      if (
+        err &&
+        typeof err === "object" &&
+        "message" in err &&
+        typeof (err as { message?: unknown }).message === "string"
+      ) {
+        errorMsg = (err as { message: string }).message;
       }
+
       setError(errorMsg);
       console.error(err);
     } finally {
