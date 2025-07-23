@@ -12,7 +12,7 @@ type InlineEditField = "status" | "priority" | "terminalId";
 type InlineEdit = {
   id: number;
   field: InlineEditField;
-  value: string | number;
+  value: string | number | null;
 } | null;
 
 type Props = {
@@ -21,7 +21,7 @@ type Props = {
   currentPage: number;
   pageSize: number;
   onDelete: (id: number) => void;
-  onUpdateInline: (id: number, field: InlineEditField, value: string | number) => Promise<void>;
+  onUpdateInline: (id: number, field: InlineEditField, value: string | number | null) => Promise<void>;
   loading: boolean;
 };
 
@@ -40,11 +40,17 @@ const AdminOrdersTable: React.FC<Props> = ({
   const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
 
   const handleInlineSave = async () => {
-    if (inlineEdit) {
-      await onUpdateInline(inlineEdit.id, inlineEdit.field, inlineEdit.value);
-      setInlineEdit(null);
+  if (inlineEdit) {
+    let value = inlineEdit.value;
+    // Always send number for priority/terminalId
+    if (inlineEdit.field === "priority" || inlineEdit.field === "terminalId") {
+      value = value === "" || value === null ? null : Number(value);
     }
-  };
+    await onUpdateInline(inlineEdit.id, inlineEdit.field, value ?? "");
+    setInlineEdit(null);
+  }
+};
+
 
   const columns: DataTableColumn<SalesOrder>[] = [
     {
@@ -63,12 +69,12 @@ const AdminOrdersTable: React.FC<Props> = ({
       render: (row) => findName(lookup.products, row.productId ?? 0),
     },
     {
-      header: "Sales No",
+      header: "Sale Order Number",
       accessor: "saleOrderNumber",
       render: (row) => row.saleOrderNumber || "-",
     },
     {
-      header: "OB Delivery",
+      header: "OutBound Delivery",
       accessor: "outboundDelivery",
       render: (row) => row.outboundDelivery || "-",
     },
@@ -78,7 +84,7 @@ const AdminOrdersTable: React.FC<Props> = ({
       render: (row) => row.transferOrder || "-",
     },
     {
-      header: "Req. Date",
+      header: "Required Date of Delivery",
       accessor: "deliveryDate",
       render: (row) => row.deliveryDate ? formatDate(row.deliveryDate) : "-",
     },
@@ -88,12 +94,12 @@ const AdminOrdersTable: React.FC<Props> = ({
       render: (row) => findName(lookup.transporters, row.transporterId ?? 0),
     },
     {
-      header: "Plant Code",
+      header: "Delivery Plant Code",
       accessor: "plantCodeId",
       render: (row) => findName(lookup.plantCodes, row.plantCodeId ?? 0, "code"),
     },
     {
-      header: "Pay",
+      header: "Payment Clearance",
       accessor: "paymentClearance",
       render: (row) => (row.paymentClearance ? "Yes" : "No"),
     },
@@ -103,7 +109,7 @@ const AdminOrdersTable: React.FC<Props> = ({
       render: (row) => findName(lookup.salesZones, row.salesZoneId ?? 0),
     },
     {
-      header: "Pack Config",
+      header: "Packing Configuration",
       accessor: "packConfigId",
       render: (row) => findName(lookup.packConfigs, row.packConfigId ?? 0, "configName"),
     },
@@ -122,7 +128,7 @@ const AdminOrdersTable: React.FC<Props> = ({
         inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "status" ? (
           <input
             type="text"
-            value={inlineEdit.value}
+            value={inlineEdit.value ?? ""}
             onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
             onBlur={handleInlineSave}
             onKeyDown={e => {
@@ -152,7 +158,7 @@ const AdminOrdersTable: React.FC<Props> = ({
         inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "priority" ? (
           <input
             type="number"
-            value={inlineEdit.value}
+            value={inlineEdit.value ?? ""}
             onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
             onBlur={handleInlineSave}
             onKeyDown={e => {
@@ -184,7 +190,7 @@ const AdminOrdersTable: React.FC<Props> = ({
       render: (row) =>
         inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "terminalId" ? (
           <select
-            value={inlineEdit.value}
+            value={inlineEdit.value ?? ""}
             onChange={e => setInlineEdit({ ...inlineEdit, value: Number(e.target.value) })}
             onBlur={handleInlineSave}
             autoFocus

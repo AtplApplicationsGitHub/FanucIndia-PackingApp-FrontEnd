@@ -35,7 +35,6 @@ const FIELDS: {
   { key: "saleOrderNumber", label: "Sales No" },
   { key: "outboundDelivery", label: "OB Delivery" },
   { key: "transferOrder", label: "Transfer" },
-  // { key: "deliveryDate", label: "Req. Date", disabled: true }, // Not editable!
   { key: "transporterId", label: "Transporter", type: "select", options: "transporters" },
   { key: "plantCodeId", label: "Plant Code", type: "select", options: "plantCodes" },
   {

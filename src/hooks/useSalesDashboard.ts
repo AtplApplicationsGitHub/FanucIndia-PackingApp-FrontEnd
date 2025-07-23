@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { API } from "@/lib/api";
 import { SalesOrder, LookupData } from "@/types/sales";
+import * as XLSX from "xlsx";
 
 const PAGE_SIZE = 10;
 
@@ -136,9 +137,33 @@ export function useSalesDashboard() {
   }, []);
 
   const handleBulkUpload = () => fileInputRef.current?.click();
+
   const handleFileChange = useCallback(async () => {
-    /*...*/
-  }, []);
+    const input = fileInputRef.current;
+    if (!input?.files?.[0]) return;
+    const file = input.files[0];
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(API.SALES.IMPORT, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        validateStatus: (status) => status >= 200 && status < 300, // let Axios treat all 2xx as success
+      });
+
+      toast.success("Bulk import successful!");
+      await fetchOrders();
+    } catch (err) {
+      toast.error("Bulk import failed. Check your file and try again.");
+      console.error(err);
+    } finally {
+      if (input) input.value = "";
+    }
+  }, [fetchOrders]);
 
   // Delete
   const handleDelete = async () => {

@@ -37,7 +37,7 @@ export function DataTable<T extends { id: number | string }>({
   pagination,
   emptyText = "No records found.",
 }: DataTableProps<T>) {
-  const thClass = "px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center whitespace-nowrap";
+ const thClass = "px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center align-middle whitespace-normal break-words max-w-[110px]";
   const tdClass = "px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center";
 
   return (
