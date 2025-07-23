@@ -1,12 +1,11 @@
-// src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "./components/theme-provider";
+import { ThemeProvider } from "@/components/common/theme-provider";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./components/ThemeToggle";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Toaster } from "sonner";
-import { PreloadHandler } from "./components/PreloadHandler";
+import { InitialTransitionPreload } from "@/components/common/InitialTransitionPreload";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,7 +27,7 @@ export default function RootLayout({
           "min-h-screen bg-background antialiased"
         )}
       >
-        <PreloadHandler />
+        <InitialTransitionPreload />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
           <Toaster

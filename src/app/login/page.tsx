@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import AnimatedPage from "@/app/components/AnimatedPage";
+import AnimatedPage from "@/components/common/AnimatedPage";
 import { Eye, EyeClosed } from "lucide-react";
 import { API } from "@/lib/api";
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="Enter your email"
                   {...register("email", { required: true })}
                 />
                 {errors.email && (

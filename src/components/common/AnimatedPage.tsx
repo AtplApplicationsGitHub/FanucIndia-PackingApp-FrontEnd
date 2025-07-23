@@ -38,14 +38,14 @@ const pageTransition = {
   },
 };
 
-export default function AnimatedPage({ children }: { children: ReactNode }) {
+export default function AnimatedPage({ children, className = "" }: { children: ReactNode, className?: string }) {
   return (
     <motion.div
       initial="initial"
       animate="animate"
       exit="exit"
       variants={pageTransition}
-      className="w-full h-full"
+      className={`w-full h-full ${className}`}
     >
       {children}
     </motion.div>

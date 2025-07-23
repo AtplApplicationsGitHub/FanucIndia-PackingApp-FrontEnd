@@ -22,13 +22,15 @@ export const API = {
   ADMIN: {
     SALES_ORDERS:        `${API_BASE_URL}/admin/sales-orders`,
     SALES_ORDER_BY_ID:   (id: string | number) => `${API_BASE_URL}/admin/sales-orders/${id}`,
+    USERS:               `${API_BASE_URL}/users`,
+    USER_BY_ID:          (id: number) => `${API_BASE_URL}/users/${id}`,
   },
   SALES: {
-    CRUD:                `${API_BASE_URL}/sales-crud`,
-    CRUD_BY_ID:          (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
-    TEMPLATE:            `${API_BASE_URL}/sales-orders/template`,
-    IMPORT:              `${API_BASE_URL}/sales-orders/import`,
-    DELETE:              (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+    CREATE_ORDER:                `${API_BASE_URL}/sales-crud`,
+    EDIT_ORDER:                  (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+    TEMPLATE:                    `${API_BASE_URL}/sales-orders/template`,
+    IMPORT:                      `${API_BASE_URL}/sales-orders/import`,
+    DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
   },
   AUTH: {
     LOGIN:               `${API_BASE_URL}/auth/login`,

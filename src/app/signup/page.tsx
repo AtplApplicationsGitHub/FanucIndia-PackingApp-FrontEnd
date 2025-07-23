@@ -10,10 +10,11 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { CheckCircle, XCircle, Eye, EyeClosed, Loader2 } from "lucide-react";
-import AnimatedPage from "@/app/components/AnimatedPage";
+import AnimatedPage from "@/components/common/AnimatedPage";
 import { API } from "@/lib/api";
 
 type SignupForm = {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -110,6 +111,7 @@ export default function SignupPage() {
     setErrorMsg("");
     try {
       const res = await axios.post(API.AUTH.SIGNUP, {
+        name: data.name,
         email: data.email,
         password: data.password,
         role: "sales",
@@ -157,6 +159,22 @@ export default function SignupPage() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  autoFocus
+                  placeholder="Enter your name"
+                  {...register("name", { required: true })}
+                  disabled={loading}
+                />
+                {errors.name && (
+                  <p className="text-sm text-destructive">Name is required</p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -164,7 +182,7 @@ export default function SignupPage() {
                     id="email"
                     type="email"
                     autoComplete="username"
-                    placeholder="you@example.com"
+                    placeholder="Enter your email"
                     {...register("email", { required: true })}
                     disabled={loading}
                   />

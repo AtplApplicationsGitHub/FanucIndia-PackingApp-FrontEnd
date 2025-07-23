@@ -1,4 +1,3 @@
-// src/components/LoadingSpinner.tsx
 import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 
