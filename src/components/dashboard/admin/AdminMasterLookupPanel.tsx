@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, Fragment } from "react";
-import LookupCrudTable, { LookupRow } from "@/components/dashboard/admin/LookupCrudTable";
+import LookupCrudTable, {
+  LookupRow,
+} from "@/components/dashboard/admin/LookupCrudTable";
 import { Combobox } from "@headlessui/react";
 import { ChevronDown } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
@@ -29,10 +31,13 @@ const MASTER_LOOKUP_OPTIONS = [
   { label: "Printers", key: "printers" },
 ];
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3010";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3010";
 
 export default function AdminMasterLookupPanel() {
-  const [selectedType, setSelectedType] = useState<string>(MASTER_LOOKUP_OPTIONS[0].key);
+  const [selectedType, setSelectedType] = useState<string>(
+    MASTER_LOOKUP_OPTIONS[0].key
+  );
   const [data, setData] = useState<LookupRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -73,22 +78,26 @@ export default function AdminMasterLookupPanel() {
   }, [selectedType]);
 
   // --- Handlers ---
-  const handleAdd = (type: string) => {
+  const handleAdd = () => {
     setAdding(true);
     setEditingId(null);
     setAddObj({});
   };
 
-  const handleAddChange = (key: string, value: any) =>
-    setAddObj((prev) => ({ ...prev, [key]: value }));
+  const handleAddChange = (
+    key: string,
+    value: string | number | boolean | null | undefined
+  ) => setAddObj((prev) => ({ ...prev, [key]: value }));
 
   const handleEdit = (id: number, row: LookupRow) => {
     setEditingId(id);
     setEditObj(row);
   };
 
-  const handleEditChange = (key: string, value: any) =>
-    setEditObj((prev) => ({ ...prev, [key]: value }));
+  const handleEditChange = (
+    key: string,
+    value: string | number | boolean | null | undefined
+  ) => setEditObj((prev) => ({ ...prev, [key]: value }));
 
   const handleCancel = () => {
     setAdding(false);
@@ -118,12 +127,15 @@ export default function AdminMasterLookupPanel() {
       }
       handleCancel();
       await fetchData();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let errorMsg =
+        "Failed to save. Ensure all required fields are filled as strings.";
+      if (err && typeof err === "object" && "message" in err) {
+        // @ts-ignore
+        errorMsg = (err as { message?: string }).message || errorMsg;
+      }
+      setError(errorMsg);
       console.error(err);
-      setError(
-        err.message ||
-          "Failed to save. Ensure all required fields are filled as strings."
-      );
     } finally {
       setLoading(false);
     }
@@ -134,7 +146,9 @@ export default function AdminMasterLookupPanel() {
     setLoading(true);
     try {
       const apiPath = getApiPath();
-      const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, { method: "DELETE" });
+      const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error(`${res.status}`);
       await fetchData();
     } catch {
@@ -149,15 +163,23 @@ export default function AdminMasterLookupPanel() {
     <div className="w-full flex flex-col items-center mt-8">
       {/* Lookup type combobox row */}
       <div className="flex items-center gap-4 w-full max-w-xl mb-1">
-        <label className="text-[16px] font-semibold min-w-[110px]">Lookup Type</label>
-        <Combobox value={selectedType} onChange={(value) => setSelectedType(value ?? MASTER_LOOKUP_OPTIONS[0].key)}>
+        <label className="text-[16px] font-semibold min-w-[110px]">
+          Lookup Type
+        </label>
+        <Combobox
+          value={selectedType}
+          onChange={(value) =>
+            setSelectedType(value ?? MASTER_LOOKUP_OPTIONS[0].key)
+          }
+        >
           <div className="relative w-full">
             <Combobox.Button as={Fragment}>
               <div className="relative w-full">
                 <Combobox.Input
                   className="w-full bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-md px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   displayValue={(key: string) =>
-                    MASTER_LOOKUP_OPTIONS.find((o) => o.key === key)?.label || ""
+                    MASTER_LOOKUP_OPTIONS.find((o) => o.key === key)?.label ||
+                    ""
                   }
                   readOnly
                   placeholder="Select lookup type"

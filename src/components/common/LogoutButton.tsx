@@ -28,7 +28,7 @@ export default function LogoutButton({
       await logoutUser();
       toast.success("You have been logged out.");
       router.replace("/login");
-    } catch (e) {
+    } catch {
       toast.error("Logout failed. Please try again.");
     } finally {
       setLoading(false);

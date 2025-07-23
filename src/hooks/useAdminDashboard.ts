@@ -62,14 +62,14 @@ export function useAdminDashboard() {
 
   // -------------- SETUP USER EMAIL --------------
   useEffect(() => {
-  const stored = localStorage.getItem("user");
-  if (stored) {
-    try {
-      const obj = JSON.parse(stored);
-      setUserName(obj.name  || "");
-    } catch {}
-  }
-}, []);
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        const obj = JSON.parse(stored);
+        setUserName(obj.name || "");
+      } catch {}
+    }
+  }, []);
 
   // ------------- DEBOUNCED PRODUCT SEARCH --------------
   const debouncedSetSearchProduct = useMemo(
@@ -147,15 +147,19 @@ export function useAdminDashboard() {
       setTotalOrders(
         isSearching ? res.data.data?.length || 0 : res.data.total || 0
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       let msg = "Failed to fetch orders.";
-      const data = err.response?.data;
-      if (data?.message) {
-        msg =
-          typeof data.message === "string"
-            ? data.message
-            : JSON.stringify(data.message);
+
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data;
+        if (data?.message) {
+          msg =
+            typeof data.message === "string"
+              ? data.message
+              : JSON.stringify(data.message);
+        }
       }
+
       setError(msg);
     } finally {
       setLoading(false);
@@ -206,7 +210,7 @@ export function useAdminDashboard() {
       setEditValue("");
       toast.success("Updated!");
       fetchOrders();
-    } catch (e) {
+    } catch {
       toast.error("Update failed.");
     } finally {
       setLoading(false);
@@ -273,10 +277,8 @@ export function useAdminDashboard() {
         transporterId,
         productId,
         plantCodeId,
-        paymentClearance,
         salesZoneId,
         packConfigId,
-        status,
         priority,
         terminalId,
         specialRemarks,
@@ -284,7 +286,7 @@ export function useAdminDashboard() {
       } = patch;
 
       // Only build PATCH object with allowed keys
-      const payload: any = {};
+      const payload: Record<string, unknown> = {};
       if (saleOrderNumber !== undefined)
         payload.saleOrderNumber = saleOrderNumber;
       if (outboundDelivery !== undefined)
@@ -312,7 +314,7 @@ export function useAdminDashboard() {
       });
       toast.success("Order updated.");
       fetchOrders();
-    } catch (e) {
+    } catch {
       toast.error("Update failed.");
     } finally {
       setLoading(false);

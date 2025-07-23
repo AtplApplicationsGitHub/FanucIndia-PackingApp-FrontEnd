@@ -1,4 +1,5 @@
 import { format, parseISO } from "date-fns";
+import { LookupRow } from "@/types/admin"; 
 
 export function getGreeting() {
   const hour = new Date().getHours();
@@ -16,7 +17,7 @@ export function formatDate(iso: string) {
 }
 
 export function findName(
-  arr: Array<{ id: number } & Record<string, any>>,
+  arr: LookupRow[],
   id: number,
   field = "name"
 ): string {

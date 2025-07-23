@@ -8,13 +8,20 @@ import { MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
+type InlineEditField = "status" | "priority" | "terminalId";
+type InlineEdit = {
+  id: number;
+  field: InlineEditField;
+  value: string | number;
+} | null;
+
 type Props = {
   orders: SalesOrder[];
   lookup: Lookup;
   currentPage: number;
   pageSize: number;
   onDelete: (id: number) => void;
-  onUpdateInline: (id: number, field: "status" | "priority" | "terminalId", value: any) => Promise<void>;
+  onUpdateInline: (id: number, field: InlineEditField, value: string | number) => Promise<void>;
   loading: boolean;
 };
 
@@ -25,17 +32,12 @@ const AdminOrdersTable: React.FC<Props> = ({
   pageSize,
   onDelete,
   onUpdateInline,
-  loading,
 }) => {
   // Modal state for edit
   const [editRow, setEditRow] = useState<SalesOrder | null>(null);
 
   // For inline editing
-  const [inlineEdit, setInlineEdit] = useState<{
-    id: number;
-    field: "status" | "priority" | "terminalId";
-    value: any;
-  } | null>(null);
+  const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
 
   const handleInlineSave = async () => {
     if (inlineEdit) {

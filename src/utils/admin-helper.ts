@@ -1,9 +1,10 @@
 // src/utils/admin-helper.ts
 import { format, parseISO } from "date-fns";
+import { LookupRow } from "../types/admin";
 
 // Find readable name for lookup fields (products, transporters, etc.)
 export function findName(
-  arr: Array<{ id: number } & Record<string, any>>,
+  arr: LookupRow[],
   id?: number,
   field = "name"
 ): string {

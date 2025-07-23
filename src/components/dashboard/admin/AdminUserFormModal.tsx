@@ -152,7 +152,7 @@ const AdminUserFormModal: React.FC<Props> = ({
               value={form.role}
               onChange={(value) => setForm((f) => ({ ...f, role: value }))}
             >
-              {({ open }) => (
+              {() => (
                 <div className="relative">
                   <Listbox.Button
                     className={`

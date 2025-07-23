@@ -2,17 +2,22 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 import { API } from "@/lib/api";
 import { toast } from "sonner";
-import { User, UserRole } from "@/types/admin";
+import { User } from "@/types/admin";
 
-function getErrorMessage(e: any, fallback: string) {
-  const data = e?.response?.data;
-  if (typeof data?.message === "string") return data.message;
-  if (typeof data?.error === "string") return data.error;
-  if (data && typeof data === "object") {
-    // If error object, stringify for dev, but you can show a generic message for users
-    return data.message || data.error || fallback;
+function getErrorMessage(e: unknown, fallback: string): string {
+  if (axios.isAxiosError(e)) {
+    const data = e.response?.data;
+    if (typeof data?.message === "string") return data.message;
+    if (typeof data?.error === "string") return data.error;
+    if (data && typeof data === "object") {
+      return (data as { message?: string; error?: string }).message
+        || (data as { message?: string; error?: string }).error
+        || fallback;
+    }
+    if (typeof e.message === "string") return e.message;
+  } else if (e instanceof Error) {
+    return e.message;
   }
-  if (typeof e?.message === "string") return e.message;
   return fallback;
 }
 
@@ -34,7 +39,7 @@ export function useAdminUsers() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data || []);
-    } catch (e: any) {
+    } catch (e) {
       const message = getErrorMessage(e, "Failed to fetch users.");
       setError(message);
       toast.error(message);
@@ -53,7 +58,7 @@ export function useAdminUsers() {
       toast.success("User created!");
       fetchUsers();
       setModalOpen(false);
-    } catch (e: any) {
+    } catch (e) {
       const message = getErrorMessage(e, "Failed to create user.");
       toast.error(message);
     } finally {
@@ -72,7 +77,7 @@ export function useAdminUsers() {
       fetchUsers();
       setModalOpen(false);
       setEditingUser(null);
-    } catch (e: any) {
+    } catch (e) {
       const message = getErrorMessage(e, "Failed to update user.");
       toast.error(message);
     } finally {
@@ -89,7 +94,7 @@ export function useAdminUsers() {
       });
       toast.success("User deleted!");
       fetchUsers();
-    } catch (e: any) {
+    } catch (e) {
       const message = getErrorMessage(e, "Failed to delete user.");
       toast.error(message);
     } finally {

@@ -32,7 +32,6 @@ export default function SalesDashboard() {
     deleteError,
     handleDelete,
     handleDeleteModalClose,
-    handleLogout,
     handleDownloadTemplate,
     handleBulkUpload,
     fileInputRef,

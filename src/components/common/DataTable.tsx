@@ -65,7 +65,7 @@ export function DataTable<T extends { id: number | string }>({
                   <td key={colIdx} className={tdClass + " " + (col.className || "")}>
                     {col.render
                       ? col.render(row, idx)
-                      : (row as any)[col.accessor]}
+                      : String((row as T)[col.accessor as keyof T] ?? "")}
                   </td>
                 ))}
                 {rowActions && (

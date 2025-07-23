@@ -11,7 +11,6 @@ const AdminManageUsersPanel: React.FC = () => {
   const {
     users,
     loading,
-    error,
     fetchUsers,
     createUser,
     updateUser,

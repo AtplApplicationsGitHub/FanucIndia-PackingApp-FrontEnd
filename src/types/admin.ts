@@ -36,7 +36,7 @@ export type Lookup = {
   packConfigs: { id: number; configName: string }[];
   terminals: { id: number; name: string }[];
   customers: { id: number; name: string }[];
-  [key: string]: { id: number; [k: string]: any }[];
+  [key: string]: LookupRow[];
 };
 
 // Used for master lookups; every row must have at least `id`

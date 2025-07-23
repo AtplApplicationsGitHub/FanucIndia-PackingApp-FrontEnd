@@ -7,6 +7,17 @@ import axios from "axios";
 import { API } from "@/lib/api";
 import { toast } from "sonner";
 
+type OptionItem = { id: string | number; name?: string; code?: string; configName?: string };
+type FieldOption = keyof Lookup | OptionItem[];
+
+function normalizeInputValue(val: unknown): string | number {
+  if (val === null || val === undefined) return "";
+  if (typeof val === "boolean") return val ? "true" : "false";
+  if (typeof val === "object") return "";
+  return val as string | number;
+}
+
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -14,7 +25,13 @@ type Props = {
   lookup: Lookup;
 };
 
-const FIELDS: { key: keyof SalesOrder; label: string; type?: string; options?: any[] | string; disabled?: boolean }[] = [
+const FIELDS: {
+  key: keyof SalesOrder;
+  label: string;
+  type?: string;
+  options?: FieldOption;
+  disabled?: boolean;
+}[] = [
   { key: "productId", label: "Product", type: "select", options: "products" },
   { key: "saleOrderNumber", label: "Sales No" },
   { key: "outboundDelivery", label: "OB Delivery" },
@@ -22,10 +39,15 @@ const FIELDS: { key: keyof SalesOrder; label: string; type?: string; options?: a
   // { key: "deliveryDate", label: "Req. Date", disabled: true }, // Not editable!
   { key: "transporterId", label: "Transporter", type: "select", options: "transporters" },
   { key: "plantCodeId", label: "Plant Code", type: "select", options: "plantCodes" },
-  { key: "paymentClearance", label: "Pay", type: "select", options: [
-    { id: true, name: "Yes" },
-    { id: false, name: "No" },
-  ] },
+  {
+    key: "paymentClearance",
+    label: "Pay",
+    type: "select",
+    options: [
+      { id: "true", name: "Yes" },
+      { id: "false", name: "No" }
+    ]
+  },
   { key: "salesZoneId", label: "Sales Zone", type: "select", options: "salesZones" },
   { key: "packConfigId", label: "Pack Config", type: "select", options: "packConfigs" },
   { key: "customerId",   label: "Customer", type: "select", options: "customers" },
@@ -41,14 +63,11 @@ export default function AdminOrderEditModal({
   order,
   lookup,
 }: Props) {
-  // Always initialize from fresh order
-  const [form, setForm] = useState<{ [key: string]: any }>({ ...order });
+  // All form state as string | number | null | undefined
+  const [form, setForm] = useState<Partial<SalesOrder> & { [key: string]: unknown }>({ ...order });
   const [loading, setLoading] = useState(false);
 
-  // If order changes, reset the form (so modal reuses properly)
-  // This can be improved with useEffect if needed
-
-  const handleChange = (key: keyof SalesOrder, value: any) => {
+  const handleChange = (key: keyof SalesOrder, value: unknown) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -57,36 +76,44 @@ export default function AdminOrderEditModal({
     try {
       const token = localStorage.getItem("token");
 
-      // Build patch object from FIELDS (never send unwanted keys!)
-      const patch: Record<string, any> = {};
+      const patch: Record<string, string | number | boolean | null> = {};
 
       for (const field of FIELDS) {
-        // Don't send disabled fields or undefined values
         if (field.disabled) continue;
         let v = form[field.key];
+
+        // Always convert these fields to number or null if empty
         if (
-          ["productId", "transporterId", "plantCodeId", "salesZoneId", "packConfigId", "terminalId", "customerId", "priority"].includes(field.key)
+          [
+            "productId",
+            "transporterId",
+            "plantCodeId",
+            "salesZoneId",
+            "packConfigId",
+            "terminalId",
+            "customerId",
+            "priority"
+          ].includes(field.key)
         ) {
-          // Always convert to number or null if empty
           v = v === undefined || v === null || v === "" ? null : Number(v);
         }
+        // Convert "paymentClearance" to boolean from string
         if (field.key === "paymentClearance") {
-          // Accepts boolean only
-          v = v === "true" || v === true;
+          v = v === "true";
         }
-        patch[field.key] = v;
+        patch[field.key] = v as string | number | boolean | null;
       }
 
-      // PATCH API
       await axios.patch(API.ADMIN.SALES_ORDER_BY_ID(order.id), patch, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Order updated!");
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: { message?: string[] } } } };
       toast.error(
-        err?.response?.data?.message?.message?.join
-          ? err.response.data.message.message.join(", ")
+        error?.response?.data?.message?.message?.join
+          ? error.response.data.message.message.join(", ")
           : "Failed to update order."
       );
     }
@@ -109,25 +136,36 @@ export default function AdminOrderEditModal({
       >
         {FIELDS.map(field => {
           if (field.key === "deliveryDate") return null; // Never editable
-          // Options from lookup or field-specific
-          let options: any[] = [];
+
+          let options: OptionItem[] = [];
           if (typeof field.options === "string") {
             options = lookup[field.options] || [];
           } else if (Array.isArray(field.options)) {
             options = field.options;
           }
+
+          // All <select> values must be string or number
+          const value =
+            field.type === "select"
+              ? form[field.key] === true
+                ? "true"
+                : form[field.key] === false
+                  ? "false"
+                  : form[field.key] ?? ""
+              : form[field.key] ?? "";
+
           return (
             <div key={field.key} className="flex flex-col gap-1">
               <label className="text-sm font-semibold">{field.label}</label>
               {field.type === "select" ? (
                 <select
-                  value={form[field.key] ?? ""}
+                  value={normalizeInputValue(form[field.key])}
                   disabled={!!field.disabled || loading}
                   onChange={e => handleChange(field.key, e.target.value)}
                   className="border rounded px-2 py-1 text-[15px] bg-white dark:bg-zinc-900"
                 >
                   <option value="">Select {field.label}</option>
-                  {options.map((opt: any) => (
+                  {options.map((opt: OptionItem) => (
                     <option key={opt.id} value={opt.id}>
                       {opt.name || opt.code || opt.configName}
                     </option>
@@ -136,7 +174,7 @@ export default function AdminOrderEditModal({
               ) : field.type === "number" ? (
                 <input
                   type="number"
-                  value={form[field.key] ?? ""}
+                  value={normalizeInputValue(form[field.key])}
                   onChange={e => handleChange(field.key, e.target.value)}
                   disabled={!!field.disabled || loading}
                   className="border rounded px-2 py-1 text-[15px] bg-white dark:bg-zinc-900"
@@ -144,7 +182,7 @@ export default function AdminOrderEditModal({
               ) : (
                 <input
                   type="text"
-                  value={form[field.key] ?? ""}
+                  value={normalizeInputValue(form[field.key])}
                   onChange={e => handleChange(field.key, e.target.value)}
                   disabled={!!field.disabled || loading}
                   className="border rounded px-2 py-1 text-[15px] bg-white dark:bg-zinc-900"

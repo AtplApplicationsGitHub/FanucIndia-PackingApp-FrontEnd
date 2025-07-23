@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   const onUpdateInline = async (
     id: number,
     field: "status" | "priority" | "terminalId",
-    value: any
+    value: string | number | null
   ) => {
     try {
       const token = localStorage.getItem("token");
