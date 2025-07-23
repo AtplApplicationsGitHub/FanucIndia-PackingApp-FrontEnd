@@ -4,7 +4,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import { API } from "@/lib/api";
 import { SalesOrder, LookupData } from "@/types/sales";
-import * as XLSX from "xlsx";
 
 const PAGE_SIZE = 10;
 
@@ -148,11 +147,11 @@ export function useSalesDashboard() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post(API.SALES.IMPORT, formData, {
+      await axios.post(API.SALES.IMPORT, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        validateStatus: (status) => status >= 200 && status < 300, // let Axios treat all 2xx as success
+        validateStatus: (status) => status >= 200 && status < 300, 
       });
 
       toast.success("Bulk import successful!");
