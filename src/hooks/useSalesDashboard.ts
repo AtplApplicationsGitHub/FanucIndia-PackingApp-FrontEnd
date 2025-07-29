@@ -127,13 +127,11 @@ export function useSalesDashboard() {
 
   useEffect(() => {
     fetchOrders(currentPage, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, pageSize, fetchOrders]);
 
   useEffect(() => {
     setCurrentPage(1);
     fetchOrders(1, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleDownloadTemplate = useCallback(async () => {
@@ -182,7 +180,7 @@ export function useSalesDashboard() {
 
       setAlert({ severity: "success", message: "Bulk import successful!" });
       await fetchOrders();
-    } catch (err) {
+    } catch {
       setAlert({
         severity: "error",
         message: "Bulk import failed. Check your file and try again.",

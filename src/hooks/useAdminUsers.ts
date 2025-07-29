@@ -1,6 +1,6 @@
 // hooks/useAdminUsers.ts
 import { useState, useCallback } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { API } from "@/lib/api";
 import { User } from "@/types/admin";
 

@@ -94,7 +94,7 @@ export default function AdminMasterLookupPanel() {
       if (!res.ok) throw new Error(`${res.status}`);
       const json = (await res.json()) as LookupRow[];
       setData(json);
-    } catch (e: unknown) {
+    } catch {
       setError("Failed to load lookup data.");
     } finally {
       setLoading(false);
@@ -176,7 +176,6 @@ export default function AdminMasterLookupPanel() {
         errorMsg = (err as { message: string }).message;
       }
       setError(errorMsg);
-      // eslint-disable-next-line no-console
       console.error(err);
     } finally {
       setLoading(false);

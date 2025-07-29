@@ -18,7 +18,6 @@ interface Props {
 
 const AdminUsersTable: React.FC<Props> = ({
   users,
-  loading,
   onEdit,
   onDelete,
   currentUserId,

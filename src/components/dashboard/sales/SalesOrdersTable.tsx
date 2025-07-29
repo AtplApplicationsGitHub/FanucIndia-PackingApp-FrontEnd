@@ -16,6 +16,58 @@ type Props = {
   onPaginationModelChange: (model: GridPaginationModel) => void;
 };
 
+// --- Extracted ActionsCell for proper hook usage ---
+function ActionsCell({
+  row,
+  onEdit,
+  onDelete,
+}: {
+  row: SalesOrder;
+  onEdit: (order: SalesOrder) => void;
+  onDelete: (id: number) => void;
+}) {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    onEdit(row);
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    onDelete(row.id);
+    handleMenuClose();
+  };
+
+  return (
+    <Box>
+      <IconButton onClick={handleMenuOpen} size="small">
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem onClick={handleEdit}>Edit</MenuItem>
+        <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+          Delete
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
 export default function SalesOrdersTable({
   orders,
   lookup,
@@ -108,49 +160,13 @@ export default function SalesOrdersTable({
       headerName: "Actions",
       width: 70,
       sortable: false,
-      renderCell: (params) => {
-        const row = params.row as SalesOrder;
-        const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-        const open = Boolean(anchorEl);
-
-        const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-          setAnchorEl(event.currentTarget);
-        };
-
-        const handleMenuClose = () => {
-          setAnchorEl(null);
-        };
-
-        const handleEdit = () => {
-          onEdit(row);
-          handleMenuClose();
-        };
-
-        const handleDelete = () => {
-          onDelete(row.id);
-          handleMenuClose();
-        };
-
-        return (
-          <Box>
-            <IconButton onClick={handleMenuOpen} size="small">
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              <MenuItem onClick={handleEdit}>Edit</MenuItem>
-              <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
-                Delete
-              </MenuItem>
-            </Menu>
-          </Box>
-        );
-      },
+      renderCell: (params) => (
+        <ActionsCell
+          row={params.row as SalesOrder}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ),
     },
   ];
 

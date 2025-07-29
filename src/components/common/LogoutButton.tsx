@@ -48,6 +48,7 @@ export default function LogoutButton({ sx = {} }: LogoutButtonProps) {
       background: "rgba(244, 67, 54, 0.04)",
       boxShadow: "none",
     },
+    ...sx,
   }}
   onClick={handleLogout}
   startIcon={!loading && <LogOut size={18} />}

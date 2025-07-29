@@ -163,7 +163,7 @@ export default function AdminOrderEditModal({
     const patch: SalesOrderPatch = {};
 
     for (const key of PATCHABLE_KEYS) {
-      let v = form[key];
+      const v = form[key];
 
       switch (key) {
         case "userId":
@@ -249,7 +249,6 @@ export default function AdminOrderEditModal({
         ).response;
         errMsg = response?.data?.message || response?.data?.error || errMsg;
       }
-      // eslint-disable-next-line no-console
       console.error("Update error:", err);
       toast.error(errMsg);
     } finally {
@@ -325,7 +324,7 @@ export default function AdminOrderEditModal({
         >
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 1 }}>
             {FIELDS.map((field) => {
-              let options: OptionItem[] =
+              const options: OptionItem[] =
                 typeof field.options === "string"
                   ? lookup[field.options] || []
                   : Array.isArray(field.options)

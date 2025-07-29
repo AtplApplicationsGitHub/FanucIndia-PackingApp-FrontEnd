@@ -28,7 +28,7 @@ const DeliveryDatePicker: React.FC<Props> = ({
         <DesktopDatePicker
           label="Required Date of Delivery"
           value={dateValue}
-          onChange={(newDate, _ctx) => {
+          onChange={(newDate) => {
             const isoString =
               newDate && dayjs.isDayjs(newDate) && newDate.isValid()
                 ? newDate.toISOString()
