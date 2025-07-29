@@ -132,6 +132,7 @@ export function useSalesDashboard() {
   useEffect(() => {
     setCurrentPage(1);
     fetchOrders(1, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const handleDownloadTemplate = useCallback(async () => {
