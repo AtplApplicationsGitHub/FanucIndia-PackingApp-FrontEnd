@@ -1,101 +1,201 @@
-// components/AdminManageTable.tsx
-import React from "react";
-import { DataTable, DataTableColumn, RowAction } from "@/components/common/DataTable";
-import { User } from "@/types/admin";
+"use client";
+import * as React from "react";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
+import { User } from "@/types/admin";
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 
 interface Props {
   users: User[];
   loading: boolean;
   onEdit: (userId: number) => void;
-  onDelete: (userId: number) => void;
+  onDelete: (userId: number) => Promise<void> | void; // support async
+  currentUserId?: number;
 }
 
-const AdminUsersTable: React.FC<Props> = ({ users, loading, onEdit, onDelete }) => {
-  // — loading skeleton —
-  if (loading) {
-    return (
-      <div className="overflow-x-auto border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg">
-        <table className="w-full text-[15px] border-collapse">
-          <thead>
-            <tr className="bg-[#5781e9] dark:bg-[#3b579d]">
-              <th colSpan={5} className="px-3 py-2 border border-gray-200 dark:border-zinc-700" />
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(5)].map((_, i) => (
-              <tr key={i}>
-                <td colSpan={5}>
-                  <Skeleton className="h-10 my-2 w-full rounded" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+const AdminUsersTable: React.FC<Props> = ({
+  users,
+  loading,
+  onEdit,
+  onDelete,
+  currentUserId,
+}) => {
+  // Menu state
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
 
-  // — column definitions —
-  const columns: DataTableColumn<User>[] = [
-    {
-      header: "Name",
-      accessor: "name",
-      className: "text-left",
-    },
-    {
-      header: "Email",
-      accessor: "email",
-      className: "text-left",
-    },
-    {
-      header: "Role",
-      accessor: "role",
-      className: "text-left",
-      render: (row) => <span className="capitalize">{row.role}</span>,
-    },
-    {
-      header: "Created",
-      accessor: "createdAt",
-      className: "text-left",
-      render: (row) => format(new Date(row.createdAt), "dd MMM yyyy"),
-    },
-  ];
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [pendingDeleteUserId, setPendingDeleteUserId] = React.useState<number | null>(null);
+  const [deleteLoading, setDeleteLoading] = React.useState(false);
 
-  // — row actions for dropdown menu —
-  const rowActions: RowAction<User>[] = [
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    rowId: number
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setMenuRowId(rowId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuRowId(null);
+  };
+
+  // Dialog logic
+  const handleDeleteClick = (userId: number) => {
+    setPendingDeleteUserId(userId);
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDialogCancel = () => {
+    setDeleteDialogOpen(false);
+    setPendingDeleteUserId(null);
+    setDeleteLoading(false);
+  };
+
+  const handleDialogConfirm = async () => {
+    if (pendingDeleteUserId != null) {
+      setDeleteLoading(true);
+      // Support both sync and async delete handlers
+      await Promise.resolve(onDelete(pendingDeleteUserId));
+      setDeleteDialogOpen(false);
+      setPendingDeleteUserId(null);
+      setDeleteLoading(false);
+    }
+  };
+
+  const columns: GridColDef<User>[] = [
     {
-      label: "Edit",
-      onClick: (row) => onEdit(row.id as number),
-      icon: <Pencil size={16} />,
+      field: "name",
+      headerName: "Name",
+      flex: 1,
+      minWidth: 150,
     },
     {
-      label: "Delete",
-      onClick: (row) => {
-        if (
-          confirm(
-            "Are you sure you want to delete this user? This action cannot be undone."
-          )
-        ) {
-          onDelete(row.id as number);
-        }
+      field: "email",
+      headerName: "Email",
+      flex: 1,
+      minWidth: 190,
+    },
+    {
+      field: "role",
+      headerName: "Role",
+      flex: 0.8,
+      minWidth: 120,
+      renderCell: (params: GridRenderCellParams<User>) => (
+        <span style={{ textTransform: "capitalize" }}>
+          {params.value as string}
+        </span>
+      ),
+    },
+    {
+      field: "createdAt",
+      headerName: "Created",
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (_value, row) =>
+        row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-",
+    },
+    {
+      field: "actions",
+      headerName: "",
+      sortable: false,
+      width: 64,
+      align: "center",
+      renderCell: (params: GridRenderCellParams<User>) => {
+        const row = params.row as User;
+        return (
+          <Box>
+            <IconButton
+              onClick={(e) => handleMenuOpen(e, row.id)}
+              size="small"
+              aria-label="actions"
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl) && menuRowId === row.id}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  onEdit(row.id);
+                  handleMenuClose();
+                }}
+              >
+                <Pencil size={16} style={{ marginRight: 10 }} /> Edit
+              </MenuItem>
+              <MenuItem
+                onClick={() => handleDeleteClick(row.id)}
+                sx={{ color: "error.main" }}
+                disabled={row.id === currentUserId}
+              >
+                <Trash2 size={16} style={{ marginRight: 10 }} />
+                {row.id === currentUserId ? "Cannot Delete Self" : "Delete"}
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
       },
-      icon: <Trash2 size={16} />,
-      danger: true,
     },
   ];
 
   return (
-    <div className="w-full">
-      <DataTable<User>
+    <Box sx={{ width: "100%" }}>
+      <DataGrid
+        autoHeight
+        rows={users}
         columns={columns}
-        data={users}
-        rowActions={rowActions}
-        emptyText="No users found."
+        getRowId={(row) => row.id}
+        pageSizeOptions={[5, 10, 20]}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 10, page: 0 } },
+        }}
+        disableRowSelectionOnClick
+        sx={{
+          border: "none",
+          bgcolor: "background.paper",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+            fontWeight: 600,
+          },
+          "& .MuiDataGrid-cell": {
+            py: 1,
+            lineHeight: 1.3,
+          },
+        }}
+        localeText={{
+          noRowsLabel: (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+              No users found.
+            </Typography>
+          ) as unknown as string,
+        }}
       />
-    </div>
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+        loading={deleteLoading}
+        title="Delete User"
+        description="Are you sure you want to delete this user? This action cannot be undone."
+      />
+    </Box>
   );
 };
 

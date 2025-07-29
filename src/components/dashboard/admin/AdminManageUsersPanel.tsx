@@ -1,13 +1,19 @@
-"use client";
 import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 import { Plus } from "lucide-react";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminUserFormModal from "./AdminUserFormModal";
 import { UserRole } from "@/types/admin";
 
-const AdminManageUsersPanel: React.FC = () => {
+interface AdminManageUsersPanelProps {
+  showSnackbar: (msg: string, severity: "success" | "error" | "info" | "warning") => void;
+}
+
+const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnackbar }) => {
   const {
     users,
     loading,
@@ -19,7 +25,7 @@ const AdminManageUsersPanel: React.FC = () => {
     setEditingUser,
     modalOpen,
     setModalOpen,
-  } = useAdminUsers();
+  } = useAdminUsers(showSnackbar);
 
   useEffect(() => {
     fetchUsers();
@@ -42,29 +48,49 @@ const AdminManageUsersPanel: React.FC = () => {
     id?: number
   ) => {
     if (id) {
-      // Editing existing user
       const updateData = { ...data };
-      if (!updateData.password) delete updateData.password; // Don't send empty password
+      if (!updateData.password) delete updateData.password;
       updateUser(id, updateData);
     } else {
-      // Creating new user
-      if (!data.password) {
-        // Should be caught by validation, but just in case
-        return;
-      }
+      if (!data.password) return;
       createUser(data as { name: string; email: string; role: UserRole; password: string });
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Manage Users</h2>
-        <Button onClick={onCreate} className="gap-2">
-          <Plus size={18} />
-          New User
+    <Box p={3} sx={{ width: "100%" }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        mb={4}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          Manage Users
+        </Typography>
+        <Button
+          onClick={onCreate}
+          startIcon={<Plus size={18} />}
+          variant="text"
+          type="button"
+          sx={{
+            color: (theme) =>
+              theme.palette.mode === "dark" ? "#e0e0e0" : "#222",
+            bgcolor: "transparent",
+            borderRadius: 0,
+            px: 2.5,
+            py: 1.25,
+            textTransform: "none",
+            "&:hover": {
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+            },
+            transition: "background 0.15s",
+          }}
+        >
+          NEW USER
         </Button>
-      </div>
+      </Stack>
 
       <AdminUsersTable
         users={users}
@@ -79,7 +105,7 @@ const AdminManageUsersPanel: React.FC = () => {
         onSubmit={handleSubmit}
         editingUser={editingUser}
       />
-    </div>
+    </Box>
   );
 };
 

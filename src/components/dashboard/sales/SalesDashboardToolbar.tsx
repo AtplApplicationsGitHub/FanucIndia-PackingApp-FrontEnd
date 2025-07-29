@@ -1,15 +1,23 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Stack,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 import { Plus, Download, UploadCloud } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 
 type Props = {
   searchValue: string;
   onSearchChange: (value: string) => void;
-  
   onCreate: () => void;
   onDownload: () => void;
   onBulkUpload: () => void;
@@ -31,55 +39,112 @@ export default function SalesDashboardToolbar({
       initial={{ opacity: 0, y: -30, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col md:flex-row justify-between items-center mb-8 px-4 space-y-3 md:space-y-0 md:space-x-4"
     >
-      <h1 className="text-3xl font-bold text-black dark:text-white mb-2 md:mb-0">
-        Your Orders
-      </h1>
-      <div className="flex flex-col md:flex-row gap-2 md:gap-4">
-        <Input
-          type="text"
-          placeholder="Search"
-          className="border border-gray-200 dark:border-zinc-700 rounded-none px-3 py-2 bg-white dark:bg-zinc-900 text-[15px] w-full md:w-auto"
-          value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-        
-        <Button
-          variant="ghost"
-          className="rounded-none font-medium px-5 py-2"
-          onClick={onCreate}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+          px: 2,
+          gap: { xs: 2, md: 4 },
+        }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          color="text.primary"
+          sx={{ mb: { xs: 1, md: 0 } }}
         >
-          <Plus className="mr-2 h-4 w-4" />
-          CREATE ORDER
-        </Button>
+          Your Orders
+        </Typography>
 
-        <Button
-          variant="ghost"
-          className="rounded-none font-medium px-5 py-2"
-          onClick={onDownload}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems="center"
+          flexWrap="wrap"
         >
-          <Download className="mr-2 h-4 w-4" />
-          EXCEL TEMPLATE
-        </Button>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="SEARCH"
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              minWidth: 200,
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: searchValue && (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => onSearchChange("")}
+                    aria-label="Clear search"
+                  >
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <Button
-          variant="ghost"
-          className="rounded-none font-medium px-5 py-2"
-          onClick={onBulkUpload}
-        >
-          <UploadCloud className="mr-2 h-4 w-4" />
-          BULK UPLOAD
-        </Button>
+          <Button
+            sx={{
+              color: (theme) => theme.palette.text.primary,
+              "&:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              borderRadius: 0,
+            }}
+            onClick={onCreate}
+            startIcon={<Plus size={18} />}
+          >
+            Create Order
+          </Button>
+          <Button
+            sx={{
+              color: (theme) => theme.palette.text.primary,
+              "&:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              borderRadius: 0,
+            }}
+            onClick={onDownload}
+            startIcon={<Download size={18} />}
+          >
+            Excel Template
+          </Button>
+          <Button
+            sx={{
+              color: (theme) => theme.palette.text.primary,
+              "&:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              borderRadius: 0,
+            }}
+            onClick={onBulkUpload}
+            startIcon={<UploadCloud size={18} />}
+          >
+            Bulk Upload
+          </Button>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx"
-          className="hidden"
-          onChange={onFileChange}
-        />
-      </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx"
+            onChange={onFileChange}
+            hidden
+          />
+        </Stack>
+      </Box>
     </motion.div>
   );
 }

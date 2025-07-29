@@ -1,32 +1,62 @@
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { RequiredLabel } from "@/components/common/RequiredLabel";
+import * as React from "react";
+import FormControl from "@mui/material/FormControl";
+import FormLabel from "@mui/material/FormLabel";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from "@mui/material/Radio";
+import FormHelperText from "@mui/material/FormHelperText";
 
 type Props = {
   value: string;
   onChange: (field: string, value: string) => void;
   error?: string;
+  required?: boolean;
 };
 
-const PaymentClearanceToggle: React.FC<Props> = ({ value, onChange, error }) => (
-  <div className="flex flex-col gap-1">
-    <RequiredLabel>Payment Clearance</RequiredLabel>
+const PaymentClearanceToggle: React.FC<Props> = ({
+  value,
+  onChange,
+  error,
+  required = true,
+}) => (
+  <FormControl
+    required={required}
+    error={!!error}
+    component="fieldset"
+    sx={{
+      mb: 1,
+      "& .MuiFormLabel-root": {
+        fontWeight: 500,
+        fontSize: 15,
+      },
+      "& .MuiFormLabel-asterisk": {
+        color: "#dc2626",
+      },
+    }}
+  >
+    <FormLabel component="legend" required={required}>
+      Payment Clearance
+    </FormLabel>
     <RadioGroup
-      className="w-full flex flex-row gap-6 mt-2"
+      row
       value={value}
-      onValueChange={(val) => onChange("paymentClearance", val)}
+      onChange={(e) => onChange("paymentClearance", e.target.value)}
+      sx={{ mt: 1, gap: 3 }}
+      name="payment-clearance"
     >
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="true" id="payment-yes" />
-        <Label htmlFor="payment-yes">Yes</Label>
-      </div>
-      <div className="flex items-center space-x-2">
-        <RadioGroupItem value="false" id="payment-no" />
-        <Label htmlFor="payment-no">No</Label>
-      </div>
+      <FormControlLabel
+        value="true"
+        control={<Radio size="small" />}
+        label="Yes"
+      />
+      <FormControlLabel
+        value="false"
+        control={<Radio size="small" />}
+        label="No"
+      />
     </RadioGroup>
-    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-  </div>
+    {error && <FormHelperText>{error}</FormHelperText>}
+  </FormControl>
 );
 
 export default PaymentClearanceToggle;

@@ -1,94 +1,114 @@
 "use client";
 
 import React from "react";
-import clsx from "clsx";
-import LogoutButton from "@/components/common/LogoutButton";
-import { Button } from "@/components/ui/button";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { Home, ClipboardList, Database, Users } from "lucide-react";
+import LogoutButton from "@/components/common/LogoutButton";
 import { getGreeting } from "@/utils/sales-helpers";
 
 type Props = {
   userName: string;
   view: "" | "orders" | "master" | "manage";
-  setView: React.Dispatch<
-    React.SetStateAction<"" | "orders" | "master" | "manage">
-  >;
+  setView: React.Dispatch<React.SetStateAction<"" | "orders" | "master" | "manage">>;
 };
 
-export default function AdminDashboardHeader({
-  userName,
-  view,
-  setView,
-}: Props) {
+const menuItems = [
+  { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "" },
+  { label: "ORDER LIST", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "orders" },
+  { label: "MASTER", icon: <Database className="mr-2 h-4 w-4" />, value: "master" },
+  { label: "MANAGE", icon: <Users className="mr-2 h-4 w-4" />, value: "manage" },
+];
+
+const FANUC_BLUE = "#3b579d";
+
+export default function AdminDashboardHeader({ userName, view, setView }: Props) {
   return (
-    <div className="w-full flex justify-between items-center py-4 px-8 bg-white dark:bg-zinc-900 shadow">
-      <span className="text-lg font-semibold">
-        {getGreeting()}
-        {userName && (
-          <>
-            , <span className="text-blue-600 dark:text-blue-400">{userName}</span>
-          </>
-        )}
-      </span>
-
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          className={clsx(
-            "rounded-none font-medium px-5 py-2",
-            view === "" && "bg-blue-50 dark:bg-blue-900 font-bold",
-            "text-blue-600 dark:text-blue-400"
-          )}
-          onClick={() => setView("")}
+    <AppBar
+      position="static"
+      elevation={1}
+      color="default"
+      sx={{ px: 0, boxShadow: 2, bgcolor: "background.paper" }}
+    >
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          px: { xs: 2, md: 8 },
+          py: 2,
+        }}
+      >
+        <Typography
+          variant="h6"
+          fontWeight={600}
+          sx={{ display: "flex", alignItems: "center" }}
         >
-          <Home className="mr-2 h-4 w-4" />
-          HOME
-        </Button>
-
-        <Button
-          variant="ghost"
-          className={clsx(
-            "rounded-none font-medium px-5 py-2",
-            view === "orders" && "bg-blue-50 dark:bg-blue-900 font-bold",
-            "text-blue-600 dark:text-blue-400"
+          {getGreeting()}
+          {userName && (
+            <>
+              ,&nbsp;
+              <Box
+                component="span"
+                sx={{
+                  color: FANUC_BLUE,
+                  fontWeight: 600,
+                }}
+              >
+                {userName}
+              </Box>
+            </>
           )}
-          onClick={() => setView("orders")}
-        >
-          <ClipboardList className="mr-2 h-4 w-4" />
-          ORDER LIST
-        </Button>
+        </Typography>
 
-        <Button
-          variant="ghost"
-          className={clsx(
-            "rounded-none font-medium px-5 py-2",
-            view === "master" && "bg-blue-50 dark:bg-blue-900 font-bold",
-            "text-blue-600 dark:text-blue-400"
-          )}
-          onClick={() => setView("master")}
-        >
-          <Database className="mr-2 h-4 w-4" />
-          MASTER
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {menuItems.map(item => {
+            const isSelected = view === item.value;
+            return (
+              <Button
+                key={item.value}
+                disableRipple
+                variant="text"
+                startIcon={item.icon}
+                onClick={() => setView(item.value as Props["view"])}
+                sx={{
+                  borderRadius: 0,
+                  px: 2.5,
+                  py: 1.2,
+                  minWidth: 120,
+                  fontWeight: isSelected ? 700 : 500,
+                  color: FANUC_BLUE,
+                  bgcolor: isSelected ? "rgba(59,87,157,0.08)" : "transparent",
+                  boxShadow: isSelected ? "0 0 0 2px #3b579d22" : "none",
+                  outline: "none",
+                  border: "none",
+                  "&:hover": {
+                    background: isSelected
+                      ? "rgba(59,87,157,0.12)"
+                      : "rgba(59,87,157,0.06)",
+                    color: FANUC_BLUE,
+                    textDecoration: "none", // NEVER underline
+                    boxShadow: isSelected ? "0 0 0 2px #3b579d33" : "none",
+                  },
+                  "&:focus": {
+                    outline: "none",
+                  },
+                  textTransform: "none",
+                  transition: "all 0.15s",
+                }}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
 
-        <Button
-          variant="ghost"
-          className={clsx(
-            "rounded-none font-medium px-5 py-2",
-            view === "manage" && "bg-blue-50 dark:bg-blue-900 font-bold",
-            "text-blue-600 dark:text-blue-400"
-          )}
-          onClick={() => setView("manage")}
-        >
-          <Users className="mr-2 h-4 w-4" />
-          MANAGE
-        </Button>
-
-        <LogoutButton
-          variant="redOutline"
-          className="px-6 py-2 mr-10"
-        />
-      </div>
-    </div>
+          <Box sx={{ ml: 4 }}>
+            <LogoutButton sx={{ px: 6, py: 2 }} />
+          </Box>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }

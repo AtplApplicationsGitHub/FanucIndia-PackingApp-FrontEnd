@@ -1,14 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, Fragment } from "react";
-import LookupCrudTable, {
-  LookupRow,
-} from "@/components/dashboard/admin/LookupCrudTable";
-import { Combobox } from "@headlessui/react";
-import { ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import LookupCrudTable, { LookupRow } from "@/components/dashboard/admin/LookupCrudTable";
 import { authFetch } from "@/lib/authFetch";
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import { Check } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { AlertColor } from "@mui/material/Alert";
 
-// Map UI types to kebab-case API paths
 const TYPE_TO_API_PATH: Record<string, string> = {
   products: "products",
   transporters: "transporters",
@@ -20,7 +26,9 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   printers: "printers",
 };
 
-const MASTER_LOOKUP_OPTIONS = [
+type MasterLookupKey = keyof typeof TYPE_TO_API_PATH;
+
+const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Products", key: "products" },
   { label: "Transporter", key: "transporters" },
   { label: "Delivery Plant Code", key: "plantCodes" },
@@ -31,15 +39,23 @@ const MASTER_LOOKUP_OPTIONS = [
   { label: "Printers", key: "printers" },
 ];
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3010";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3010";
+
+type DeleteTarget = {
+  type: MasterLookupKey;
+  id: number;
+} | null;
+
+type SnackbarState = {
+  open: boolean;
+  message: string;
+  severity: AlertColor;
+};
 
 export default function AdminMasterLookupPanel() {
-  const [selectedType, setSelectedType] = useState<string>(
-    MASTER_LOOKUP_OPTIONS[0].key
-  );
+  const [selectedType, setSelectedType] = useState<MasterLookupKey | "">("");
   const [data, setData] = useState<LookupRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
   const [adding, setAdding] = useState<boolean>(false);
@@ -48,11 +64,28 @@ export default function AdminMasterLookupPanel() {
   const [addObj, setAddObj] = useState<Partial<LookupRow>>({});
   const [editObj, setEditObj] = useState<Partial<LookupRow>>({});
 
-  // Helper to get kebab-case API path
-  const getApiPath = () => TYPE_TO_API_PATH[selectedType] || selectedType;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    open: false,
+    message: "",
+    severity: "error",
+  });
+
+  const showSnackbar = (message: string, severity: AlertColor = "error") => {
+    setSnackbar({ open: true, message, severity });
+  };
+  const handleSnackbarClose = () =>
+    setSnackbar((prev) => ({ ...prev, open: false }));
+
+  const getApiPath = () =>
+    selectedType ? TYPE_TO_API_PATH[selectedType] || selectedType : "";
 
   // --- Fetch / Refresh ---
   const fetchData = async () => {
+    if (!selectedType) return;
     setLoading(true);
     setError("");
     try {
@@ -61,7 +94,7 @@ export default function AdminMasterLookupPanel() {
       if (!res.ok) throw new Error(`${res.status}`);
       const json = (await res.json()) as LookupRow[];
       setData(json);
-    } catch {
+    } catch (e: unknown) {
       setError("Failed to load lookup data.");
     } finally {
       setLoading(false);
@@ -73,7 +106,9 @@ export default function AdminMasterLookupPanel() {
     setEditingId(null);
     setAddObj({});
     setEditObj({});
-    fetchData();
+    if (selectedType) {
+      fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedType]);
 
@@ -85,7 +120,7 @@ export default function AdminMasterLookupPanel() {
   };
 
   const handleAddChange = (
-    key: string,
+    key: keyof LookupRow,
     value: string | number | boolean | null | undefined
   ) => setAddObj((prev) => ({ ...prev, [key]: value }));
 
@@ -95,7 +130,7 @@ export default function AdminMasterLookupPanel() {
   };
 
   const handleEditChange = (
-    key: string,
+    key: keyof LookupRow,
     value: string | number | boolean | null | undefined
   ) => setEditObj((prev) => ({ ...prev, [key]: value }));
 
@@ -106,7 +141,7 @@ export default function AdminMasterLookupPanel() {
     setEditObj({});
   };
 
-  const handleSave = async (type: string, id: number) => {
+  const handleSave = async (type: MasterLookupKey, id: number) => {
     setLoading(true);
     try {
       const apiPath = getApiPath();
@@ -118,10 +153,12 @@ export default function AdminMasterLookupPanel() {
         });
         if (!res.ok) throw await res.json();
       } else {
-        // UPDATE
+        // UPDATE: Remove id from payload
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _id, ...patchObj } = editObj;
         const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, {
-          method: "PUT",
-          body: JSON.stringify(editObj),
+          method: "PATCH",
+          body: JSON.stringify(patchObj),
         });
         if (!res.ok) throw await res.json();
       }
@@ -138,88 +175,173 @@ export default function AdminMasterLookupPanel() {
       ) {
         errorMsg = (err as { message: string }).message;
       }
-
       setError(errorMsg);
+      // eslint-disable-next-line no-console
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (type: string, id: number) => {
-    if (!confirm("Delete this lookup value?")) return;
-    setLoading(true);
+  // ----- Confirm Delete Dialog -----
+  const handleRequestDelete = (type: MasterLookupKey, id: number) => {
+    setDeleteTarget({ type, id });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
     try {
-      const apiPath = getApiPath();
-      const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error(`${res.status}`);
+      const apiPath = TYPE_TO_API_PATH[deleteTarget.type] || deleteTarget.type;
+      const res = await authFetch(
+        `${API_BASE_URL}/lookup/${apiPath}/${deleteTarget.id}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        let errMessage = "Failed to delete.";
+        try {
+          const errBody = await res.json();
+          if (typeof errBody?.message === "string") {
+            errMessage = errBody.message;
+          } else if (
+            errBody?.message &&
+            typeof errBody.message === "object" &&
+            typeof errBody.message.message === "string"
+          ) {
+            errMessage = errBody.message.message;
+          }
+        } catch {}
+        showSnackbar(String(errMessage), "error");
+        setDeleteDialogOpen(false);
+        setDeleteTarget(null);
+        setDeleteLoading(false);
+        return;
+      }
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
       await fetchData();
-    } catch {
-      setError("Failed to delete.");
+    } catch (err: unknown) {
+      let msg = "Failed to delete.";
+      if (
+        err &&
+        typeof err === "object" &&
+        "message" in err &&
+        typeof (err as { message?: unknown }).message === "string"
+      ) {
+        msg = (err as { message: string }).message;
+      }
+      showSnackbar(msg, "error");
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
   };
 
   // --- Render ---
   return (
-    <div className="w-full flex flex-col items-center mt-8">
+    <Box
+      sx={{
+        width: "100%",
+        mt: 6,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
       {/* Lookup type combobox row */}
-      <div className="flex items-center gap-4 w-full max-w-xl mb-1">
-        <label className="text-[16px] font-semibold min-w-[110px]">
-          Lookup Type
-        </label>
-        <Combobox
-          value={selectedType}
-          onChange={(value) =>
-            setSelectedType(value ?? MASTER_LOOKUP_OPTIONS[0].key)
-          }
-        >
-          <div className="relative w-full">
-            <Combobox.Button as={Fragment}>
-              <div className="relative w-full">
-                <Combobox.Input
-                  className="w-full bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-md px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  displayValue={(key: string) =>
-                    MASTER_LOOKUP_OPTIONS.find((o) => o.key === key)?.label ||
-                    ""
-                  }
-                  readOnly
-                  placeholder="Select lookup type"
-                />
-                <ChevronDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-                  size={20}
-                />
-              </div>
-            </Combobox.Button>
-            <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-zinc-900 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-white">
-              {MASTER_LOOKUP_OPTIONS.map((option) => (
-                <Combobox.Option
-                  key={option.key}
-                  value={option.key}
-                  className={({ active }) =>
-                    `cursor-pointer select-none relative py-2 pl-4 pr-4 ${
-                      active ? "bg-[#3b579d] text-white" : "text-gray-200"
-                    }`
-                  }
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 3,
+          width: "100%",
+          maxWidth: 520,
+          mb: 1,
+        }}
+      >
+        <FormControl sx={{ width: 320 }} size="medium" variant="outlined">
+          <InputLabel id="master-lookup-type-label">Select Lookup</InputLabel>
+          <Select
+            labelId="master-lookup-type-label"
+            id="master-lookup-type"
+            value={selectedType}
+            label="Select Lookup"
+            onChange={(e: SelectChangeEvent<MasterLookupKey | "">) =>
+              setSelectedType(e.target.value as MasterLookupKey | "")
+            }
+            sx={{
+              borderRadius: 2,
+              fontSize: 16,
+              textAlign: "center",
+              "& .MuiSelect-select": {
+                textAlign: "center",
+              },
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  bgcolor: (theme) => theme.palette.background.paper,
+                },
+              },
+            }}
+          >
+            {MASTER_LOOKUP_OPTIONS.map((option) => (
+              <MenuItem
+                key={option.key}
+                value={option.key}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "left",
+                  fontSize: 16,
+                }}
+              >
+                {selectedType === option.key && (
+                  <Check
+                    size={18}
+                    style={{
+                      color: "#1976d2",
+                      display: "inline-block",
+                      marginRight: 8,
+                      verticalAlign: "middle",
+                    }}
+                  />
+                )}
+                <span
+                  style={{
+                    fontWeight: selectedType === option.key ? 600 : 400,
+                  }}
                 >
                   {option.label}
-                </Combobox.Option>
-              ))}
-            </Combobox.Options>
-          </div>
-        </Combobox>
-      </div>
+                </span>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Table or loading/error */}
-      <div className="w-full mt-8 max-w-3xl">
-        {loading ? (
-          <div className="text-center py-10 text-lg">Loading...</div>
+      <Box sx={{ width: "100%", mt: 6, maxWidth: 700 }}>
+        {!selectedType ? (
+          <Box sx={{ textAlign: "center", color: "#888", mt: 8, fontSize: 18 }}>
+            Please select a lookup type to manage.
+          </Box>
+        ) : loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress size={38} />
+          </Box>
         ) : error ? (
-          <div className="text-center py-10 text-red-600">{error}</div>
+          <Alert severity="error" sx={{ py: 4, fontSize: 18, textAlign: "center" }}>
+            {error}
+          </Alert>
         ) : (
           <LookupCrudTable
             type={selectedType}
@@ -229,7 +351,7 @@ export default function AdminMasterLookupPanel() {
             onEdit={handleEdit}
             onEditChange={handleEditChange}
             onSave={handleSave}
-            onRequestDelete={handleDelete}
+            onRequestDelete={handleRequestDelete}
             onCancel={handleCancel}
             addObj={addObj}
             onAdd={handleAdd}
@@ -238,7 +360,33 @@ export default function AdminMasterLookupPanel() {
             refresh={fetchData}
           />
         )}
-      </div>
-    </div>
+      </Box>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleDeleteDialogClose}
+        loading={deleteLoading}
+        title="Delete Confirmation"
+        description="Are you sure you want to delete this lookup value? This action cannot be undone."
+      />
+
+      {/* Snackbar for delete and other global errors */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
+    </Box>
   );
 }

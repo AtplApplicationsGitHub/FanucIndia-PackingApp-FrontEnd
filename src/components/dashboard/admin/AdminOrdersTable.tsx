@@ -1,12 +1,23 @@
 "use client";
-import { useState } from "react";
-import { DataTable, DataTableColumn } from "@/components/common/DataTable";
+
+import * as React from "react";
+import Box from "@mui/material/Box";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
+  TextField,
+  FormControl,
+} from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { SalesOrder, Lookup } from "@/types/admin";
 import { findName, formatDate } from "@/utils/sales-helpers";
-import AdminOrderEditModal from "./AdminOrderEditModal";
-import { MoreVertical } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 type InlineEditField = "status" | "priority" | "terminalId";
 type InlineEdit = {
@@ -20,192 +31,268 @@ type Props = {
   lookup: Lookup;
   currentPage: number;
   pageSize: number;
+  rowCount: number;
+  setCurrentPage: (page: number) => void;
+  setPageSize: (size: number) => void;
   onDelete: (id: number) => void;
-  onUpdateInline: (id: number, field: InlineEditField, value: string | number | null) => Promise<void>;
+  onUpdateInline: (
+    id: number,
+    field: InlineEditField,
+    value: string | number | null
+  ) => Promise<void>;
   loading: boolean;
+  onEdit?: (order: SalesOrder) => void; // ✅ Required for external modal
 };
 
-const AdminOrdersTable: React.FC<Props> = ({
+export default function AdminOrdersTable({
   orders,
   lookup,
   currentPage,
   pageSize,
+  rowCount,
+  setCurrentPage,
+  setPageSize,
   onDelete,
   onUpdateInline,
-}) => {
-  // Modal state for edit
-  const [editRow, setEditRow] = useState<SalesOrder | null>(null);
+  loading,
+  onEdit,
+}: Props) {
+  const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
 
-  // For inline editing
-  const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
+    null
+  );
+  const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
+
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    rowId: number
+  ) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuRowId(rowId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuRowId(null);
+  };
 
   const handleInlineSave = async () => {
-  if (inlineEdit) {
-    let value = inlineEdit.value;
-    // Always send number for priority/terminalId
-    if (inlineEdit.field === "priority" || inlineEdit.field === "terminalId") {
-      value = value === "" || value === null ? null : Number(value);
+    if (inlineEdit) {
+      let value = inlineEdit.value;
+      if (
+        inlineEdit.field === "priority" ||
+        inlineEdit.field === "terminalId"
+      ) {
+        value = value === "" || value === null ? null : Number(value);
+      }
+      await onUpdateInline(inlineEdit.id, inlineEdit.field, value ?? "");
+      setInlineEdit(null);
     }
-    await onUpdateInline(inlineEdit.id, inlineEdit.field, value ?? "");
-    setInlineEdit(null);
-  }
-};
+  };
 
-
-  const columns: DataTableColumn<SalesOrder>[] = [
+  const columns: GridColDef<SalesOrder>[] = [
     {
-      header: "S.I No",
-      accessor: "id",
-      render: (_, i) => (currentPage - 1) * pageSize + i + 1,
+      field: "si",
+      headerName: "S.I No",
+      width: 60,
+      valueGetter: (_value, row) =>
+        (currentPage - 1) * pageSize +
+        orders.findIndex((o) => o.id === row.id) +
+        1,
     },
     {
-      header: "User Name",
-      accessor: "user",
-      render: (row) => row.user?.name || "-",
+      field: "user",
+      headerName: "User Name",
+      width: 120,
+      valueGetter: (_value, row) => row.user?.name || "-",
     },
     {
-      header: "Product",
-      accessor: "productId",
-      render: (row) => findName(lookup.products, row.productId ?? 0),
+      field: "productId",
+      headerName: "Product",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.products, row.productId ?? 0),
     },
     {
-      header: "Sale Order Number",
-      accessor: "saleOrderNumber",
-      render: (row) => row.saleOrderNumber || "-",
+      field: "saleOrderNumber",
+      headerName: "Sale Order Number",
+      width: 120,
     },
     {
-      header: "OutBound Delivery",
-      accessor: "outboundDelivery",
-      render: (row) => row.outboundDelivery || "-",
+      field: "outboundDelivery",
+      headerName: "Out Bound Delivery",
+      width: 130,
     },
     {
-      header: "Transfer",
-      accessor: "transferOrder",
-      render: (row) => row.transferOrder || "-",
+      field: "transferOrder",
+      headerName: "Transfer Order",
+      width: 110,
     },
     {
-      header: "Required Date of Delivery",
-      accessor: "deliveryDate",
-      render: (row) => row.deliveryDate ? formatDate(row.deliveryDate) : "-",
+      field: "deliveryDate",
+      headerName: "Required Date of Delivery",
+      width: 130,
+      valueGetter: (_value, row) =>
+        row.deliveryDate ? formatDate(row.deliveryDate) : "-",
     },
     {
-      header: "Transporter",
-      accessor: "transporterId",
-      render: (row) => findName(lookup.transporters, row.transporterId ?? 0),
+      field: "transporterId",
+      headerName: "Transporter",
+      width: 120,
+      valueGetter: (_value, row) =>
+        findName(lookup.transporters, row.transporterId ?? 0),
     },
     {
-      header: "Delivery Plant Code",
-      accessor: "plantCodeId",
-      render: (row) => findName(lookup.plantCodes, row.plantCodeId ?? 0, "code"),
+      field: "plantCodeId",
+      headerName: "Delivery Plant Code",
+      width: 130,
+      valueGetter: (_value, row) =>
+        findName(lookup.plantCodes, row.plantCodeId ?? 0, "code"),
     },
     {
-      header: "Payment Clearance",
-      accessor: "paymentClearance",
-      render: (row) => (row.paymentClearance ? "Yes" : "No"),
+      field: "paymentClearance",
+      headerName: "Payment Clearance",
+      width: 110,
+      valueGetter: (_value, row) => (row.paymentClearance ? "Yes" : "No"),
     },
     {
-      header: "Sales Zone",
-      accessor: "salesZoneId",
-      render: (row) => findName(lookup.salesZones, row.salesZoneId ?? 0),
+      field: "salesZoneId",
+      headerName: "Sales Zone",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.salesZones, row.salesZoneId ?? 0),
     },
     {
-      header: "Packing Configuration",
-      accessor: "packConfigId",
-      render: (row) => findName(lookup.packConfigs, row.packConfigId ?? 0, "configName"),
+      field: "packConfigId",
+      headerName: "Packing Configuration",
+      width: 130,
+      valueGetter: (_value, row) =>
+        findName(lookup.packConfigs, row.packConfigId ?? 0, "configName"),
     },
     {
-      header: "Customer",
-      accessor: "customerId",
-      render: (row) => findName(lookup.customers, row.customerId ?? 0, "name"),
+      field: "customerId",
+      headerName: "Customer",
+      width: 120,
+      valueGetter: (_value, row) =>
+        findName(lookup.customers, row.customerId ?? 0, "name"),
     },
-    // ---------------------------
-    // Inline-editable columns
-    // ---------------------------
     {
-      header: "Status",
-      accessor: "status",
-      render: (row) =>
-        inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "status" ? (
-          <input
-            type="text"
+      field: "status",
+      headerName: "Status",
+      width: 80,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return inlineEdit &&
+          inlineEdit.id === row.id &&
+          inlineEdit.field === "status" ? (
+          <TextField
             value={inlineEdit.value ?? ""}
-            onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+            size="small"
+            onChange={(e) =>
+              setInlineEdit({ ...inlineEdit, value: e.target.value })
+            }
             onBlur={handleInlineSave}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === "Enter") handleInlineSave();
               if (e.key === "Escape") setInlineEdit(null);
             }}
             autoFocus
-            className="border rounded px-2 py-1 w-28 text-[15px] bg-white dark:bg-zinc-900"
-            maxLength={32}
+            variant="standard"
+            inputProps={{ maxLength: 32 }}
+            sx={{ width: 80 }}
           />
         ) : (
-          <span
-            className="cursor-pointer hover:underline"
+          <Box
+            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
             onClick={() =>
-              setInlineEdit({ id: row.id, field: "status", value: row.status || "" })
+              setInlineEdit({
+                id: row.id,
+                field: "status",
+                value: row.status || "",
+              })
             }
             title="Click to edit"
           >
             {row.status || "-"}
-          </span>
-        ),
+          </Box>
+        );
+      },
     },
     {
-      header: "Priority",
-      accessor: "priority",
-      render: (row) =>
-        inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "priority" ? (
-          <input
-            type="number"
+      field: "priority",
+      headerName: "Priority",
+      width: 80,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return inlineEdit &&
+          inlineEdit.id === row.id &&
+          inlineEdit.field === "priority" ? (
+          <TextField
             value={inlineEdit.value ?? ""}
-            onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+            type="number"
+            size="small"
+            onChange={(e) =>
+              setInlineEdit({ ...inlineEdit, value: e.target.value })
+            }
             onBlur={handleInlineSave}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === "Enter") handleInlineSave();
               if (e.key === "Escape") setInlineEdit(null);
             }}
             autoFocus
-            className="border rounded px-2 py-1 w-16 text-[15px] bg-white dark:bg-zinc-900"
+            variant="standard"
+            sx={{ width: 65 }}
           />
         ) : (
-          <span
-            className="cursor-pointer hover:underline"
+          <Box
+            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
             onClick={() =>
               setInlineEdit({
                 id: row.id,
                 field: "priority",
-                value: row.priority !== undefined && row.priority !== null ? row.priority : "",
+                value:
+                  row.priority !== undefined && row.priority !== null
+                    ? row.priority
+                    : "",
               })
             }
             title="Click to edit"
           >
             {row.priority ?? "-"}
-          </span>
-        ),
+          </Box>
+        );
+      },
     },
     {
-      header: "Terminal",
-      accessor: "terminalId",
-      render: (row) =>
-        inlineEdit && inlineEdit.id === row.id && inlineEdit.field === "terminalId" ? (
-          <select
-            value={inlineEdit.value ?? ""}
-            onChange={e => setInlineEdit({ ...inlineEdit, value: Number(e.target.value) })}
-            onBlur={handleInlineSave}
-            autoFocus
-            className="border rounded px-2 py-1 w-32 text-[15px] bg-white dark:bg-zinc-900"
-          >
-            <option value="">Select</option>
-            {lookup.terminals.map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+      field: "terminalId",
+      headerName: "Terminal",
+      width: 110,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return inlineEdit &&
+          inlineEdit.id === row.id &&
+          inlineEdit.field === "terminalId" ? (
+          <FormControl variant="standard" size="small" sx={{ minWidth: 80 }}>
+            <Select
+              value={inlineEdit.value ?? ""}
+              onChange={(e) =>
+                setInlineEdit({ ...inlineEdit, value: Number(e.target.value) })
+              }
+              onBlur={handleInlineSave}
+              autoFocus
+            >
+              <MenuItem value="">Select</MenuItem>
+              {lookup.terminals.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         ) : (
-          <span
-            className="cursor-pointer hover:underline"
+          <Box
+            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
             onClick={() =>
               setInlineEdit({
                 id: row.id,
@@ -215,61 +302,95 @@ const AdminOrdersTable: React.FC<Props> = ({
             }
             title="Click to edit"
           >
-            {row.terminal?.name || findName(lookup.terminals, row.terminalId ?? 0) || "-"}
-          </span>
-        ),
+            {row.terminal?.name ||
+              findName(lookup.terminals, row.terminalId ?? 0) ||
+              "-"}
+          </Box>
+        );
+      },
     },
     {
-      header: "Remarks",
-      accessor: "specialRemarks",
-      render: (row) => row.specialRemarks || "-",
+      field: "specialRemarks",
+      headerName: "SpecialRemarks",
+      width: 120,
+      valueGetter: (_value, row) => row.specialRemarks || "-",
     },
-    // ---------------------------
-    // Actions column (3-dots)
-    // ---------------------------
     {
-      header: "Actions",
-      accessor: "actions",
-      render: (row) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="px-2 py-0">
-              <MoreVertical size={20} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setEditRow(row)}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-red-600"
-              onClick={() => onDelete(row.id)}
+      field: "actions",
+      headerName: "Actions",
+      width: 65,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return (
+          <Box>
+            <IconButton
+              onClick={(e) => handleMenuOpen(e, row.id)}
+              size="small"
+              aria-label="actions"
             >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-      className: "w-10",
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl) && menuRowId === row.id}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem
+                onClick={() => {
+                  onEdit?.(row); // ✅ trigger parent modal
+                  handleMenuClose();
+                }}
+              >
+                Edit
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  onDelete(row.id);
+                  handleMenuClose();
+                }}
+                sx={{ color: "error.main" }}
+              >
+                Delete
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
+      },
     },
   ];
 
   return (
-    <>
-      <DataTable
+    <Box sx={{ width: "100%", overflowX: "auto" }}>
+      <DataGrid
+        rows={orders}
         columns={columns}
-        data={orders}
+        getRowId={(row) => row.id}
+        autoHeight
+        pageSizeOptions={[5, 10, 25, 50]}
+        paginationModel={{ page: currentPage - 1, pageSize }}
+        onPaginationModelChange={({ page, pageSize }) => {
+          setCurrentPage(page + 1);
+          setPageSize(pageSize);
+        }}
+        rowCount={rowCount}
+        pagination
+        paginationMode="server"
+        loading={loading}
+        sx={{
+          border: "none",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+            fontWeight: 600,
+          },
+          "& .MuiDataGrid-cell": {
+            lineHeight: 1.3,
+            py: 1,
+          },
+        }}
       />
-      {editRow && (
-        <AdminOrderEditModal
-          open={!!editRow}
-          onClose={() => setEditRow(null)}
-          order={editRow}
-          lookup={lookup}
-        />
-      )}
-    </>
+    </Box>
   );
-};
-
-export default AdminOrdersTable;
+}

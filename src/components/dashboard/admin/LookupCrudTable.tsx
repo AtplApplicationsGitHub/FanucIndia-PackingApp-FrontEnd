@@ -1,10 +1,21 @@
-// components/LookupCrudTable.tsx
 "use client";
-
 import React from "react";
-import { DataTable, DataTableColumn } from "@/components/common/DataTable";
-import { Button } from "@/components/ui/button";
-import { Menu } from "@headlessui/react";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridRowId,
+  GridEventListener,
+} from "@mui/x-data-grid";
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Button,
+  Typography,
+  Tooltip,
+} from "@mui/material";
 import {
   MoreVertical,
   Pencil,
@@ -33,7 +44,7 @@ type Props = {
   onSave: (type: string, id: number) => void;
   onRequestDelete: (type: string, id: number) => void;
   onCancel: () => void;
-  onAdd: (type: string) => void; // renamed from onStartAdd
+  onAdd: (type: string) => void;
   addObj: Partial<LookupRow>;
   onAddChange: (
     key: string,
@@ -61,154 +72,318 @@ const LookupCrudTable: React.FC<Props> = ({
   adding,
   refresh,
 }) => {
-  // derive column keys (exclude timestamps)
-  const keys = data[0]
-    ? Object.keys(data[0]).filter(
-        (col) => col !== "createdAt" && col !== "updatedAt"
+  // 1. Preprocess rows: remap "type" column to "_type" for DataGrid only
+  // const safeRows: LookupRow[] = (
+  //   adding ? [...data, { id: ADD_ROW_ID, ...addObj }] : data
+  // ).map((row) => (row.type !== undefined ? { ...row, _type: row.type } : row));
+
+  const safeRows = data;
+
+  // 2. Get all keys, skipping timestamps and the original "type"
+  const keys = safeRows[0]
+    ? Object.keys(safeRows[0]).filter(
+        (col) => col !== "createdAt" && col !== "updatedAt" && col !== "type"
       )
     : [];
 
   const activeEditId = adding ? ADD_ROW_ID : editingId;
-  const rows: LookupRow[] = adding
-    ? [...data, { id: ADD_ROW_ID, ...addObj } as LookupRow]
-    : data;
 
-  const columns: DataTableColumn<LookupRow>[] = keys.map((col) => ({
-    header: col,
-    accessor: col,
-    className: col === "id" ? "text-center" : "",
-    render: (row) => {
-      if (activeEditId === row.id && col !== "id") {
-        const value = row.id === ADD_ROW_ID ? addObj[col] : editObj[col];
-        const handleChange = row.id === ADD_ROW_ID ? onAddChange : onEditChange;
-        return (
-          <input
-            value={typeof value === "boolean" ? String(value) : value ?? ""}
-            onChange={(e) => handleChange(col, e.target.value)}
-            className="border rounded px-2 py-1 bg-white dark:bg-zinc-900 w-full"
-            placeholder={col}
-            disabled={!!editingId && !adding}
-          />
-        );
-      }
+  // 3. Actions menu state
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [menuRowId, setMenuRowId] = React.useState<GridRowId | null>(null);
 
-      if (col === "id") {
-        return row.id === ADD_ROW_ID ? "Auto" : row[col];
-      }
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    rowId: GridRowId
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setMenuRowId(rowId);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuRowId(null);
+  };
 
-      return String(row[col]);
-    },
-  }));
-
-  const actionColumn: DataTableColumn<LookupRow> = {
-    header: "Actions",
-    accessor: "actions",
-    className: "text-center",
-    render: (row) => {
-      if (activeEditId === row.id) {
-        // disable save if new row has missing required fields
-        const isIncomplete =
-          row.id === ADD_ROW_ID &&
-          keys
-            .filter((k) => k !== "id")
-            .some(
-              (k) =>
-                typeof addObj[k] !== "string" || !addObj[k]?.toString().trim()
+  // 4. Column definitions, with _type field mapped to display and edit "type" in your data
+  const columns: GridColDef<LookupRow>[] = [
+    ...keys.map((col) => {
+      // Patch: Prevent field: "type"
+      const field = col === "type" ? "_type" : col;
+      return {
+        field,
+        headerName: col === "id" ? "ID" : col.replace(/([A-Z])/g, " $1"),
+        minWidth: 110,
+        flex: col === "id" ? 0.3 : 1,
+        align: col === "id" ? "center" : "left",
+        headerAlign: col === "id" ? "center" : "left",
+        editable: false,
+        renderCell: (params: GridRenderCellParams<LookupRow>) => {
+          const row = params.row;
+          // For "_type", always map back to "type" for input/edit logic
+          const key = field === "_type" ? "type" : field;
+          if (activeEditId === row.id && field !== "id") {
+            const value = row.id === ADD_ROW_ID ? addObj[key] : editObj[key];
+            const handleChange =
+              row.id === ADD_ROW_ID ? onAddChange : onEditChange;
+            return (
+              <input
+                value={
+                  typeof value === "boolean" ? String(value) : (value ?? "")
+                }
+                onChange={(e) => handleChange(key, e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                }}
+                className="MuiInputBase-input MuiInput-input"
+                style={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 4,
+                  padding: 6,
+                  width: "100%",
+                  background: "inherit",
+                }}
+                placeholder={key}
+              />
             );
-
+          }
+          if (field === "id") {
+            return row.id === ADD_ROW_ID ? (
+              <Typography color="text.secondary" fontStyle="italic">
+                Auto
+              </Typography>
+            ) : (
+              row[field]
+            );
+          }
+          return String(row[field] ?? "");
+        },
+      } as GridColDef<LookupRow>;
+    }),
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 100,
+      sortable: false,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params: GridRenderCellParams<LookupRow>) => {
+        const row = params.row;
+        if (activeEditId === row.id) {
+          const isIncomplete =
+            row.id === ADD_ROW_ID &&
+            keys
+              .filter((k) => k !== "id")
+              .some(
+                (k) =>
+                  typeof addObj[k === "type" ? "type" : k] !== "string" ||
+                  !addObj[k === "type" ? "type" : k]?.toString().trim()
+              );
+          return (
+            <Box display="flex" gap={1} justifyContent="center">
+              <Tooltip title="Save">
+                <span>
+                  <IconButton
+                    color="primary"
+                    onClick={() => onSave(type, row.id)}
+                    disabled={isIncomplete}
+                  >
+                    <Save size={18} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title="Cancel">
+                <IconButton color="inherit" onClick={onCancel}>
+                  <X size={18} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          );
+        }
         return (
-          <div className="flex justify-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => onSave(type, row.id)}
-              disabled={isIncomplete}
-              aria-label="Save"
+          <Box>
+            <IconButton
+              size="small"
+              onClick={(e) => handleMenuOpen(e, row.id)}
+              aria-label="row actions"
             >
-              <Save size={18} />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onCancel}
-              aria-label="Cancel"
-            >
-              <X size={18} />
-            </Button>
-          </div>
-        );
-      }
-
-      return (
-        <div className="flex justify-center">
-          <Menu as="div" className="relative inline-block text-left">
-            <Menu.Button className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800">
               <MoreVertical size={20} />
-            </Menu.Button>
-            <Menu.Items className="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded shadow-lg z-10">
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => onEdit(row.id, row)}
-                    className={`${
-                      active ? "bg-gray-100 dark:bg-zinc-800" : ""
-                    } flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-zinc-200`}
-                  >
-                    <Pencil size={16} className="mr-2" />
-                    Edit
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => onRequestDelete(type, row.id)}
-                    className={`${
-                      active ? "bg-gray-100 dark:bg-zinc-800" : ""
-                    } flex items-center w-full px-4 py-2 text-sm text-red-600`}
-                  >
-                    <Trash2 size={16} className="mr-2" />
-                    Delete
-                  </button>
-                )}
-              </Menu.Item>
-            </Menu.Items>
-          </Menu>
-        </div>
-      );
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl) && menuRowId === row.id}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  onEdit(row.id, row);
+                  handleMenuClose();
+                }}
+              >
+                <Pencil size={16} style={{ marginRight: 10 }} /> Edit
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  onRequestDelete(type, row.id);
+                  handleMenuClose();
+                }}
+                sx={{ color: "error.main" }}
+              >
+                <Trash2 size={16} style={{ marginRight: 10 }} /> Delete
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
+      },
     },
+  ];
+
+  // 5. Keyboard handler to prevent Ctrl+A/Cmd+A select-all from toggling row selection while editing
+  const handleCellKeyDown: GridEventListener<"cellKeyDown"> = (
+    params,
+    event
+  ) => {
+    const isCtrlA =
+      (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a";
+    if (isCtrlA && params.isEditable) {
+      event.stopPropagation(); // Prevent DataGrid from toggling all row selection in edit mode
+    }
   };
 
   return (
-    <div className="w-full">
-      <div className="flex justify-end items-center mb-4 gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onAdd(type)}
-          disabled={adding}
-          aria-label={`Add ${type}`}
-        >
-          <PlusCircle size={18} className="mr-2" />
-          Add
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={refresh}
-          aria-label="Refresh"
-        >
-          <RefreshCcw size={18} className="mr-2" />
-          Refresh
-        </Button>
-      </div>
+    <Box sx={{ width: "100%" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        {/* Add Row Inputs (if adding is true) */}
+        {adding && (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            {keys
+              .filter((key) => key !== "id")
+              .map((key) => (
+                <input
+                  key={key}
+                  value={
+                    typeof addObj[key] === "boolean"
+                      ? String(addObj[key])
+                      : (addObj[key] ?? "")
+                  }
+                  onChange={(e) => onAddChange(key, e.target.value)}
+                  placeholder={key}
+                  className="MuiInputBase-input MuiInput-input"
+                  style={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 4,
+                    padding: 6,
+                    width: 120,
+                    background: "inherit",
+                  }}
+                />
+              ))}
+            <IconButton
+              color="primary"
+              onClick={() => onSave(type, ADD_ROW_ID)}
+              disabled={keys
+                .filter((k) => k !== "id")
+                .some(
+                  (k) =>
+                    typeof addObj[k] !== "string" ||
+                    !addObj[k]?.toString().trim()
+                )}
+            >
+              <Save size={18} />
+            </IconButton>
+            <IconButton color="inherit" onClick={onCancel}>
+              <X size={18} />
+            </IconButton>
+          </Box>
+        )}
 
-      <DataTable<LookupRow>
-        columns={[...columns, actionColumn]}
-        data={rows}
-        emptyText="No items found."
+        {/* Ghost Buttons on the right */}
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Button
+            size="small"
+            startIcon={<PlusCircle size={18} />}
+            onClick={() => onAdd(type)}
+            disabled={adding}
+            sx={{
+              color: (theme) => theme.palette.text.primary,
+              "&:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              borderRadius: 0,
+            }}
+          >
+            Add
+          </Button>
+
+          <Button
+            size="small"
+            startIcon={<RefreshCcw size={18} />}
+            onClick={refresh}
+            sx={{
+              color: (theme) => theme.palette.text.primary,
+              "&:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+              borderRadius: 0,
+            }}
+          >
+            Refresh
+          </Button>
+        </Box>
+      </Box>
+      <DataGrid
+        autoHeight
+        rows={safeRows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        pagination
+        pageSizeOptions={[5, 10, 25, 50]}
+        disableRowSelectionOnClick
+        sx={{
+          border: "none",
+          bgcolor: "background.paper",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+            fontWeight: 600,
+          },
+          "& .MuiDataGrid-cell": {
+            py: 1,
+            lineHeight: 1.3,
+          },
+        }}
+        localeText={{
+          noRowsLabel: (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+              No items found.
+            </Typography>
+          ) as unknown as string,
+        }}
+        onCellKeyDown={handleCellKeyDown}
       />
-    </div>
+    </Box>
   );
 };
 

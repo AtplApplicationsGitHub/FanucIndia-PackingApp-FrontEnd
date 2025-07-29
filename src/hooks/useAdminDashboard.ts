@@ -19,6 +19,9 @@ export function useAdminDashboard() {
   const [view, setView] = useState<"" | "orders" | "master" | "manage">("");
   const [error, setError] = useState<string>("");
 
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   // ----------------- ORDERS STATE ------------------
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [lookup, setLookup] = useState<Lookup>({
@@ -31,7 +34,7 @@ export function useAdminDashboard() {
     customers: [],
   });
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalOrders, setTotalOrders] = useState<number>(0);
   const [editingCell, setEditingCell] = useState<{
     id: number;
@@ -239,13 +242,15 @@ export function useAdminDashboard() {
   };
 
   const onOrderDelete = async (id: number) => {
+    setDeleteLoading(true); // <--- add this
+    setDeleteError(null); // <--- add this
+
     try {
       const token = localStorage.getItem("token");
       await axios.delete(API.ADMIN.SALES_ORDER_BY_ID(id), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Order deleted successfully.");
-      fetchOrders(); // Or your refresh logic
+      fetchOrders();
     } catch (error: unknown) {
       let message = "Delete failed.";
       if (axios.isAxiosError(error)) {
@@ -257,7 +262,9 @@ export function useAdminDashboard() {
       } else if (error instanceof Error) {
         message = error.message;
       }
-      toast.error(message);
+      setDeleteError(message);
+    } finally {
+      setDeleteLoading(false); 
     }
   };
 
@@ -572,10 +579,12 @@ export function useAdminDashboard() {
 
     // Orders
     orders,
+    setOrders,
     lookup,
     currentPage,
     setCurrentPage,
     pageSize,
+    setPageSize,
     totalOrders,
     editingCell,
     editValue,
@@ -585,7 +594,8 @@ export function useAdminDashboard() {
     cancelCellEdit,
     handleInputKeyDown,
     loading,
-    updateOrderModal, // For edit modal
+    updateOrderModal,
+    fetchOrders,
 
     // Search UI state
     searchInput,
@@ -599,6 +609,8 @@ export function useAdminDashboard() {
     handleClearFilters,
 
     onOrderDelete,
+    deleteError,
+    deleteLoading,
 
     // Master lookup
     selectedMasterLookup,

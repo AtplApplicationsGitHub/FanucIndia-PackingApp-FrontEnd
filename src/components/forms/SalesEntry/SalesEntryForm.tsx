@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import Button from "@mui/material/Button";
 import { useSalesForm } from "@/hooks/useSalesForm";
 import { SalesOrder, LookupData } from "@/types/sales";
 import ProductSelect from "@/components/forms/SalesEntry/ProductSelect";
@@ -14,6 +14,7 @@ import PackConfigSelect from "@/components/forms/SalesEntry/PackConfigSelect";
 import PaymentClearanceToggle from "@/components/forms/SalesEntry/PaymentClearanceToggle";
 import CustomerSelect from "@/components/forms/SalesEntry/CustomerSelect";
 import RemarksTextarea from "@/components/forms/SalesEntry/RemarksTextarea";
+import Alert from "@mui/material/Alert";
 
 interface SalesEntryFormProps {
   initialData?: SalesOrder | null;
@@ -42,8 +43,9 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   onSuccess,
 }) => {
   const [form, setForm] = useState(DEFAULT_FORM);
-  const { handleSubmit, submitting, errors } = useSalesForm(onSuccess);
+  const { handleSubmit, submitting, errors, alert, clearAlert } = useSalesForm();
 
+  // Autofill form in edit mode when lookup and initialData are loaded
   useEffect(() => {
     if (
       initialData &&
@@ -79,6 +81,16 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
     lookup.customers,
   ]);
 
+  // Show alert for 2 seconds on success before closing modal
+  useEffect(() => {
+    if (alert && alert.severity === "success") {
+      const timer = setTimeout(() => {
+        onSuccess();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [alert, onSuccess]);
+
   const onChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -90,6 +102,16 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
 
   return (
     <form onSubmit={onSubmit}>
+      {alert && (
+        <Alert
+          severity={alert.severity}
+          onClose={clearAlert}
+          sx={{ mb: 2, width: "100%" }}
+        >
+          {alert.message}
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProductSelect
           value={form.productId}
@@ -165,8 +187,19 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         />
       </div>
       <div className="pt-6 flex justify-end">
-        <Button type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : initialData ? "Update" : "Create"}
+        <Button
+          type="submit"
+          disableElevation
+          sx={{
+            color: (theme) => theme.palette.text.primary,
+            "&:hover": {
+              backgroundColor: (theme) => theme.palette.action.hover,
+            },
+            borderRadius: 0,
+          }}
+          disabled={submitting}
+        >
+          {submitting ? "Submitting…" : initialData ? "Update" : "Create"}
         </Button>
       </div>
     </form>

@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { toast } from "sonner";
 import { API } from "@/lib/api";
 import { SalesOrder, LookupData } from "@/types/sales";
-
-const PAGE_SIZE = 10;
 
 export function useSalesDashboard() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // State
+  const [pageSize, setPageSize] = useState(10);
+
+  const [totalOrders, setTotalOrders] = useState(0);
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [lookup, setLookup] = useState<LookupData>({
     products: [],
@@ -31,50 +30,59 @@ export function useSalesDashboard() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Search state
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Auth guard
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) router.replace("/login");
-  }, [router]);
+  const [alert, setAlert] = useState<{
+    severity: "success" | "error" | "info" | "warning";
+    message: string;
+  } | null>(null);
 
-  // Load user name
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        setUserName(JSON.parse(stored).name || "");
-      } catch {}
+    if (alert) {
+      const timeout = setTimeout(() => setAlert(null), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [alert]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedSize = localStorage.getItem("pageSize");
+      if (storedSize && !isNaN(Number(storedSize))) {
+        setPageSize(Number(storedSize));
+      }
     }
   }, []);
 
-  // Fetch lookups
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (!token) router.replace("/login");
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          setUserName(JSON.parse(stored).name || "");
+        } catch {}
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
     setLookupsLoading(true);
     setError("");
     Promise.all([
-      axios.get(API.LOOKUP.PRODUCTS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.TRANSPORTERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.PLANT_CODES, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.SALES_ZONES, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.PACK_CONFIGS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.CUSTOMERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
+      axios.get(API.LOOKUP.PRODUCTS, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.TRANSPORTERS, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.PLANT_CODES, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.SALES_ZONES, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.PACK_CONFIGS, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.CUSTOMERS, { headers: { Authorization: `Bearer ${token}` } }),
     ])
       .then(([p, t, pc, sz, pk, c]) =>
         setLookup({
@@ -90,29 +98,46 @@ export function useSalesDashboard() {
       .finally(() => setLookupsLoading(false));
   }, []);
 
-  // Fetch orders with search
-  const fetchOrders = useCallback(() => {
-    const token = localStorage.getItem("token");
-    setLoading(true);
-    axios
-      .get(API.SALES.CREATE_ORDER, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { search: searchTerm || undefined },
-      })
-      .then((res) => {
-        setOrders(res.data || []);
-        setCurrentPage(1);
-      })
-      .catch(() => setError("Failed to fetch orders."))
-      .finally(() => setLoading(false));
-  }, [searchTerm]);
+  const fetchOrders = useCallback(
+    (page = currentPage, size = pageSize) => {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+      setLoading(true);
+      axios
+        .get(API.SALES.CREATE_ORDER, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            search: searchTerm || undefined,
+            page,
+            limit: size,
+          },
+        })
+        .then((res) => {
+          setOrders(res.data.orders || []);
+          setTotalOrders(res.data.totalCount || 0);
+        })
+        .catch(() => {
+          setAlert({ severity: "error", message: "Failed to fetch orders." });
+          setError("Failed to fetch orders.");
+        })
+        .finally(() => setLoading(false));
+    },
+    [searchTerm, currentPage, pageSize]
+  );
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchOrders(currentPage, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, fetchOrders]);
 
-  // File
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchOrders(1, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
   const handleDownloadTemplate = useCallback(async () => {
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(API.SALES.TEMPLATE, {
@@ -131,7 +156,7 @@ export function useSalesDashboard() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch {
-      toast.error("Failed to download template");
+      setAlert({ severity: "error", message: "Failed to download template" });
     }
   }, []);
 
@@ -143,6 +168,7 @@ export function useSalesDashboard() {
     const file = input.files[0];
 
     try {
+      if (typeof window === "undefined") return;
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", file);
@@ -151,81 +177,96 @@ export function useSalesDashboard() {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        validateStatus: (status) => status >= 200 && status < 300, 
+        validateStatus: (status) => status >= 200 && status < 300,
       });
 
-      toast.success("Bulk import successful!");
+      setAlert({ severity: "success", message: "Bulk import successful!" });
       await fetchOrders();
     } catch (err) {
-      toast.error("Bulk import failed. Check your file and try again.");
-      console.error(err);
+      setAlert({
+        severity: "error",
+        message: "Bulk import failed. Check your file and try again.",
+      });
     } finally {
       if (input) input.value = "";
     }
   }, [fetchOrders]);
 
-  // Delete
   const handleDelete = async () => {
     if (!deletingId) return;
     setDeleteLoading(true);
     setDeleteError(null);
     try {
+      if (typeof window === "undefined") return;
       const token = localStorage.getItem("token");
       await axios.delete(`${API.SALES.CREATE_ORDER}/${deletingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeletingId(null);
       fetchOrders();
+      setAlert({ severity: "success", message: "Order deleted successfully." });
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setDeleteError(
           err.response?.data?.message || "Delete failed. Try again."
         );
+        setAlert({
+          severity: "error",
+          message:
+            err.response?.data?.message || "Delete failed. Try again.",
+        });
       } else if (err instanceof Error) {
         setDeleteError(err.message);
+        setAlert({ severity: "error", message: err.message });
       } else {
         setDeleteError("Delete failed. Try again.");
+        setAlert({
+          severity: "error",
+          message: "Delete failed. Try again.",
+        });
       }
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  // Logout
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
     router.replace("/login");
   };
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
-  const pagedOrders = orders.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [orders, currentPage, totalPages]);
-
-  // Modals
   const handleEdit = (order: SalesOrder) => {
     setEditingOrder(order);
     setShowForm(true);
   };
+
   const handleCreate = () => {
     setEditingOrder(null);
     setShowForm(true);
   };
+
   const handleModalClose = () => {
     setShowForm(false);
     setEditingOrder(null);
   };
+
   const handleDeleteModalClose = () => setDeletingId(null);
+
+  const handleSetPageSize = (size: number) => {
+    setPageSize(size);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pageSize", size.toString());
+    }
+  };
 
   return {
     orders,
-    pagedOrders,
+    pageSize,
+    setPageSize: handleSetPageSize,
+    totalOrders,
     lookup,
     loading,
     lookupsLoading,
@@ -234,7 +275,6 @@ export function useSalesDashboard() {
     searchTerm,
     setSearchTerm,
     currentPage,
-    totalPages,
     setCurrentPage,
     showForm,
     setShowForm,
@@ -254,5 +294,7 @@ export function useSalesDashboard() {
     handleFileChange,
     handleModalClose,
     fetchOrders,
+    alert,
+    setAlert,
   };
 }

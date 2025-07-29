@@ -1,27 +1,33 @@
 "use client";
+
 import React from "react";
-import AnimatedPage from "@/components/common/AnimatedPage";
-import { Card } from "@/components/ui/card";
-import { Modal } from "@/components/ui/Modal";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import MUICard from "@mui/material/Card";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+
 import SalesDashboardHeader from "@/components/dashboard/sales/SalesDashboardHeader";
 import SalesDashboardToolbar from "@/components/dashboard/sales/SalesDashboardToolbar";
 import SalesOrdersTable from "@/components/dashboard/sales/SalesOrdersTable";
-import SalesEntryForm from "@/components/forms/SalesEntry/SalesEntryForm";
-import TablePagination from "@/components/common/TablePagination";
-import { useSalesDashboard } from "@/hooks/useSalesDashboard";
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
+import AnimatedPage from "@/components/common/AnimatedPage";
+import { useSalesDashboard } from "@/hooks/useSalesDashboard";
+import SalesEntryDialog from "@/components/forms/SalesEntry/SalesEntryDialog";
 
 export default function SalesDashboard() {
   const {
-    pagedOrders,
+    orders,
     lookup,
     error,
     userName,
     searchTerm,
     setSearchTerm,
     currentPage,
-    totalPages,
     setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalOrders,
     showForm,
     editingOrder,
     handleEdit,
@@ -39,62 +45,92 @@ export default function SalesDashboard() {
     handleFileChange,
     handleModalClose,
     fetchOrders,
+    alert,
+    setAlert,
   } = useSalesDashboard();
 
   if (error)
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-lg text-red-600">
-        {error}
-      </div>
+      <Box
+        minHeight="40vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography color="error" fontSize="1.25rem">
+          {error}
+        </Typography>
+      </Box>
     );
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-background p-0 w-full">
+      <Box minHeight="100vh" bgcolor="background.default" width="100%">
+        <Snackbar
+          open={!!alert}
+          autoHideDuration={2000}
+          onClose={() => setAlert(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          {alert ? (
+            <Alert
+              onClose={() => setAlert(null)}
+              severity={alert.severity}
+              sx={{ width: "100%" }}
+            >
+              {alert.message}
+            </Alert>
+          ) : undefined}
+        </Snackbar>
+
         <SalesDashboardHeader userName={userName} />
-        <div className="py-8 w-full grid grid-cols-12 gap-0">
-          <div className="col-span-12">
-            <SalesDashboardToolbar
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
-              onCreate={handleCreate}
-              onDownload={handleDownloadTemplate}
-              onBulkUpload={handleBulkUpload}
-              fileInputRef={fileInputRef}
-              onFileChange={handleFileChange}
+
+        <Box py={4} width="100%">
+          <SalesDashboardToolbar
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            onCreate={handleCreate}
+            onDownload={handleDownloadTemplate}
+            onBulkUpload={handleBulkUpload}
+            fileInputRef={fileInputRef}
+            onFileChange={handleFileChange}
+          />
+
+          {orders.length === 0 ? (
+            <MUICard
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "40vh",
+                width: "100%",
+                boxShadow: 6,
+                borderRadius: 4,
+                fontSize: "2rem",
+                fontWeight: 600,
+                color: "text.secondary",
+                bgcolor: "background.paper",
+              }}
+            >
+              No orders found.
+            </MUICard>
+          ) : (
+            <SalesOrdersTable
+              orders={orders}
+              lookup={lookup}
+              totalOrders={totalOrders}
+              onEdit={handleEdit}
+              onDelete={setDeletingId}
+              paginationModel={{ page: currentPage - 1, pageSize }}
+              onPaginationModelChange={({ page, pageSize }) => {
+                setCurrentPage(page + 1); // MUI uses 0-based index
+                setPageSize(pageSize);
+                fetchOrders(page + 1, pageSize);
+              }}
             />
+          )}
+        </Box>
 
-            {pagedOrders.length === 0 ? (
-              <Card className="flex items-center justify-center h-[40vh] w-full shadow-lg rounded-2xl text-2xl font-semibold text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-900">
-                No orders found.
-              </Card>
-            ) : (
-              <SalesOrdersTable
-                orders={pagedOrders}
-                lookup={lookup}
-                currentPage={currentPage}
-                pageSize={10}
-                onEdit={handleEdit}
-                onDelete={setDeletingId}
-              />
-            )}
-
-            <div className="flex justify-between items-center mt-4 px-2">
-              <span className="text-sm text-gray-700">
-                Showing {(currentPage - 1) * 10 + 1} to{" "}
-                {Math.min(currentPage * 10, pagedOrders.length)} of{" "}
-                {pagedOrders.length} orders
-              </span>
-              <TablePagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Delete Modal */}
         <ConfirmDeleteDialog
           open={deletingId !== null}
           onCancel={handleDeleteModalClose}
@@ -106,36 +142,34 @@ export default function SalesDashboard() {
               Are you sure you want to delete this item? This action cannot be
               undone.
               {deleteError && (
-                <div className="text-xs text-red-600 mt-2">{deleteError}</div>
+                <Typography
+                  variant="caption"
+                  color="error"
+                  display="block"
+                  mt={2}
+                >
+                  {deleteError}
+                </Typography>
               )}
             </>
           }
         />
 
-        {/* Entry Form Modal */}
-        <Modal
+        <SalesEntryDialog
           open={showForm}
-          onOpenChange={(open) => {
-            setShowForm(open);
-            if (!open) handleModalClose();
+          onClose={() => {
+            setShowForm(false);
+            handleModalClose();
           }}
-          title={editingOrder ? "Edit Sales Entry" : "Create Sales Entry"}
-          description="..."
-        >
-          {showForm && (
-            <SalesEntryForm
-              key={editingOrder ? `edit-${editingOrder.id}` : "create"}
-              initialData={editingOrder || undefined}
-              lookup={lookup}
-              onSuccess={() => {
-                setShowForm(false);
-                handleModalClose();
-                fetchOrders();
-              }}
-            />
-          )}
-        </Modal>
-      </div>
+          initialData={editingOrder || undefined}
+          lookup={lookup}
+          onSuccess={() => {
+            setShowForm(false);
+            handleModalClose();
+            fetchOrders();
+          }}
+        />
+      </Box>
     </AnimatedPage>
   );
 }

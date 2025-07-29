@@ -1,73 +1,79 @@
-import { useState } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { RequiredLabel } from "@/components/common/RequiredLabel";
+import * as React from 'react';
+import dayjs, { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import Box from '@mui/material/Box';
 
 type Props = {
   value: string;
   onChange: (field: string, value: string) => void;
   error?: string;
+  required?: boolean;
 };
 
-const DeliveryDatePicker: React.FC<Props> = ({ value, onChange, error }) => {
-  const [open, setOpen] = useState(false);
-  const date = value ? new Date(value) : null;
-
-  // Today at midnight
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Year range: current year to +50 years
-  const currentYear = today.getFullYear();
-  const maxYear = currentYear + 50;
-
-  const handleSelect = (date: Date | undefined) => {
-    if (date) {
-      onChange("deliveryDate", date.toISOString());
-      setOpen(false);
-    }
-  };
+const DeliveryDatePicker: React.FC<Props> = ({
+  value,
+  onChange,
+  error,
+  required = true,
+}) => {
+  const today  = React.useMemo(() => dayjs().startOf('day'), []);
+  const maxDate = React.useMemo(() => dayjs().add(50, 'year').endOf('day'), []);
+  const dateValue: Dayjs | null = value ? dayjs(value) : null;
 
   return (
-    <div className="flex flex-col gap-1">
-      <RequiredLabel>Required Date of Delivery</RequiredLabel>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="w-full rounded-md border px-3 py-2 text-left text-sm shadow-sm flex items-center"
-          >
-            <span className="flex-1">
-              {date ? (
-                format(date, "dd-MMM-yyyy")
-              ) : (
-                <span className="text-muted-foreground">Pick a date</span>
-              )}
-            </span>
-            <CalendarIcon className="ml-2 h-4 w-4 opacity-50" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={date || undefined}
-            onSelect={handleSelect}
-            disabled={(date) => date < today}
-            captionLayout="dropdown"
-            fromYear={currentYear}
-            toYear={maxYear}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-    </div>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ width: '100%' }}>
+        <DesktopDatePicker
+          label="Required Date of Delivery"
+          value={dateValue}
+          onChange={(newDate, _ctx) => {
+            const isoString =
+              newDate && dayjs.isDayjs(newDate) && newDate.isValid()
+                ? newDate.toISOString()
+                : '';
+            onChange('deliveryDate', isoString);
+          }}
+          minDate={today}
+          maxDate={maxDate}
+          disablePast
+          slotProps={{
+            field: {
+              clearable: true,
+              onClear: () => onChange('deliveryDate', ''),
+            },
+            textField: {
+              required,
+              error: !!error,
+              helperText: error,
+              size: 'small',
+              autoComplete: 'off',
+              InputLabelProps: { required },
+              fullWidth: true,
+              sx: {
+                mb: 1,
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  borderRadius: '0.5rem', 
+                  backgroundColor: (theme) => theme.palette.background.paper,
+                },
+                '& .MuiInputLabel-root': { fontWeight: 500, fontSize: 15 },
+                '& .MuiFormLabel-asterisk': { color: '#dc2626' },
+              },
+            },
+          }}
+          format="DD-MMM-YYYY"
+          sx={{
+            width: '100%',
+            '& .MuiInputBase-root': {
+              borderRadius: '0.5rem',
+              backgroundColor: (theme) => theme.palette.background.paper,
+            },
+          }}
+        />
+      </Box>
+    </LocalizationProvider>
   );
 };
 

@@ -2,23 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/auth";
-import { toast } from "sonner";
 import { useState } from "react";
-import clsx from "clsx";
-import { Button } from "@/components/ui/button";
+import { Button, CircularProgress } from "@mui/material";
 import { LogOut } from "lucide-react";
 
 interface LogoutButtonProps {
-  /** Additional Tailwind or custom classes */
-  className?: string;
-  /** ShadCN button variant (e.g. 'link', 'ghost', 'redOutline', etc.) */
-  variant?: React.ComponentProps<typeof Button>["variant"];
+  sx?: object;
 }
 
-export default function LogoutButton({
-  className,
-  variant = "redOutline",
-}: LogoutButtonProps) {
+export default function LogoutButton({ sx = {} }: LogoutButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -26,10 +18,7 @@ export default function LogoutButton({
     setLoading(true);
     try {
       await logoutUser();
-      toast.success("You have been logged out.");
-      router.replace("/login");
-    } catch {
-      toast.error("Logout failed. Please try again.");
+      router.replace("/login?loggedout=1");
     } finally {
       setLoading(false);
     }
@@ -37,16 +26,37 @@ export default function LogoutButton({
 
   return (
     <Button
-      onClick={handleLogout}
-      disabled={loading}
-      variant={variant}
-      className={clsx(
-        "rounded-none px-6 py-2 mr-10",
-        className
+  variant="outlined"
+  color="error"
+  size="small" 
+  sx={{
+    borderColor: "error.main",
+    color: "error.main",
+    fontWeight: 700,
+    minWidth: 120,
+    minHeight: 32,
+    height: 36,
+    py: 0,
+    px: 2.5,
+    mr: 4,
+    borderRadius: 1.5,
+    fontSize: 16, 
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: "error.dark",
+      color: "error.dark",
+      background: "rgba(244, 67, 54, 0.04)",
+      boxShadow: "none",
+    },
+  }}
+  onClick={handleLogout}
+  startIcon={!loading && <LogOut size={18} />}
+>
+      {loading ? (
+        <CircularProgress size={18} thickness={5} color="inherit" />
+      ) : (
+        "Logout"
       )}
-    >
-      <LogOut className="mr-2 h-4 w-4" />
-      {loading ? "LOGGING OUT..." : "LOGOUT"}
     </Button>
   );
 }

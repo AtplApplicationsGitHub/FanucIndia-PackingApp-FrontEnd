@@ -1,11 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/common/theme-provider";
-import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { Toaster } from "sonner";
-import { InitialTransitionPreload } from "@/components/common/InitialTransitionPreload";
+import ThemeRegistry from "@/components/common/ThemeRegistry";
+import AppProviders from "@/components/common/AppProviders";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,14 +20,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          inter.className,
-          "min-h-screen bg-background antialiased"
-        )}
-      >
-        <InitialTransitionPreload />
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <head>
+        {/* Inline script to prevent theme flicker */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  try {
+    const mode = localStorage.getItem('color-mode');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const effective = mode === 'dark' || (!mode && prefersDark) ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = effective;
+    document.body.style.backgroundColor = effective === 'dark' ? '#121212' : '#ffffff';
+  } catch (e) {}
+})();
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className}>
+        <ThemeRegistry>
+          <AppProviders>
+          <div className="absolute top-4 right-4 z-50">
+            <ThemeToggle />
+          </div>
           {children}
           <Toaster
             richColors
@@ -37,8 +52,8 @@ export default function RootLayout({
             duration={3000}
             expand={true}
           />
-          <ThemeToggle />
-        </ThemeProvider>
+          </AppProviders>
+        </ThemeRegistry>
       </body>
     </html>
   );

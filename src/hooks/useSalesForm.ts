@@ -1,17 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "sonner";
 import { API } from "@/lib/api";
 
-export const useSalesForm = (onSuccess: () => void) => {
+export type AlertState = {
+  severity: "success" | "error";
+  message: string;
+} | null;
+
+export const useSalesForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [alert, setAlert] = useState<AlertState>(null);
+
+  // Show a native popup whenever alert message is set
+  useEffect(() => {
+    if (alert?.message) {
+      window.alert(alert.message);
+    }
+  }, [alert]);
 
   const handleSubmit = async (
     form: Record<string, unknown>,
     isEdit: boolean,
     id?: number
   ) => {
+    setAlert(null);
+
+    // 1. Client-side validation for required fields
+    const newErrors: Record<string, string> = {};
+
+    if (!form.productId) {
+      newErrors.productId = "Product is required";
+    }
+    if (!form.saleOrderNumber) {
+      newErrors.saleOrderNumber = "Sale Order Number is required";
+    }
+    if (!form.outboundDelivery) {
+      newErrors.outboundDelivery = "Out Bound Delivery is required";
+    }
+    if (!form.transferOrder) {
+      newErrors.transferOrder = "Transfer Order is required";
+    }
+    if (!form.deliveryDate) {
+      newErrors.deliveryDate = "Delivery Date is required";
+    }
+    if (
+      form.paymentClearance !== "true" &&
+      form.paymentClearance !== "false" &&
+      form.paymentClearance !== true &&
+      form.paymentClearance !== false
+    ) {
+      newErrors.paymentClearance = "Please select payment clearance";
+    }
+    if (!form.transporterId) {
+      newErrors.transporterId = "Transporter is required";
+    }
+    if (!form.plantCodeId) {
+      newErrors.plantCodeId = "Delivery Plant Code is required";
+    }
+    if (!form.salesZoneId) {
+      newErrors.salesZoneId = "Sales Zone is required";
+    }
+    if (!form.packConfigId) {
+      newErrors.packConfigId = "Packing Configuration is required";
+    }
+    if (!form.customerId) {
+      newErrors.customerId = "Customer is required";
+    }
+    // specialRemarks is optional
+
+    // If validation errors exist, set them and abort
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // 2. No validation errors → proceed with submission
     setSubmitting(true);
     setErrors({});
 
@@ -28,7 +92,6 @@ export const useSalesForm = (onSuccess: () => void) => {
           form.paymentClearance === "true" || form.paymentClearance === true,
       };
 
-      // Get token before request
       const token = localStorage.getItem("token");
 
       if (isEdit && id) {
@@ -38,7 +101,7 @@ export const useSalesForm = (onSuccess: () => void) => {
             "Content-Type": "application/json",
           },
         });
-        toast.success("Sales entry updated.");
+        setAlert({ severity: "success", message: "Sales entry updated." });
       } else {
         await axios.post(API.SALES.CREATE_ORDER, payload, {
           headers: {
@@ -46,23 +109,22 @@ export const useSalesForm = (onSuccess: () => void) => {
             "Content-Type": "application/json",
           },
         });
-        toast.success("Sales entry created.");
+        setAlert({ severity: "success", message: "Sales entry created." });
       }
 
-      onSuccess();
+      // DO NOT call onSuccess() here! Let the parent/form handle modal close.
     } catch (error: unknown) {
-      // Safe axios error handling
+      let msg = "Something went wrong.";
       if (axios.isAxiosError(error)) {
         console.log(error.response?.data);
-        toast.error("Something went wrong.");
         if (error.response?.data?.errors) {
           setErrors(error.response.data.errors);
         }
+        msg = error.response?.data?.message || msg;
       } else if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Something went wrong.");
+        msg = error.message;
       }
+      setAlert({ severity: "error", message: msg });
     } finally {
       setSubmitting(false);
     }
@@ -72,5 +134,7 @@ export const useSalesForm = (onSuccess: () => void) => {
     handleSubmit,
     submitting,
     errors,
+    alert,
+    clearAlert: () => setAlert(null),
   };
 };

@@ -1,112 +1,180 @@
-import { DataTable, DataTableColumn } from "@/components/common/DataTable";
+import * as React from "react";
+import Box from "@mui/material/Box";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { SalesOrder, LookupData } from "@/types/sales";
 import { findName, formatDate } from "@/utils/sales-helpers";
+import { IconButton, Menu, MenuItem } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 type Props = {
   orders: SalesOrder[];
   lookup: LookupData;
-  currentPage: number;
-  pageSize: number;
+  totalOrders: number;
   onEdit: (order: SalesOrder) => void;
   onDelete: (id: number) => void;
+  paginationModel: GridPaginationModel;
+  onPaginationModelChange: (model: GridPaginationModel) => void;
 };
 
-const SalesOrdersTable: React.FC<Props> = ({
+export default function SalesOrdersTable({
   orders,
   lookup,
-  currentPage,
-  pageSize,
+  totalOrders,
   onEdit,
   onDelete,
-}) => {
-  const columns: DataTableColumn<SalesOrder>[] = [
+  paginationModel,
+  onPaginationModelChange,
+}: Props) {
+  const columns: GridColDef<SalesOrder>[] = [
     {
-      header: "S.I No",
-      accessor: "id",
-      render: (_, i) => (currentPage - 1) * pageSize + i + 1,
+      field: "si",
+      headerName: "S.I No",
+      width: 60,
+      valueGetter: (_value, row) =>
+        paginationModel.page * paginationModel.pageSize +
+        orders.findIndex((o) => o.id === row.id) +
+        1,
     },
     {
-      header: "Product",
-      accessor: "productId",
-      render: (row) => findName(lookup.products, row.productId),
+      field: "productId",
+      headerName: "Product",
+      width: 110,
+      valueGetter: (_value, row) => findName(lookup.products, row.productId),
+    },
+    { field: "saleOrderNumber", headerName: "Sale Order Number", width: 110 },
+    { field: "outboundDelivery", headerName: "OutBound Delivery", width: 110 },
+    { field: "transferOrder", headerName: "Transfer Order", width: 110 },
+    {
+      field: "deliveryDate",
+      headerName: "Required Date of Delivery",
+      width: 110,
+      valueGetter: (_value, row) =>
+        row.deliveryDate ? formatDate(row.deliveryDate) : "-",
     },
     {
-      header: "Sales No",
-      accessor: "saleOrderNumber",
+      field: "transporterId",
+      headerName: "Transporter",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.transporters, row.transporterId),
     },
     {
-      header: "OB Delivery",
-      accessor: "outboundDelivery",
+      field: "plantCodeId",
+      headerName: "Plant Code",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.plantCodes, row.plantCodeId, "code"),
     },
     {
-      header: "Transfer",
-      accessor: "transferOrder",
+      field: "paymentClearance",
+      headerName: "Payment Clearance",
+      width: 70,
+      valueGetter: (_value, row) => (row.paymentClearance ? "Yes" : "No"),
     },
     {
-      header: "Req. Date",
-      accessor: "deliveryDate",
-      render: (row) => (row.deliveryDate ? formatDate(row.deliveryDate) : "-"),
+      field: "salesZoneId",
+      headerName: "Sales Zone",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.salesZones, row.salesZoneId),
     },
     {
-      header: "Transporter",
-      accessor: "transporterId",
-      render: (row) => findName(lookup.transporters, row.transporterId),
-    },
-    {
-      header: "Plant Code",
-      accessor: "plantCodeId",
-      render: (row) => findName(lookup.plantCodes, row.plantCodeId, "code"),
-    },
-    {
-      header: "Pay",
-      accessor: "paymentClearance",
-      render: (row) => (row.paymentClearance ? "Yes" : "No"),
-    },
-    {
-      header: "Sales Zone",
-      accessor: "salesZoneId",
-      render: (row) => findName(lookup.salesZones, row.salesZoneId),
-    },
-    {
-      header: "Pack Config",
-      accessor: "packConfigId",
-      render: (row) =>
+      field: "packConfigId",
+      headerName: "Packing Configuration",
+      width: 110,
+      valueGetter: (_value, row) =>
         findName(lookup.packConfigs, row.packConfigId, "configName"),
     },
     {
-      header: "Customer",
-      accessor: "customerId",
-      render: row => findName(lookup.customers, row.customerId, "name"),
+      field: "customerId",
+      headerName: "Customer",
+      width: 110,
+      valueGetter: (_value, row) =>
+        findName(lookup.customers, row.customerId, "name"),
     },
     {
-      header: "Remarks",
-      accessor: "specialRemarks",
-      render: (row) => row.specialRemarks || "-",
+      field: "specialRemarks",
+      headerName: "Special Remarks",
+      width: 160,
+      valueGetter: (_value, row) => row.specialRemarks || "-",
     },
     {
-      header: "Status",
-      accessor: "status",
-      render: (row) => row.status || "-",
+      field: "status",
+      headerName: "Status",
+      width: 70,
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 70,
+      sortable: false,
+      renderCell: (params) => {
+        const row = params.row as SalesOrder;
+        const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+        const open = Boolean(anchorEl);
+
+        const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+          setAnchorEl(event.currentTarget);
+        };
+
+        const handleMenuClose = () => {
+          setAnchorEl(null);
+        };
+
+        const handleEdit = () => {
+          onEdit(row);
+          handleMenuClose();
+        };
+
+        const handleDelete = () => {
+          onDelete(row.id);
+          handleMenuClose();
+        };
+
+        return (
+          <Box>
+            <IconButton onClick={handleMenuOpen} size="small">
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem onClick={handleEdit}>Edit</MenuItem>
+              <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+                Delete
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
+      },
     },
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={orders}
-      rowActions={[
-        {
-          label: "Edit",
-          onClick: onEdit,
-        },
-        {
-          label: "Delete",
-          onClick: (row) => onDelete(row.id),
-          danger: true,
-        },
-      ]}
-    />
+    <Box sx={{ width: "100%", overflowX: "auto" }}>
+      <DataGrid
+        rows={orders}
+        columns={columns}
+        getRowId={(row) => row.id}
+        autoHeight
+        disableRowSelectionOnClick
+        paginationModel={paginationModel}
+        onPaginationModelChange={onPaginationModelChange}
+        rowCount={totalOrders}
+        paginationMode="server"
+        pageSizeOptions={[5, 10, 25, 50]}
+        sx={{
+          border: "none",
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+            fontWeight: 600,
+          },
+        }}
+      />
+    </Box>
   );
-};
-
-export default SalesOrdersTable;
+}

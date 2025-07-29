@@ -1,41 +1,57 @@
 "use client";
 
+import * as React from "react";
 import AnimatedPage from "@/components/common/AnimatedPage";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import TablePagination from "@/components/common/TablePagination";
+  Box,
+  Typography,
+  Paper,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { motion } from "framer-motion";
 import AdminDashboardHeader from "@/components/dashboard/admin/AdminDashboardHeader";
 import AdminOrdersTable from "@/components/dashboard/admin/AdminOrdersTable";
 import AdminMasterLookupPanel from "@/components/dashboard/admin/AdminMasterLookupPanel";
 import AdminManageUsersPanel from "@/components/dashboard/admin/AdminManageUsersPanel";
+import AdminOrdersToolbar from "@/components/dashboard/admin/AdminOrdersToolbar";
+import AdminOrderEditModal from "@/components/dashboard/admin/AdminOrderEditModal";
+
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
 import axios from "axios";
 import { API } from "@/lib/api";
+import { SalesOrder } from "@/types/admin";
 
 export default function AdminDashboard() {
   const admin = useAdminDashboard();
 
-  // Used for showing "Showing X to Y of Z" for Orders Table
-  const from = (admin.currentPage - 1) * admin.pageSize + 1;
-  const to = Math.min(admin.currentPage * admin.pageSize, admin.totalOrders);
+  const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
 
-  // Inline update for Status, Priority, Terminal
+  // Snackbar state
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error" | "info" | "warning";
+  }>({ open: false, message: "", severity: "success" });
+
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success"
+  ) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleSnackbarClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") return;
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
+  // Inline update handler
   const onUpdateInline = async (
     id: number,
     field: "status" | "priority" | "terminalId",
@@ -50,16 +66,40 @@ export default function AdminDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      toast.success("Updated!");
-      admin.setCurrentPage(1); // or refresh as per your need
+      showSnackbar("Updated!", "success");
+      admin.setCurrentPage(1);
+      await admin.fetchOrders();
     } catch {
-      toast.error("Update failed.");
+      showSnackbar("Update failed.", "error");
     }
   };
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen bg-background p-0 w-full">
+      {/* SNACKBAR FOR NOTIFICATIONS */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={2000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Box
+        sx={{
+          minHeight: "100vh",
+          width: "100%",
+          bgcolor: "background.default",
+          p: 0,
+        }}
+      >
         <AdminDashboardHeader
           userName={admin.userName}
           view={admin.view}
@@ -68,156 +108,121 @@ export default function AdminDashboard() {
 
         {/* Initial Welcome */}
         {admin.view === "" && (
-          <div className="min-h-[40vh] flex items-center justify-center text-2xl font-bold text-blue-800 dark:text-blue-300">
+          <Box
+            sx={{
+              minHeight: "40vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: "bold",
+              color: (theme) =>
+                theme.palette.mode === "dark" ? "#90caf9" : "#1a237e",
+            }}
+          >
             Welcome
-          </div>
+          </Box>
         )}
 
         {/* ----- ORDERS TABLE ----- */}
         {admin.view === "orders" && (
-          <div className="py-8 w-full grid grid-cols-12 gap-0">
-            <div className="col-span-12">
-              {/* Search, filters, etc */}
-              <motion.div
-                initial={{ opacity: 0, y: -30, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col md:flex-row justify-between items-center mb-8 px-4 space-y-3 md:space-y-0 md:space-x-4"
+          <Box sx={{ py: 4, width: "100%" }}>
+            <motion.div
+              initial={{ opacity: 0, y: -30, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ marginBottom: 32 }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 3,
+                  px: { xs: 2, md: 4 },
+                  mb: 1,
+                }}
               >
-                <h1 className="text-3xl font-bold text-black dark:text-white mb-2 md:mb-0">
-                  Orders List
-                </h1>
-                <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-                  <Input
-                    type="text"
-                    placeholder="Search"
-                    className="border border-gray-200 dark:border-zinc-700 rounded-none px-3 py-2 bg-white dark:bg-zinc-900 text-[15px] w-full md:w-auto"
-                    value={admin.searchInput}
-                    onChange={(e) => {
-                      admin.setSearchInput(e.target.value);
-                      admin.setSearchProduct(e.target.value);
-                      admin.setCurrentPage(1);
-                    }}
-                  />
-                  <div className="relative w-full md:w-auto">
-                    <Popover
-                      open={admin.openCalendar}
-                      onOpenChange={admin.setOpenCalendar}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={`
-                            w-full md:w-auto justify-start text-left
-                            font-normal bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white
-                            border border-gray-200 dark:border-zinc-700
-                            px-3 py-2
-                            ${admin.searchDate ? "" : "text-muted-foreground"}
-                            rounded-none
-                          `}
-                          aria-label="Select date"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {admin.searchDate ? (
-                            format(admin.searchDate, "dd-MM-yyyy")
-                          ) : (
-                            <span>Filter by Date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0 bg-white dark:bg-zinc-900 rounded-none w-auto">
-                        <Calendar
-                          mode="single"
-                          selected={admin.searchDate}
-                          onSelect={(date) => {
-                            admin.setSearchDate(date);
-                            admin.setCurrentPage(1);
-                            admin.setOpenCalendar(false);
-                          }}
-                          className="bg-white dark:bg-zinc-900 text-black dark:text-white"
-                          initialFocus
-                        />
-                        {admin.searchDate && (
-                          <div className="flex justify-end p-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="rounded-none"
-                              onClick={() => admin.setSearchDate(undefined)}
-                            >
-                              Clear
-                            </Button>
-                          </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      admin.setSearchInput("");
-                      admin.setSearchProduct("");
-                      admin.setSearchDate(undefined);
-                      admin.setCurrentPage(1);
-                    }}
-                    className="ml-1 px-5 py-2 rounded-none"
-                  >
-                    CLEAR
-                  </Button>
-                </div>
-              </motion.div>
-              {/* --- NEW DataTable-based AdminOrdersTable --- */}
+                <AdminOrdersToolbar
+                  searchInput={admin.searchInput}
+                  onSearchInputChange={(val) => {
+                    admin.setSearchInput(val);
+                    admin.setSearchProduct(val);
+                    admin.setCurrentPage(1);
+                  }}
+                  searchDate={admin.searchDate ?? null}
+                  onSearchDateChange={(date: Date | null) => {
+                    admin.setSearchDate(date ?? undefined);
+                    admin.setCurrentPage(1);
+                  }}
+                  onClear={() => {
+                    admin.setSearchInput("");
+                    admin.setSearchProduct("");
+                    admin.setSearchDate(undefined);
+                    admin.setCurrentPage(1);
+                  }}
+                />
+              </Box>
+            </motion.div>
+            <Paper
+              elevation={0}
+              sx={{
+                width: "100%",
+                mb: 2,
+                px: { xs: 1, md: 2 },
+                py: 1,
+                bgcolor: "background.paper",
+              }}
+            >
               <AdminOrdersTable
                 orders={admin.orders}
                 lookup={admin.lookup}
                 currentPage={admin.currentPage}
                 pageSize={admin.pageSize}
-                onDelete={(id) =>
+                rowCount={admin.totalOrders}
+                setCurrentPage={admin.setCurrentPage}
+                setPageSize={admin.setPageSize}
+                onDelete={(id: number) =>
                   admin.setConfirmDelete({ type: "orders", id })
                 }
                 onUpdateInline={onUpdateInline}
+                onEdit={(order: SalesOrder) => {
+                  setEditOrder(order);
+                  setEditModalOpen(true);
+                }}
                 loading={admin.loading}
               />
-
-              {/* Pagination & Info Bar */}
-              {admin.totalOrders > 0 && (
-                <div className="flex justify-between items-center mt-4 px-2">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Showing {from} to {to} of {admin.totalOrders} orders
-                  </span>
-                  <TablePagination
-                    currentPage={admin.currentPage}
-                    totalPages={Math.max(
-                      1,
-                      Math.ceil(admin.totalOrders / admin.pageSize)
-                    )}
-                    onPageChange={admin.setCurrentPage}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            </Paper>
+          </Box>
         )}
 
         {/* ----- MASTER LOOKUP PANEL ----- */}
-        {admin.view === "master" && (
-          <AdminMasterLookupPanel
-          />
-        )}
+        {admin.view === "master" && <AdminMasterLookupPanel />}
 
-        {admin.view === "manage" && <AdminManageUsersPanel />}
+        {/* ----- MANAGE USERS PANEL ----- */}
+        {admin.view === "manage" && <AdminManageUsersPanel showSnackbar={showSnackbar} />}
 
         {/* GLOBAL ERROR (fallback) */}
         {admin.error && (
-          <div className="min-h-[40vh] flex items-center justify-center text-lg text-red-600">
+          <Box
+            sx={{
+              minHeight: "40vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
+              color: "error.main",
+            }}
+          >
             {admin.error}
-          </div>
+          </Box>
         )}
 
-        {/* GLOBAL DELETE DIALOG (for lookup masters and orders) */}
+        {/* GLOBAL DELETE DIALOG */}
         <ConfirmDeleteDialog
           open={!!admin.confirmDelete}
-          onClose={() => admin.setConfirmDelete(null)}
+          onCancel={() => admin.setConfirmDelete(null)}
           onConfirm={async () => {
             if (!admin.confirmDelete) return;
             if (admin.confirmDelete.type === "orders") {
@@ -230,39 +235,47 @@ export default function AdminDashboard() {
             }
             admin.setConfirmDelete(null);
           }}
+          loading={admin.deleteLoading}
+          title="Delete Confirmation"
+          description={
+            <>
+              Are you sure you want to delete this item? This action cannot be undone.
+              {admin.deleteError && (
+                <Typography
+                  variant="caption"
+                  color="error"
+                  display="block"
+                  mt={2}
+                >
+                  {admin.deleteError}
+                </Typography>
+              )}
+            </>
+          }
         />
-      </div>
-    </AnimatedPage>
-  );
-}
 
-// ----------- ConfirmDeleteDialog component -------------
-function ConfirmDeleteDialog({
-  open,
-  onClose,
-  onConfirm,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void | Promise<void>;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogTitle>Delete Confirmation</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete this item? This action cannot be
-          undone.
-        </DialogDescription>
-        <div className="flex justify-end gap-2 mt-6">
-          <Button variant="destructive" onClick={onConfirm}>
-            Yes, Delete
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        {/* ORDER EDIT MODAL */}
+        {editOrder && (
+          <AdminOrderEditModal
+            open={editModalOpen}
+            onClose={() => {
+              setEditModalOpen(false);
+              setEditOrder(null);
+            }}
+            order={editOrder}
+            lookup={admin.lookup}
+            onUpdate={(updatedOrder: SalesOrder) => {
+              setEditModalOpen(false);
+              setEditOrder(null);
+              admin.setOrders?.((prev: SalesOrder[]) =>
+                prev.map((o: SalesOrder) =>
+                  o.id === updatedOrder.id ? updatedOrder : o
+                )
+              );
+            }}
+          />
+        )}
+      </Box>
+    </AnimatedPage>
   );
 }

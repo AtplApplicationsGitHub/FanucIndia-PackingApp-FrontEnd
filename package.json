@@ -9,11 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.4",
     "@mui/icons-material": "^7.2.0",
+    "@mui/lab": "^7.0.0-beta.14",
     "@mui/material": "^7.2.0",
+    "@mui/x-data-grid": "^8.9.1",
+    "@mui/x-date-pickers": "^8.9.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-label": "^2.1.7",
@@ -23,6 +27,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@shadcn/ui": "^0.0.4",
+    "@toolpad/core": "^0.16.0",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

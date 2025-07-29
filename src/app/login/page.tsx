@@ -1,16 +1,28 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  IconButton,
+  Link,
+  CircularProgress,
+  Alert,
+  Snackbar,
+} from "@mui/material";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import AnimatedPage from "@/components/common/AnimatedPage";
 import { Eye, EyeClosed } from "lucide-react";
 import { API } from "@/lib/api";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type LoginForm = {
   email: string;
@@ -18,7 +30,6 @@ type LoginForm = {
 };
 
 function extractErrorMessage(err: unknown) {
-  // AxiosError type check
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
     if (!data) return "Login failed. Please try again.";
@@ -37,13 +48,40 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginForm>();
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  // NEW: Snackbar for logged-out state
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [loggedOutSnackbar, setLoggedOutSnackbar] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("loggedout") === "1") {
+      setLoggedOutSnackbar(true);
+    }
+  }, [searchParams]);
+
+  const handleLoggedOutSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") return;
+    setLoggedOutSnackbar(false);
+    // Clean the URL: remove the "loggedout" param
+    const params = new URLSearchParams(window.location.search);
+    params.delete("loggedout");
+    const newSearch = params.toString();
+    router.replace(`/login${newSearch ? "?" + newSearch : ""}`);
+  };
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setErrorMsg("");
+    setSuccessMsg("");
 
     try {
       const res = await axios.post(API.AUTH.LOGIN, data);
@@ -53,15 +91,21 @@ export default function LoginPage() {
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
-      if (user.role === "admin") {
-        window.location.replace("/admin/dashboard");
-      } else if (user.role === "sales") {
-        window.location.replace("/sales/dashboard");
-      } else {
-        setErrorMsg("Unknown user role.");
-      }
+      setSuccessMsg("Logging in...");
+
+      setTimeout(() => {
+        if (user.role === "admin") {
+          window.location.replace("/admin/dashboard");
+        } else if (user.role === "sales") {
+          window.location.replace("/sales/dashboard");
+        } else {
+          setErrorMsg("Unknown user role.");
+          setSuccessMsg("");
+        }
+      }, 1000);
     } catch (err: unknown) {
       setErrorMsg(extractErrorMessage(err));
+      setSuccessMsg("");
     } finally {
       setLoading(false);
     }
@@ -69,84 +113,158 @@ export default function LoginPage() {
 
   return (
     <AnimatedPage>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted to-background px-4">
-        <Card className="w-full max-w-md shadow-xl border border-gray-200 rounded-2xl animate-fade-in">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              Welcome Back
-            </CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Sign in to your account
-            </p>
-          </CardHeader>
+      {/* Logged out snackbar */}
+      <Snackbar
+        open={loggedOutSnackbar}
+        autoHideDuration={2000}
+        onClose={handleLoggedOutSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%" }}
+          onClose={handleLoggedOutSnackbarClose}
+        >
+          You have been logged out.
+        </Alert>
+      </Snackbar>
+
+      <Box
+        minHeight="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        px={2}
+        sx={{
+          background: (theme) =>
+            theme.palette.mode === "dark"
+              ? "linear-gradient(to bottom right, #1e1e1e, #121212)"
+              : "linear-gradient(to bottom right, #f5f5f5, #ffffff)",
+        }}
+      >
+        <Card
+          sx={{ maxWidth: 400, width: "100%", borderRadius: 3, boxShadow: 4 }}
+        >
+          <CardHeader
+            title={
+              <Typography variant="h5" fontWeight={600} textAlign="center">
+                Welcome Back
+              </Typography>
+            }
+            subheader={
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                textAlign="center"
+              >
+                Sign in to your account
+              </Typography>
+            }
+          />
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <Box display="flex" flexDirection="column" gap={2}>
+                <TextField
+                  label="Email"
                   type="email"
-                  placeholder="Enter your email"
+                  fullWidth
+                  variant="outlined"
+                  size="medium"
                   {...register("email", { required: true })}
+                  error={!!errors.email}
+                  helperText={errors.email ? "Email is required" : ""}
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">Email is required</p>
+
+                <TextField
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  fullWidth
+                  variant="outlined"
+                  size="medium"
+                  {...register("password", { required: true })}
+                  error={!!errors.password}
+                  helperText={errors.password ? "Password is required" : ""}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword((v) => !v)}
+                          edge="end"
+                        >
+                          {showPassword ? (
+                            <Eye size={20} />
+                          ) : (
+                            <EyeClosed size={20} />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                {successMsg && (
+                  <Alert severity="success" sx={{ mb: 1 }}>
+                    {successMsg}
+                  </Alert>
                 )}
-              </div>
-
-              <div className="space-y-2 relative">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    {...register("password", { required: true })}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    {showPassword ? (
-                      <Eye className="w-5 h-5" />
-                    ) : (
-                      <EyeClosed className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">
-                    Password is required
-                  </p>
+                {errorMsg && (
+                  <Alert severity="error" sx={{ mb: 1 }}>
+                    {errorMsg}
+                  </Alert>
                 )}
-              </div>
 
-              {errorMsg && (
-                <p className="text-sm text-destructive text-center">
-                  {errorMsg}
-                </p>
-              )}
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  size="large"
+                  fullWidth
+                  disabled={loading}
+                  sx={(theme) => {
+                    const isDark = theme.palette.mode === "dark";
+                    const mainBlue = "#1877F2";
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </Button>
+                    return {
+                      textTransform: "none",
+                      fontWeight: 600,
+                      borderWidth: 2,
+                      borderColor: mainBlue,
+                      color: mainBlue,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor: isDark ? "#0d47a1" : "#0d47a1",
+                        color: isDark ? "#ffffff" : "#ffffff",
+                        borderColor: mainBlue,
+                      },
+                    };
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={22} color="inherit" />
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
 
-              <p className="text-xs text-center text-muted-foreground pt-2">
-                Admin Demo: admin@fanuc.com / FanucAdmin123 <br /> Sales Demo:
-                user1@example.com / Demo123!@#
-              </p>
+                <Typography
+                  variant="caption"
+                  align="center"
+                  color="text.secondary"
+                >
+                  Admin Demo: admin@fanuc.com / FanucAdmin123 <br />
+                  Sales Demo: user1@example.com / Demo123!@#
+                </Typography>
+
+                <Typography variant="body2" align="center" mt={1}>
+                  Don&apos;t have an account?{" "}
+                  <Link href="/signup" underline="hover" color="primary">
+                    Sign up
+                  </Link>
+                </Typography>
+              </Box>
             </form>
-            <p className="text-center pt-2 text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <a href="/signup" className="text-primary hover:text-primary/80">
-                Sign up
-              </a>
-            </p>
           </CardContent>
         </Card>
-      </div>
+      </Box>
     </AnimatedPage>
   );
 }
