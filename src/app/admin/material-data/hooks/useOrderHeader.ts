@@ -1,40 +1,3 @@
-// // hooks/useOrderHeader.ts
-// import { useQuery } from '@tanstack/react-query';
-// import { API } from '../../../../lib/api';
-
-// export interface OrderHeader {
-//   so: string;
-//   customerName: string;
-//   transferOrder: string;
-//   fgObd: string;
-// }
-
-// export function useOrderHeader(orderId: number) {
-//   return useQuery<OrderHeader, Error>({
-//     queryKey: ['orderHeader', orderId],
-//     queryFn: async () => {
-//       // Get the JWT token from localStorage (adjust if you store it elsewhere)
-//       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-//       const res = await fetch(API.ADMIN.SALES_ORDER_BY_ID(orderId), {
-//         cache: 'no-cache',
-//         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-//       });
-//       if (!res.ok) {
-//         throw new Error(`Failed to fetch order header: ${res.statusText}`);
-//       }
-//       const data = await res.json();
-//       return {
-//         so: data.saleOrderNumber,
-//         customerName: data.customer?.name ?? '',
-//         transferOrder: data.transferOrder,
-//         fgObd: data.outboundDelivery,
-//       };
-//     },
-//     enabled: orderId > 0,
-//   });
-// }
-
-// hooks/useOrderHeader.ts
 import { useState, useEffect } from 'react';
 import { API } from '../../../../lib/api';
 
@@ -45,9 +8,14 @@ export interface OrderHeader {
   fgObd: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return typeof error === 'string' ? error : 'Failed to load order header';
+}
+
 export function useOrderHeader(orderId: number) {
   const [data, setData] = useState<OrderHeader | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,17 +26,31 @@ export function useOrderHeader(orderId: number) {
       return;
     }
     let cancelled = false;
+
     const fetchHeader = async () => {
       setLoading(true);
       setError(null);
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined'
+          ? localStorage.getItem('token')
+          : null;
+
         const res = await fetch(API.ADMIN.SALES_ORDER_BY_ID(orderId), {
           cache: 'no-cache',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!res.ok) throw new Error(`Failed to fetch order header: ${res.statusText}`);
-        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch order header: ${res.statusText}`);
+        }
+
+        const json = await res.json() as {
+          saleOrderNumber: string;
+          customer?: { name?: string };
+          transferOrder: string;
+          outboundDelivery: string;
+        };
+
         if (!cancelled) {
           setData({
             so: json.saleOrderNumber,
@@ -77,12 +59,17 @@ export function useOrderHeader(orderId: number) {
             fgObd: json.outboundDelivery,
           });
         }
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || 'Failed to load order header');
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setError(getErrorMessage(err));
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
+
     fetchHeader();
     return () => {
       cancelled = true;

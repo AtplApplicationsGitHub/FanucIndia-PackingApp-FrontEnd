@@ -10,7 +10,7 @@ interface Props {
     materialCode: string,
     issueStage: number
   ) => Promise<MaterialRow | null>;
-  onProcessRowUpdateError?: (error: any) => void;
+  onProcessRowUpdateError?: (error: Error) => void;
 }
 
 const columns: GridColDef[] = [
@@ -48,8 +48,10 @@ export default function MaterialDataTable({
   onUpdateIssueStage,
   onProcessRowUpdateError,
 }: Props) {
-  // processRowUpdate now calls the backend and returns the updated row
-  const processRowUpdate = async (newRow: MaterialRow, oldRow: MaterialRow) => {
+  const processRowUpdate = async (
+    newRow: MaterialRow,
+    oldRow: MaterialRow
+  ): Promise<MaterialRow> => {
     if (newRow.issueStage > newRow.reqQuantity || newRow.issueStage < 0) {
       throw new Error("Issue Stage must be between 0 and Required Qty");
     }
@@ -58,14 +60,20 @@ export default function MaterialDataTable({
         newRow.materialCode,
         newRow.issueStage
       );
-      if (!updatedRow) throw new Error("Failed to update Issue Stage");
+      if (!updatedRow) {
+        throw new Error("Failed to update Issue Stage");
+      }
       return updatedRow;
     }
     return oldRow;
   };
 
+  const handleDefaultError = (error: Error): void => {
+    console.error(error);
+  };
+
   return (
-    <div style={{ height: 500, width: '100%' }}>
+    <div style={{ height: 500, width: "100%" }}>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -74,7 +82,9 @@ export default function MaterialDataTable({
         pageSizeOptions={[5, 10, 50, 100]}
         autoHeight
         processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={onProcessRowUpdateError || ((error) => console.error(error))}
+        onProcessRowUpdateError={
+          onProcessRowUpdateError ?? handleDefaultError
+        }
       />
     </div>
   );

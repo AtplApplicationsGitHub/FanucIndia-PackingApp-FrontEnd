@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Alert, Box } from "@mui/material";
+import { Alert } from "@mui/material";
 import HeaderSection from "../components/HeaderSection";
 import InputBoxSection from "../components/InputBoxSection";
 import MaterialDataTable from "../components/MaterialDataTable";
@@ -10,35 +10,52 @@ import { useErpMaterials, useIncrementIssueStage } from "../hooks/useErpMaterial
 import { useOrderHeader } from "../hooks/useOrderHeader";
 import { updateIssueStage } from "../../../../lib/api";
 
-function extractErrorMessage(error: any): string {
+type ApiError = {
+  response?: {
+    data?: {
+      message?: string | { message?: string };
+    };
+  };
+  message?: string;
+};
+
+function extractErrorMessage(error: unknown): string {
   if (typeof error === "string") {
-    try { return extractErrorMessage(JSON.parse(error)); } catch { return error; }
+    try { return extractErrorMessage(JSON.parse(error)); }
+    catch { return error; }
   }
-  if (error?.message) {
-    const msg = error.message;
-    if (typeof msg === "string") {
-      try { return extractErrorMessage(JSON.parse(msg)); } catch { return msg; }
-    }
-    if (msg?.message) return msg.message;
+  if (error instanceof Error) {
+    try { return extractErrorMessage(JSON.parse(error.message)); }
+    catch { return error.message; }
   }
-  if (error?.response?.data?.message) {
-    const m = error.response.data.message;
-    return typeof m === "string" ? m : m.message ?? "Something went wrong.";
+  const err = error as ApiError;
+  const msg = err.response?.data?.message;
+  if (msg) {
+    return typeof msg === "string" ? msg : msg.message ?? "Something went wrong.";
   }
   return "Something went wrong. Please try again.";
 }
 
 export default function MaterialDataPage() {
-  const orderId = Number(useParams().orderId);
+  const params = useParams();
+  const rawId = params.orderId;
+
+  // reject missing or array IDs
+  if (!rawId || Array.isArray(rawId)) {
+    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID in URL.</Alert>;
+  }
+
+  const orderId = Number(rawId);
+  if (isNaN(orderId)) {
+    return <Alert severity="error" sx={{ m: 6 }}>Order ID is not a number.</Alert>;
+  }
+
   const [editError, setEditError] = useState<string | null>(null);
 
+  // now always pass the numeric orderId
   const { data: header, error: hdrError } = useOrderHeader(orderId);
   const { data: rows = [], error: matError, refetch } = useErpMaterials(orderId);
   const { mutate, loading: mutating, error: mutErr } = useIncrementIssueStage(orderId);
-
-  if (isNaN(orderId)) {
-    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID in URL.</Alert>;
-  }
 
   if (hdrError || matError) {
     return (
@@ -47,7 +64,6 @@ export default function MaterialDataPage() {
       </Alert>
     );
   }
-
   if (!header) {
     return <Alert severity="info" sx={{ m: 6 }}>Loading order header...</Alert>;
   }
@@ -61,44 +77,57 @@ export default function MaterialDataPage() {
     try {
       await mutate(code);
       refetch();
-    } catch {
-      // error displayed below
+    } catch (err: unknown) {
+      setEditError(extractErrorMessage(err));
     }
   };
 
   const handleRowUpdate = async (code: string, stage: number) => {
+    setEditError(null);
     try {
-      setEditError(null);
       const data = await updateIssueStage(orderId, code, stage);
-      const m = data.updatedMaterial || data.updatedRow || data.updated || data;
-      const old = rows.find(
-        (r) => r.materialCode === code || r.id === m.ID
-      ) || rows[0]!;
+      const raw = data as Record<string, unknown>;
+      const candidate = raw.updatedMaterial ?? raw.updatedRow ?? raw.updated ?? raw;
+      const m = (typeof candidate === "object" && candidate !== null)
+        ? (candidate as Record<string, unknown>)
+        : raw;
+
+      const old = rows.find(r =>
+        r.materialCode === code ||
+        (typeof m["ID"] === "number" ? r.id === m["ID"] : false)
+      ) ?? rows[0]!;
+
+      const getNumber = (key: string, fallback: number): number => {
+        const v = m[key];
+        if (typeof v === "number") return v;
+        if (typeof v === "string") {
+          const n = Number(v);
+          return isNaN(n) ? fallback : n;
+        }
+        return fallback;
+      };
+      const getString = (key: string, fallback: string): string => {
+        const v = m[key];
+        return typeof v === "string" ? v : fallback;
+      };
 
       return {
         ...old,
-        id:
-          m.ID != null && !isNaN(Number(m.ID)) ? Number(m.ID) : old.id,
-        siNo: m.SI_No ?? old.siNo,
-        materialCode: m.Material_Code ?? old.materialCode,
-        materialDescription:
-          m.Material_Description ?? old.materialDescription,
-        batchNo: m.Batch_No ?? old.batchNo,
-        soDonorBatch:
-          m.SO_Donor_Batch ?? old.soDonorBatch,
-        certNo: m.Cert_No ?? old.certNo,
-        binNo: m.Bin_No ?? old.binNo,
-        adf: m.A_D_F ?? old.adf,
-        reqQuantity:
-          m.Required_Qty ?? old.reqQuantity,
-        issueStage:
-          m.Issue_stage ?? old.issueStage,
-        machineModel:
-          m.Machine_Model ?? old.machineModel,
-        cncSerialNo:
-          m.CNC_Serial_No ?? old.cncSerialNo,
+        id: getNumber("ID", old.id),
+        siNo: getNumber("SI_No", old.siNo),
+        materialCode: getString("Material_Code", old.materialCode),
+        materialDescription: getString("Material_Description", old.materialDescription),
+        batchNo: getString("Batch_No", old.batchNo),
+        soDonorBatch: getString("SO_Donor_Batch", old.soDonorBatch),
+        certNo: getString("Cert_No", old.certNo),
+        binNo: getString("Bin_No", old.binNo),
+        adf: getString("A_D_F", old.adf),
+        reqQuantity: getNumber("Required_Qty", old.reqQuantity),
+        issueStage: getNumber("Issue_stage", old.issueStage),
+        machineModel: getString("Machine_Model", old.machineModel),
+        cncSerialNo: getString("CNC_Serial_No", old.cncSerialNo),
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
       throw err;
     }
@@ -132,9 +161,7 @@ export default function MaterialDataPage() {
         rows={rows}
         loading={mutating}
         onUpdateIssueStage={handleRowUpdate}
-        onProcessRowUpdateError={(err) =>
-          setEditError(extractErrorMessage(err))
-        }
+        onProcessRowUpdateError={err => setEditError(extractErrorMessage(err))}
       />
     </main>
   );

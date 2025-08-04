@@ -34,6 +34,10 @@ function normalizeInputValue(val: unknown): string | number {
   return val as string | number;
 }
 
+type ErrorPayload = {
+  message?: string | string[];
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -223,24 +227,22 @@ export default function AdminOrderEditModal({
       await axios.patch(API.ADMIN.SALES_ORDER_BY_ID(order.id), patch, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (typeof onUpdate === "function") {
-        onUpdate({ ...order, ...patch });
-      }
+      onUpdate?.({ ...order, ...patch });
       toast.success("Order updated!");
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Update error:", err);
       let errMsg = "Failed to update order.";
 
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        const payload = err.response.data.message;
-        if (Array.isArray((payload as any).message)) {
-          errMsg = (payload as any).message.join("; ");
-        } else if (typeof payload === "string") {
-          errMsg = payload;
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const data = err.response.data as ErrorPayload;
+        const msg = data.message;
+        if (Array.isArray(msg)) {
+          errMsg = msg.join("; ");
+        } else if (typeof msg === "string") {
+          errMsg = msg;
         }
       }
-
       toast.error(errMsg);
     } finally {
       setLoading(false);
