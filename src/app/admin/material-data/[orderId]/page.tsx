@@ -11,14 +11,9 @@ import { useOrderHeader } from "../hooks/useOrderHeader";
 import { updateIssueStage } from "../../../../lib/api";
 
 type ApiError = {
-  response?: {
-    data?: {
-      message?: string | { message?: string };
-    };
-  };
+  response?: { data?: { message?: string | { message?: string } } };
   message?: string;
 };
-
 function extractErrorMessage(error: unknown): string {
   if (typeof error === "string") {
     try { return extractErrorMessage(JSON.parse(error)); }
@@ -30,32 +25,29 @@ function extractErrorMessage(error: unknown): string {
   }
   const err = error as ApiError;
   const msg = err.response?.data?.message;
-  if (msg) {
-    return typeof msg === "string" ? msg : msg.message ?? "Something went wrong.";
-  }
-  return "Something went wrong. Please try again.";
+  return msg
+    ? (typeof msg === "string" ? msg : msg.message ?? "Something went wrong.")
+    : "Something went wrong. Please try again.";
 }
 
 export default function MaterialDataPage() {
-  const params = useParams();
-  const rawId = params.orderId;
+  const { orderId: rawId } = useParams();
+  const idStr = typeof rawId === "string" ? rawId : "";
+  const orderId = Number(idStr);
 
-  // reject missing or array IDs
-  if (!rawId || Array.isArray(rawId)) {
-    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID in URL.</Alert>;
-  }
-
-  const orderId = Number(rawId);
-  if (isNaN(orderId)) {
-    return <Alert severity="error" sx={{ m: 6 }}>Order ID is not a number.</Alert>;
-  }
-
+  // Hooks must be called unconditionally
   const [editError, setEditError] = useState<string | null>(null);
-
-  // now always pass the numeric orderId
   const { data: header, error: hdrError } = useOrderHeader(orderId);
   const { data: rows = [], error: matError, refetch } = useErpMaterials(orderId);
   const { mutate, loading: mutating, error: mutErr } = useIncrementIssueStage(orderId);
+
+  // Now safe to return early based on params
+  if (!idStr) {
+    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID in URL.</Alert>;
+  }
+  if (isNaN(orderId)) {
+    return <Alert severity="error" sx={{ m: 6 }}>Order ID is not a number.</Alert>;
+  }
 
   if (hdrError || matError) {
     return (
@@ -89,7 +81,7 @@ export default function MaterialDataPage() {
       const raw = data as Record<string, unknown>;
       const candidate = raw.updatedMaterial ?? raw.updatedRow ?? raw.updated ?? raw;
       const m = (typeof candidate === "object" && candidate !== null)
-        ? (candidate as Record<string, unknown>)
+        ? candidate as Record<string, unknown>
         : raw;
 
       const old = rows.find(r =>
