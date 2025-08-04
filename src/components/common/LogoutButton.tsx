@@ -26,37 +26,35 @@ export default function LogoutButton({ sx = {} }: LogoutButtonProps) {
 
   return (
     <Button
-  variant="outlined"
-  color="error"
-  size="small" 
-  sx={{
-    borderColor: "error.main",
-    color: "error.main",
-    fontWeight: 700,
-    minWidth: 120,
-    minHeight: 32,
-    height: 36,
-    py: 0,
-    px: 2.5,
-    mr: 4,
-    borderRadius: 1.5,
-    fontSize: 16, 
-    boxShadow: "none",
-    "&:hover": {
-      borderColor: "error.dark",
-      color: "error.dark",
-      background: "rgba(244, 67, 54, 0.04)",
-      boxShadow: "none",
-    },
-    ...sx,
-  }}
-  onClick={handleLogout}
-  startIcon={!loading && <LogOut size={18} />}
->
+      color="error"
+      size="medium"
+      disabled={loading}
+      onClick={handleLogout}
+      startIcon={!loading && <LogOut size={18} />}
+      sx={{
+        borderRadius: 0,
+        fontWeight: 600,
+        fontSize: 15,
+        minWidth: 120,
+        height: 40,
+        px: 3,
+        textTransform: "none",
+        boxShadow: "none",
+        transition: "all 0.2s ease-in-out",
+        "&:hover": {
+          backgroundColor: "rgba(244, 67, 54, 0.10)", 
+          boxShadow: "none",
+        },
+        "&:disabled": {
+          opacity: 0.6,
+        },
+        ...sx,
+      }}
+    >
       {loading ? (
-        <CircularProgress size={18} thickness={5} color="inherit" />
+        <CircularProgress size={18} thickness={4.5} color="inherit" />
       ) : (
-        "Logout"
+        "LOGOUT"
       )}
     </Button>
   );

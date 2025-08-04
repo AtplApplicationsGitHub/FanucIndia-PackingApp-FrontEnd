@@ -105,8 +105,8 @@ const FIELDS: {
   },
 ];
 
+// Removed 'userId' since it's not patchable by the API
 const PATCHABLE_KEYS = [
-  "userId",
   "productId",
   "saleOrderNumber",
   "outboundDelivery",
@@ -166,14 +166,6 @@ export default function AdminOrderEditModal({
       const v = form[key];
 
       switch (key) {
-        case "userId":
-          if (typeof v === "string" && v.trim() !== "") {
-            patch.userId = isNaN(Number(v)) ? v : Number(v);
-          } else if (typeof v === "number") {
-            patch.userId = v;
-          }
-          break;
-
         case "productId":
         case "transporterId":
         case "plantCodeId":
@@ -237,19 +229,18 @@ export default function AdminOrderEditModal({
       toast.success("Order updated!");
       onClose();
     } catch (err) {
-      let errMsg = "Failed to update order.";
-      if (
-        err &&
-        typeof err === "object" &&
-        "response" in err &&
-        typeof (err as { response?: unknown }).response === "object"
-      ) {
-        const response = (
-          err as { response?: { data?: { message?: string; error?: string } } }
-        ).response;
-        errMsg = response?.data?.message || response?.data?.error || errMsg;
-      }
       console.error("Update error:", err);
+      let errMsg = "Failed to update order.";
+
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const payload = err.response.data.message;
+        if (Array.isArray((payload as any).message)) {
+          errMsg = (payload as any).message.join("; ");
+        } else if (typeof payload === "string") {
+          errMsg = payload;
+        }
+      }
+
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -264,7 +255,7 @@ export default function AdminOrderEditModal({
       fullWidth
       PaperProps={{
         sx: (theme) => ({
-          bgcolor: theme.palette.background.paper, // Use theme for modal bg
+          bgcolor: theme.palette.background.paper,
           borderRadius: 0,
           minHeight: "80vh",
           maxHeight: "95vh",
@@ -352,6 +343,7 @@ export default function AdminOrderEditModal({
                   </Box>
                 );
               }
+
               if (field.type === "date") {
                 const raw = form[field.key];
                 const dateObj =
@@ -394,6 +386,7 @@ export default function AdminOrderEditModal({
                   </Box>
                 );
               }
+
               if (field.type === "select") {
                 return (
                   <Box
@@ -450,7 +443,7 @@ export default function AdminOrderEditModal({
                   </Box>
                 );
               }
-              // text / number
+
               return (
                 <Box
                   key={field.key}

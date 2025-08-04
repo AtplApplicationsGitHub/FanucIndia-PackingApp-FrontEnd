@@ -2,11 +2,7 @@
 
 import * as React from "react";
 import Box from "@mui/material/Box";
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import {
   IconButton,
   Menu,
@@ -18,6 +14,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { SalesOrder, Lookup } from "@/types/admin";
 import { findName, formatDate } from "@/utils/sales-helpers";
+import { useRouter } from "next/navigation";
 
 type InlineEditField = "status" | "priority" | "terminalId";
 type InlineEdit = {
@@ -59,6 +56,8 @@ export default function AdminOrdersTable({
 }: Props) {
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
 
+  const router = useRouter();
+
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
     null
   );
@@ -93,13 +92,57 @@ export default function AdminOrdersTable({
 
   const columns: GridColDef<SalesOrder>[] = [
     {
-      field: "si",
-      headerName: "S.I No",
-      width: 60,
-      valueGetter: (_value, row) =>
-        (currentPage - 1) * pageSize +
-        orders.findIndex((o) => o.id === row.id) +
-        1,
+      field: "actions",
+      headerName: "Actions",
+      width: 65,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return (
+          <Box>
+            <IconButton
+              onClick={(e) => handleMenuOpen(e, row.id)}
+              size="small"
+              aria-label="actions"
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl) && menuRowId === row.id}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem
+                onClick={() => {
+                  onEdit?.(row);
+                  handleMenuClose();
+                }}
+              >
+                Edit
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  onDelete(row.id);
+                  handleMenuClose();
+                }}
+                sx={{ color: "error.main" }}
+              >
+                Delete
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  router.push(`/admin/material-data/${row.id}`);
+                  handleMenuClose();
+                }}
+              >
+                View
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
+      },
     },
     {
       field: "user",
@@ -315,51 +358,59 @@ export default function AdminOrdersTable({
       width: 120,
       valueGetter: (_value, row) => row.specialRemarks || "-",
     },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 65,
-      sortable: false,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-        return (
-          <Box>
-            <IconButton
-              onClick={(e) => handleMenuOpen(e, row.id)}
-              size="small"
-              aria-label="actions"
-            >
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={menuAnchorEl}
-              open={Boolean(menuAnchorEl) && menuRowId === row.id}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              <MenuItem
-                onClick={() => {
-                  onEdit?.(row); // ✅ trigger parent modal
-                  handleMenuClose();
-                }}
-              >
-                Edit
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  onDelete(row.id);
-                  handleMenuClose();
-                }}
-                sx={{ color: "error.main" }}
-              >
-                Delete
-              </MenuItem>
-            </Menu>
-          </Box>
-        );
-      },
-    },
+    // {
+    //   field: "actions",
+    //   headerName: "Actions",
+    //   width: 65,
+    //   sortable: false,
+    //   renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+    //     const row = params.row;
+    //     return (
+    //       <Box>
+    //         <IconButton
+    //           onClick={(e) => handleMenuOpen(e, row.id)}
+    //           size="small"
+    //           aria-label="actions"
+    //         >
+    //           <MoreVertIcon />
+    //         </IconButton>
+    //         <Menu
+    //           anchorEl={menuAnchorEl}
+    //           open={Boolean(menuAnchorEl) && menuRowId === row.id}
+    //           onClose={handleMenuClose}
+    //           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+    //           transformOrigin={{ vertical: "top", horizontal: "right" }}
+    //         >
+    //           <MenuItem
+    //             onClick={() => {
+    //               onEdit?.(row);
+    //               handleMenuClose();
+    //             }}
+    //           >
+    //             Edit
+    //           </MenuItem>
+    //           <MenuItem
+    //             onClick={() => {
+    //               onDelete(row.id);
+    //               handleMenuClose();
+    //             }}
+    //             sx={{ color: "error.main" }}
+    //           >
+    //             Delete
+    //           </MenuItem>
+    //           <MenuItem
+    //             onClick={() => {
+    //               router.push(`/admin/material-data/${row.id}`);
+    //               handleMenuClose();
+    //             }}
+    //           >
+    //             View
+    //           </MenuItem>
+    //         </Menu>
+    //       </Box>
+    //     );
+    //   },
+    // },
   ];
 
   return (

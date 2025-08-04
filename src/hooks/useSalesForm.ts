@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { API } from "@/lib/api";
 
@@ -11,13 +11,6 @@ export const useSalesForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [alert, setAlert] = useState<AlertState>(null);
-
-  // Show a native popup whenever alert message is set
-  useEffect(() => {
-    if (alert?.message) {
-      window.alert(alert.message);
-    }
-  }, [alert]);
 
   const handleSubmit = async (
     form: Record<string, unknown>,
