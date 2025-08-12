@@ -13,7 +13,6 @@ export interface UploadErpMaterialFileButtonProps {
 }
 
 const UploadErpMaterialFileButton: FC<UploadErpMaterialFileButtonProps> = ({
-  saleOrderNumber,
   onCreated,
   buttonProps,
   onOpenDialog,

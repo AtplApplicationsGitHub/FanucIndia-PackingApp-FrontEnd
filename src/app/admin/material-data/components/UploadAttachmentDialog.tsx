@@ -97,7 +97,7 @@ export default function UploadAttachmentDialog({
           persisted: true,
         }));
         setRows(mapped);
-      } catch (e) {
+      } catch {
         // optionally toast an error; keep dialog usable for new uploads
       } finally {
         if (!cancelled) setLoadingList(false);
@@ -108,9 +108,6 @@ export default function UploadAttachmentDialog({
       cancelled = true;
     };
   }, [open, saleOrderNumber]);
-
-  // const attachedCount = useMemo(() => rows.length, [rows]);
-  const visibleCount = rows.length;
 
   // Report the current visible file count to the parent
   useEffect(() => {
@@ -211,20 +208,13 @@ export default function UploadAttachmentDialog({
     [rows]
   );
 
-  const handleView = (r: Row) => {
-    if (r.previewUrl) window.open(r.previewUrl, "_blank");
-  };
-
-  // Delete: if row has dbId, delete from backend (also deletes SFTP via service);
-  // otherwise just remove the local row.
   const handleDelete = async (r: Row) => {
     if (r.dbId) {
       try {
         await deleteMaterialFile(r.dbId);
         setRows((prev) => prev.filter((x) => x.id !== r.id));
-        onUploaded?.(); // refresh main table
-      } catch (_e: unknown) {
-        // Show error? For now, keep the row
+        onUploaded?.();
+      } catch {
         return;
       }
     } else {
@@ -262,11 +252,6 @@ export default function UploadAttachmentDialog({
     }
   };
 
-  const getViewHref = (r: Row) =>
-    r.dbId
-      ? `${API.ERP_MATERIAL_FILES.BY_ID(r.dbId)}/download`
-      : r.previewUrl || undefined;
-
   const openPersistedWithAuth = async (r: Row) => {
     if (!r.dbId) return;
     const url = `${API.ERP_MATERIAL_FILES.BY_ID(r.dbId)}/download`;
@@ -283,7 +268,7 @@ export default function UploadAttachmentDialog({
       w.location.href = objUrl;
       // clean up after awhile
       setTimeout(() => URL.revokeObjectURL(objUrl), 60_000);
-    } catch (err) {
+    } catch {
       w.document.write(
         '<p style="font-family:sans-serif">Failed to open file.</p>'
       );

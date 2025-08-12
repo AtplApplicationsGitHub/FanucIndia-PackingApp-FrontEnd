@@ -95,7 +95,7 @@ const AdminUserFormModal: React.FC<Props> = ({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { ref: nameFieldRef, ...nameReg } = register("name", {
+  const { ref: nameFieldRef } = register("name", {
     required: "Name is required",
     minLength: { value: 3, message: "Name must be at least 3 characters" },
   });

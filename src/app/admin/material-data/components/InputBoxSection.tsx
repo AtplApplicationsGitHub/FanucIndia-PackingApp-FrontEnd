@@ -19,7 +19,7 @@ const InputBoxSection: FC<Props> = ({
 }) => {
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
-  const [attachedCount, setAttachedCount] = useState(0);
+  // const [attachedCount, setAttachedCount] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +95,7 @@ const InputBoxSection: FC<Props> = ({
         onClose={() => setOpenUploadDialog(false)}
         saleOrderNumber={saleOrderNumber}
         onUploaded={onFileCreated} 
-        onAttachedCountChange={setAttachedCount}
+        // onAttachedCountChange={setAttachedCount}
       />
     </div>
   );

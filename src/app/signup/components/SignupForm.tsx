@@ -103,7 +103,6 @@ export default function SignupForm() {
               fullWidth
               disabled={loading || !isValid || password !== confirmPassword}
               sx={(theme) => {
-                const isDark = theme.palette.mode === "dark";
                 const mainBlue = "#1877F2";
 
                 return {

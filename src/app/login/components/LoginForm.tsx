@@ -83,7 +83,7 @@ export default function LoginForm({
           size="large"
           fullWidth
           disabled={loading}
-          sx={(theme) => {
+          sx={() => {
             const mainBlue = "#1877F2";
             return {
               textTransform: "none",
