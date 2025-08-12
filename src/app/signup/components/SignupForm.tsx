@@ -102,7 +102,7 @@ export default function SignupForm() {
               size="large"
               fullWidth
               disabled={loading || !isValid || password !== confirmPassword}
-              sx={(theme) => {
+              sx={() => {
                 const mainBlue = "#1877F2";
 
                 return {
