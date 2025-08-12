@@ -7,13 +7,13 @@ import MUICard from "@mui/material/Card";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
-import SalesDashboardHeader from "@/components/dashboard/sales/SalesDashboardHeader";
-import SalesDashboardToolbar from "@/components/dashboard/sales/SalesDashboardToolbar";
-import SalesOrdersTable from "@/components/dashboard/sales/SalesOrdersTable";
-import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
-import AnimatedPage from "@/components/common/AnimatedPage";
-import { useSalesDashboard } from "@/hooks/useSalesDashboard";
-import SalesEntryDialog from "@/components/forms/SalesEntry/SalesEntryDialog";
+import SalesDashboardHeader from "@/app/sales/components/Header";
+import SalesDashboardToolbar from "@/app/sales/components/Toolbar";
+import SalesOrdersTable from "@/app/sales/components/Table";
+import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
+import AnimatedPage from "@/common/components/AnimatedPage";
+import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboard";
+import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
 
 export default function SalesDashboard() {
   const {

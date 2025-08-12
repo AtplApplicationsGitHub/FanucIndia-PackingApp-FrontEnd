@@ -10,6 +10,7 @@ export interface MaterialRow {
   adf: string;
   reqQuantity: number;
   issueStage: number;
+  packingStage: number;
   machineModel: string;
   cncSerialNo: string;
 }

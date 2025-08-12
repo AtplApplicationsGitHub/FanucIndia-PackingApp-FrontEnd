@@ -1,10 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
-import { Toaster } from "sonner";
-import ThemeRegistry from "@/components/common/ThemeRegistry";
-import AppProviders from "@/components/common/AppProviders";
+import { ThemeToggle } from "@/common/components/ThemeToggle";
+import ThemeRegistry from "@/common/components/ThemeRegistry";
+import AppProviders from "@/common/components/AppProviders";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Inline script to prevent theme flicker */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -45,13 +43,6 @@ export default function RootLayout({
             <ThemeToggle />
           </div>
           {children}
-          <Toaster
-            richColors
-            position="top-center"
-            closeButton
-            duration={3000}
-            expand={true}
-          />
           </AppProviders>
         </ThemeRegistry>
       </body>
