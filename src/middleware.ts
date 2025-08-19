@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`/${userRole}/dashboard`, request.url));
     }
 
-  } catch (error) {
+  } catch {
     // If token is invalid, clear it and redirect to login
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete("token");
