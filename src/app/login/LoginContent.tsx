@@ -14,8 +14,7 @@ import LoginDemoCredentials from "@/app/login/components/LoginDemoCredentials";
 import LoginSignupLink from "@/app/login/components/LoginSignupLink";
 import apiClient from "@/common/lib/apiClient";
 
-// If you already have a global User type, use that instead.
-type UserRole = "admin" | "sales";
+type UserRole = "admin" | "sales" | "user";
 type User = { role: UserRole } & Record<string, unknown>;
 
 type LoginSuccessPayload = {
@@ -81,6 +80,8 @@ export default function LoginContent() {
           window.location.replace("/admin/dashboard");
         } else if (user.role === "sales") {
           window.location.replace("/sales/dashboard");
+        } else if (user.role === "user") {
+          window.location.replace("/user/dashboard");
         } else {
           setErrorMsg("Unknown user role.");
           setSuccessMsg("");

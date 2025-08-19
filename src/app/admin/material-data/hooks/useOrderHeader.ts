@@ -31,11 +31,23 @@ export function useOrderHeader(orderId: number) {
       setLoading(true);
       setError(null);
       try {
-        const token = typeof window !== 'undefined'
-          ? localStorage.getItem('token')
-          : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        
+        if (!token || !userStr) {
+          throw new Error("User not authenticated");
+        }
+        
+        const user = JSON.parse(userStr);
+        const userRole = user.role;
 
-        const res = await fetch(API.ADMIN.SALES_ORDER_BY_ID(orderId), {
+        // Determine the correct API endpoint based on the user's role
+        const url = userRole === 'admin' 
+          ? API.ADMIN.SALES_ORDER_BY_ID(orderId)
+          : `${API.USER_DASHBOARD.ORDERS}/${orderId}`;
+
+
+        const res = await fetch(url, {
           cache: 'no-cache',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });

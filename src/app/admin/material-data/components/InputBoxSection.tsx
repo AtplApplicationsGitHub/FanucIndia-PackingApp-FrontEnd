@@ -10,12 +10,14 @@ interface Props {
   onSubmit: (value: string) => void;
   saleOrderNumber: string;
   onFileCreated: () => void;
+  disabled?: boolean;
 }
 
 const InputBoxSection: FC<Props> = ({
   onSubmit,
   saleOrderNumber,
   onFileCreated,
+  disabled = false,
 }) => {
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
@@ -59,6 +61,7 @@ const InputBoxSection: FC<Props> = ({
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKey}
             inputProps={{ autoFocus: true }}
+            disabled={disabled}
           />
 
           {/* Ghost submit button (unchanged behavior) */}
@@ -73,6 +76,7 @@ const InputBoxSection: FC<Props> = ({
               whiteSpace: "nowrap",
               "& .MuiButton-startIcon": { mr: 1 },
             })}
+            disabled={disabled}
           >
             Submit
           </Button>
@@ -82,10 +86,8 @@ const InputBoxSection: FC<Props> = ({
             saleOrderNumber={saleOrderNumber}
             onCreated={onFileCreated}
             onOpenDialog={() => setOpenUploadDialog(true)}
-            buttonProps={{ type: "button" }}
+            buttonProps={{ type: "button", disabled: disabled }}
           />
-
-          {/* <span>{`No. of attachments: ${attachedCount}`}</span> */}
         </Box>
       </Box>
 
@@ -95,7 +97,6 @@ const InputBoxSection: FC<Props> = ({
         onClose={() => setOpenUploadDialog(false)}
         saleOrderNumber={saleOrderNumber}
         onUploaded={onFileCreated} 
-        // onAttachedCountChange={setAttachedCount}
       />
     </div>
   );

@@ -8,13 +8,15 @@ import {
   Lookup,
   LookupRow,
   EditableField,
+  User,
 } from "@/app/admin/components/types/admin";
 import { formatDateLocalYYYYMMDD } from "@/app/admin/components/utils/date";
 
 const INLINE_EDIT_FIELDS: EditableField[] = [
   "status",
   "priority",
-  "terminalId",
+  "assignedUserId",
+  "fgLocation",
 ];
 
 export function useAdminDashboard() {
@@ -55,7 +57,7 @@ export function useAdminDashboard() {
     plantCodes: [],
     salesZones: [],
     packConfigs: [],
-    terminals: [],
+    assignableUsers: [],
     customers: [],
   });
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -108,7 +110,7 @@ export function useAdminDashboard() {
     setError("");
     const token = localStorage.getItem("token");
     try {
-      const [p, t, pc, sz, pk, tm, c] = await Promise.all([
+      const [p, t, pc, sz, pk, au, c] = await Promise.all([
         axios.get(API.LOOKUP.PRODUCTS, {
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -124,7 +126,7 @@ export function useAdminDashboard() {
         axios.get(API.LOOKUP.PACK_CONFIGS, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(API.LOOKUP.TERMINALS, {
+        axios.get(`${API.ADMIN.USERS}?role=user`, { 
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(API.LOOKUP.CUSTOMERS, {
@@ -137,7 +139,7 @@ export function useAdminDashboard() {
         plantCodes: pc.data,
         salesZones: sz.data,
         packConfigs: pk.data,
-        terminals: tm.data,
+        assignableUsers: au.data,
         customers: c.data,
       });
     } catch {
@@ -211,9 +213,9 @@ export function useAdminDashboard() {
       const field = editingCell.field;
       let value: string | number | boolean | null = editValue;
 
-      if (field === "priority" || field === "terminalId") {
+      if (field === "priority" || field === "assignedUserId") {
         value = editValue === "" ? null : Number(editValue);
-      } else if (field === "status") {
+      } else if (field === "status" || field === "fgLocation") {
         value = editValue;
       }
 
@@ -298,8 +300,9 @@ export function useAdminDashboard() {
         salesZoneId,
         packConfigId,
         priority,
-        terminalId,
+        assignedUserId,
         specialRemarks,
+        fgLocation,
       } = patch;
 
       const payload: Record<string, unknown> = {};
@@ -318,12 +321,13 @@ export function useAdminDashboard() {
         payload.salesZoneId = Number(salesZoneId);
       if (packConfigId !== undefined && packConfigId !== null)
         payload.packConfigId = Number(packConfigId);
-      if (terminalId !== undefined && terminalId !== null)
-        payload.terminalId = Number(terminalId);
+      if (assignedUserId !== undefined && assignedUserId !== null)
+        payload.assignedUserId = Number(assignedUserId);
       if (priority !== undefined && priority !== null)
         payload.priority = Number(priority);
 
       if (specialRemarks !== undefined) payload.specialRemarks = specialRemarks;
+      if (fgLocation !== undefined) payload.fgLocation = fgLocation;
 
       await axios.patch(API.ADMIN.SALES_ORDER_BY_ID(orderId), payload, {
         headers: { Authorization: `Bearer ${token}` },

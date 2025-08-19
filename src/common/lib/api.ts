@@ -17,8 +17,6 @@ export const API = {
     SALES_ZONE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/sales-zones/${id}`,
     PACK_CONFIGS:    `${API_BASE_URL}/lookup/pack-configs`,
     PACK_CONFIG_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/pack-configs/${id}`,
-    TERMINALS:       `${API_BASE_URL}/lookup/terminals`,
-    TERMINAL_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/terminals/${id}`,
     CUSTOMERS:       `${API_BASE_URL}/lookup/customers`,
     CUSTOMER_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/customers/${id}`,
     PRINTERS:       `${API_BASE_URL}/lookup/printers`,
@@ -47,6 +45,9 @@ export const API = {
     SIGNUP:              `${API_BASE_URL}/auth/signup`,
     CHECK_EMAIL:         (email: string) =>
       `${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`,
+  },
+  USER_DASHBOARD: {
+    ORDERS: `${API_BASE_URL}/user-dashboard/orders`,
   },
   ERP_MATERIAL_FILES: {
     BASE: `${API_BASE_URL}/v1/erp-material-files`,

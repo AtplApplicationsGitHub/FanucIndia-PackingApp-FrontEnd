@@ -1,5 +1,8 @@
 "use client";
 
+// This is the new shared page for the detailed order view.
+// Its content is moved from the old admin-specific page.
+
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -8,7 +11,6 @@ import {
   CircularProgress,
   Snackbar,
   Box,
-  Typography,
 } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
@@ -26,7 +28,6 @@ import {
 } from "@/common/lib/api";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 
-// Robust error message extractor (keeps your original behavior)
 type ApiError = {
   response?: { data?: { message?: string | { message?: string } } };
   message?: string;
@@ -56,7 +57,6 @@ function extractErrorMessage(error: unknown): string {
 }
 
 export default function MaterialDataPage() {
-  // ---- URL / ID handling (preserved)
   const params = useParams<{ orderId: string }>();
   const idStr = useMemo(
     () => (typeof params.orderId === "string" ? params.orderId : ""),
@@ -64,15 +64,10 @@ export default function MaterialDataPage() {
   );
   const orderId = Number(idStr);  
 
-  // ---- notices & errors (preserved)
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
 
-  // ---- data hooks
   const { data: header, error: hdrError } = useOrderHeader(orderId);
-
-  // Your original hook returned SWR-style { data, error, refetch }.
-  // Our current hook returns { rows, loading, error }. We’ll keep a local copy, like before.
   const {
     rows: fetchedRows = [],
     error: matError,
@@ -91,12 +86,11 @@ export default function MaterialDataPage() {
     error: mutErrPacking,
   } = useIncrementPackingStage(orderId);
 
-  // Keep localRows + sync (preserved behavior)
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   useEffect(() => {
     setLocalRows(fetchedRows);
   }, [fetchedRows]);
-
+  
   const isOrderFullyComplete = useMemo(() => {
     if (!localRows || localRows.length === 0) {
       return false;
@@ -109,23 +103,15 @@ export default function MaterialDataPage() {
     );
   }, [localRows]);
 
-  // Validate ID early (preserved)
-  if (!idStr) {
+
+  if (!idStr || isNaN(orderId)) {
     return (
       <Alert severity="error" sx={{ m: 6 }}>
         Invalid Order ID in URL.
       </Alert>
     );
   }
-  if (isNaN(orderId)) {
-    return (
-      <Alert severity="error" sx={{ m: 6 }}>
-        Order ID is not a number.
-      </Alert>
-    );
-  }
 
-  // Show load/error states (preserved)
   if (hdrError || matError) {
     return (
       <Alert severity="error" sx={{ m: 6 }}>
@@ -157,8 +143,6 @@ export default function MaterialDataPage() {
     localRows.length > 0 &&
     localRows.every((r) => r.issueStage >= r.reqQuantity);
 
-  // Local refetch to preserve old “refetch()” flow without a hard reload
-  // We map API data back to MaterialRow shape if API returns raw items.
   type ApiMaterial = {
     ID: number;
     Material_Code: string;
@@ -202,42 +186,13 @@ export default function MaterialDataPage() {
     }
   };
 
-  // ---- scan submit (preserved pattern + now supports Packing)
   const handleProcess = async (code: string) => {
     setEditError(null);
     try {
       if (!allIssued) {
         await incIssue(code);
-        // optimistic ++ for Issue
-        setLocalRows((prev) =>
-          prev.map((r) =>
-            r.materialCode === code
-              ? {
-                  ...r,
-                  issueStage: Math.min(
-                    (Number(r.issueStage) || 0) + 1,
-                    Number(r.reqQuantity) || 0,
-                  ),
-                }
-              : r,
-          ),
-        );
       } else {
         await incPacking(code);
-        // optimistic ++ for Packing
-        setLocalRows((prev) =>
-          prev.map((r) =>
-            r.materialCode === code
-              ? {
-                  ...r,
-                  packingStage: Math.min(
-                    (Number(r.packingStage) || 0) + 1,
-                    Math.min(Number(r.reqQuantity) || 0, Number(r.issueStage) || 0),
-                  ),
-                }
-              : r,
-          ),
-        );
       }
       await refetch();
     } catch (err: unknown) {
@@ -249,66 +204,8 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updateIssueStage(orderId, code, stage);
-      const raw = data as Record<string, unknown>;
-      const candidate =
-        (raw.updatedMaterial as Record<string, unknown> | undefined) ??
-        (raw.updatedRow as Record<string, unknown> | undefined) ??
-        (raw.updated as Record<string, unknown> | undefined) ??
-        raw;
-      const m =
-        typeof candidate === "object" && candidate !== null
-          ? (candidate as Record<string, unknown>)
-          : raw;
-
-      const old =
-        localRows.find(
-          (r) =>
-            r.materialCode === code ||
-            (typeof m["ID"] === "number" ? r.id === m["ID"] : false),
-        ) ?? localRows[0]!;
-
-      const getNumber = (key: string, fallback: number): number => {
-        const v = m[key];
-        if (typeof v === "number") return v;
-        if (typeof v === "string") {
-          const n = Number(v);
-          return isNaN(n) ? fallback : n;
-        }
-        return fallback;
-      };
-      const getString = (key: string, fallback: string): string => {
-        const v = m[key];
-        return typeof v === "string" ? v : fallback;
-      };
-
-      const updatedRow: MaterialRow = {
-        ...old,
-        id: getNumber("ID", old.id),
-        siNo: getNumber("SI_No", old.siNo),
-        materialCode: getString("Material_Code", old.materialCode),
-        materialDescription: getString("Material_Description", old.materialDescription),
-        batchNo: getString("Batch_No", old.batchNo),
-        soDonorBatch: getString("SO_Donor_Batch", old.soDonorBatch),
-        certNo: getString("Cert_No", old.certNo),
-        binNo: getString("Bin_No", old.binNo),
-        adf: getString("A_D_F", old.adf),
-        reqQuantity: getNumber("Required_Qty", old.reqQuantity),
-        issueStage: getNumber("Issue_stage", old.issueStage),
-        packingStage: getNumber("Packing_stage", old.packingStage ?? 0),
-        machineModel: getString("Machine_Model", old.machineModel ?? ""),
-        cncSerialNo: getString("CNC_Serial_No", old.cncSerialNo ?? ""),
-      };
-
-      setLocalRows((prev) =>
-        prev.map((r) =>
-          r.materialCode === code ||
-          (typeof m["ID"] === "number" ? r.id === m["ID"] : false)
-            ? updatedRow
-            : r,
-        ),
-      );
-
-      return updatedRow;
+      await refetch();
+      return data as MaterialRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
       throw err;
@@ -319,66 +216,8 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage);
-      const raw = data as Record<string, unknown>;
-      const candidate =
-        (raw.updatedMaterial as Record<string, unknown> | undefined) ??
-        (raw.updatedRow as Record<string, unknown> | undefined) ??
-        (raw.updated as Record<string, unknown> | undefined) ??
-        raw;
-      const m =
-        typeof candidate === "object" && candidate !== null
-          ? (candidate as Record<string, unknown>)
-          : raw;
-
-      const old =
-        localRows.find(
-          (r) =>
-            r.materialCode === code ||
-            (typeof m["ID"] === "number" ? r.id === m["ID"] : false),
-        ) ?? localRows[0]!;
-
-      const getNumber = (key: string, fallback: number): number => {
-        const v = m[key];
-        if (typeof v === "number") return v;
-        if (typeof v === "string") {
-          const n = Number(v);
-          return isNaN(n) ? fallback : n;
-        }
-        return fallback;
-      };
-      const getString = (key: string, fallback: string): string => {
-        const v = m[key];
-        return typeof v === "string" ? v : fallback;
-      };
-
-      const updatedRow: MaterialRow = {
-        ...old,
-        id: getNumber("ID", old.id),
-        siNo: getNumber("SI_No", old.siNo),
-        materialCode: getString("Material_Code", old.materialCode),
-        materialDescription: getString("Material_Description", old.materialDescription),
-        batchNo: getString("Batch_No", old.batchNo),
-        soDonorBatch: getString("SO_Donor_Batch", old.soDonorBatch),
-        certNo: getString("Cert_No", old.certNo),
-        binNo: getString("Bin_No", old.binNo),
-        adf: getString("A_D_F", old.adf),
-        reqQuantity: getNumber("Required_Qty", old.reqQuantity),
-        issueStage: getNumber("Issue_stage", old.issueStage),
-        packingStage: getNumber("Packing_stage", old.packingStage ?? 0),
-        machineModel: getString("Machine_Model", old.machineModel ?? ""),
-        cncSerialNo: getString("CNC_Serial_No", old.cncSerialNo ?? ""),
-      };
-
-      setLocalRows((prev) =>
-        prev.map((r) =>
-          r.materialCode === code ||
-          (typeof m["ID"] === "number" ? r.id === m["ID"] : false)
-            ? updatedRow
-            : r,
-        ),
-      );
-
-      return updatedRow;
+      await refetch();
+      return data as MaterialRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
       throw err;
@@ -389,24 +228,15 @@ export default function MaterialDataPage() {
 
   return (
     <main className="p-6 space-y-6">
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
-        }}
-      >
-        <HeaderSection
-          so={so}
-          customerName={customerName}
-          transferOrder={transferOrder}
-          fgObd={fgObd}
-          machineModel={machineModel}
-          cncSerialNo={cncSerialNo}
-          items={localRows}
-        />
-      </Box>
+      <HeaderSection
+        so={so}
+        customerName={customerName}
+        transferOrder={transferOrder}
+        fgObd={fgObd}
+        machineModel={machineModel}
+        cncSerialNo={cncSerialNo}
+        items={localRows}
+      />
 
       {isOrderFullyComplete ? (
         <Alert severity="success" sx={{ my: 4 }}>

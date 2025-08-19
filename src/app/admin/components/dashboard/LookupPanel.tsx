@@ -22,7 +22,6 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   plantCodes: "plant-codes",
   salesZones: "sales-zones",
   packConfigs: "pack-configs",
-  terminals: "terminals",
   customers: "customers",
   printers: "printers",
 };
@@ -35,7 +34,6 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Delivery Plant Code", key: "plantCodes" },
   { label: "Sales Zone", key: "salesZones" },
   { label: "Packing Configuration", key: "packConfigs" },
-  { label: "Terminals", key: "terminals" },
   { label: "Customers", key: "customers" },
   { label: "Printers", key: "printers" },
 ];

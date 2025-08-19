@@ -4,7 +4,6 @@ import {
   DataGrid,
   GridColDef,
   GridRowClassNameParams,
-  // GridCellParams,
 } from "@mui/x-data-grid";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import { alpha } from "@mui/material/styles";
@@ -21,6 +20,7 @@ interface Props {
     value: number
   ) => Promise<MaterialRow | null>;
   onProcessRowUpdateError?: (error: Error) => void;
+  isOrderFullyComplete?: boolean; 
 }
 
 export default function MaterialDataTable({
@@ -29,6 +29,7 @@ export default function MaterialDataTable({
   onUpdateIssueStage,
   onUpdatePackingStage,
   onProcessRowUpdateError,
+  isOrderFullyComplete = false,
 }: Props) {
   // Packing becomes editable only when every row is fully issued
   const allIssued =
@@ -122,7 +123,7 @@ export default function MaterialDataTable({
       headerName: "Issue Stage",
       type: "number",
       width: 120,
-      editable: Boolean(onUpdateIssueStage),
+      editable: !isOrderFullyComplete && Boolean(onUpdateIssueStage),
       align: "center",
       headerAlign: "center",
       cellClassName: cellClass,
@@ -132,7 +133,7 @@ export default function MaterialDataTable({
       headerName: "Packing Stage",
       type: "number",
       width: 120,
-      editable: Boolean(onUpdatePackingStage) && allIssued,
+      editable: !isOrderFullyComplete && Boolean(onUpdatePackingStage) && allIssued,
       align: "center",
       headerAlign: "center",
       // cellClassName: allIssued ? "" : "packing-disabled",
@@ -152,6 +153,7 @@ export default function MaterialDataTable({
   };
 
   const processRowUpdate = async (newRow: MaterialRow, oldRow: MaterialRow) => {
+    if (isOrderFullyComplete) return oldRow;
     // nothing to do if no handlers
     if (!onUpdateIssueStage && !onUpdatePackingStage) return oldRow;
 

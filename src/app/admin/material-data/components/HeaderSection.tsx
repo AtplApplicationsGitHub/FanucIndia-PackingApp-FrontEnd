@@ -1,100 +1,6 @@
-// "use client";
-
-// import { FC } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { Box, Typography, useTheme, Button } from '@mui/material';
-// import { ArrowLeft } from 'lucide-react';
-
-// interface HeaderProps {
-//   so: string;
-//   customerName: string;
-//   transferOrder: string;
-//   fgObd: string;
-//   machineModel: string;
-//   cncSerialNo: string;
-// }
-
-// const HeaderSection: FC<HeaderProps> = ({
-//   so,
-//   customerName,
-//   transferOrder,
-//   fgObd,
-//   machineModel,
-//   cncSerialNo,
-// }) => {
-//   const theme = useTheme();
-//   const router = useRouter();
-
-//   return (
-//     <Box position="relative" width="100%" py={3} sx={{ backgroundColor: theme.palette.background.paper }}>
-//       <Box position="absolute" top={16} left={16}>
-//         <Button
-//           variant="text"
-//           startIcon={<ArrowLeft size={16} />}
-//           onClick={() => router.back()}
-//           sx={{
-//             padding: '4px 8px',
-//             color: theme.palette.text.primary,
-//             textTransform: 'none',
-//             '&:hover': {
-//               backgroundColor: theme.palette.action.hover,
-//             },
-//           }}
-//         >
-//           Go Back
-//         </Button>
-//       </Box>
-
-//       <Box
-//         display="grid"
-//         gridTemplateColumns="repeat(4, 1fr)"
-//         gap={3}
-//         alignItems="center"
-//         mb={4}
-//       >
-//         {[
-//           { label: 'SO', value: so },
-//           { label: 'Customer Name', value: customerName },
-//           { label: 'Transfer Order', value: transferOrder },
-//           { label: 'FG OBD', value: fgObd },
-//         ].map((item, i) => (
-//           <Box key={i} textAlign="center">
-//             <Typography variant="body2" color="text.secondary">
-//               {item.label}:
-//             </Typography>
-//             <Typography variant="subtitle1" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-//               {item.value}
-//             </Typography>
-//           </Box>
-//         ))}
-//       </Box>
-
-//       <Box display="grid" gridTemplateColumns="repeat(4, 1fr)" gap={3} alignItems="center">
-
-//         <Box textAlign="center">
-//           <Typography variant="body2" color="text.secondary">Machine Model:</Typography>
-//           <Typography variant="subtitle1" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-//             {machineModel}
-//           </Typography>
-//         </Box>
-
-//         <Box textAlign="center">
-//           <Typography variant="body2" color="text.secondary">CNC Serial No:</Typography>
-//           <Typography variant="subtitle1" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-//             {cncSerialNo}
-//           </Typography>
-//         </Box>
-
-//       </Box>
-//     </Box>
-//   );
-// };
-
-// export default HeaderSection;
-
 "use client";
 
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, useTheme, Button, Tooltip } from '@mui/material';
 import { ArrowLeft } from 'lucide-react';
@@ -107,7 +13,7 @@ interface HeaderProps {
   fgObd: string;
   machineModel: string;
   cncSerialNo: string;
-  items: MaterialRow[]; // NEW
+  items: MaterialRow[];
 }
 
 const HeaderSection: FC<HeaderProps> = ({
@@ -121,43 +27,100 @@ const HeaderSection: FC<HeaderProps> = ({
 }) => {
   const theme = useTheme();
   const router = useRouter();
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Derived KPIs
-  const { totalItems, completedItems, sumRequired, sumPickedClamped } = useMemo(() => {
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserRole(user.role);
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleGoBack = () => {
+    // If the user has the 'user' role, navigate them to their specific dashboard view.
+    // Otherwise, use the default browser back behavior for admins.
+    if (userRole === 'user') {
+      sessionStorage.setItem('userDashboardView', 'pick_pack');
+      router.push('/user/dashboard');
+    } else {
+      router.back();
+    }
+  };
+
+  const {
+    totalItems,
+    completedIssuedItems,
+    sumRequired,
+    sumIssuedClamped,
+    completedPackedItems,
+    sumPackedClamped,
+    isIssuingComplete,
+  } = useMemo(() => {
     const list = Array.isArray(items) ? items : [];
+    if (list.length === 0) {
+      return {
+        totalItems: 0,
+        completedIssuedItems: 0,
+        sumRequired: 0,
+        sumIssuedClamped: 0,
+        completedPackedItems: 0,
+        sumPackedClamped: 0,
+        isIssuingComplete: false,
+      };
+    }
 
     const total = list.length;
-
-    const completed = list.reduce((acc, it) => {
-      const req = Math.max(0, Number(it.reqQuantity) || 0);
-      const picked = Math.max(0, Number(it.issueStage) || 0);
-      return acc + (req > 0 && picked >= req ? 1 : 0);
-    }, 0);
-
     const reqSum = list.reduce((acc, it) => acc + Math.max(0, Number(it.reqQuantity) || 0), 0);
 
-    const pickedSumClamped = list.reduce((acc, it) => {
+    const completedIssued = list.reduce((acc, it) => {
       const req = Math.max(0, Number(it.reqQuantity) || 0);
-      const picked = Math.max(0, Number(it.issueStage) || 0);
-      return acc + Math.min(picked, req);
+      const issued = Math.max(0, Number(it.issueStage) || 0);
+      return acc + (req > 0 && issued >= req ? 1 : 0);
     }, 0);
+
+    const issuedSumClamped = list.reduce((acc, it) => {
+      const req = Math.max(0, Number(it.reqQuantity) || 0);
+      const issued = Math.max(0, Number(it.issueStage) || 0);
+      return acc + Math.min(issued, req);
+    }, 0);
+
+    const completedPacked = list.reduce((acc, it) => {
+      const req = Math.max(0, Number(it.reqQuantity) || 0);
+      const packed = Math.max(0, Number(it.packingStage) || 0);
+      return acc + (req > 0 && packed >= req ? 1 : 0);
+    }, 0);
+
+    const packedSumClamped = list.reduce((acc, it) => {
+      const req = Math.max(0, Number(it.reqQuantity) || 0);
+      const packed = Math.max(0, Number(it.packingStage) || 0);
+      return acc + Math.min(packed, req);
+    }, 0);
+
+    const allIssued = completedIssued === total;
 
     return {
       totalItems: total,
-      completedItems: completed,
       sumRequired: reqSum,
-      sumPickedClamped: pickedSumClamped,
+      completedIssuedItems: completedIssued,
+      sumIssuedClamped: issuedSumClamped,
+      completedPackedItems: completedPacked,
+      sumPackedClamped: packedSumClamped,
+      isIssuingComplete: allIssued,
     };
   }, [items]);
 
+  const kpiView = isIssuingComplete ? 'packing' : 'issue';
+
   return (
     <Box position="relative" width="100%" py={3} sx={{ backgroundColor: theme.palette.background.paper }}>
-      {/* Back */}
       <Box position="absolute" top={16} left={16}>
         <Button
           variant="text"
           startIcon={<ArrowLeft size={16} />}
-          onClick={() => router.back()}
+          onClick={handleGoBack}
           sx={{
             padding: '4px 8px',
             color: theme.palette.text.primary,
@@ -169,7 +132,6 @@ const HeaderSection: FC<HeaderProps> = ({
         </Button>
       </Box>
 
-      {/* Row 1 */}
       <Box
         display="grid"
         gridTemplateColumns="repeat(4, 1fr)"
@@ -192,10 +154,9 @@ const HeaderSection: FC<HeaderProps> = ({
         ))}
       </Box>
 
-      {/* Row 2: existing + new columns */}
       <Box
         display="grid"
-        gridTemplateColumns="repeat(4, 1fr)" // was 4 → now 6
+        gridTemplateColumns="repeat(4, 1fr)"
         gap={3}
         alignItems="center"
       >
@@ -213,37 +174,32 @@ const HeaderSection: FC<HeaderProps> = ({
           </Typography>
         </Box>
 
-        {/* NEW: Total items */}
         <Box textAlign="center">
-          <Typography variant="body2" color="text.secondary">Total items:</Typography>
-          <Tooltip title="Completed materials / Total materials" arrow placement="top">
+          <Typography variant="body2" color="text.secondary">
+            {kpiView === 'issue' ? 'Total Issued:' : 'Total Packed:'}
+          </Typography>
+          <Tooltip title={kpiView === 'issue' ? "Completed Issued / Total materials" : "Completed Packed / Total materials"} arrow placement="top">
             <Typography
               variant="subtitle1"
               sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}
-              aria-label="total-items-counter"
             >
-              {completedItems}/{totalItems}
+              {kpiView === 'issue' ? `${completedIssuedItems}/${totalItems}` : `${completedPackedItems}/${totalItems}`}
             </Typography>
           </Tooltip>
         </Box>
-
-        {/* NEW: Required vs Picked */}
         <Box textAlign="center">
-          <Typography variant="body2" color="text.secondary">Required vs Picked:</Typography>
-          <Tooltip title="Picked quantity (clamped) / Total required quantity" arrow placement="top">
+          <Typography variant="body2" color="text.secondary">
+            {kpiView === 'issue' ? 'Required vs Issued:' : 'Required vs Packed:'}
+          </Typography>
+          <Tooltip title={kpiView === 'issue' ? "Issued quantity (clamped) / Total required quantity" : "Packed quantity (clamped) / Total required quantity"} arrow placement="top">
             <Typography
               variant="subtitle1"
               sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}
-              aria-label="required-vs-picked-counter"
             >
-              {sumPickedClamped}/{sumRequired}
+              {kpiView === 'issue' ? `${sumIssuedClamped}/${sumRequired}` : `${sumPackedClamped}/${sumRequired}`}
             </Typography>
           </Tooltip>
         </Box>
-
-        {/* optional spacers to balance 6 columns */}
-        <span />
-        <span />
       </Box>
     </Box>
   );

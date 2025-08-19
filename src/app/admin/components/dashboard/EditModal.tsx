@@ -103,11 +103,12 @@ const FIELDS: {
   { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
   { key: "priority", label: "Priority", type: "number" },
   {
-    key: "terminalId",
-    label: "Terminal",
+    key: "assignedUserId",
+    label: "Assigned User",
     type: "select",
-    options: "terminals",
+    options: "assignableUsers",
   },
+  { key: "fgLocation", label: "FG Location" },
 ];
 
 const PATCHABLE_KEYS = [
@@ -123,9 +124,10 @@ const PATCHABLE_KEYS = [
   "packConfigId",
   "status",
   "priority",
-  "terminalId",
+  "assignedUserId",
   "customerId",
   "specialRemarks",
+  "fgLocation",
 ] as const;
 
 type SalesOrderPatch = Partial<
@@ -181,7 +183,7 @@ export default function AdminOrderEditModal({
         case "plantCodeId":
         case "salesZoneId":
         case "packConfigId":
-        case "terminalId":
+        case "assignedUserId":
         case "customerId":
           if (typeof v === "string" && v.trim() !== "") {
             patch[key] = Number(v) as SalesOrderPatch[typeof key];
@@ -210,6 +212,7 @@ export default function AdminOrderEditModal({
 
         case "specialRemarks":
         case "status":
+        case "fgLocation":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
           } else if (v === null) {

@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 
-type InlineEditField = "status" | "priority" | "terminalId";
+type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 type InlineEdit = {
   id: number;
   field: InlineEditField;
@@ -85,7 +85,7 @@ export default function AdminOrdersTable({
       let value = inlineEdit.value;
       if (
         inlineEdit.field === "priority" ||
-        inlineEdit.field === "terminalId"
+        inlineEdit.field === "assignedUserId"
       ) {
         value = value === "" || value === null ? null : Number(value);
       }
@@ -143,7 +143,8 @@ export default function AdminOrdersTable({
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  router.push(`/admin/material-data/${row.id}`);
+                  // router.push(`/admin/material-data/${row.id}`);
+                  router.push(`/orders/${row.id}`);
                   handleMenuClose();
                 }}
               >
@@ -323,14 +324,14 @@ export default function AdminOrdersTable({
       },
     },
     {
-      field: "terminalId",
-      headerName: "Terminal",
+      field: "assignedUserId",
+      headerName: "Assigned User",
       width: 110,
       renderCell: (params: GridRenderCellParams<SalesOrder>) => {
         const row = params.row;
         return inlineEdit &&
           inlineEdit.id === row.id &&
-          inlineEdit.field === "terminalId" ? (
+          inlineEdit.field === "assignedUserId" ? (
           <FormControl variant="standard" size="small" sx={{ minWidth: 80 }}>
             <Select
               value={inlineEdit.value ?? ""}
@@ -340,10 +341,12 @@ export default function AdminOrdersTable({
               onBlur={handleInlineSave}
               autoFocus
             >
-              <MenuItem value="">Select</MenuItem>
-              {lookup.terminals.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
+              <MenuItem value="">
+                <em>Unassigned</em>
+              </MenuItem>
+              {lookup.assignableUsers.map((u) => (
+                <MenuItem key={u.id} value={u.id}>
+                  {u.name}
                 </MenuItem>
               ))}
             </Select>
@@ -354,15 +357,65 @@ export default function AdminOrdersTable({
             onClick={() =>
               setInlineEdit({
                 id: row.id,
-                field: "terminalId",
-                value: row.terminalId ?? "",
+                field: "assignedUserId",
+                value: row.assignedUserId ?? "",
               })
             }
             title="Click to edit"
           >
-            {row.terminal?.name ||
-              findName(lookup.terminals, row.terminalId ?? 0) ||
+            {row.assignedUser?.name ||
+              findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
               "-"}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "fgLocation",
+      headerName: "FG Location",
+      width: 120,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
+        const row = params.row;
+        return inlineEdit &&
+          inlineEdit.id === row.id &&
+          inlineEdit.field === "fgLocation" ? (
+          <TextField
+            value={inlineEdit.value ?? ""}
+            size="small"
+            onChange={(e) =>
+              setInlineEdit({ ...inlineEdit, value: e.target.value })
+            }
+            onBlur={handleInlineSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleInlineSave();
+              if (e.key === "Escape") setInlineEdit(null);
+            }}
+            autoFocus
+            variant="standard"
+            slotProps={{
+              htmlInput: { maxLength: 100 },
+            }}
+            sx={{ width: "100%" }}
+          />
+        ) : (
+          <Box
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline dotted",
+              width: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            onClick={() =>
+              setInlineEdit({
+                id: row.id,
+                field: "fgLocation",
+                value: row.fgLocation || "",
+              })
+            }
+            title={row.fgLocation || "Click to edit"}
+          >
+            {row.fgLocation || "-"}
           </Box>
         );
       },

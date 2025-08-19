@@ -19,11 +19,12 @@ export type SalesOrder = {
   packConfigId?: number;
   status?: string | null;
   priority?: number | null;
-  terminal?: { name?: string } | null;
-  terminalId?: number;
+  assignedUser?: { id: number; name: string } | null; // Replaced terminal
+  assignedUserId?: number; // Replaced terminalId
   customerId?: number;
   customer?: { id: number; name: string } | null;
   specialRemarks?: string | null;
+  fgLocation?: string | null; 
 };
 
 export type Lookup = {
@@ -32,19 +33,19 @@ export type Lookup = {
   plantCodes: { id: number; code: string }[];
   salesZones: { id: number; name: string }[];
   packConfigs: { id: number; configName: string }[];
-  terminals: { id: number; name: string }[];
+  assignableUsers: { id: number; name: string }[]; // Replaced terminals
   customers: { id: number; name: string }[];
   [key: string]: LookupRow[];
 };
 
 export type LookupRow = {
   id: number;
-  [key: string]: string | number | boolean | null | undefined;
+  [key:string]: string | number | boolean | null | undefined;
 };
 
 export type MasterRow = {
   id: number;
-  [key: string]: string | number | boolean | null | undefined;
+  [key:string]: string | number | boolean | null | undefined;
 };
 
 export type EditableField =
@@ -60,8 +61,9 @@ export type EditableField =
   | "packConfigId"
   | "status"
   | "priority"
-  | "terminalId"
-  | "specialRemarks";
+  | "assignedUserId" // Replaced terminalId
+  | "specialRemarks"
+  | "fgLocation";
 
 export type EditingCell = { id: number; field: EditableField } | null;
 
