@@ -61,7 +61,7 @@ export type EditableField =
   | "packConfigId"
   | "status"
   | "priority"
-  | "assignedUserId" // Replaced terminalId
+  | "assignedUserId" 
   | "specialRemarks"
   | "fgLocation";
 

@@ -14,7 +14,7 @@ import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { useAdminDashboard } from "@/app/admin/components/hooks/useAdminDashboard";
 import axios from "axios";
 import { API } from "@/common/lib/api";
-import { SalesOrder } from "@/app/admin/components/types/admin";
+import { SalesOrder, EditableField } from "@/app/admin/components/types/admin";
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
 
   const onUpdateInline = async (
     id: number,
-    field: "status" | "priority" | "terminalId",
+    field: EditableField,
     value: string | number | null
   ) => {
     try {
