@@ -10,7 +10,6 @@ import {
   Backdrop,
   CircularProgress,
   Snackbar,
-  Box,
 } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";

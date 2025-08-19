@@ -35,7 +35,7 @@ const HeaderSection: FC<HeaderProps> = ({
       try {
         const user = JSON.parse(storedUser);
         setUserRole(user.role);
-      } catch (e) {}
+      } catch {}
     }
   }, []);
 

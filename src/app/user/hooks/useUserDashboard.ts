@@ -53,7 +53,7 @@ export function useUserDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(response.data);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch assigned orders.");
       setAlert({ severity: "error", message: "Could not load your orders." });
     } finally {

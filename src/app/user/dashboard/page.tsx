@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Box, Typography, Paper, Snackbar, Alert } from "@mui/material";
+import { Box, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import AnimatedPage from "@/common/components/AnimatedPage";
 import UserDashboardHeader from "@/app/user/components/Header";

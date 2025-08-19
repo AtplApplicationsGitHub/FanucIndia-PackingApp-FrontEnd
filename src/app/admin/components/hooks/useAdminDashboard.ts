@@ -8,7 +8,6 @@ import {
   Lookup,
   LookupRow,
   EditableField,
-  User,
 } from "@/app/admin/components/types/admin";
 import { formatDateLocalYYYYMMDD } from "@/app/admin/components/utils/date";
 
@@ -379,9 +378,6 @@ export function useAdminDashboard() {
         case "packConfigs":
           url = API.LOOKUP.PACK_CONFIGS;
           break;
-        case "terminals":
-          url = API.LOOKUP.TERMINALS;
-          break;
         case "customers":
           url = API.LOOKUP.CUSTOMERS;
           break;
@@ -440,9 +436,6 @@ export function useAdminDashboard() {
         case "packConfigs":
           url = API.LOOKUP.PACK_CONFIG_BY_ID(id);
           break;
-        case "terminals":
-          url = API.LOOKUP.TERMINAL_BY_ID(id);
-          break;
         case "customers":
           url = API.LOOKUP.CUSTOMER_BY_ID(id);
           break;
@@ -489,9 +482,6 @@ export function useAdminDashboard() {
           break;
         case "packConfigs":
           url = API.LOOKUP.PACK_CONFIG_BY_ID(id);
-          break;
-        case "terminals":
-          url = API.LOOKUP.TERMINAL_BY_ID(id);
           break;
         case "customers":
           url = API.LOOKUP.CUSTOMER_BY_ID(id);
@@ -556,9 +546,6 @@ export function useAdminDashboard() {
           break;
         case "packConfigs":
           url = API.LOOKUP.PACK_CONFIGS;
-          break;
-        case "terminals":
-          url = API.LOOKUP.TERMINALS;
           break;
         case "customers":
           url = API.LOOKUP.CUSTOMERS;

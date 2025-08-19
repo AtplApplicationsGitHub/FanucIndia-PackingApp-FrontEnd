@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
   role: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function middleware(request: NextRequest) {

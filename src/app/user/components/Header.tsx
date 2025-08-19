@@ -16,7 +16,7 @@ const FANUC_BLUE = "#3b579d";
 type Props = {
   userName: string;
   view: UserDashboardView;
-  setView: React.Dispatch<React.SetStateAction<UserDashboardView>>;
+  setView: (view: UserDashboardView) => void; // Corrected the type here
 };
 
 const menuItems = [
