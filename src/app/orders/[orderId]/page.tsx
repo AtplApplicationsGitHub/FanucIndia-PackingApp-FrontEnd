@@ -21,21 +21,17 @@ import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
 
 function extractErrorMessage(error: unknown): string {
-  // Handle standard JavaScript Error objects first, as this is what our API utility throws.
   if (error instanceof Error) {
     try {
-      // Attempt to parse the error message as JSON, which is how our backend sends it.
       const parsed = JSON.parse(error.message);
       if (parsed && typeof parsed.message === "string") {
         return parsed.message;
       }
     } catch {
-      // If parsing fails, it's just a regular error message string.
       return error.message;
     }
   }
 
-  // Handle Axios errors as a fallback for other parts of the app.
   if (axios.isAxiosError(error)) {
     if (
       error.response?.data &&
@@ -52,7 +48,6 @@ export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
   const router = useRouter();
   const [_isRedirecting, setIsRedirecting] = useState(false);
-
   const [_userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
@@ -218,13 +213,11 @@ export default function MaterialDataPage() {
     try {
       let response: { issueStageCompleted?: boolean } | undefined;
       if (!allIssued) {
-        response = await incIssue(code); // This now returns the backend response
+        response = await incIssue(code); 
       } else {
-        // Packing stage logic remains the same
         await incPacking(code);
       }
       
-      // Check for the completion flag from the response
       if (response && response.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
@@ -233,7 +226,6 @@ export default function MaterialDataPage() {
           router.push("/user/dashboard");
         }, 2500);
       } else {
-        // If not complete, just refetch the data as usual
         await refetch();
       }
     } catch (err: unknown) {
@@ -256,7 +248,6 @@ export default function MaterialDataPage() {
       const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
       setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
 
-      // Check for the completion flag from the response
       if ((data as { issueStageCompleted?: boolean })?.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
@@ -289,14 +280,14 @@ export default function MaterialDataPage() {
         throw new Error("Original row not found.");
       }
       const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
-      // Optimistically update the local state
+
       setLocalRows((prev) =>
         prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
       );
       return updatedRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
-      await refetch(); // Refetch on error to ensure consistency
+      await refetch(); 
       throw err;
     }
   };

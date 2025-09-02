@@ -132,7 +132,7 @@ const AttachmentDialog = ({
       });
       showSnackbar("Attachment deleted", "success");
       onUpdate();
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to delete attachment", "error");
     }
   };
@@ -281,7 +281,7 @@ export default function DispatchView() {
       const res = await fetchWithAuth(API.LOOKUP.CUSTOMERS);
       const data = await res.json();
       setCustomers(data);
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to load customers", "error");
     }
   }, []);
@@ -291,7 +291,7 @@ export default function DispatchView() {
       const res = await fetchWithAuth(API.LOOKUP.TRANSPORTERS);
       const data = await res.json();
       setTransporters(data);
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to load transporters", "error");
     }
   }, []);
@@ -302,7 +302,7 @@ export default function DispatchView() {
       const res = await fetchWithAuth(API.DISPATCH.BASE);
       const data = await res.json();
       setDispatches(data);
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to load dispatches", "error");
     } finally {
       setLoading(false);
@@ -315,7 +315,7 @@ export default function DispatchView() {
       const res = await fetchWithAuth(API.DISPATCH.SO(dispatchId));
       const data = await res.json();
       setDispatchSOs(data);
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to load SO numbers for dispatch", "error");
     } finally {
       setSoLoading(false);
@@ -455,7 +455,7 @@ export default function DispatchView() {
       });
       fetchDispatchSOs(selectedDispatch!.id);
       fetchDispatches();
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to delete SO number", "error");
     } finally {
       setSoLoading(false);
@@ -510,7 +510,7 @@ export default function DispatchView() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to generate PDF", "error");
     }
     handleMenuClose();
