@@ -4,11 +4,16 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/common/lib/auth";
 
-export function useInactivityLogout(timeoutMinutes = 10) {
+export function useInactivityLogout(timeoutMinutes = 10, enabled = true) { 
   const router = useRouter();
   const timeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+
+    if (!enabled) {
+      return;
+    }
+
     const handleLogout = () => {
       logoutUser(); 
       router.push("/login?reason=session-expired");
@@ -37,5 +42,5 @@ export function useInactivityLogout(timeoutMinutes = 10) {
       }
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [router, timeoutMinutes]);
+  }, [router, timeoutMinutes, enabled]); 
 }

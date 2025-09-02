@@ -1,37 +1,36 @@
-import React from 'react';
-import { Autocomplete, TextField } from '@mui/material';
+import React from "react";
+import { Autocomplete, TextField } from "@mui/material";
 
-interface SearchableSelectProps {
+type Option<V> = { value: V; label: string };
+
+interface SearchableSelectProps<V extends string | number> {
   label: string;
-  options: { value: any; label: string }[];
-  value: any;
-  onChange: (value: any) => void;
+  options: Option<V>[];
+  value: V | null;
+  onChange: (value: V | null) => void;
   name: string;
 }
 
-const SearchableSelect: React.FC<SearchableSelectProps> = ({
+export default function SearchableSelect<V extends string | number>({
   label,
   options,
   value,
   onChange,
   name,
-}) => {
+}: SearchableSelectProps<V>) {
   const selectedOption =
-    options.find((option) => option.value === value) || null;
+    options.find((option) => option.value === value) ?? null;
 
   return (
-    <Autocomplete
+    <Autocomplete<Option<V>, false, false, false>
       options={options}
-      getOptionLabel={(option) => option.label}
       value={selectedOption}
+      getOptionLabel={(option) => option.label}
+      isOptionEqualToValue={(option, val) => option.value === val.value}
       onChange={(_, newValue) => {
-        onChange(newValue ? newValue.value : '');
+        onChange(newValue ? newValue.value : null);
       }}
-      renderInput={(params) => (
-        <TextField {...params} label={label} name={name} />
-      )}
+      renderInput={(params) => <TextField {...params} label={label} name={name} />}
     />
   );
-};
-
-export default SearchableSelect;
+}

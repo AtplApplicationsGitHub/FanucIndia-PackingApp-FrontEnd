@@ -52,11 +52,52 @@ import UserDashboardHeader from "@/app/user/components/Header";
 import { getGreeting } from "@/app/sales/components/utils/sales";
 import LogoutButton from "@/common/components/LogoutButton";
 
-// --- Types ---
+interface SalesOrder {
+  saleOrderNumber: string;
+  status: string;
+  deliveryDate: string;
+  fgLocation?: string;
+  transferOrder?: string;
+  outboundDelivery?: string;
+  paymentClearance?: boolean;
+  priority?: string;
+  product?: { name: string };
+  customer?: { name: string; address?: string };
+  packConfig?: { configName: string };
+  transporter?: { name: string };
+  plantCode?: { code: string };
+  salesZone?: { name: string };
+  specialRemarks?: string;
+}
+
+interface DispatchInfo {
+  id: number;
+  customer: { name: string; address: string };
+  transporter?: { name: string };
+  vehicleNumber: string;
+  attachments?: { fileName: string }[];
+}
+
+interface MaterialDetail {
+  ID: number;
+  Material_Code: string;
+  Material_Description: string;
+  Batch_No: string;
+  SO_Donor_Batch?: string;
+  Cert_No?: string;
+  Bin_No?: string;
+  A_D_F?: string;
+  Required_Qty: number;
+  Issue_stage: number;
+  Packing_stage: number;
+  UpdatedBy?: string;
+  UpdatedDate?: string;
+}
+
 interface SoDetails {
-  salesOrder: any;
-  dispatchInfo: any[];
-  materialDetails: any[];
+  salesOrder: SalesOrder;
+  dispatchInfo: DispatchInfo[];
+  materialDetails: MaterialDetail[];
 }
 interface MaterialAttachment {
   ID: number;
@@ -214,7 +255,9 @@ export default function SoSearchPage() {
   const [packingDrawerOpen, setPackingDrawerOpen] = useState(false);
   const [materialDrawerOpen, setMaterialDrawerOpen] = useState(false);
 
-  const [drawerAttachments, setDrawerAttachments] = useState<any[]>([]);
+  const [drawerAttachments, setDrawerAttachments] = useState<
+    { fileName: string }[]
+  >([]);
   const [materialAttachments, setMaterialAttachments] = useState<
     MaterialAttachment[]
   >([]);
@@ -240,7 +283,7 @@ export default function SoSearchPage() {
       const user = JSON.parse(storedUser);
       setUserName(user.name || "");
       setUserRole(user.role || null);
-    } catch (e) {
+    } catch {
       router.replace("/login");
     }
   }, [router]);
@@ -259,8 +302,12 @@ export default function SoSearchPage() {
         }
       );
       setData(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to fetch SO details.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Failed to fetch SO details.");
+      } else {
+        setError("Failed to fetch SO details.");
+      }
     } finally {
       setLoading(false);
     }
@@ -295,7 +342,7 @@ export default function SoSearchPage() {
 
   const handlePrint = () => window.print();
 
-  const openDispatchAttachmentDrawer = (attachments: any[]) => {
+  const openDispatchAttachmentDrawer = (attachments: { fileName: string }[]) => {
     setDrawerAttachments(attachments);
     setDispatchDrawerOpen(true);
   };
@@ -310,7 +357,7 @@ export default function SoSearchPage() {
       const attachments = await res.json();
       setMaterialAttachments(attachments);
       setMaterialDrawerOpen(true);
-    } catch (err) {
+    } catch {
       setError("Failed to load material attachments.");
     }
   };
@@ -413,7 +460,7 @@ export default function SoSearchPage() {
         return (
           <AdminDashboardHeader
             userName={userName}
-            view={"" as any}
+            view={""}
             setView={(view) => {
               const newView = typeof view === "function" ? view("") : view;
               sessionStorage.setItem("adminView", newView);
@@ -425,7 +472,7 @@ export default function SoSearchPage() {
         return (
           <UserDashboardHeader
             userName={userName}
-            view={"home" as any}
+            view={"home"}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
               router.push("/user/dashboard");

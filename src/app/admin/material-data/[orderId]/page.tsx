@@ -26,40 +26,27 @@ import {
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
 
-// Robust error message extractor (keeps your original behavior)
-type ApiError = {
-  response?: { data?: { message?: string | { message?: string } } };
-  message?: string;
-};
-
 function extractErrorMessage(error: unknown): string {
-  // Handle standard JavaScript Error objects first, as this is what our API utility throws.
   if (error instanceof Error) {
     try {
-      // Attempt to parse the error message as JSON, which is how our backend sends it.
       const parsed = JSON.parse(error.message);
       if (parsed && typeof parsed.message === 'string') {
         return parsed.message;
       }
     } catch {
-      // If parsing fails, it's just a regular error message string.
       return error.message;
     }
   }
-
-  // Handle Axios errors as a fallback for other parts of the app.
   if (axios.isAxiosError(error)) {
     if (error.response?.data && typeof error.response.data.message === 'string') {
       return error.response.data.message;
     }
   }
 
-  // Final fallback for any other unexpected error types.
   return 'An unexpected error occurred.';
 }
 
 export default function MaterialDataPage2() {
-  // ---- URL / ID handling (preserved)
   const params = useParams<{ orderId: string }>();
   const idStr = useMemo(
     () => (typeof params.orderId === "string" ? params.orderId : ""),
@@ -67,34 +54,24 @@ export default function MaterialDataPage2() {
   );
   const orderId = Number(idStr);  
 
-  // ---- notices & errors (preserved)
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-
-  // ---- data hooks
   const { data: header, error: hdrError } = useOrderHeader(orderId);
-
-  // Your original hook returned SWR-style { data, error, refetch }.
-  // Our current hook returns { rows, loading, error }. We’ll keep a local copy, like before.
   const {
     rows: fetchedRows = [],
     error: matError,
     loading: matLoading,
   } = useErpMaterials(orderId);
-
   const {
     mutate: incIssue,
     loading: mutatingIssue,
     error: mutErrIssue,
   } = useIncrementIssueStage(orderId);
-
   const {
     mutate: incPacking,
     loading: mutatingPacking,
     error: mutErrPacking,
   } = useIncrementPackingStage(orderId);
-
-  // Keep localRows + sync (preserved behavior)
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   useEffect(() => {
     setLocalRows(fetchedRows);
@@ -111,8 +88,6 @@ export default function MaterialDataPage2() {
         row.issueStage === row.packingStage
     );
   }, [localRows]);
-
-  // Validate ID early (preserved)
   if (!idStr) {
     return (
       <Alert severity="error" sx={{ m: 6 }}>
@@ -127,8 +102,6 @@ export default function MaterialDataPage2() {
       </Alert>
     );
   }
-
-  // Show load/error states (preserved)
   if (hdrError || matError) {
     return (
       <Alert severity="error" sx={{ m: 6 }}>
@@ -160,8 +133,6 @@ export default function MaterialDataPage2() {
     localRows.length > 0 &&
     localRows.every((r) => r.issueStage >= r.reqQuantity);
 
-  // Local refetch to preserve old “refetch()” flow without a hard reload
-  // We map API data back to MaterialRow shape if API returns raw items.
   type ApiMaterial = {
     ID: number;
     Material_Code: string;
@@ -205,13 +176,12 @@ export default function MaterialDataPage2() {
     }
   };
 
-  // ---- scan submit (preserved pattern + now supports Packing)
   const handleProcess = async (code: string) => {
     setEditError(null);
     try {
       if (!allIssued) {
         await incIssue(code);
-        // optimistic ++ for Issue
+
         setLocalRows((prev) =>
           prev.map((r) =>
             r.materialCode === code
@@ -227,7 +197,7 @@ export default function MaterialDataPage2() {
         );
       } else {
         await incPacking(code);
-        // optimistic ++ for Packing
+
         setLocalRows((prev) =>
           prev.map((r) =>
             r.materialCode === code

@@ -45,16 +45,15 @@ function extractErrorMessage(error: unknown): string {
     }
   }
 
-  // Final fallback for any other unexpected error types.
   return "An unexpected error occurred.";
 }
 
 export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
   const router = useRouter();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [_isRedirecting, setIsRedirecting] = useState(false);
 
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [_userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -84,17 +83,15 @@ export default function MaterialDataPage() {
   const {
     mutate: incIssue,
     loading: mutatingIssue,
-    error: mutErrIssue,
   } = useIncrementIssueStage(orderId);
 
   const {
     mutate: incPacking,
     loading: mutatingPacking,
-    error: mutErrPacking,
   } = useIncrementPackingStage(orderId);
 
   const mapApiToMaterialRow = (
-    apiMaterial: any,
+    apiMaterial: ApiMaterial,
     oldRow: MaterialRow
   ): MaterialRow => {
     return {
@@ -219,7 +216,7 @@ export default function MaterialDataPage() {
   const handleProcess = async (code: string) => {
     setEditError(null);
     try {
-      let response: any;
+      let response: { issueStageCompleted?: boolean } | undefined;
       if (!allIssued) {
         response = await incIssue(code); // This now returns the backend response
       } else {
@@ -248,7 +245,7 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updateIssueStage(orderId, code, stage);
-      const updatedMaterial = (data as any)?.updatedMaterial;
+      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial; issueStageCompleted?: boolean })?.updatedMaterial;
       if (!updatedMaterial) {
         throw new Error("Invalid response from server when updating issue stage.");
       }
@@ -260,7 +257,7 @@ export default function MaterialDataPage() {
       setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
 
       // Check for the completion flag from the response
-      if ((data as any)?.issueStageCompleted) {
+      if ((data as { issueStageCompleted?: boolean })?.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
         setTimeout(() => {
@@ -281,7 +278,7 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage);
-      const updatedMaterial = (data as any)?.updatedMaterial;
+      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial })?.updatedMaterial;
       if (!updatedMaterial) {
         throw new Error(
           "Invalid response from server when updating packing stage."
