@@ -47,8 +47,8 @@ function extractErrorMessage(error: unknown): string {
 export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
   const router = useRouter();
-  const [_isRedirecting, setIsRedirecting] = useState(false);
-  const [_userRole, setUserRole] = useState<string | null>(null);
+  const [, setIsRedirecting] = useState(false);
+  const [, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
