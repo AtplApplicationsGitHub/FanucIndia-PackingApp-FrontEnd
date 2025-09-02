@@ -1,12 +1,11 @@
 'use client';
 
 import { Box, Card, CardHeader } from "@mui/material";
-import AnimatedPage from "@/common/components/AnimatedPage";
 import SignupForm from "@/app/signup/components/SignupForm";
 
 export default function SignupPage() {
   return (
-    <AnimatedPage>
+    <>
       <Box
         minHeight="100vh"
         display="flex"
@@ -47,6 +46,6 @@ export default function SignupPage() {
           <SignupForm />
         </Card>
       </Box>
-    </AnimatedPage>
+    </>
   );
 }

@@ -5,7 +5,7 @@ import axios from "axios";
 import { API_BASE_URL } from "@/common/lib/api";
 import { SalesOrder } from "@/app/admin/components/types/admin";
 
-export type UserDashboardView = "home" | "pick_pack";
+export type UserDashboardView = "home" | "pick_pack" | "dispatch" | "fg_dashboard";
 
 export function useUserDashboard() {
   const [userName, setUserName] = useState<string>("");

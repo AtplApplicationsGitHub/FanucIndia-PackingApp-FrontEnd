@@ -1,12 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Box, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
-import AnimatedPage from "@/common/components/AnimatedPage";
 import UserDashboardHeader from "@/app/user/components/Header";
 import AssignedOrdersTable from "@/app/user/components/OrdersTable";
 import { useUserDashboard } from "@/app/user/hooks/useUserDashboard";
+import DispatchView from "@/app/components/DispatchView";
+import FgDashboardView from "@/app/components/FgDashboardView";
+import axios from "axios";
+import { API } from "@/common/lib/api";
+import { SalesOrder } from "@/app/admin/components/types/admin";
+import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 
 export default function UserDashboard() {
   const {
@@ -20,6 +26,45 @@ export default function UserDashboard() {
     setAlert,
   } = useUserDashboard();
 
+  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
+  const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
+  
+  // 👇 FIX #2: Use the correct hook to get the router instance
+  const router = useRouter(); 
+
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success"
+  ) => {
+    setAlert({ message, severity });
+  };
+
+  const handleDetailedViewClick = async (order: SalesOrder) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(API.ADMIN.ERP_MATERIALS_BY_ORDER(order.id), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.data && res.data.length > 0) {
+        router.push(`/orders/${order.id}`);
+      } else {
+        setErpUploadOrder(order);
+        setIsErpUploadOpen(true);
+      }
+    } catch (error) {
+      showSnackbar('Could not check for material data. Please try again.', 'error');
+      console.error("Failed to check ERP materials:", error);
+    }
+  };
+
+  const handleUploadSuccess = () => {
+    setIsErpUploadOpen(false);
+    if (erpUploadOrder) {
+      router.push(`/orders/${erpUploadOrder.id}`);
+    }
+  };
+
   const handleSnackbarClose = (
     _event?: React.SyntheticEvent | Event,
     reason?: string
@@ -29,7 +74,7 @@ export default function UserDashboard() {
   };
 
   return (
-    <AnimatedPage>
+    <>
       <Snackbar
         open={!!alert}
         autoHideDuration={4000}
@@ -96,11 +141,16 @@ export default function UserDashboard() {
                 <AssignedOrdersTable
                   orders={orders}
                   loading={loading}
+                  onDetailedView={handleDetailedViewClick}
                 />
               </Paper>
             </motion.div>
           </Box>
         )}
+
+        {view === "dispatch" && <DispatchView />}
+
+        {view === "fg_dashboard" && <FgDashboardView />}
 
         {error && (
           <Box
@@ -117,6 +167,13 @@ export default function UserDashboard() {
           </Box>
         )}
       </Box>
-    </AnimatedPage>
+
+      <ErpUploadDialog
+        open={isErpUploadOpen}
+        onClose={() => setIsErpUploadOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+        saleOrderNumber={erpUploadOrder?.saleOrderNumber ?? null}
+      />
+    </>
   );
 }

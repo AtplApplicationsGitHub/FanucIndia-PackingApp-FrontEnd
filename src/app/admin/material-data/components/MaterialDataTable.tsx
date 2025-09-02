@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  DataGrid,
-  GridColDef,
-  GridRowClassNameParams,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowClassNameParams } from "@mui/x-data-grid";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import { alpha } from "@mui/material/styles";
 
@@ -20,7 +16,7 @@ interface Props {
     value: number
   ) => Promise<MaterialRow | null>;
   onProcessRowUpdateError?: (error: Error) => void;
-  isOrderFullyComplete?: boolean; 
+  isOrderFullyComplete?: boolean;
 }
 
 export default function MaterialDataTable({
@@ -133,7 +129,8 @@ export default function MaterialDataTable({
       headerName: "Packing Stage",
       type: "number",
       width: 120,
-      editable: !isOrderFullyComplete && Boolean(onUpdatePackingStage) && allIssued,
+      editable:
+        !isOrderFullyComplete && Boolean(onUpdatePackingStage) && allIssued,
       align: "center",
       headerAlign: "center",
       // cellClassName: allIssued ? "" : "packing-disabled",
@@ -152,55 +149,60 @@ export default function MaterialDataTable({
     return fulfilled ? "bg-green-50" : "";
   };
 
-  const processRowUpdate = async (newRow: MaterialRow, oldRow: MaterialRow) => {
+  const processRowUpdate = async (newRow: MaterialRow, oldRow: MaterialRow): Promise<MaterialRow> => {
     if (isOrderFullyComplete) return oldRow;
-    // nothing to do if no handlers
-    if (!onUpdateIssueStage && !onUpdatePackingStage) return oldRow;
 
-    // detect which field changed
     const issueChanged = newRow.issueStage !== oldRow.issueStage;
     const packingChanged = newRow.packingStage !== oldRow.packingStage;
 
-    // validate caps
-    if (issueChanged) {
-      const cap = newRow.reqQuantity;
-      if (newRow.issueStage < 0 || newRow.issueStage > cap) {
-        throw new Error(`Issue Stage must be between 0 and ${cap}`);
+    try {
+      if (issueChanged) {
+        if (!onUpdateIssueStage) return oldRow;
+        const cap = newRow.reqQuantity;
+        if (newRow.issueStage < 0 || newRow.issueStage > cap) {
+          throw new Error(`Issue Stage must be between 0 and ${cap}`);
+        }
+        const updatedRow = await onUpdateIssueStage(newRow.materialCode, newRow.issueStage);
+        if (!updatedRow) {
+          throw new Error("Update failed: Server returned no data.");
+        }
+        return updatedRow;
       }
-      if (!onUpdateIssueStage) return oldRow;
-      const updatedRow = await onUpdateIssueStage(
-        newRow.materialCode,
-        newRow.issueStage
-      );
-      if (!updatedRow) throw new Error("Failed to update Issue Stage");
-      return updatedRow;
+
+      if (packingChanged) {
+        if (!onUpdatePackingStage) return oldRow;
+        const cap = Math.min(newRow.reqQuantity, newRow.issueStage);
+        if (!allIssued) {
+          throw new Error("Packing is locked until all items are fully issued.");
+        }
+        if (newRow.packingStage < 0 || newRow.packingStage > cap) {
+          throw new Error(`Packing Stage must be between 0 and ${cap}`);
+        }
+        const updatedRow = await onUpdatePackingStage(newRow.materialCode, newRow.packingStage);
+        if (!updatedRow) {
+          throw new Error("Update failed: Server returned no data.");
+        }
+        return updatedRow;
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        onProcessRowUpdateError?.(error);
+      }
+      // Re-throwing the error is crucial for DataGrid to handle it and revert the cell value.
+      throw error;
     }
 
-    if (packingChanged) {
-      const cap = Math.min(newRow.reqQuantity, newRow.issueStage);
-      if (!allIssued) {
-        throw new Error("Packing is locked until all items are fully issued.");
-      }
-      if (newRow.packingStage < 0 || newRow.packingStage > cap) {
-        throw new Error(`Packing Stage must be between 0 and ${cap}`);
-      }
-      if (!onUpdatePackingStage) return oldRow;
-      const updatedRow = await onUpdatePackingStage(
-        newRow.materialCode,
-        newRow.packingStage
-      );
-      if (!updatedRow) throw new Error("Failed to update Packing Stage");
-      return updatedRow;
-    }
-
-    // no actual editable field changed
     return oldRow;
   };
 
   const handleDefaultError = (error: Error): void => {
-    console.error(error);
     onProcessRowUpdateError?.(error);
   };
+
+  const rowsWithUniqueId = rows.map((row) => ({
+    ...row,
+    id: Number(row.id),
+  }));
 
   return (
     <div
@@ -209,7 +211,7 @@ export default function MaterialDataTable({
     >
       <DataGrid
         className="border-0"
-        rows={rows}
+        rows={rowsWithUniqueId}
         columns={columns}
         getRowId={(r) => r.id}
         disableRowSelectionOnClick

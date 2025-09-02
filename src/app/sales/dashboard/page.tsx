@@ -3,7 +3,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import MUICard from "@mui/material/Card";
+import Paper from "@mui/material/Paper";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
@@ -11,7 +11,6 @@ import SalesDashboardHeader from "@/app/sales/components/Header";
 import SalesDashboardToolbar from "@/app/sales/components/Toolbar";
 import SalesOrdersTable from "@/app/sales/components/Table";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
-import AnimatedPage from "@/common/components/AnimatedPage";
 import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboard";
 import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
 
@@ -64,7 +63,7 @@ export default function SalesDashboard() {
     );
 
   return (
-    <AnimatedPage>
+    <>
       <Box minHeight="100vh" bgcolor="background.default" width="100%">
         <Snackbar
           open={!!alert}
@@ -85,7 +84,7 @@ export default function SalesDashboard() {
 
         <SalesDashboardHeader userName={userName} />
 
-        <Box py={4} width="100%">
+        <Box p={{ xs: 2, md: 4 }}>
           <SalesDashboardToolbar
             searchValue={searchTerm}
             onSearchChange={setSearchTerm}
@@ -95,39 +94,43 @@ export default function SalesDashboard() {
             fileInputRef={fileInputRef}
             onFileChange={handleFileChange}
           />
-
           {orders.length === 0 ? (
-            <MUICard
+            <Paper
               sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 height: "40vh",
                 width: "100%",
-                boxShadow: 6,
-                borderRadius: 4,
-                fontSize: "2rem",
-                fontWeight: 600,
+                boxShadow: 0,
+                borderRadius: 2,
+                fontSize: "1.5rem",
+                fontWeight: 500,
                 color: "text.secondary",
                 bgcolor: "background.paper",
+                border: (theme) => `1px dashed ${theme.palette.divider}`,
               }}
             >
               No orders found.
-            </MUICard>
+            </Paper>
           ) : (
-            <SalesOrdersTable
-              orders={orders}
-              lookup={lookup}
-              totalOrders={totalOrders}
-              onEdit={handleEdit}
-              onDelete={setDeletingId}
-              paginationModel={{ page: currentPage - 1, pageSize }}
-              onPaginationModelChange={({ page, pageSize }) => {
-                setCurrentPage(page + 1); // MUI uses 0-based index
-                setPageSize(pageSize);
-                fetchOrders(page + 1, pageSize);
-              }}
-            />
+            <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden" }}>
+              <Box sx={{ px: { xs: 1, md: 2 } }}>
+                <SalesOrdersTable
+                  orders={orders}
+                  lookup={lookup}
+                  totalOrders={totalOrders}
+                  onEdit={handleEdit}
+                  onDelete={setDeletingId}
+                  paginationModel={{ page: currentPage - 1, pageSize }}
+                  onPaginationModelChange={({ page, pageSize }) => {
+                    setCurrentPage(page + 1); // MUI uses 0-based index
+                    setPageSize(pageSize);
+                    fetchOrders(page + 1, pageSize);
+                  }}
+                />
+              </Box>
+            </Paper>
           )}
         </Box>
 
@@ -170,6 +173,6 @@ export default function SalesDashboard() {
           }}
         />
       </Box>
-    </AnimatedPage>
+    </>
   );
 }

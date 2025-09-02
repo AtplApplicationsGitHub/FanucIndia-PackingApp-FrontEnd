@@ -4,19 +4,18 @@ import * as React from "react";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { Eye } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { SalesOrder } from "@/app/admin/components/types/admin";
 
 interface Props {
   orders: SalesOrder[];
   loading: boolean;
+  onDetailedView: (order: SalesOrder) => void; // 👈 Add this prop
 }
 
-const AssignedOrdersTable: React.FC<Props> = ({ orders, loading }) => {
-  const router = useRouter();
+const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView }) => {
 
-  const handleViewDetails = (orderId: number) => {
-    router.push(`/orders/${orderId}`); // Updated route
+  const handleViewDetails = (order: SalesOrder) => { // 👈 Change parameter to the whole order object
+    onDetailedView(order); // 👈 Call the prop function
   };
 
   const columns: GridColDef<SalesOrder>[] = [
@@ -30,7 +29,7 @@ const AssignedOrdersTable: React.FC<Props> = ({ orders, loading }) => {
       renderCell: (params: GridRenderCellParams<SalesOrder>) => (
         <Tooltip title="View Details">
           <IconButton
-            onClick={() => handleViewDetails(params.row.id)}
+            onClick={() => handleViewDetails(params.row)} // 👈 Pass the full row object
             size="small"
           >
             <Eye size={18} />
@@ -38,6 +37,7 @@ const AssignedOrdersTable: React.FC<Props> = ({ orders, loading }) => {
         </Tooltip>
       ),
     },
+    // ... (the rest of the columns remain the same)
     {
       field: "product",
       headerName: "Product",

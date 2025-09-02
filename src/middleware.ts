@@ -26,13 +26,13 @@ export function middleware(request: NextRequest) {
     const userRole = decoded.role;
 
     // Role-based redirection logic
-    if (pathname.startsWith("/admin") && userRole !== "admin") {
+    if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
       return NextResponse.redirect(new URL(`/${userRole}/dashboard`, request.url));
     }
-    if (pathname.startsWith("/sales") && userRole !== "sales") {
+    if (pathname.startsWith("/sales") && userRole !== "SALES") {
       return NextResponse.redirect(new URL(`/${userRole}/dashboard`, request.url));
     }
-    if (pathname.startsWith("/user") && userRole !== "user") {
+    if (pathname.startsWith("/user") && userRole !== "USER") {
       return NextResponse.redirect(new URL(`/${userRole}/dashboard`, request.url));
     }
 

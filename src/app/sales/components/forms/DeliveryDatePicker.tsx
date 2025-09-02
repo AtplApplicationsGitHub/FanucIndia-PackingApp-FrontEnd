@@ -47,7 +47,7 @@ const DeliveryDatePicker: React.FC<Props> = ({
               required,
               error: !!error,
               helperText: error,
-              size: 'small',
+              size: 'medium',
               autoComplete: 'off',
               InputLabelProps: { required },
               fullWidth: true,
@@ -55,7 +55,7 @@ const DeliveryDatePicker: React.FC<Props> = ({
                 mb: 1,
                 width: '100%',
                 '& .MuiInputBase-root': {
-                  borderRadius: '0.5rem', 
+                  borderRadius: '4px', 
                   backgroundColor: (theme) => theme.palette.background.paper,
                 },
                 '& .MuiInputLabel-root': { fontWeight: 500, fontSize: 15 },

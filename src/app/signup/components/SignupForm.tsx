@@ -50,7 +50,7 @@ export default function SignupForm() {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: "sales",
+        role: "SALES",
       });
       const { accessToken } = res.data;
       Cookies.set("token", accessToken, { expires: 1 });

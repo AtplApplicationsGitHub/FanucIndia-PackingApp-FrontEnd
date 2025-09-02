@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import AnimatedPage from "@/common/components/AnimatedPage";
 import { Box, Typography, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
@@ -15,6 +14,10 @@ import { useAdminDashboard } from "@/app/admin/components/hooks/useAdminDashboar
 import axios from "axios";
 import { API } from "@/common/lib/api";
 import { SalesOrder, EditableField } from "@/app/admin/components/types/admin";
+import { useRouter } from "next/navigation";
+import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
+import DispatchView from "@/app/components/DispatchView";
+import FgDashboardView from "@/app/components/FgDashboardView";
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -25,7 +28,11 @@ export default function AdminDashboard() {
     severity: "success" | "error" | "info" | "warning";
   }>({ open: false, message: "", severity: "success" });
 
+  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
+  const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
+
   const admin = useAdminDashboard();
+  const router = useRouter();
   const {
     snackbar: adminSnackbar,
     onSnackbarClose: handleAdminSnackbarClose,
@@ -68,8 +75,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDetailedViewClick = async (order: SalesOrder) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(API.ADMIN.ERP_MATERIALS_BY_ORDER(order.id), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.data && res.data.length > 0) {
+        router.push(`/orders/${order.id}`);
+      } else {
+        setErpUploadOrder(order);
+        setIsErpUploadOpen(true);
+      }
+    } catch (error) {
+      showSnackbar('Could not check for material data. Please try again.', 'error');
+      console.error("Failed to check ERP materials:", error);
+    }
+  };
+
+  const handleUploadSuccess = () => {
+    setIsErpUploadOpen(false);
+    if (erpUploadOrder) {
+      router.push(`/orders/${erpUploadOrder.id}`);
+    }
+  };
+
   return (
-    <AnimatedPage>
+    <>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={2000}
@@ -157,16 +190,18 @@ export default function AdminDashboard() {
                     admin.setSearchProduct(val);
                     admin.setCurrentPage(1);
                   }}
-                  searchDate={admin.searchDate ?? null}
-                  onSearchDateChange={(date: Date | null) => {
-                    admin.setSearchDate(date ?? undefined);
+                  startDate={admin.startDate}
+                  onStartDateChange={(date: Date | null) => {
+                    admin.setStartDate(date);
+                    admin.setCurrentPage(1);
+                  }}
+                  endDate={admin.endDate}
+                  onEndDateChange={(date: Date | null) => {
+                    admin.setEndDate(date);
                     admin.setCurrentPage(1);
                   }}
                   onClear={() => {
-                    admin.setSearchInput("");
-                    admin.setSearchProduct("");
-                    admin.setSearchDate(undefined);
-                    admin.setCurrentPage(1);
+                    admin.handleClearFilters();
                   }}
                 />
               </Box>
@@ -197,6 +232,7 @@ export default function AdminDashboard() {
                   setEditOrder(order);
                   setEditModalOpen(true);
                 }}
+                onDetailedView={handleDetailedViewClick}
                 loading={admin.loading}
               />
             </Paper>
@@ -208,6 +244,10 @@ export default function AdminDashboard() {
         {admin.view === "manage" && (
           <AdminManageUsersPanel showSnackbar={showSnackbar} />
         )}
+
+        {admin.view === "dispatch" && <DispatchView />}
+
+        {admin.view === "fg_dashboard" && <FgDashboardView />}
 
         {admin.error && (
           <Box
@@ -279,7 +319,14 @@ export default function AdminDashboard() {
             }}
           />
         )}
+        
+        <ErpUploadDialog
+          open={isErpUploadOpen}
+          onClose={() => setIsErpUploadOpen(false)}
+          onUploadSuccess={handleUploadSuccess}
+          saleOrderNumber={erpUploadOrder?.saleOrderNumber ?? null}
+        />
       </Box>
-    </AnimatedPage>
+    </>
   );
 }

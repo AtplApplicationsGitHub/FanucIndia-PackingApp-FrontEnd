@@ -34,7 +34,7 @@ const RemarksTextarea: React.FC<Props> = ({
     sx={{
       mb: 1,
       "& .MuiOutlinedInput-root": {
-        borderRadius: "0.5rem",
+        borderRadius: "4px",
         backgroundColor: (theme) => theme.palette.background.paper,
       },
       "& .MuiInputLabel-root": {

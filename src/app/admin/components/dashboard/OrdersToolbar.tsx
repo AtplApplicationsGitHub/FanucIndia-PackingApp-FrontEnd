@@ -17,16 +17,20 @@ import dayjs from "dayjs";
 type Props = {
   searchInput: string;
   onSearchInputChange: (val: string) => void;
-  searchDate: Date | null;
-  onSearchDateChange: (val: Date | null) => void;
+  startDate: Date | null;
+  onStartDateChange: (val: Date | null) => void;
+  endDate: Date | null;
+  onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
 };
 
 export default function AdminOrdersToolbar({
   searchInput,
   onSearchInputChange,
-  searchDate,
-  onSearchDateChange,
+  startDate,
+  onStartDateChange,
+  endDate,
+  onEndDateChange,
   onClear,
 }: Props) {
   return (
@@ -35,8 +39,8 @@ export default function AdminOrdersToolbar({
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          gap: { xs: 2, md: 3 },
-          width: { xs: "100%", md: "max-content" },
+          gap: { xs: 2, md: 2 }, // Reduced gap for tighter layout
+          width: { xs: "100%", md: "auto" },
           mx: { xs: 0, md: "auto" },
           mb: 3,
           px: { xs: 1, md: 2 },
@@ -53,37 +57,58 @@ export default function AdminOrdersToolbar({
             width: { xs: "100%", sm: "auto" },
             minWidth: 200,
           }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+            endAdornment: searchInput && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => onSearchInputChange("")}
+                  aria-label="Clear search"
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <DatePicker
+          label="FROM DATE"
+          value={startDate ? dayjs(startDate) : null}
+          onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
+          format="DD-MM-YYYY"
           slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: searchInput && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => onSearchInputChange("")}
-                    aria-label="Clear search"
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
+            field: {
+              clearable: true,
+              onClear: () => onStartDateChange(null),
+            },
+            textField: {
+              size: "small",
+              variant: "outlined",
+              sx: {
+                minWidth: 170,
+                bgcolor: "background.paper",
+                "& .MuiOutlinedInput-root": { borderRadius: 1 },
+              },
             },
           }}
         />
 
         <DatePicker
-          label="FILTER BY DATE"
-          value={searchDate ? dayjs(searchDate) : null}
-          onChange={(val) => onSearchDateChange(val ? val.toDate() : null)}
+          label="TO DATE"
+          value={endDate ? dayjs(endDate) : null}
+          onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"
+          minDate={startDate ? dayjs(startDate) : undefined} // Prevent selecting a to-date before from-date
           slotProps={{
             field: {
               clearable: true,
-              onClear: () => onSearchDateChange(null),
+              onClear: () => onEndDateChange(null),
             },
             textField: {
               size: "small",

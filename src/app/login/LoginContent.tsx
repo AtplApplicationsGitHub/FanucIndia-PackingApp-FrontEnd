@@ -1,10 +1,9 @@
 "use client";
 
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, Alert } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import AnimatedPage from "@/common/components/AnimatedPage";
 import { API } from "@/common/lib/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
@@ -14,7 +13,7 @@ import LoginDemoCredentials from "@/app/login/components/LoginDemoCredentials";
 import LoginSignupLink from "@/app/login/components/LoginSignupLink";
 import apiClient from "@/common/lib/apiClient";
 
-type UserRole = "admin" | "sales" | "user";
+type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole } & Record<string, unknown>;
 
 type LoginSuccessPayload = {
@@ -46,10 +45,14 @@ export default function LoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loggedOutSnackbar, setLoggedOutSnackbar] = useState<boolean>(false);
+  const [sessionExpiredAlert, setSessionExpiredAlert] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("loggedout") === "1") {
       setLoggedOutSnackbar(true);
+    }
+    if (searchParams.get("reason") === "session-expired") {
+      setSessionExpiredAlert(true);
     }
   }, [searchParams]);
 
@@ -74,29 +77,32 @@ export default function LoginContent() {
       Cookies.set("token", accessToken, { expires: 1 });
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
-      setSuccessMsg("Logging in...");
+      
+      setSuccessMsg("LOGGING IN...");
+
       setTimeout(() => {
-        if (user.role === "admin") {
+        if (user.role === "ADMIN") {
           window.location.replace("/admin/dashboard");
-        } else if (user.role === "sales") {
+        } else if (user.role === "SALES") {
           window.location.replace("/sales/dashboard");
-        } else if (user.role === "user") {
+        } else if (user.role === "USER") {
           window.location.replace("/user/dashboard");
         } else {
           setErrorMsg("Unknown user role.");
           setSuccessMsg("");
+          setLoading(false); // Also set loading to false here
         }
       }, 1000);
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err));
       setSuccessMsg("");
-    } finally {
-      setLoading(false);
+      setLoading(false); // This is the crucial fix
     }
+    // The finally block was removed to prevent setLoading(false) on successful login
   };
 
   return (
-    <AnimatedPage>
+    <>
       <LoginSnackbar
         open={loggedOutSnackbar}
         onClose={handleLoggedOutSnackbarClose}
@@ -125,6 +131,15 @@ export default function LoginContent() {
         >
           <LoginHeader />
           <CardContent>
+            {sessionExpiredAlert && (
+              <Alert
+                severity="warning"
+                onClose={() => setSessionExpiredAlert(false)}
+                sx={{ mb: 2, width: "100%" }}
+              >
+                Your session expired due to inactivity. Please log in again.
+              </Alert>
+            )}
             <LoginForm
               register={register}
               errors={errors}
@@ -140,6 +155,6 @@ export default function LoginContent() {
           </CardContent>
         </Card>
       </Box>
-    </AnimatedPage>
+      </>
   );
 }

@@ -3,7 +3,6 @@
 import React from "react";
 import {
   Box,
-  Typography,
   TextField,
   Button,
   Stack,
@@ -44,21 +43,13 @@ export default function SalesDashboardToolbar({
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          justifyContent: "space-between",
+          justifyContent: "center", // Changed to center the content
           alignItems: "center",
-          mb: 4,
+          mb: 1, // Reduced margin bottom for a tighter look
           px: 2,
           gap: { xs: 2, md: 4 },
         }}
       >
-        <Typography
-          variant="h4"
-          fontWeight={700}
-          color="text.primary"
-          sx={{ mb: { xs: 1, md: 0 } }}
-        >
-          Your Orders
-        </Typography>
 
         <Stack
           direction={{ xs: "column", sm: "row" }}

@@ -1,10 +1,16 @@
 import * as React from "react";
-import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Radio from "@mui/material/Radio";
-import FormHelperText from "@mui/material/FormHelperText";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+
+type Option = {
+  label: string;
+  value: string;
+};
+
+const options: Option[] = [
+  { label: "Yes", value: "true" },
+  { label: "No", value: "false" },
+];
 
 type Props = {
   value: string;
@@ -18,45 +24,54 @@ const PaymentClearanceToggle: React.FC<Props> = ({
   onChange,
   error,
   required = true,
-}) => (
-  <FormControl
-    required={required}
-    error={!!error}
-    component="fieldset"
-    sx={{
-      mb: 1,
-      "& .MuiFormLabel-root": {
-        fontWeight: 500,
-        fontSize: 15,
-      },
-      "& .MuiFormLabel-asterisk": {
-        color: "#dc2626",
-      },
-    }}
-  >
-    <FormLabel component="legend" required={required}>
-      Payment Clearance
-    </FormLabel>
-    <RadioGroup
-      row
-      value={value}
-      onChange={(e) => onChange("paymentClearance", e.target.value)}
-      sx={{ mt: 1, gap: 3 }}
-      name="payment-clearance"
-    >
-      <FormControlLabel
-        value="true"
-        control={<Radio size="small" />}
-        label="Yes"
-      />
-      <FormControlLabel
-        value="false"
-        control={<Radio size="small" />}
-        label="No"
-      />
-    </RadioGroup>
-    {error && <FormHelperText>{error}</FormHelperText>}
-  </FormControl>
-);
+}) => {
+  const selected = options.find((opt) => opt.value === value) || null;
+
+  return (
+    <Autocomplete
+      disablePortal
+      fullWidth
+      options={options}
+      getOptionLabel={(option) => option.label}
+      value={selected}
+      isOptionEqualToValue={(option, v) => option.value === v?.value}
+      onChange={(_, option) =>
+        onChange("paymentClearance", option ? option.value : "")
+      }
+      noOptionsText="No results found."
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Payment Clearance"
+          required={required}
+          error={!!error}
+          helperText={error}
+          size="medium"
+          placeholder="Select clearance status"
+          autoComplete="off"
+          sx={{
+            "& .MuiFormLabel-asterisk": {
+              color: "#dc2626",
+            },
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "4px", // This matches the inner TextField style
+              backgroundColor: (theme) => theme.palette.background.paper,
+            },
+            "& .MuiInputLabel-root": {
+              fontWeight: 500,
+              fontSize: 15,
+            },
+          }}
+        />
+      )}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          borderRadius: "4px", // This matches the outer Autocomplete style
+          backgroundColor: (theme) => theme.palette.background.paper,
+        },
+      }}
+    />
+  );
+};
 
 export default PaymentClearanceToggle;

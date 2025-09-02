@@ -49,11 +49,26 @@ export const API = {
   USER_DASHBOARD: {
     ORDERS: `${API_BASE_URL}/user-dashboard/orders`,
   },
+  SO_SEARCH: {
+    BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
+  },
+  DISPATCH: { 
+    BASE: `${API_BASE_URL}/dispatch`,
+    BY_ID: (id: number) => `${API_BASE_URL}/dispatch/${id}`,
+    SO: (id: number) => `${API_BASE_URL}/dispatch/${id}/so`,
+    DELETE_SO: (soId: number) => `${API_BASE_URL}/dispatch/so/${soId}`,
+    PDF: (id: number) => `${API_BASE_URL}/dispatch/${id}/pdf`,
+    ATTACHMENT: (id: number, fileName: string) => `${API_BASE_URL}/dispatch/${id}/attachments/${encodeURIComponent(fileName)}`,
+  },
   ERP_MATERIAL_FILES: {
     BASE: `${API_BASE_URL}/v1/erp-material-files`,
     BY_ID: (id: number) => `${API_BASE_URL}/v1/erp-material-files/${id}`,
     BY_SO: (so: string) => `${API_BASE_URL}/v1/erp-material-files/by-sale-order/${encodeURIComponent(so)}`,
   },
+  ERP_IMPORTER: {
+    UPLOAD: `${API_BASE_URL}/erp-material-importer/upload`,
+  },
+  FG_DASHBOARD: `${API_BASE_URL}/fg-dashboard`,
 };
 
 export async function getMaterialFilesBySaleOrder(saleOrderNumber: string) {
@@ -243,7 +258,7 @@ export async function uploadMaterialFiles(
   const fd = new FormData();
   if (saleOrderNumber) fd.append('saleOrderNumber', saleOrderNumber);
   if (description) fd.append('description', description);
-  for (const f of files) fd.append('files', f, f.name); // << important: 'files'
+  for (const f of files) fd.append('files', f, f.name); 
 
   const res = await fetchWithAuth(`${API.ERP_MATERIAL_FILES.BASE}/upload`, {
     method: 'POST',

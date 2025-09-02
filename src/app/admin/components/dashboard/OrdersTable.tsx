@@ -10,21 +10,23 @@ import {
   Select,
   TextField,
   FormControl,
+  Link as MuiLink,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { ListItemIcon, ListItemText } from "@mui/material";
-import { useRouter } from "next/navigation";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
+import Link from "next/link";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 type InlineEdit = {
   id: number;
   field: InlineEditField;
   value: string | number | null;
+  original: string | number | null;
 } | null;
 
 type Props = {
@@ -43,6 +45,7 @@ type Props = {
   ) => Promise<void>;
   loading: boolean;
   onEdit?: (order: SalesOrder) => void;
+  onDetailedView: (order: SalesOrder) => void;
 };
 
 export default function AdminOrdersTable({
@@ -57,10 +60,9 @@ export default function AdminOrdersTable({
   onUpdateInline,
   loading,
   onEdit,
+  onDetailedView,
 }: Props) {
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
-
-  const router = useRouter();
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
     null
@@ -80,19 +82,81 @@ export default function AdminOrdersTable({
     setMenuRowId(null);
   };
 
-  const handleInlineSave = async () => {
-    if (inlineEdit) {
-      let value = inlineEdit.value;
-      if (
-        inlineEdit.field === "priority" ||
-        inlineEdit.field === "assignedUserId"
-      ) {
-        value = value === "" || value === null ? null : Number(value);
+  const handleInlineSave = async (overrideValue?: string | number | null) => {
+    if (!inlineEdit) return;
+
+    const normalize = (
+      field: InlineEditField,
+      val: string | number | null | undefined
+    ) => {
+      if (field === "priority" || field === "assignedUserId") {
+        if (val === "" || val === null || typeof val === "undefined")
+          return null;
+        const n = Number(val);
+        return Number.isNaN(n) ? null : n;
       }
-      await onUpdateInline(inlineEdit.id, inlineEdit.field, value ?? "");
+      // text fields
+      return typeof val === "string" ? val.trim() : (val ?? "");
+    };
+
+    const next = normalize(inlineEdit.field, overrideValue ?? inlineEdit.value);
+    const prev = normalize(inlineEdit.field, inlineEdit.original);
+
+    // If nothing changed, just close edit and do nothing.
+    const same =
+      typeof next === "string" && typeof prev === "string"
+        ? next === prev
+        : next === prev;
+
+    if (same) {
       setInlineEdit(null);
+      return;
     }
+
+    await onUpdateInline(inlineEdit.id, inlineEdit.field, next ?? "");
+    setInlineEdit(null);
   };
+
+  function CustomEditTextField({
+    initialValue,
+    onCommit,
+    onCancel,
+    width,
+    maxLength,
+  }: {
+    initialValue: string | number | null;
+    onCommit: (val: string) => void;
+    onCancel: () => void;
+    width?: number | string;
+    maxLength?: number;
+  }) {
+    const [localValue, setLocalValue] = React.useState(initialValue ?? "");
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") onCommit(localValue.toString());
+      if (e.key === "Escape") onCancel();
+      // prevent DataGrid from hijacking text-edit keys
+      if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
+        e.stopPropagation();
+      }
+    };
+
+    return (
+      <TextField
+        value={localValue}
+        size="small"
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => onCommit(localValue.toString())}
+        onKeyDown={handleKeyDown}
+        autoFocus
+        variant="standard"
+        slotProps={{
+          htmlInput: maxLength ? { maxLength } : {},
+        }}
+        sx={{ width: width ?? "100%" }}
+      />
+    );
+  }
 
   const columns: GridColDef<SalesOrder>[] = [
     {
@@ -143,8 +207,7 @@ export default function AdminOrdersTable({
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  // router.push(`/admin/material-data/${row.id}`);
-                  router.push(`/orders/${row.id}`);
+                  onDetailedView(row);
                   handleMenuClose();
                 }}
               >
@@ -175,6 +238,16 @@ export default function AdminOrdersTable({
       field: "saleOrderNumber",
       headerName: "Sale Order Number",
       width: 120,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => (
+        <MuiLink
+          component={Link}
+          href={`/so-search/${params.row.saleOrderNumber}`}
+          underline="hover"
+          sx={{ fontWeight: 500 }}
+        >
+          {params.value}
+        </MuiLink>
+      ),
     },
     {
       field: "outboundDelivery",
@@ -243,23 +316,13 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "status" ? (
-          <TextField
-            value={inlineEdit.value ?? ""}
-            size="small"
-            onChange={(e) =>
-              setInlineEdit({ ...inlineEdit, value: e.target.value })
-            }
-            onBlur={handleInlineSave}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleInlineSave();
-              if (e.key === "Escape") setInlineEdit(null);
-            }}
-            autoFocus
-            variant="standard"
-            slotProps={{
-              htmlInput: { maxLength: 32 },
-            }}
-            sx={{ width: 80 }}
+          // inside the "status" column renderCell, replace the editor JSX with:
+          <CustomEditTextField
+            initialValue={inlineEdit.value}
+            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCancel={() => setInlineEdit(null)}
+            width={80}
+            maxLength={32}
           />
         ) : (
           <Box
@@ -269,6 +332,7 @@ export default function AdminOrdersTable({
                 id: row.id,
                 field: "status",
                 value: row.status || "",
+                original: row.status || "",
               })
             }
             title="Click to edit"
@@ -287,21 +351,12 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "priority" ? (
-          <TextField
-            value={inlineEdit.value ?? ""}
-            type="number"
-            size="small"
-            onChange={(e) =>
-              setInlineEdit({ ...inlineEdit, value: e.target.value })
-            }
-            onBlur={handleInlineSave}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleInlineSave();
-              if (e.key === "Escape") setInlineEdit(null);
-            }}
-            autoFocus
-            variant="standard"
-            sx={{ width: 65 }}
+          // inside the "priority" column renderCell, replace the editor JSX with:
+          <CustomEditTextField
+            initialValue={inlineEdit.value}
+            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCancel={() => setInlineEdit(null)}
+            width={65}
           />
         ) : (
           <Box
@@ -314,6 +369,7 @@ export default function AdminOrdersTable({
                   row.priority !== undefined && row.priority !== null
                     ? row.priority
                     : "",
+                original: row.priority ?? "",
               })
             }
             title="Click to edit"
@@ -326,24 +382,35 @@ export default function AdminOrdersTable({
     {
       field: "assignedUserId",
       headerName: "Assigned User",
-      width: 110,
+      width: 150,
       renderCell: (params: GridRenderCellParams<SalesOrder>) => {
         const row = params.row;
+
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "assignedUserId" ? (
-          <FormControl variant="standard" size="small" sx={{ minWidth: 80 }}>
+          <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
             <Select
               value={inlineEdit.value ?? ""}
-              onChange={(e) =>
-                setInlineEdit({ ...inlineEdit, value: Number(e.target.value) })
-              }
-              onBlur={handleInlineSave}
+              onChange={(e) => {
+                const selected =
+                  e.target.value === "" ? null : Number(e.target.value);
+                handleInlineSave(selected);
+              }}
+              onKeyDown={(e) => {
+                if (
+                  e.key === " " ||
+                  (e.ctrlKey && e.key.toLowerCase() === "a")
+                ) {
+                  e.stopPropagation();
+                }
+              }}
               autoFocus
             >
               <MenuItem value="">
                 <em>Unassigned</em>
               </MenuItem>
+              {/* assignableUsers is already filtered by role=user from the backend */}
               {lookup.assignableUsers.map((u) => (
                 <MenuItem key={u.id} value={u.id}>
                   {u.name}
@@ -359,6 +426,7 @@ export default function AdminOrdersTable({
                 id: row.id,
                 field: "assignedUserId",
                 value: row.assignedUserId ?? "",
+                original: row.assignedUserId ?? "",
               })
             }
             title="Click to edit"
@@ -379,23 +447,13 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "fgLocation" ? (
-          <TextField
-            value={inlineEdit.value ?? ""}
-            size="small"
-            onChange={(e) =>
-              setInlineEdit({ ...inlineEdit, value: e.target.value })
-            }
-            onBlur={handleInlineSave}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleInlineSave();
-              if (e.key === "Escape") setInlineEdit(null);
-            }}
-            autoFocus
-            variant="standard"
-            slotProps={{
-              htmlInput: { maxLength: 100 },
-            }}
-            sx={{ width: "100%" }}
+          // inside the "fgLocation" column renderCell, replace the editor JSX with:
+          <CustomEditTextField
+            initialValue={inlineEdit.value}
+            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCancel={() => setInlineEdit(null)}
+            width="100%"
+            maxLength={100}
           />
         ) : (
           <Box
@@ -411,6 +469,7 @@ export default function AdminOrdersTable({
                 id: row.id,
                 field: "fgLocation",
                 value: row.fgLocation || "",
+                original: row.fgLocation || "",
               })
             }
             title={row.fgLocation || "Click to edit"}
@@ -429,7 +488,14 @@ export default function AdminOrdersTable({
   ];
 
   return (
-    <Box sx={{ width: "100%", overflowX: "auto" }}>
+    <Box
+      sx={{
+        width: "100%",
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+        overflow: "hidden",
+      }}
+    >
       <DataGrid
         rows={orders}
         columns={columns}

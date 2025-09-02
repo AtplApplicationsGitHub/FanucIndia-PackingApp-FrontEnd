@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Dialog,
   DialogTitle,
@@ -38,7 +38,7 @@ interface Props {
   editingUser: User | null;
 }
 
-const roles: UserRole[] = ["admin", "sales", "user"];
+const roles: UserRole[] = ["ADMIN", "SALES", "USER"];
 const passwordChecks = [
   { label: "At least 8 characters", check: (pw: string) => pw.length >= 8 },
   {
@@ -75,6 +75,7 @@ const AdminUserFormModal: React.FC<Props> = ({
     watch,
     reset,
     setValue,
+    control,
     formState: { errors },
   } = useForm<FormFields>({
     mode: "onChange",
@@ -83,7 +84,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       email: "",
       password: "",
       confirmPassword: "",
-      role: "user",
+      role: "",
     },
   });
 
@@ -101,13 +102,13 @@ const AdminUserFormModal: React.FC<Props> = ({
   });
 
   useEffect(() => {
-  if (open) {
-    const timer = setTimeout(() => {
-      nameInputRef.current?.focus();
-    }, 150);
-    return () => clearTimeout(timer);
-  }
-}, [open]);
+    if (open) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const name = watch("name");
   const email = watch("email");
@@ -195,12 +196,7 @@ const AdminUserFormModal: React.FC<Props> = ({
     (!!password && (!allSatisfied || !passwordsMatch));
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="xs"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>{editingUser ? "Edit User" : "Create User"}</DialogTitle>
       <DialogContent>
         <Box
@@ -216,7 +212,7 @@ const AdminUserFormModal: React.FC<Props> = ({
             fullWidth
             size="small"
             inputRef={(el) => {
-              nameFieldRef(el); 
+              nameFieldRef(el);
               nameInputRef.current = el;
             }}
             {...register("name", {
@@ -342,18 +338,26 @@ const AdminUserFormModal: React.FC<Props> = ({
 
           <FormControl fullWidth size="small">
             <InputLabel id="role-label">Role</InputLabel>
-            <Select
-              labelId="role-label"
-              label="Role"
-              defaultValue="user"
-              {...register("role", { required: true })}
-            >
-              {roles.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </MenuItem>
-              ))}
-            </Select>
+            <Controller
+              name="role"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <Select
+                  labelId="role-label"
+                  label="Role"
+                  size="small"
+                  // Controller gives you value/onChange so it will show the current role on edit
+                  {...field}
+                >
+                  {roles.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {role.charAt(0) + role.slice(1).toLowerCase()}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
           </FormControl>
         </Box>
       </DialogContent>

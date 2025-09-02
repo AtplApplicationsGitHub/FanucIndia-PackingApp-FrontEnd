@@ -30,18 +30,17 @@ const TextInput: React.FC<Props> = ({
     placeholder={placeholder || `Enter ${label}`}
     error={!!error}
     helperText={error}
-    size="small"
+    size="medium" // Changed from "small" to "medium"
     variant="outlined"
     autoComplete="off"
     sx={{
-      mb: 1,
       "& .MuiInputBase-root": {
-        borderRadius: "0.5rem",
+        borderRadius: "4px",
         backgroundColor: (theme) => theme.palette.background.paper,
       },
       "& .MuiInputLabel-root": {
         fontWeight: 500,
-        fontSize: 15,
+        fontSize: 16, // Adjusted for medium size
       },
       "& .MuiFormLabel-asterisk": {
         color: "#dc2626",

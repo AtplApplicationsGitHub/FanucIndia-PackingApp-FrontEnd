@@ -89,7 +89,6 @@ const LookupCrudTable: React.FC<Props> = ({
 
   React.useEffect(() => {
     if (adding && firstAddInputRef.current) {
-      // slight delay helps when inputs just mounted
       setTimeout(() => firstAddInputRef.current?.focus(), 0);
     }
   }, [adding]);
@@ -353,34 +352,40 @@ const LookupCrudTable: React.FC<Props> = ({
           </Button>
         </Box>
       </Box>
-      <DataGrid
-        rows={safeRows}
-        columns={columns}
-        getRowId={(row) => row.id}
-        pagination
-        pageSizeOptions={[5, 10, 25, 50]}
-        disableRowSelectionOnClick
-        sx={{
-          border: "none",
-          bgcolor: "background.paper",
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "rgba(0,0,0,0.04)",
-            fontWeight: 600,
-          },
-          "& .MuiDataGrid-cell": {
-            py: 1,
-            lineHeight: 1.3,
-          },
-        }}
-        localeText={{
-          noRowsLabel: (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-              No items found.
-            </Typography>
-          ) as unknown as string,
-        }}
-        onCellKeyDown={handleCellKeyDown}
-      />
+      <Box sx={{
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          borderRadius: 2,
+          overflow: 'hidden'
+      }}>
+        <DataGrid
+            rows={safeRows}
+            columns={columns}
+            getRowId={(row) => row.id}
+            pagination
+            pageSizeOptions={[5, 10, 25, 50]}
+            disableRowSelectionOnClick
+            sx={{
+            border: "none",
+            bgcolor: "background.paper",
+            "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "rgba(0,0,0,0.04)",
+                fontWeight: 600,
+            },
+            "& .MuiDataGrid-cell": {
+                py: 1,
+                lineHeight: 1.3,
+            },
+            }}
+            localeText={{
+            noRowsLabel: (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                No items found.
+                </Typography>
+            ) as unknown as string,
+            }}
+            onCellKeyDown={handleCellKeyDown}
+        />
+      </Box>
     </Box>
   );
 };

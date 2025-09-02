@@ -69,19 +69,19 @@ const AdminUsersTable: React.FC<Props> = ({
       field: "name",
       headerName: "Name",
       flex: 1,
-      minWidth: 150,
+      minWidth: 100,
     },
     {
       field: "email",
       headerName: "Email",
       flex: 1,
-      minWidth: 190,
+      minWidth: 100,
     },
     {
       field: "role",
       headerName: "Role",
       flex: 0.8,
-      minWidth: 120,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<User>) => (
         <span style={{ textTransform: "capitalize" }}>
           {params.value as string}
@@ -92,15 +92,15 @@ const AdminUsersTable: React.FC<Props> = ({
       field: "createdAt",
       headerName: "Created",
       flex: 1,
-      minWidth: 140,
+      minWidth: 100,
       valueGetter: (_value, row) =>
         row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-",
     },
     {
       field: "actions",
-      headerName: "",
+      headerName: "Actions",
       sortable: false,
-      width: 64,
+      width: 100,
       align: "center",
       renderCell: (params: GridRenderCellParams<User>) => {
         const row = params.row as User;
@@ -151,35 +151,41 @@ const AdminUsersTable: React.FC<Props> = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <DataGrid
-        rows={users}
-        columns={columns}
-        getRowId={(row) => row.id}
-        pageSizeOptions={[5, 10, 20]}
-        initialState={{
-          pagination: { paginationModel: { pageSize: 10, page: 0 } },
-        }}
-        disableRowSelectionOnClick
-        sx={{
-          border: "none",
-          bgcolor: "background.paper",
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "rgba(0,0,0,0.04)",
-            fontWeight: 600,
-          },
-          "& .MuiDataGrid-cell": {
-            py: 1,
-            lineHeight: 1.3,
-          },
-        }}
-        localeText={{
-          noRowsLabel: (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-              No users found.
-            </Typography>
-          ) as unknown as string,
-        }}
-      />
+      <Box sx={{
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          borderRadius: 2,
+          overflow: 'hidden'
+      }}>
+        <DataGrid
+            rows={users}
+            columns={columns}
+            getRowId={(row) => row.id}
+            pageSizeOptions={[5, 10, 20]}
+            initialState={{
+            pagination: { paginationModel: { pageSize: 10, page: 0 } },
+            }}
+            disableRowSelectionOnClick
+            sx={{
+            border: "none",
+            bgcolor: "background.paper",
+            "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "rgba(0,0,0,0.04)",
+                fontWeight: 600,
+            },
+            "& .MuiDataGrid-cell": {
+                py: 1,
+                lineHeight: 1.3,
+            },
+            }}
+            localeText={{
+            noRowsLabel: (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                No users found.
+                </Typography>
+            ) as unknown as string,
+            }}
+        />
+      </Box>
 
       <ConfirmDeleteDialog
         open={deleteDialogOpen}

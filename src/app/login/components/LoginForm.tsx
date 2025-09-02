@@ -5,7 +5,6 @@ import {
   Button,
   InputAdornment,
   IconButton,
-  CircularProgress,
   Alert,
 } from "@mui/material";
 import { Eye, EyeClosed } from "lucide-react";
@@ -22,7 +21,7 @@ interface LoginFormProps {
   showPassword: boolean;
   onToggleShowPassword: () => void;
   loading: boolean;
-  successMsg: string;
+  successMsg: string; // This will now control the button text
   errorMsg: string;
   onSubmit: React.FormEventHandler<HTMLFormElement>;
 }
@@ -74,7 +73,6 @@ export default function LoginForm({
           }}
         />
 
-        {successMsg && <Alert severity="success">{successMsg}</Alert>}
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
         <Button
@@ -100,7 +98,7 @@ export default function LoginForm({
             };
           }}
         >
-          {loading ? <CircularProgress size={22} color="inherit" /> : "LOGIN"}
+          {successMsg ? successMsg : (loading ? "VERIFYING..." : "LOGIN")}
         </Button>
       </Box>
     </form>

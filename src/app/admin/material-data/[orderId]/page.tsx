@@ -24,37 +24,41 @@ import {
   getErpMaterials as fetchErpMaterials,
 } from "@/common/lib/api";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
+import axios from "axios";
 
 // Robust error message extractor (keeps your original behavior)
 type ApiError = {
   response?: { data?: { message?: string | { message?: string } } };
   message?: string;
 };
+
 function extractErrorMessage(error: unknown): string {
-  if (typeof error === "string") {
-    try {
-      return extractErrorMessage(JSON.parse(error));
-    } catch {
-      return error;
-    }
-  }
+  // Handle standard JavaScript Error objects first, as this is what our API utility throws.
   if (error instanceof Error) {
     try {
-      return extractErrorMessage(JSON.parse(error.message));
+      // Attempt to parse the error message as JSON, which is how our backend sends it.
+      const parsed = JSON.parse(error.message);
+      if (parsed && typeof parsed.message === 'string') {
+        return parsed.message;
+      }
     } catch {
+      // If parsing fails, it's just a regular error message string.
       return error.message;
     }
   }
-  const err = error as ApiError;
-  const msg = err.response?.data?.message;
-  return msg
-    ? typeof msg === "string"
-      ? msg
-      : (msg.message ?? "Something went wrong.")
-    : "Something went wrong. Please try again.";
+
+  // Handle Axios errors as a fallback for other parts of the app.
+  if (axios.isAxiosError(error)) {
+    if (error.response?.data && typeof error.response.data.message === 'string') {
+      return error.response.data.message;
+    }
+  }
+
+  // Final fallback for any other unexpected error types.
+  return 'An unexpected error occurred.';
 }
 
-export default function MaterialDataPage() {
+export default function MaterialDataPage2() {
   // ---- URL / ID handling (preserved)
   const params = useParams<{ orderId: string }>();
   const idStr = useMemo(

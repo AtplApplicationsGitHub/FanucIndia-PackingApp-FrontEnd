@@ -8,7 +8,6 @@ type APIErrorResponse = {
   error?: string | object;
   [key: string]: unknown;
 };
-
 function getErrorMessage(e: unknown, fallback: string): string {
   if (axios.isAxiosError(e)) {
     const data = e.response?.data as APIErrorResponse | undefined;

@@ -1,16 +1,8 @@
 "use client";
 
-// This is the new shared page for the detailed order view.
-// Its content is moved from the old admin-specific page.
-
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
-import {
-  Alert,
-  Backdrop,
-  CircularProgress,
-  Snackbar,
-} from "@mui/material";
+import { useParams, useRouter } from "next/navigation";
+import { Alert, Backdrop, CircularProgress, Snackbar } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
 import MaterialDataTable from "@/app/admin/material-data/components/MaterialDataTable";
@@ -26,53 +18,69 @@ import {
   getErpMaterials as fetchErpMaterials,
 } from "@/common/lib/api";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
+import axios from "axios";
 
-type ApiError = {
-  response?: { data?: { message?: string | { message?: string } } };
-  message?: string;
-};
 function extractErrorMessage(error: unknown): string {
-  if (typeof error === "string") {
-    try {
-      return extractErrorMessage(JSON.parse(error));
-    } catch {
-      return error;
-    }
-  }
+  // Handle standard JavaScript Error objects first, as this is what our API utility throws.
   if (error instanceof Error) {
     try {
-      return extractErrorMessage(JSON.parse(error.message));
+      // Attempt to parse the error message as JSON, which is how our backend sends it.
+      const parsed = JSON.parse(error.message);
+      if (parsed && typeof parsed.message === "string") {
+        return parsed.message;
+      }
     } catch {
+      // If parsing fails, it's just a regular error message string.
       return error.message;
     }
   }
-  const err = error as ApiError;
-  const msg = err.response?.data?.message;
-  return msg
-    ? typeof msg === "string"
-      ? msg
-      : (msg.message ?? "Something went wrong.")
-    : "Something went wrong. Please try again.";
+
+  // Handle Axios errors as a fallback for other parts of the app.
+  if (axios.isAxiosError(error)) {
+    if (
+      error.response?.data &&
+      typeof error.response.data.message === "string"
+    ) {
+      return error.response.data.message;
+    }
+  }
+
+  // Final fallback for any other unexpected error types.
+  return "An unexpected error occurred.";
 }
 
 export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
+  const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserRole(user.role);
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    }
+  }, []);
+
   const idStr = useMemo(
     () => (typeof params.orderId === "string" ? params.orderId : ""),
     [params.orderId]
   );
-  const orderId = Number(idStr);  
-
+  const orderId = Number(idStr);
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-
   const { data: header, error: hdrError } = useOrderHeader(orderId);
   const {
     rows: fetchedRows = [],
     error: matError,
     loading: matLoading,
   } = useErpMaterials(orderId);
-
   const {
     mutate: incIssue,
     loading: mutatingIssue,
@@ -85,11 +93,35 @@ export default function MaterialDataPage() {
     error: mutErrPacking,
   } = useIncrementPackingStage(orderId);
 
+  const mapApiToMaterialRow = (
+    apiMaterial: any,
+    oldRow: MaterialRow
+  ): MaterialRow => {
+    return {
+      ...oldRow,
+      id: Number(apiMaterial.ID),
+      siNo: oldRow.siNo,
+      materialCode: apiMaterial.Material_Code ?? oldRow.materialCode,
+      materialDescription:
+        apiMaterial.Material_Description ?? oldRow.materialDescription,
+      batchNo: apiMaterial.Batch_No ?? oldRow.batchNo,
+      soDonorBatch: apiMaterial.SO_Donor_Batch ?? oldRow.soDonorBatch,
+      certNo: apiMaterial.Cert_No ?? oldRow.certNo,
+      binNo: apiMaterial.Bin_No ?? oldRow.binNo,
+      adf: apiMaterial.A_D_F ?? oldRow.adf,
+      reqQuantity: Number(apiMaterial.Required_Qty) ?? oldRow.reqQuantity,
+      issueStage: Number(apiMaterial.Issue_stage) ?? oldRow.issueStage,
+      packingStage: Number(apiMaterial.Packing_stage) ?? oldRow.packingStage,
+      machineModel: apiMaterial.Machine_Model ?? oldRow.machineModel,
+      cncSerialNo: apiMaterial.CNC_Serial_No ?? oldRow.cncSerialNo,
+    };
+  };
+
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   useEffect(() => {
     setLocalRows(fetchedRows);
   }, [fetchedRows]);
-  
+
   const isOrderFullyComplete = useMemo(() => {
     if (!localRows || localRows.length === 0) {
       return false;
@@ -101,7 +133,6 @@ export default function MaterialDataPage() {
         row.issueStage === row.packingStage
     );
   }, [localRows]);
-
 
   if (!idStr || isNaN(orderId)) {
     return (
@@ -188,12 +219,26 @@ export default function MaterialDataPage() {
   const handleProcess = async (code: string) => {
     setEditError(null);
     try {
+      let response: any;
       if (!allIssued) {
-        await incIssue(code);
+        response = await incIssue(code); // This now returns the backend response
       } else {
+        // Packing stage logic remains the same
         await incPacking(code);
       }
-      await refetch();
+      
+      // Check for the completion flag from the response
+      if (response && response.issueStageCompleted) {
+        setIsRedirecting(true);
+        setUploadNotice("Issue stage complete! Returning to your dashboard...");
+        setTimeout(() => {
+          sessionStorage.setItem("userDashboardView", "pick_pack");
+          router.push("/user/dashboard");
+        }, 2500);
+      } else {
+        // If not complete, just refetch the data as usual
+        await refetch();
+      }
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
     }
@@ -203,10 +248,31 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updateIssueStage(orderId, code, stage);
-      await refetch();
-      return data as MaterialRow;
+      const updatedMaterial = (data as any)?.updatedMaterial;
+      if (!updatedMaterial) {
+        throw new Error("Invalid response from server when updating issue stage.");
+      }
+
+      const oldRow = localRows.find((r) => r.materialCode === code);
+      if (!oldRow) throw new Error("Original row not found.");
+      
+      const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
+      setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+
+      // Check for the completion flag from the response
+      if ((data as any)?.issueStageCompleted) {
+        setIsRedirecting(true);
+        setUploadNotice("Issue stage complete! Returning to your dashboard...");
+        setTimeout(() => {
+          sessionStorage.setItem("userDashboardView", "pick_pack");
+          router.push("/user/dashboard");
+        }, 2500);
+      }
+      
+      return updatedRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
+      await refetch();
       throw err;
     }
   };
@@ -215,15 +281,28 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage);
-      await refetch();
-      return data as MaterialRow;
+      const updatedMaterial = (data as any)?.updatedMaterial;
+      if (!updatedMaterial) {
+        throw new Error(
+          "Invalid response from server when updating packing stage."
+        );
+      }
+      const oldRow = localRows.find((r) => r.materialCode === code);
+      if (!oldRow) {
+        throw new Error("Original row not found.");
+      }
+      const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
+      // Optimistically update the local state
+      setLocalRows((prev) =>
+        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
+      );
+      return updatedRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
+      await refetch(); // Refetch on error to ensure consistency
       throw err;
     }
   };
-
-  const mutErr = allIssued ? mutErrPacking : mutErrIssue;
 
   return (
     <main className="p-6 space-y-6">
@@ -239,7 +318,8 @@ export default function MaterialDataPage() {
 
       {isOrderFullyComplete ? (
         <Alert severity="success" sx={{ my: 4 }}>
-          This order is fully packed and complete. No further actions can be taken.
+          This order is fully packed and complete. No further actions can be
+          taken.
         </Alert>
       ) : (
         <InputBoxSection
@@ -253,11 +333,6 @@ export default function MaterialDataPage() {
         />
       )}
 
-      {mutErr && (
-        <Alert severity="error" className="my-4">
-          {extractErrorMessage(mutErr)}
-        </Alert>
-      )}
       {editError && (
         <Alert severity="error" className="my-4">
           {editError}
@@ -269,7 +344,9 @@ export default function MaterialDataPage() {
         loading={busy}
         onUpdateIssueStage={handleUpdateIssueStage}
         onUpdatePackingStage={handleUpdatePackingStage}
-        onProcessRowUpdateError={(err) => setEditError(extractErrorMessage(err))}
+        onProcessRowUpdateError={(err) =>
+          setEditError(extractErrorMessage(err))
+        }
         isOrderFullyComplete={isOrderFullyComplete}
       />
 

@@ -7,7 +7,7 @@ export type SalesOrder = {
   saleOrderNumber?: string;
   outboundDelivery?: string;
   transferOrder?: string;
-  deliveryDate?: string; // ISO date string
+  deliveryDate?: string; 
   transporter?: { name?: string } | null;
   transporterId?: number;
   plantCode?: { code?: string } | null;
@@ -19,8 +19,8 @@ export type SalesOrder = {
   packConfigId?: number;
   status?: string | null;
   priority?: number | null;
-  assignedUser?: { id: number; name: string } | null; // Replaced terminal
-  assignedUserId?: number; // Replaced terminalId
+  assignedUser?: { id: number; name: string } | null; 
+  assignedUserId?: number;
   customerId?: number;
   customer?: { id: number; name: string } | null;
   specialRemarks?: string | null;
@@ -33,7 +33,7 @@ export type Lookup = {
   plantCodes: { id: number; code: string }[];
   salesZones: { id: number; name: string }[];
   packConfigs: { id: number; configName: string }[];
-  assignableUsers: { id: number; name: string }[]; // Replaced terminals
+  assignableUsers: { id: number; name: string }[]; 
   customers: { id: number; name: string }[];
   [key: string]: LookupRow[];
 };
@@ -67,7 +67,7 @@ export type EditableField =
 
 export type EditingCell = { id: number; field: EditableField } | null;
 
-export type UserRole = "admin" | "sales" | "user";
+export type UserRole = "ADMIN" | "SALES" | "USER" | "";
 
 export interface User {
   id: number;

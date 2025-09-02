@@ -20,7 +20,7 @@ const INLINE_EDIT_FIELDS: EditableField[] = [
 
 export function useAdminDashboard() {
   const [userName, setUserName] = useState<string>("");
-  type ViewType = "" | "orders" | "master" | "manage";
+  type ViewType = "" | "orders" | "master" | "manage" | "dispatch" | "fg_dashboard";
 
   const [view, setViewInternal] = useState<ViewType>("");
 
@@ -70,7 +70,10 @@ export function useAdminDashboard() {
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>("");
   const [searchProduct, setSearchProduct] = useState<string>("");
-  const [searchDate, setSearchDate] = useState<Date | undefined>(undefined);
+
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
   const [selectedMasterLookup, setSelectedMasterLookup] =
     useState<string>("products");
@@ -125,7 +128,7 @@ export function useAdminDashboard() {
         axios.get(API.LOOKUP.PACK_CONFIGS, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`${API.ADMIN.USERS}?role=user`, { 
+        axios.get(`${API.ADMIN.USERS}?role=USER`, { 
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(API.LOOKUP.CUSTOMERS, {
@@ -151,7 +154,7 @@ export function useAdminDashboard() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const isSearching = !!(searchProduct || searchDate);
+    const isSearching = !!(searchProduct || startDate || endDate);
 
     try {
       const res = await axios.get(API.ADMIN.SALES_ORDERS, {
@@ -161,7 +164,8 @@ export function useAdminDashboard() {
             ? { limit: 10000 }
             : { page: currentPage, limit: pageSize }),
           search: searchInput || undefined,
-          date: formatDateLocalYYYYMMDD(searchDate),
+          startDate: formatDateLocalYYYYMMDD(startDate ?? undefined),
+          endDate: formatDateLocalYYYYMMDD(endDate ?? undefined),    
         },
       });
       setOrders(res.data.data || []);
@@ -185,7 +189,7 @@ export function useAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchProduct, searchInput, searchDate]);
+  }, [currentPage, pageSize, searchProduct, searchInput, startDate, endDate]);
 
   useEffect(() => {
     if (view === "orders") {
@@ -198,7 +202,7 @@ export function useAdminDashboard() {
     if (view === "orders") {
       fetchOrders();
     }
-  }, [currentPage, searchInput, searchDate, view, fetchOrders]);
+  }, [currentPage, searchInput, startDate, endDate, view, fetchOrders]);
 
   const saveCellEdit = async (row: SalesOrder) => {
     if (!editingCell) return;
@@ -346,7 +350,8 @@ export function useAdminDashboard() {
 
   const handleClearFilters = () => {
     setSearchInput("");
-    setSearchDate(undefined);
+    setStartDate(null);
+    setEndDate(null);
     setCurrentPage(1);
   };
 
@@ -607,8 +612,10 @@ export function useAdminDashboard() {
     setSearchInput,
     searchProduct,
     setSearchProduct,
-    searchDate,
-    setSearchDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
     openCalendar,
     setOpenCalendar,
     handleClearFilters,

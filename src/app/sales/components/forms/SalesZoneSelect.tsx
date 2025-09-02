@@ -41,12 +41,12 @@ const SalesZoneSelect: React.FC<Props> = ({
           required={required}
           error={!!error}
           helperText={error}
-          size="small"
+          size="medium"
           placeholder="Select sales zone"
           autoComplete="off"
           sx={{
             "& .MuiOutlinedInput-root": {
-              borderRadius: "0.5rem",
+              borderRadius: "4px",
               backgroundColor: (theme) => theme.palette.background.paper,
             },
             "& .MuiInputLabel-root": {

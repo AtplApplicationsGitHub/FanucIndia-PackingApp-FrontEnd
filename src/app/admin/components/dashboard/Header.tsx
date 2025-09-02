@@ -6,16 +6,18 @@ import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Home, ClipboardList, Database, Users } from "lucide-react";
+import { Home, ClipboardList, Database, Users, Truck, Grid } from "lucide-react";
 import LogoutButton from "@/common/components/LogoutButton";
 import { getGreeting } from "@/app/sales/components/utils/sales";
 
 const FANUC_BLUE = "#3b579d";
 
+type ViewType = "" | "orders" | "master" | "manage" | "dispatch" | "fg_dashboard";
+
 type Props = {
   userName: string;
-  view: "" | "orders" | "master" | "manage";
-  setView: React.Dispatch<React.SetStateAction<"" | "orders" | "master" | "manage">>;
+  view: ViewType;
+  setView: React.Dispatch<React.SetStateAction<ViewType>>;
 };
 
 const menuItems = [
@@ -23,6 +25,8 @@ const menuItems = [
   { label: "ORDER LIST", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "orders" },
   { label: "MASTER", icon: <Database className="mr-2 h-4 w-4" />, value: "master" },
   { label: "MANAGE", icon: <Users className="mr-2 h-4 w-4" />, value: "manage" },
+  { label: "DISPATCH", icon: <Truck className="mr-2 h-4 w-4" />, value: "dispatch" },
+  { label: "FG", icon: <Grid className="mr-2 h-4 w-4" />, value: "fg_dashboard" },
 ];
 
 export default function AdminDashboardHeader({ userName, view, setView }: Props) {

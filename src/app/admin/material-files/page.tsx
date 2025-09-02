@@ -1,6 +1,5 @@
 'use client'
 import * as React from 'react'
-import AnimatedPage from '@/common/components/AnimatedPage'
 import FilesHeader from '@/app/admin/material-files/components/Header'
 import FilesTable from '@/app/admin/material-files/components/FilesTable'
 import FileFormDialog from '@/app/admin/material-files/components/FileFormDialog'
@@ -32,7 +31,7 @@ export default function MaterialFilesPage() {
   const page = data?.meta.page ?? params.page ?? 1
 
   return (
-    <AnimatedPage>
+    <>
       <Box sx={{ p: 3 }}>
         <FilesHeader />
 
@@ -119,6 +118,6 @@ export default function MaterialFilesPage() {
           <Alert severity="error">{error}</Alert>
         </Snackbar>
       </Box>
-    </AnimatedPage>
+    </>
   )
 }

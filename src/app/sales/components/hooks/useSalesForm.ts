@@ -7,7 +7,7 @@ export type AlertState = {
   message: string;
 } | null;
 
-export const useSalesForm = () => {
+export const useSalesForm = (onSuccess?: () => void) => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [alert, setAlert] = useState<AlertState>(null);
@@ -91,6 +91,9 @@ export const useSalesForm = () => {
           },
         });
         setAlert({ severity: "success", message: "Sales entry updated." });
+        setTimeout(() => {
+          onSuccess?.(); // callback from parent to close dialog
+        }, 300);
       } else {
         await axios.post(API.SALES.CREATE_ORDER, payload, {
           headers: {
@@ -99,6 +102,9 @@ export const useSalesForm = () => {
           },
         });
         setAlert({ severity: "success", message: "Sales entry created." });
+        setTimeout(() => {
+          onSuccess?.(); // callback from parent to close dialog
+        }, 300);
       }
     } catch (error: unknown) {
       let msg = "Something went wrong.";

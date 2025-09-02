@@ -1,10 +1,11 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { findName, formatDate } from "@/app/sales/components/utils/sales";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem, Link as MuiLink } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import Link from "next/link"; 
 
 type Props = {
   orders: SalesOrder[];
@@ -96,7 +97,21 @@ export default function SalesOrdersTable({
       width: 110,
       valueGetter: (_value, row) => findName(lookup.products, row.productId),
     },
-    { field: "saleOrderNumber", headerName: "Sale Order Number", width: 110 },
+    {
+      field: "saleOrderNumber",
+      headerName: "Sale Order Number",
+      width: 110,
+      renderCell: (params: GridRenderCellParams<SalesOrder>) => (
+        <MuiLink
+          component={Link}
+          href={`/so-search/${params.row.saleOrderNumber}`}
+          underline="hover"
+          sx={{ fontWeight: 500 }}
+        >
+          {params.value}
+        </MuiLink>
+      ),
+    },
     { field: "outboundDelivery", headerName: "OutBound Delivery", width: 110 },
     { field: "transferOrder", headerName: "Transfer Order", width: 110 },
     {
@@ -161,7 +176,12 @@ export default function SalesOrdersTable({
   ];
 
   return (
-    <Box sx={{ width: "100%", overflowX: "auto" }}>
+    <Box sx={{ 
+        width: "100%", 
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+        overflow: 'hidden'
+    }}>
       <DataGrid
         rows={orders}
         columns={columns}

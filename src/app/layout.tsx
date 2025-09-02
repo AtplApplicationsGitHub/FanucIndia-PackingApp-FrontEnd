@@ -4,12 +4,13 @@ import { Inter } from "next/font/google";
 import { ThemeToggle } from "@/common/components/ThemeToggle";
 import ThemeRegistry from "@/common/components/ThemeRegistry";
 import AppProviders from "@/common/components/AppProviders";
+import PageAnimationWrapper from "@/common/components/PageAnimationWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Fanuc India Packing App",
-  description: "Admin & Sales Dashboard",
+  description: "Picking & Packing Management",
 };
 
 export default function RootLayout({
@@ -42,7 +43,9 @@ export default function RootLayout({
           <div className="absolute top-4 right-4 z-50">
             <ThemeToggle />
           </div>
-          {children}
+          <PageAnimationWrapper>
+              {children}
+          </PageAnimationWrapper>
           </AppProviders>
         </ThemeRegistry>
       </body>

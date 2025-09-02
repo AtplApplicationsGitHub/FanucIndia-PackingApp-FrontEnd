@@ -4,10 +4,6 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -19,6 +15,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { API } from "@/common/lib/api";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
+import SearchableSelect from "@/app/admin/components/dashboard/SearchableSelect";
 
 type OptionItem = {
   id: string | number;
@@ -358,7 +355,7 @@ export default function AdminOrderEditModal({
                   <Box key={field.key} sx={{ flex: "0 0 100%", mb: 1 }}>
                     <TextField
                       fullWidth
-                      size="small"
+                      size="medium"
                       label={field.label}
                       value={normalizeInputValue(form[field.key])}
                       onChange={(e) => handleChange(field.key, e.target.value)}
@@ -403,7 +400,7 @@ export default function AdminOrderEditModal({
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          size: "small",
+                          size: "medium",
                           disabled: loading,
                           sx: (theme) => ({
                             bgcolor: theme.palette.background.default,
@@ -420,6 +417,11 @@ export default function AdminOrderEditModal({
               }
 
               if (field.type === "select") {
+                const searchableOptions = options.map((opt) => ({
+                  value: opt.id,
+                  label: opt.name || opt.code || opt.configName || "",
+                }));
+
                 return (
                   <Box
                     key={field.key}
@@ -428,50 +430,13 @@ export default function AdminOrderEditModal({
                       minWidth: { xs: "100%", sm: "47%" },
                     }}
                   >
-                    <FormControl
-                      fullWidth
-                      size="small"
-                      disabled={loading}
-                      sx={(theme) => ({
-                        bgcolor: theme.palette.background.default,
-                        borderRadius: 2,
-                      })}
-                    >
-                      <InputLabel
-                        sx={(theme) => ({
-                          color: theme.palette.text.secondary,
-                        })}
-                      >
-                        {field.label}
-                      </InputLabel>
-                      <Select
-                        value={normalizeInputValue(form[field.key])}
-                        label={field.label}
-                        onChange={(e) =>
-                          handleChange(field.key, e.target.value)
-                        }
-                        MenuProps={{
-                          PaperProps: {
-                            sx: (theme) => ({
-                              maxHeight: 300,
-                              bgcolor: theme.palette.background.default,
-                            }),
-                          },
-                        }}
-                        sx={(theme) => ({
-                          color: theme.palette.text.primary,
-                        })}
-                      >
-                        <MenuItem value="">
-                          <em>Select {field.label}</em>
-                        </MenuItem>
-                        {options.map((opt) => (
-                          <MenuItem key={opt.id} value={opt.id}>
-                            {opt.name || opt.code || opt.configName}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <SearchableSelect
+                      name={field.key}
+                      label={field.label}
+                      options={searchableOptions}
+                      value={normalizeInputValue(form[field.key])}
+                      onChange={(value) => handleChange(field.key, value)}
+                    />
                   </Box>
                 );
               }
@@ -486,7 +451,7 @@ export default function AdminOrderEditModal({
                 >
                   <TextField
                     fullWidth
-                    size="small"
+                    size="medium"
                     label={field.label}
                     type={field.type === "number" ? "number" : "text"}
                     value={normalizeInputValue(form[field.key])}

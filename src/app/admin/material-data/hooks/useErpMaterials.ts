@@ -1,107 +1,3 @@
-// import { useState, useEffect, useCallback } from 'react';
-// import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage } from '@/common/lib/api';
-// import type { MaterialRow } from '@/app/admin/material-data/types/material-row';
-
-// type ApiMaterial = {
-//   ID: number;
-//   Material_Code: string;
-//   Material_Description: string;
-//   Batch_No: string;
-//   SO_Donor_Batch: string;
-//   Cert_No: string;
-//   Bin_No: string;
-//   A_D_F: string;
-//   Required_Qty: number;
-//   Issue_stage: number;
-//   Packing_stage: number;
-//   Machine_Model: string;
-//   CNC_Serial_No: string;
-// };
-
-// function getErrorMessage(error: unknown): string {
-//   if (typeof error === 'string') return error;
-//   if (error instanceof Error) return error.message;
-//   try {
-//     return JSON.stringify(error);
-//   } catch {
-//     return 'An unknown error occurred';
-//   }
-// }
-
-// export function useErpMaterials(orderId: number): {
-//   data: MaterialRow[];
-//   loading: boolean;
-//   error: string | null;
-//   refetch: () => Promise<void>;
-// } {
-//   const [data, setData] = useState<MaterialRow[]>([]);
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const fetchMaterials = useCallback(async (): Promise<void> => {
-//     if (orderId <= 0) {
-//       setData([]);
-//       setError(null);
-//       setLoading(false);
-//       return;
-//     }
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       const apiData = (await getErpMaterials(orderId)) as ApiMaterial[];
-//       const mapped = apiData.map<MaterialRow>((m, i) => ({
-//         id: m.ID,
-//         siNo: i + 1,
-//         materialCode: m.Material_Code,
-//         materialDescription: m.Material_Description,
-//         batchNo: m.Batch_No,
-//         soDonorBatch: m.SO_Donor_Batch,
-//         certNo: m.Cert_No,
-//         binNo: m.Bin_No,
-//         adf: m.A_D_F,
-//         reqQuantity: m.Required_Qty,
-//         issueStage: m.Issue_stage,
-//         machineModel: m.Machine_Model,
-//         cncSerialNo: m.CNC_Serial_No,
-//       }));
-//       setData(mapped);
-//     } catch (err: unknown) {
-//       setError(getErrorMessage(err));
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [orderId]);
-
-//   useEffect(() => {
-//     void fetchMaterials();
-//   }, [fetchMaterials]);
-
-//   return { data, loading, error, refetch: fetchMaterials };
-// }
-
-// export function useIncrementIssueStage(orderId: number): {
-//   mutate: (materialCode: string) => Promise<void>;
-//   loading: boolean;
-//   error: string | null;
-// } {
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const mutate = useCallback(async (materialCode: string): Promise<void> => {
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       await incrementIssueStage(orderId, materialCode);
-//     } catch (err: unknown) {
-//       setError(getErrorMessage(err));
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [orderId]);
-
-//   return { mutate, loading, error };
-// }
-
 import { useState, useEffect, useCallback } from 'react';
 import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage } from '@/common/lib/api';
 import type { MaterialRow } from '@/app/admin/material-data/types/material-row';
@@ -186,7 +82,8 @@ export function useIncrementIssueStage(orderId: number) {
     setLoading(true);
     setError(null);
     try {
-      await incrementIssueStage(orderId, materialCode);
+      // await incrementIssueStage(orderId, materialCode);
+      return await incrementIssueStage(orderId, materialCode);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
       throw err;

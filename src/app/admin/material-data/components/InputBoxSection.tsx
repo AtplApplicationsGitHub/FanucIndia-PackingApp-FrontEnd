@@ -1,4 +1,3 @@
-// admin/material-data/components/InputBoxSection.tsx
 "use client";
 
 import { FC, useState } from "react";
@@ -21,7 +20,6 @@ const InputBoxSection: FC<Props> = ({
 }) => {
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
-  // const [attachedCount, setAttachedCount] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

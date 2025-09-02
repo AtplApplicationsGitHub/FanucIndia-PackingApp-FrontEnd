@@ -34,7 +34,7 @@ const ProductSelect: React.FC<Props> = ({ value, onChange, options, error }) => 
           required
           error={!!error}
           helperText={error}
-          size="small"
+          size="medium"
           placeholder="Select product"
           autoComplete="off"
           sx={{
@@ -42,7 +42,7 @@ const ProductSelect: React.FC<Props> = ({ value, onChange, options, error }) => 
               color: "#dc2626",
             },
             "& .MuiOutlinedInput-root": {
-              borderRadius: "0.5rem",
+              borderRadius: "4px",
               backgroundColor: (theme) => theme.palette.background.paper,
             },
             "& .MuiInputLabel-root": {

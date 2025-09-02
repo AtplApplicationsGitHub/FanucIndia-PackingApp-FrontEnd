@@ -6,7 +6,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Home, Package } from "lucide-react";
+import { Home, Package, Truck, Grid } from "lucide-react";
 import LogoutButton from "@/common/components/LogoutButton";
 import { getGreeting } from "@/app/sales/components/utils/sales";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
@@ -22,6 +22,8 @@ type Props = {
 const menuItems = [
   { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "home" },
   { label: "PICK & PACK", icon: <Package className="mr-2 h-4 w-4" />, value: "pick_pack" },
+  { label: "DISPATCH", icon: <Truck className="mr-2 h-4 w-4" />, value: "dispatch" },
+  { label: "FG DASHBOARD", icon: <Grid className="mr-2 h-4 w-4" />, value: "fg_dashboard" },
 ];
 
 export default function UserDashboardHeader({ userName, view, setView }: Props) {
