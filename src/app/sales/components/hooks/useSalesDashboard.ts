@@ -77,12 +77,24 @@ export function useSalesDashboard() {
     setLookupsLoading(true);
     setError("");
     Promise.all([
-      axios.get(API.LOOKUP.PRODUCTS, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(API.LOOKUP.TRANSPORTERS, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(API.LOOKUP.PLANT_CODES, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(API.LOOKUP.SALES_ZONES, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(API.LOOKUP.PACK_CONFIGS, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(API.LOOKUP.CUSTOMERS, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(API.LOOKUP.PRODUCTS, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(API.LOOKUP.TRANSPORTERS, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(API.LOOKUP.PLANT_CODES, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(API.LOOKUP.SALES_ZONES, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(API.LOOKUP.PACK_CONFIGS, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(API.LOOKUP.CUSTOMERS, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
     ])
       .then(([p, t, pc, sz, pk, c]) =>
         setLookup({
@@ -181,10 +193,25 @@ export function useSalesDashboard() {
 
       setAlert({ severity: "success", message: "Bulk import successful!" });
       await fetchOrders();
-    } catch {
+    } catch (err: unknown) { 
+      let message = "Bulk import failed. Check your file and try again.";
+
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const errorData = err.response.data as { message?: string; errors?: { row: number; errors: string[] }[] };
+        
+        if (errorData.errors && errorData.errors.length > 0) {
+          const detailedErrors = errorData.errors
+            .map(e => `Row ${e.row}: ${e.errors.join(', ')}`)
+            .join('\n');
+          message = `Import failed. Please correct the following errors:\n${detailedErrors}`;
+        } else if (errorData.message) {
+          message = errorData.message;
+        }
+      }
+      
       setAlert({
         severity: "error",
-        message: "Bulk import failed. Check your file and try again.",
+        message: message,
       });
     } finally {
       if (input) input.value = "";
@@ -211,8 +238,7 @@ export function useSalesDashboard() {
         );
         setAlert({
           severity: "error",
-          message:
-            err.response?.data?.message || "Delete failed. Try again.",
+          message: err.response?.data?.message || "Delete failed. Try again.",
         });
       } else if (err instanceof Error) {
         setDeleteError(err.message);

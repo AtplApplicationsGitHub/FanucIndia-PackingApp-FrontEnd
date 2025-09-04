@@ -84,6 +84,8 @@ export function useAdminDashboard() {
   const [masterEditObj, setMasterEditObj] = useState<Partial<LookupRow>>({});
   const [masterAddObj, setMasterAddObj] = useState<Partial<LookupRow>>({});
   const [masterAdding, setMasterAdding] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   type ConfirmDeleteState = { type: string; id: number } | null;
   const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteState>(null);
@@ -165,7 +167,9 @@ export function useAdminDashboard() {
             : { page: currentPage, limit: pageSize }),
           search: searchInput || undefined,
           startDate: formatDateLocalYYYYMMDD(startDate ?? undefined),
-          endDate: formatDateLocalYYYYMMDD(endDate ?? undefined),    
+          endDate: formatDateLocalYYYYMMDD(endDate ?? undefined),
+          sortBy,
+          sortOrder,
         },
       });
       setOrders(res.data.data || []);
@@ -189,7 +193,7 @@ export function useAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchProduct, searchInput, startDate, endDate]);
+  }, [currentPage, pageSize, searchProduct, searchInput, startDate, endDate, sortBy, sortOrder]);
 
   useEffect(() => {
     if (view === "orders") {
@@ -607,6 +611,10 @@ export function useAdminDashboard() {
     loading,
     updateOrderModal,
     fetchOrders,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
 
     searchInput,
     setSearchInput,
