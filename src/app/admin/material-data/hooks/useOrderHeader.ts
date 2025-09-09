@@ -13,13 +13,13 @@ function getErrorMessage(error: unknown): string {
   return typeof error === 'string' ? error : 'Failed to load order header';
 }
 
-export function useOrderHeader(orderId: number) {
+export function useOrderHeader(orderId: number, userId: number | null) {
   const [data, setData] = useState<OrderHeader | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orderId <= 0) {
+    if (orderId <= 0 || !userId) {
       setData(null);
       setLoading(false);
       setError(null);
@@ -86,7 +86,7 @@ export function useOrderHeader(orderId: number) {
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [orderId, userId]);
 
   return { data, loading, error };
 }

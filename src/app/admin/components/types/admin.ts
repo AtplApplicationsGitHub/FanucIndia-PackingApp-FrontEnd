@@ -25,6 +25,7 @@ export type SalesOrder = {
   customer?: { id: number; name: string } | null;
   specialRemarks?: string | null;
   fgLocation?: string | null; 
+  hasMaterialData?: boolean;
 };
 
 export type Lookup = {

@@ -48,14 +48,14 @@ export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
   const router = useRouter();
   const [, setIsRedirecting] = useState(false);
-  const [, setUserRole] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: number | null; role: string | null }>({ id: null, role: null });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setUserRole(user.role);
+        setCurrentUser({ id: user.id, role: user.role });
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
       }
@@ -69,12 +69,12 @@ export default function MaterialDataPage() {
   const orderId = Number(idStr);
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-  const { data: header, error: hdrError } = useOrderHeader(orderId);
+  const { data: header, error: hdrError } = useOrderHeader(orderId, currentUser.id);
   const {
     rows: fetchedRows = [],
     error: matError,
     loading: matLoading,
-  } = useErpMaterials(orderId);
+  } = useErpMaterials(orderId, currentUser.id);
   const {
     mutate: incIssue,
     loading: mutatingIssue,
@@ -318,6 +318,7 @@ export default function MaterialDataPage() {
             refetch();
           }}
           disabled={isOrderFullyComplete}
+          items={localRows}
         />
       )}
 

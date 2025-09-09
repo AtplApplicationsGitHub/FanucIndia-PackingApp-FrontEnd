@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import { DataGrid, GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { findName, formatDate } from "@/app/sales/components/utils/sales";
-import { IconButton, Menu, MenuItem, Link as MuiLink } from "@mui/material";
+import { IconButton, Menu, MenuItem, Link as MuiLink, Tooltip } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Link from "next/link"; 
 
@@ -28,6 +28,7 @@ function ActionsCell({
 }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const isAssigned = !!row.assignedUserId;
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -59,10 +60,14 @@ function ActionsCell({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem onClick={handleEdit}>Edit</MenuItem>
-        <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
-          Delete
-        </MenuItem>
+        <Tooltip title={isAssigned ? "This order is assigned and cannot be edited or deleted." : ""}>
+          <div>
+            <MenuItem onClick={handleEdit} disabled={isAssigned}>Edit</MenuItem>
+            <MenuItem onClick={handleDelete} sx={{ color: "error.main" }} disabled={isAssigned}>
+              Delete
+            </MenuItem>
+          </div>
+        </Tooltip>
       </Menu>
     </Box>
   );

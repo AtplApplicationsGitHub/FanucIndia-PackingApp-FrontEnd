@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { UploadCloud, X as CloseIcon, File as FileIcon } from 'lucide-react';
 import axios from 'axios';
-import { API } from '@/common/lib/api'; // Assuming API is in your common lib
+import { API } from '@/common/lib/api';
 
 export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOrderNumber }: {
   open: boolean;
@@ -47,6 +47,9 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
 
     const formData = new FormData();
     formData.append('file', file);
+    if (saleOrderNumber) {
+      formData.append('saleOrderNumber', saleOrderNumber);
+    }
 
     try {
       const token = localStorage.getItem('token');

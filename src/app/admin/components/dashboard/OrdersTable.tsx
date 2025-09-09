@@ -11,6 +11,7 @@ import {
   TextField,
   FormControl,
   Link as MuiLink,
+  Tooltip,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -193,18 +194,23 @@ export default function AdminOrdersTable({
                 </ListItemIcon>
                 <ListItemText>Edit</ListItemText>
               </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  onDelete(row.id);
-                  handleMenuClose();
-                }}
-                sx={{ color: "error.main" }}
-              >
-                <ListItemIcon sx={{ color: "inherit" }}>
-                  <DeleteIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Delete</ListItemText>
-              </MenuItem>
+              <Tooltip title={row.hasMaterialData ? "Cannot delete an order with imported material data." : ""}>
+                <div>
+                  <MenuItem
+                    onClick={() => {
+                      onDelete(row.id);
+                      handleMenuClose();
+                    }}
+                    sx={{ color: row.hasMaterialData ? "text.disabled" : "error.main" }}
+                    disabled={row.hasMaterialData}
+                  >
+                    <ListItemIcon sx={{ color: "inherit" }}>
+                      <DeleteIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Delete</ListItemText>
+                  </MenuItem>
+                </div>
+              </Tooltip>
               <MenuItem
                 onClick={() => {
                   onDetailedView(row);

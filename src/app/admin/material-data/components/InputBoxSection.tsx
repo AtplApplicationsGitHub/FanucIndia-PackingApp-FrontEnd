@@ -1,22 +1,51 @@
 "use client";
 
-import { FC, useState } from "react";
-import { TextField, Button, Box } from "@mui/material";
+import { FC, useState, useMemo } from "react";
+import { TextField, Button, Box, Typography } from "@mui/material";
 import UploadErpMaterialFileButton from "@/app/admin/material-data/components/UploadErpMaterialFileButton";
 import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadAttachmentDialog";
+import { MaterialRow } from "../types/material-row";
 
 interface Props {
   onSubmit: (value: string) => void;
   saleOrderNumber: string;
   onFileCreated: () => void;
   disabled?: boolean;
+  items: MaterialRow[];
 }
+
+const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
+  const lastUpdatedItem = useMemo(() => {
+    if (!items || items.length === 0) return null;
+
+    const updatedItems = items.filter(item => item.updatedDate);
+    if (updatedItems.length === 0) return null;
+
+    return updatedItems.sort((a, b) => new Date(b.updatedDate!).getTime() - new Date(a.updatedDate!).getTime())[0];
+  }, [items]);
+
+  if (!lastUpdatedItem || !lastUpdatedItem.updatedBy) {
+    return <Box sx={{ flex: 1, minWidth: 300 }} />; // Maintain space
+  }
+
+  return (
+    <Box sx={{ flex: 1, minWidth: 300, textAlign: 'left' }}>
+      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+        Last Updated By: {lastUpdatedItem.updatedBy}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        Last Updated At: {new Date(lastUpdatedItem.updatedDate!).toLocaleString()}
+      </Typography>
+    </Box>
+  );
+};
 
 const InputBoxSection: FC<Props> = ({
   onSubmit,
   saleOrderNumber,
   onFileCreated,
   disabled = false,
+  items,
 }) => {
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
@@ -41,18 +70,20 @@ const InputBoxSection: FC<Props> = ({
 
   return (
     <div className="w-full">
-      <Box sx={{ maxWidth: 550, mx: "auto" }}>
+      <Box display="flex" alignItems="center" justifyContent="center" gap={3} sx={{ mx: "auto" }}>
+        <LastUpdatedInfo items={items} />
+        
         <Box
           component="form"
           onSubmit={handleSubmit}
           display="flex"
-          gap={3}
+          gap={2}
           alignItems="center"
           justifyContent="center"
+          flex={1.5}
         >
           <TextField
-            fullWidth
-            size="small"
+            size="medium"
             label="Scan / Enter Material Code"
             placeholder="e.g., ROB-HAND-001"
             value={value}
@@ -60,9 +91,9 @@ const InputBoxSection: FC<Props> = ({
             onKeyDown={handleKey}
             inputProps={{ autoFocus: true }}
             disabled={disabled}
+            sx={{ width: 350 }}
           />
 
-          {/* Ghost submit button (unchanged behavior) */}
           <Button
             type="submit"
             sx={(theme) => ({
@@ -79,7 +110,6 @@ const InputBoxSection: FC<Props> = ({
             Submit
           </Button>
 
-          {/* Bulk Upload opens dialog */}
           <UploadErpMaterialFileButton
             saleOrderNumber={saleOrderNumber}
             onCreated={onFileCreated}
@@ -87,9 +117,10 @@ const InputBoxSection: FC<Props> = ({
             buttonProps={{ type: "button", disabled: disabled }}
           />
         </Box>
+
+        <Box flex={1} /> 
       </Box>
 
-      {/* The actual dialog with DnD area + table */}
       <UploadAttachmentDialog
         open={openUploadDialog}
         onClose={() => setOpenUploadDialog(false)}

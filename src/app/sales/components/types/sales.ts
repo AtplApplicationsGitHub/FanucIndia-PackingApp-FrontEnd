@@ -13,6 +13,10 @@ export type SalesOrder = {
   status?: string | null;
   specialRemarks: string;
   customerId: number;
+  assignedUserId?: number | null;
+  assignedUser?: {
+    name: string;
+  } | null;
 };
 
 export type LookupData = {

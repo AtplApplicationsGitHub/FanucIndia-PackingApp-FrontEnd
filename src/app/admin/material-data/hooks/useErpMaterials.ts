@@ -16,6 +16,8 @@ type ApiMaterial = {
   Packing_stage: number;
   Machine_Model: string;
   CNC_Serial_No: string;
+  UpdatedBy?: string;
+  UpdatedDate?: string;
 };
 
 function getErrorMessage(error: unknown): string {
@@ -24,12 +26,13 @@ function getErrorMessage(error: unknown): string {
 }
 
 /** Fetch ERP materials for a given order. */
-export function useErpMaterials(orderId: number) {
+export function useErpMaterials(orderId: number, userId: number | null) {
   const [rows, setRows] = useState<MaterialRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
 
     const fetchData = async () => {
@@ -56,6 +59,8 @@ export function useErpMaterials(orderId: number) {
           packingStage: m.Packing_stage ?? 0,
           machineModel: m.Machine_Model,
           cncSerialNo: m.CNC_Serial_No,
+          updatedBy: m.UpdatedBy,
+          updatedDate: m.UpdatedDate,
         }));
 
         setRows(mapped);
@@ -68,7 +73,7 @@ export function useErpMaterials(orderId: number) {
 
     fetchData();
     return () => { cancelled = true; };
-  }, [orderId]);
+  }, [orderId, userId]);
 
   return { rows, setRows, loading, error, setError };
 }

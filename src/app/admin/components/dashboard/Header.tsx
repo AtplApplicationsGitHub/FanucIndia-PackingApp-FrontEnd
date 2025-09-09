@@ -26,7 +26,7 @@ const menuItems = [
   { label: "MASTER", icon: <Database className="mr-2 h-4 w-4" />, value: "master" },
   { label: "MANAGE", icon: <Users className="mr-2 h-4 w-4" />, value: "manage" },
   { label: "DISPATCH", icon: <Truck className="mr-2 h-4 w-4" />, value: "dispatch" },
-  { label: "FG", icon: <Grid className="mr-2 h-4 w-4" />, value: "fg_dashboard" },
+  { label: "FG DASHBOARD", icon: <Grid className="mr-2 h-4 w-4" />, value: "fg_dashboard" },
 ];
 
 export default function AdminDashboardHeader({ userName, view, setView }: Props) {

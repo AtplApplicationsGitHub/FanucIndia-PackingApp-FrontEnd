@@ -12,37 +12,12 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Link,
-  Chip,
   Stack,
-  Stepper,
-  Step,
-  StepLabel,
-  StepConnector,
-  stepConnectorClasses,
-  styled,
 } from "@mui/material";
-import { StepIconProps } from "@mui/material/StepIcon";
 import {
   Search,
   Print,
-  Visibility,
-  FilePresent,
-  Close,
   Home,
-  Check,
 } from "@mui/icons-material";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/api";
@@ -51,6 +26,10 @@ import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
 import { getGreeting } from "@/app/sales/components/utils/sales";
 import LogoutButton from "@/common/components/LogoutButton";
+import OrderSnapshot from "../components/OrderSnapshot";
+import DispatchInfo from "../components/DispatchInfo";
+import MaterialDetails from "../components/MaterialDetails";
+import AttachmentDialogs from "../components/AttachmentDialogs";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -70,7 +49,7 @@ interface SalesOrder {
   specialRemarks?: string;
 }
 
-interface DispatchInfo {
+interface DispatchInfoData {
   id: number;
   customer: { name: string; address: string };
   transporter?: { name: string };
@@ -96,7 +75,7 @@ interface MaterialDetail {
 
 interface SoDetails {
   salesOrder: SalesOrder;
-  dispatchInfo: DispatchInfo[];
+  dispatchInfo: DispatchInfoData[];
   materialDetails: MaterialDetail[];
 }
 interface MaterialAttachment {
@@ -105,103 +84,6 @@ interface MaterialAttachment {
   description: string | null;
 }
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
-
-const QontoConnector = styled(StepConnector)(({ theme }) => ({
-  [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: 10,
-    left: "calc(-50% + 16px)",
-    right: "calc(50% + 16px)",
-  },
-  [`&.${stepConnectorClasses.active}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: "#784af4",
-    },
-  },
-  [`&.${stepConnectorClasses.completed}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: "#784af4",
-    },
-  },
-  [`& .${stepConnectorClasses.line}`]: {
-    borderColor:
-      theme.palette.mode === "dark" ? theme.palette.grey[800] : "#eaeaf0",
-    borderTopWidth: 3,
-    borderRadius: 1,
-  },
-}));
-
-const QontoStepIconRoot = styled("div")<{ ownerState: { active?: boolean } }>(
-  ({ theme, ownerState }) => ({
-    color: theme.palette.mode === "dark" ? theme.palette.grey[700] : "#eaeaf0",
-    display: "flex",
-    height: 22,
-    alignItems: "center",
-    ...(ownerState.active && {
-      color: "#784af4",
-    }),
-    "& .QontoStepIcon-completedIcon": {
-      color: "#784af4",
-      zIndex: 1,
-      fontSize: 18,
-    },
-    "& .QontoStepIcon-circle": {
-      width: 8,
-      height: 8,
-      borderRadius: "50%",
-      backgroundColor: "currentColor",
-    },
-  })
-);
-
-function QontoStepIcon(props: StepIconProps) {
-  const { active, completed, className } = props;
-
-  return (
-    <QontoStepIconRoot ownerState={{ active }} className={className}>
-      {completed ? (
-        <Check className="QontoStepIcon-completedIcon" />
-      ) : (
-        <div className="QontoStepIcon-circle" />
-      )}
-    </QontoStepIconRoot>
-  );
-}
-
-const steps = [
-  "Order Created",
-  "Materials Issued",
-  "Ready for Dispatch",
-  "Dispatched",
-];
-
-function OrderStatusStepper({ status }: { status?: string }) {
-  const getActiveStep = () => {
-    if (!status) return 0;
-    const lowerStatus = status.toLowerCase();
-    if (lowerStatus.includes("dispatched")) return 3;
-    if (lowerStatus === "f105") return 2; // Ready for Dispatch
-    if (lowerStatus === "r105") return 1; // Materials Issued
-    return 0; // Order Created
-  };
-
-  const activeStep = getActiveStep();
-
-  return (
-    <Stack sx={{ width: "100%", mb: 4 }} spacing={4}>
-      <Stepper
-        alternativeLabel
-        activeStep={activeStep}
-        connector={<QontoConnector />}
-      >
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel StepIconComponent={QontoStepIcon}>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-    </Stack>
-  );
-}
 
 // --- Sales Header Component ---
 const SalesHeader = ({
@@ -251,21 +133,12 @@ export default function SoSearchPage() {
   const dispatchRef = useRef<HTMLDivElement>(null);
   const materialRef = useRef<HTMLDivElement>(null);
 
-  const [dispatchDrawerOpen, setDispatchDrawerOpen] = useState(false);
+  const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [packingDrawerOpen, setPackingDrawerOpen] = useState(false);
-  const [materialDrawerOpen, setMaterialDrawerOpen] = useState(false);
+  const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
 
-  const [drawerAttachments, setDrawerAttachments] = useState<
-    { fileName: string }[]
-  >([]);
-  const [materialAttachments, setMaterialAttachments] = useState<
-    MaterialAttachment[]
-  >([]);
-
-  const [materialFilters, setMaterialFilters] = useState({
-    text: "",
-    batch: "",
-  });
+  const [dispatchAttachments, setDispatchAttachments] = useState<{ fileName: string }[]>([]);
+  const [materialAttachments, setMaterialAttachments] = useState<MaterialAttachment[]>([]);
 
   const router = useRouter();
   const params = useParams<{ soNumber?: string[] }>();
@@ -331,7 +204,7 @@ export default function SoSearchPage() {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     const refs = [snapshotRef, dispatchRef, materialRef];
     refs[newValue]?.current?.scrollIntoView({
@@ -342,9 +215,12 @@ export default function SoSearchPage() {
 
   const handlePrint = () => window.print();
 
-  const openDispatchAttachmentDrawer = (attachments: { fileName: string }[]) => {
-    setDrawerAttachments(attachments);
-    setDispatchDrawerOpen(true);
+  const handleOpenDispatchAttachments = () => {
+    if (data?.dispatchInfo) {
+      const allAttachments = data.dispatchInfo.flatMap(d => d.attachments || []);
+      setDispatchAttachments(allAttachments);
+      setDispatchDialogOpen(true);
+    }
   };
 
   const handleOpenMaterialAttachments = async () => {
@@ -356,7 +232,7 @@ export default function SoSearchPage() {
       if (!res.ok) throw new Error("Could not fetch attachments");
       const attachments = await res.json();
       setMaterialAttachments(attachments);
-      setMaterialDrawerOpen(true);
+      setMaterialDialogOpen(true);
     } catch {
       setError("Failed to load material attachments.");
     }
@@ -369,10 +245,7 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch file for viewing");
-        return res.blob();
-      })
+      .then((res) => res.ok ? res.blob() : Promise.reject("Failed to fetch file"))
       .then((blob) => {
         const blobUrl = window.URL.createObjectURL(blob);
         window.open(blobUrl, "_blank");
@@ -388,10 +261,7 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Download failed");
-        return res.blob();
-      })
+      .then((res) => res.ok ? res.blob() : Promise.reject("Download failed"))
       .then((blob) => {
         const blobUrl = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -416,10 +286,7 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to get attachment");
-        return res.blob();
-      })
+      .then((res) => res.ok ? res.blob() : Promise.reject("Failed to get attachment"))
       .then((blob) => {
         const blobUrl = window.URL.createObjectURL(blob);
         if (action === "view") {
@@ -437,22 +304,6 @@ export default function SoSearchPage() {
       })
       .catch(() => setError(`Failed to ${action} attachment.`));
   };
-
-  const filteredMaterials =
-    data?.materialDetails.filter((m) => {
-      const textMatch =
-        !materialFilters.text ||
-        m.Material_Code?.toLowerCase().includes(
-          materialFilters.text.toLowerCase()
-        ) ||
-        m.Material_Description?.toLowerCase().includes(
-          materialFilters.text.toLowerCase()
-        );
-      const batchMatch =
-        !materialFilters.batch ||
-        m.Batch_No?.toLowerCase().includes(materialFilters.batch.toLowerCase());
-      return textMatch && batchMatch;
-    }) || [];
 
   const renderHeader = () => {
     switch (userRole) {
@@ -521,17 +372,9 @@ export default function SoSearchPage() {
               onClick={handleManualSearch}
               disabled={loading}
             >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Submit"
-              )}
+              {loading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
             </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Print />}
-              onClick={handlePrint}
-            >
+            <Button variant="outlined" startIcon={<Print />} onClick={handlePrint}>
               Print
             </Button>
           </Stack>
@@ -557,9 +400,7 @@ export default function SoSearchPage() {
           </Alert>
         )}
         {!data && !loading && !error && !params.soNumber?.[0] && (
-          <Typography
-            sx={{ textAlign: "center", color: "text.secondary", mt: 4 }}
-          >
+          <Typography sx={{ textAlign: "center", color: "text.secondary", mt: 4 }}>
             Enter a Sales Order number to view details.
           </Typography>
         )}
@@ -567,406 +408,38 @@ export default function SoSearchPage() {
         {data && (
           <>
             <Box ref={snapshotRef} sx={{ height: "24px" }} />
-
-            <Paper ref={snapshotRef} sx={{ p: 3, mb: 3 }} id="snapshot-section">
-              <OrderStatusStepper status={data.salesOrder.status} />
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h5" gutterBottom>
-                  ORDER SNAPSHOT
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Chip
-                    label={`Status: ${data.salesOrder.status}`}
-                    color={
-                      data.salesOrder.status === "Ready" ||
-                      data.salesOrder.status === "Dispatched"
-                        ? "success"
-                        : "warning"
-                    }
-                  />
-                  {data.salesOrder.priority && (
-                    <Chip
-                      label={`Priority: ${data.salesOrder.priority}`}
-                      color="error"
-                    />
-                  )}
-                </Box>
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-                <KVBox label="SO" value={data.salesOrder.saleOrderNumber} />
-                <KVBox label="Status" value={data.salesOrder.status} />
-                <KVBox
-                  label="Delivery Date"
-                  value={new Date(
-                    data.salesOrder.deliveryDate
-                  ).toLocaleDateString()}
-                />
-                <KVBox label="FG Location" value={data.salesOrder.fgLocation} />
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-                <KVBox label="TO" value={data.salesOrder.transferOrder} />
-                <KVBox label="OB" value={data.salesOrder.outboundDelivery} />
-                <KVBox
-                  label="Payment Status"
-                  value={data.salesOrder.paymentClearance ? "Yes" : "No"}
-                />
-                <KVBox label="Packing Attachment">
-                  <Link
-                    component="button"
-                    variant="body2"
-                    onClick={() => setPackingDrawerOpen(true)}
-                  >
-                    View attachments
-                  </Link>
-                </KVBox>
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-                <KVBox label="Product" value={data.salesOrder.product?.name} />
-                <KVBox
-                  label="Customer"
-                  value={data.salesOrder.customer?.name}
-                />
-                <KVBox label="Priority" value={data.salesOrder.priority} />
-                <KVBox label="Terminal" value={"-"} />
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={2}>
-                <KVBox
-                  label="Packing Config"
-                  value={data.salesOrder.packConfig?.configName}
-                />
-                <KVBox
-                  label="Transporter"
-                  value={data.salesOrder.transporter?.name}
-                />
-                <KVBox
-                  label="Delivery Plant Code"
-                  value={data.salesOrder.plantCode?.code}
-                />
-                <KVBox
-                  label="Sales Zone"
-                  value={data.salesOrder.salesZone?.name}
-                />
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
-                <KVBox
-                  label="Special Remarks"
-                  value={data.salesOrder.specialRemarks}
-                  fullWidth
-                />
-              </Box>
-            </Paper>
-
-            <Paper ref={dispatchRef} sx={{ p: 3, mb: 3 }} id="dispatch-section">
-              <Typography variant="h5" gutterBottom>
-                DISPATCH INFO
-              </Typography>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell>Address</TableCell>
-                      <TableCell>Vehicle Number</TableCell>
-                      <TableCell>Transporter</TableCell>
-                      <TableCell>Attachments</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.dispatchInfo.map((dispatch) => (
-                      <TableRow key={dispatch.id}>
-                        <TableCell>{dispatch.customer.name}</TableCell>
-                        <TableCell>{dispatch.customer.address}</TableCell>
-                        <TableCell>{dispatch.vehicleNumber}</TableCell>
-                        <TableCell>{dispatch.transporter?.name}</TableCell>
-                        <TableCell>
-                          <IconButton
-                            onClick={() =>
-                              openDispatchAttachmentDrawer(
-                                dispatch.attachments || []
-                              )
-                            }
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-
-            <Paper ref={materialRef} sx={{ p: 3, mb: 3 }} id="material-section">
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-              >
-                <Typography variant="h5">MATERIAL DETAILS</Typography>
-                <Button onClick={handleOpenMaterialAttachments}>
-                  Attachments
-                </Button>
-              </Box>
-              <Box display="flex" gap={2} mb={2} flexWrap="wrap">
-                <TextField
-                  size="small"
-                  label="Search code/description"
-                  value={materialFilters.text}
-                  onChange={(e) =>
-                    setMaterialFilters((p) => ({ ...p, text: e.target.value }))
-                  }
-                />
-                <TextField
-                  size="small"
-                  label="Batch contains..."
-                  value={materialFilters.batch}
-                  onChange={(e) =>
-                    setMaterialFilters((p) => ({ ...p, batch: e.target.value }))
-                  }
-                />
-              </Box>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Material Code</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Batch</TableCell>
-                      <TableCell>SO Donor</TableCell>
-                      <TableCell>Cert No</TableCell>
-                      <TableCell>Bin</TableCell>
-                      <TableCell>A/D/F</TableCell>
-                      <TableCell>Req Qty</TableCell>
-                      <TableCell>Issue</TableCell>
-                      <TableCell>Packing</TableCell>
-                      <TableCell>Updated By</TableCell>
-                      <TableCell>Updated Date</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredMaterials.map((m) => (
-                      <TableRow key={m.ID}>
-                        <TableCell>{m.Material_Code}</TableCell>
-                        <TableCell>{m.Material_Description}</TableCell>
-                        <TableCell>{m.Batch_No}</TableCell>
-                        <TableCell>{m.SO_Donor_Batch}</TableCell>
-                        <TableCell>{m.Cert_No}</TableCell>
-                        <TableCell>{m.Bin_No}</TableCell>
-                        <TableCell>{m.A_D_F}</TableCell>
-                        <TableCell>{m.Required_Qty}</TableCell>
-                        <TableCell>{m.Issue_stage}</TableCell>
-                        <TableCell>{m.Packing_stage}</TableCell>
-                        <TableCell>{m.UpdatedBy}</TableCell>
-                        <TableCell>
-                          {m.UpdatedDate
-                            ? new Date(m.UpdatedDate).toLocaleString()
-                            : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+            <OrderSnapshot
+              salesOrder={data.salesOrder}
+              onViewPackingAttachments={() => setPackingDrawerOpen(true)}
+            />
+            <DispatchInfo
+              dispatchInfo={data.dispatchInfo}
+              onViewAttachments={handleOpenDispatchAttachments}
+            />
+            <MaterialDetails
+              materialDetails={data.materialDetails}
+              onViewAttachments={handleOpenMaterialAttachments}
+            />
           </>
         )}
       </Box>
 
-      {/* Dispatch Attachment Drawer */}
-      <Drawer
-        anchor="right"
-        open={dispatchDrawerOpen}
-        onClose={() => setDispatchDrawerOpen(false)}
-      >
-        <Box sx={{ width: 450, p: 2 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6">Dispatch Attachments</Typography>
-            <IconButton onClick={() => setDispatchDrawerOpen(false)}>
-              <Close />
-            </IconButton>
-          </Box>
-          <List>
-            {drawerAttachments.length === 0 ? (
-              <ListItem>
-                <ListItemText primary="No attachments found." />
-              </ListItem>
-            ) : (
-              drawerAttachments.map((att, i) => (
-                <ListItem
-                  key={i}
-                  secondaryAction={
-                    <>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          handleDispatchAttachmentAction(
-                            data!.dispatchInfo[0].id,
-                            att.fileName,
-                            "view"
-                          )
-                        }
-                      >
-                        View
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          handleDispatchAttachmentAction(
-                            data!.dispatchInfo[0].id,
-                            att.fileName,
-                            "download"
-                          )
-                        }
-                      >
-                        Download
-                      </Button>
-                    </>
-                  }
-                >
-                  <ListItemIcon>
-                    <FilePresent />
-                  </ListItemIcon>
-                  <ListItemText primary={att.fileName} />
-                </ListItem>
-              ))
-            )}
-          </List>
-        </Box>
-      </Drawer>
+      <AttachmentDialogs
+        dispatchDialogOpen={dispatchDialogOpen}
+        onDispatchDialogClose={() => setDispatchDialogOpen(false)}
+        dispatchAttachments={dispatchAttachments}
+        onDispatchAttachmentAction={handleDispatchAttachmentAction}
+        dispatchInfo={data?.dispatchInfo || []}
 
-      {/* Packing Attachment Drawer (Dummy) */}
-      <Drawer
-        anchor="right"
-        open={packingDrawerOpen}
-        onClose={() => setPackingDrawerOpen(false)}
-      >
-        <Box sx={{ width: 400, p: 2 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6">Packing Attachments</Typography>
-            <IconButton onClick={() => setPackingDrawerOpen(false)}>
-              <Close />
-            </IconButton>
-          </Box>
-          <List>
-            <ListItem>
-              <ListItemText primary="Dummy packing attachment." />
-            </ListItem>
-          </List>
-        </Box>
-      </Drawer>
+        packingDrawerOpen={packingDrawerOpen}
+        onPackingDrawerClose={() => setPackingDrawerOpen(false)}
 
-      {/* Material Attachment Drawer */}
-      <Drawer
-        anchor="right"
-        open={materialDrawerOpen}
-        onClose={() => setMaterialDrawerOpen(false)}
-      >
-        <Box sx={{ width: 450, p: 2 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6">Material Attachments</Typography>
-            <IconButton onClick={() => setMaterialDrawerOpen(false)}>
-              <Close />
-            </IconButton>
-          </Box>
-          <List>
-            {materialAttachments.length === 0 ? (
-              <ListItem>
-                <ListItemText primary="No attachments found." />
-              </ListItem>
-            ) : (
-              materialAttachments.map((att) => (
-                <ListItem
-                  key={att.ID}
-                  secondaryAction={
-                    <>
-                      <Button
-                        size="small"
-                        onClick={() => handleAttachmentView(att.ID)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() => handleAttachmentDownload(att.ID)}
-                      >
-                        Download
-                      </Button>
-                    </>
-                  }
-                >
-                  <ListItemIcon>
-                    <FilePresent />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={att.fileName}
-                    secondary={att.description}
-                  />
-                </ListItem>
-              ))
-            )}
-          </List>
-        </Box>
-      </Drawer>
+        materialDialogOpen={materialDialogOpen}
+        onMaterialDialogClose={() => setMaterialDialogOpen(false)}
+        materialAttachments={materialAttachments}
+        onMaterialAttachmentView={handleAttachmentView}
+        onMaterialAttachmentDownload={handleAttachmentDownload}
+      />
     </Box>
   );
 }
-
-const KVBox = ({
-  label,
-  value,
-  children,
-  fullWidth = false,
-}: {
-  label: string;
-  value?: string | number | null;
-  children?: React.ReactNode;
-  fullWidth?: boolean;
-}) => (
-  <Box
-    sx={{
-      flex: fullWidth ? "1 1 100%" : "1 1 23%",
-      minWidth: fullWidth ? "100%" : "200px",
-      border: "1px dashed #e5e7eb",
-      borderRadius: "10px",
-      p: "10px 12px",
-      display: "flex",
-      flexDirection: "column",
-      gap: "4px",
-    }}
-  >
-    <Typography
-      variant="caption"
-      color="text.secondary"
-      sx={{ textTransform: "uppercase", letterSpacing: ".02em" }}
-    >
-      {label}
-    </Typography>
-    <Typography
-      variant="body1"
-      fontWeight={600}
-      sx={{ whiteSpace: "pre-wrap" }}
-    >
-      {children || value || "—"}
-    </Typography>
-  </Box>
-);

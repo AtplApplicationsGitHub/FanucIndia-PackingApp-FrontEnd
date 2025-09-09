@@ -13,4 +13,6 @@ export interface MaterialRow {
   packingStage: number;
   machineModel: string;
   cncSerialNo: string;
+  updatedBy?: string;
+  updatedDate?: string;
 }

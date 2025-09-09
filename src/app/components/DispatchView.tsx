@@ -17,6 +17,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   List,
   ListItem,
   ListItemText,
@@ -39,7 +40,6 @@ import {
   Edit,
   PictureAsPdf,
   Delete,
-  UploadFile,
   Close,
   FilePresent,
   Visibility as VisibilityIcon,
@@ -232,10 +232,15 @@ const AttachmentDialog = ({
 // --- Main Component ---
 export default function DispatchView() {
   // --- State ---
-  const [form, setForm] = useState({
-    customerId: null as Customer | null,
+  const [form, setForm] = useState<{
+    customerId: Customer | null | string;
+    address: string;
+    transporterId: Transporter | null;
+    vehicleNumber: string;
+  }>({
+    customerId: null,
     address: "",
-    transporterId: null as Transporter | null,
+    transporterId: null,
     vehicleNumber: "",
   });
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -251,7 +256,7 @@ export default function DispatchView() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [soLoading, setSoLoading] = useState(false);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -342,7 +347,7 @@ export default function DispatchView() {
     value: Customer | Transporter | string | null
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (field === "customerId" && value) {
+    if (field === "customerId" && value && typeof value !== "string") {
       setForm((prev) => ({
         ...prev,
         address: (value as Customer).address || "",
@@ -363,6 +368,16 @@ export default function DispatchView() {
     setEditingId(null);
   };
 
+  const handleCreateClick = () => {
+    resetForm();
+    setCreateDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setCreateDialogOpen(false);
+    resetForm();
+  };
+  
   const handleSave = async () => {
     if (!form.customerId || !form.address || !form.vehicleNumber) {
       showSnackbar("Please fill all mandatory fields.", "error");
@@ -372,10 +387,22 @@ export default function DispatchView() {
 
     try {
       const token = localStorage.getItem("token");
-
+      const customerId =
+        typeof form.customerId === "string"
+          ? (customers.find((c) => c.name === form.customerId) || { id: null })
+              .id
+          : form.customerId?.id;
+      if (!customerId) {
+        showSnackbar(
+          "Invalid customer. Please select a customer from the list or create a new one.",
+          "error"
+        );
+        setLoading(false);
+        return;
+      }
       if (editingId) {
         const payload = {
-          customerId: String(form.customerId.id),
+          customerId: String(customerId),
           transporterId: form.transporterId
             ? String(form.transporterId.id)
             : undefined,
@@ -386,7 +413,7 @@ export default function DispatchView() {
         });
       } else {
         const formData = new FormData();
-        formData.append("customerId", String(form.customerId.id));
+        formData.append("customerId", String(customerId));
         formData.append("address", form.address);
         if (form.transporterId)
           formData.append("transporterId", String(form.transporterId.id));
@@ -403,7 +430,7 @@ export default function DispatchView() {
       }
 
       showSnackbar(`Dispatch ${editingId ? "updated" : "saved"} successfully!`);
-      resetForm();
+      handleDialogClose();
       fetchDispatches();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -491,6 +518,7 @@ export default function DispatchView() {
       });
       setEditingId(currentMenuId);
       setAttachments([]);
+      setCreateDialogOpen(true);
     }
     handleMenuClose();
   };
@@ -585,81 +613,14 @@ export default function DispatchView() {
 
   return (
     <Box p={3}>
-      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          {editingId ? "Edit Dispatch" : "Create Dispatch"}
-        </Typography>
-        <Box component="form" noValidate autoComplete="off">
-          <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
-            <Autocomplete
-              options={customers}
-              getOptionLabel={(option) => option.name}
-              value={form.customerId}
-              onChange={(_, value) => handleFormChange("customerId", value)}
-              sx={{ width: "50%" }}
-              renderInput={(params) => (
-                <TextField {...params} label="Customer Name*" />
-              )}
-            />
-            <TextField
-              label="Address"
-              multiline
-              rows={3}
-              value={form.address}
-              sx={{ width: "50%" }}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", gap: 3, mb: 3 }}>
-            <Autocomplete
-              options={transporters}
-              getOptionLabel={(option) => option.name}
-              value={form.transporterId}
-              onChange={(_, value) => handleFormChange("transporterId", value)}
-              sx={{ width: "50%" }}
-              renderInput={(params) => (
-                <TextField {...params} label="Transporter" />
-              )}
-            />
-            <TextField
-              label="Vehicle Number*"
-              value={form.vehicleNumber}
-              sx={{ width: "50%" }}
-              onChange={(e) =>
-                handleFormChange("vehicleNumber", e.target.value)
-              }
-            />
-          </Box>
-          <Box sx={{ mb: 3 }}>
-            <Button
-              startIcon={<UploadFile />}
-              onClick={() => setUploadDialogOpen(true)}
-            >
-              Attachments ({attachments.length})
-            </Button>
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button variant="outlined" onClick={resetForm} disabled={loading}>
-              Cancel
-            </Button>
-            <Button variant="contained" onClick={handleSave} disabled={loading}>
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : editingId ? (
-                "Update"
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" fontWeight={700}>Dispatch</Typography>
+        <Button variant="contained" onClick={handleCreateClick}>Create Dispatch</Button>
+      </Box>
 
-      <Box sx={{ display: "flex", gap: 4 }}>
+      <Box sx={{ display: "flex", gap: 4, mt: 3 }}>
         <Box sx={{ width: "60%" }}>
-          <Paper elevation={3} sx={{ height: 500, width: "100%" }}>
+          <Paper elevation={3} sx={{ height: 600, width: "100%" }}>
             <DataGrid
               rows={dispatches}
               columns={columns}
@@ -686,7 +647,7 @@ export default function DispatchView() {
         <Box sx={{ width: "40%" }}>
           <Paper
             elevation={3}
-            sx={{ p: 2, height: 500, display: "flex", flexDirection: "column" }}
+            sx={{ p: 2, height: 600, display: "flex", flexDirection: "column" }}
           >
             <Typography variant="h6">Sale Order Numbers</Typography>
             <Box display="flex" gap={1} my={2}>
@@ -745,65 +706,78 @@ export default function DispatchView() {
           </Paper>
         </Box>
       </Box>
-
-      <Dialog
-        open={uploadDialogOpen}
-        onClose={() => setUploadDialogOpen(false)}
-        fullWidth
-      >
+      
+      <Dialog open={createDialogOpen} onClose={handleDialogClose} fullWidth maxWidth="md">
         <DialogTitle>
-          Upload Attachments
-          <IconButton
-            onClick={() => setUploadDialogOpen(false)}
-            sx={{ position: "absolute", right: 8, top: 8 }}
-          >
+          {editingId ? "Edit Dispatch" : "Dispatch Details"}
+          <IconButton onClick={handleDialogClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
             <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Box
-            {...getRootProps()}
-            sx={{
-              p: 4,
-              border: "2px dashed #ccc",
-              textAlign: "center",
-              cursor: "pointer",
-            }}
-          >
-            <input {...getInputProps()} />
-            <Typography>
-              Drag &#39;n&#39; drop some files here, or click to select files
-            </Typography>
-          </Box>
-          <List>
-            {attachments.map((file, index) => (
-              <ListItem
-                key={index}
-                secondaryAction={
-                  <IconButton
-                    edge="end"
-                    onClick={() =>
-                      setAttachments((prev) =>
-                        prev.filter((_, i) => i !== index)
-                      )
-                    }
-                  >
-                    <Delete />
+          <Box component="form" noValidate autoComplete="off" sx={{ pt: 2 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+              <Autocomplete
+                freeSolo
+                options={customers}
+                getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
+                value={form.customerId}
+                onChange={(_, value) => handleFormChange("customerId", value)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Customer*" />
+                )}
+              />
+              <TextField
+                label="Address"
+                value={form.address}
+                onChange={(e) => handleFormChange("address", e.target.value)}
+              />
+              <Autocomplete
+                options={transporters}
+                getOptionLabel={(option) => option.name}
+                value={form.transporterId}
+                onChange={(_, value) => handleFormChange("transporterId", value)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Transporter" />
+                )}
+              />
+              <TextField
+                label="Vehicle Number*"
+                value={form.vehicleNumber}
+                onChange={(e) => handleFormChange("vehicleNumber", e.target.value)}
+              />
+            </Box>
+            
+            <Typography variant="subtitle2" color="text.secondary">Attachments</Typography>
+            <Box {...getRootProps()} sx={{ p: 3, mt: 1, border: '2px dashed #ccc', textAlign: 'center', cursor: 'pointer' }}>
+              <input {...getInputProps()} />
+              <Typography>Drop files here or <strong>browse</strong></Typography>
+            </Box>
+            {attachments.length > 0 && (
+            <List>
+              {attachments.map((file, index) => (
+                <ListItem key={index} dense secondaryAction={
+                  <IconButton edge="end" onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}>
+                    <Delete fontSize="small" />
                   </IconButton>
-                }
-              >
-                <ListItemIcon>
-                  <FilePresent />
-                </ListItemIcon>
-                <ListItemText
-                  primary={file.name}
-                  secondary={`${(file.size / 1024).toFixed(2)} KB`}
-                />
-              </ListItem>
-            ))}
-          </List>
+                }>
+                  <ListItemIcon sx={{minWidth: '32px'}}><FilePresent fontSize="small"/></ListItemIcon>
+                  <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
+                </ListItem>
+              ))}
+            </List>
+            )}
+
+          </Box>
         </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button variant="contained" onClick={handleSave} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : (editingId ? "Update" : "Save")}
+          </Button>
+        </DialogActions>
       </Dialog>
+
 
       <AttachmentDialog
         open={attachmentDialogOpen}
