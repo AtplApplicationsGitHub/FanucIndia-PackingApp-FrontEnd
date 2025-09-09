@@ -16,7 +16,6 @@ import {
   DataGrid,
   GridColDef,
   GridRenderCellParams,
-  GridRowModel,
   GridEventListener,
 } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -124,7 +123,7 @@ export default function FgDashboardView() {
         severity: "success",
       });
       fetchData();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: "Failed to update FG Location",
