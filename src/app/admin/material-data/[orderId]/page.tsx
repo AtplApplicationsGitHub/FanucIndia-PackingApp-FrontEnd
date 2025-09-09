@@ -48,6 +48,20 @@ function extractErrorMessage(error: unknown): string {
 
 export default function MaterialDataPage2() {
   const params = useParams<{ orderId: string }>();
+  const [currentUser, setCurrentUser] = useState<{ id: number | null }>({ id: null });
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser({ id: user.id });
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    }
+  }, []);
+  
   const idStr = useMemo(
     () => (typeof params.orderId === "string" ? params.orderId : ""),
     [params.orderId]
@@ -56,12 +70,12 @@ export default function MaterialDataPage2() {
 
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-  const { data: header, error: hdrError } = useOrderHeader(orderId);
+  const { data: header, error: hdrError } = useOrderHeader(orderId, currentUser.id);
   const {
     rows: fetchedRows = [],
     error: matError,
     loading: matLoading,
-  } = useErpMaterials(orderId);
+  } = useErpMaterials(orderId, currentUser.id);
   const {
     mutate: incIssue,
     loading: mutatingIssue,
@@ -383,7 +397,8 @@ export default function MaterialDataPage2() {
 
       {isOrderFullyComplete ? (
         <Alert severity="success" sx={{ my: 4 }}>
-          This order is fully packed and complete. No further actions can be taken.
+          This order is fully packed and complete. No further actions can be
+          taken.
         </Alert>
       ) : (
         <InputBoxSection
@@ -394,6 +409,7 @@ export default function MaterialDataPage2() {
             refetch();
           }}
           disabled={isOrderFullyComplete}
+          items={localRows}
         />
       )}
 
