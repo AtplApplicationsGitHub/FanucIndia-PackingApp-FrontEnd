@@ -80,8 +80,9 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
             component="button"
             variant="body2"
             onClick={onViewPackingAttachments}
+            underline="none"
           >
-            View attachments
+            ATTACHMENTS
           </Link>
         </KVBox>
       </Box>
