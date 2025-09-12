@@ -9,6 +9,7 @@ RUN npm run build
 FROM nginx:1.23.4-alpine
 # Install Node.js and dumb-init (init system to run multiple processes)
 RUN apk add --no-cache nodejs npm dumb-init
+RUN apk upgrade --no-cache
 WORKDIR /app
 # Copy Next.js build artifacts and node_modules
 COPY --from=builder /app /app
