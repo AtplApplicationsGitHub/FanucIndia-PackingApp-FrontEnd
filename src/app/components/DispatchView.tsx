@@ -47,6 +47,7 @@ import {
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/api";
+import { secureDownload } from "@/common/lib/secure-download";
 
 interface Customer {
   id: number;
@@ -377,7 +378,7 @@ export default function DispatchView() {
     setCreateDialogOpen(false);
     resetForm();
   };
-  
+
   const handleSave = async () => {
     if (!form.customerId || !form.address || !form.vehicleNumber) {
       showSnackbar("Please fill all mandatory fields.", "error");
@@ -531,13 +532,7 @@ export default function DispatchView() {
         headers: { Authorization: `Bearer ${token}` },
         responseType: "blob",
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `dispatch_${currentMenuId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      secureDownload(response.data, `dispatch_${currentMenuId}.pdf`);
     } catch {
       showSnackbar("Failed to generate PDF", "error");
     }
@@ -613,9 +608,18 @@ export default function DispatchView() {
 
   return (
     <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" fontWeight={700}>Dispatch</Typography>
-        <Button variant="contained" onClick={handleCreateClick}>Create Dispatch</Button>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          Dispatch
+        </Typography>
+        <Button variant="contained" onClick={handleCreateClick}>
+          Create Dispatch
+        </Button>
       </Box>
 
       <Box sx={{ display: "flex", gap: 4, mt: 3 }}>
@@ -706,21 +710,38 @@ export default function DispatchView() {
           </Paper>
         </Box>
       </Box>
-      
-      <Dialog open={createDialogOpen} onClose={handleDialogClose} fullWidth maxWidth="md">
+
+      <Dialog
+        open={createDialogOpen}
+        onClose={handleDialogClose}
+        fullWidth
+        maxWidth="md"
+      >
         <DialogTitle>
           {editingId ? "Edit Dispatch" : "Dispatch Details"}
-          <IconButton onClick={handleDialogClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
+          <IconButton
+            onClick={handleDialogClose}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
             <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent>
           <Box component="form" noValidate autoComplete="off" sx={{ pt: 2 }}>
-            <Box sx={{ display: "grid", gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 2,
+                mb: 2,
+              }}
+            >
               <Autocomplete
                 freeSolo
                 options={customers}
-                getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
+                getOptionLabel={(option) =>
+                  typeof option === "string" ? option : option.name
+                }
                 value={form.customerId}
                 onChange={(_, value) => handleFormChange("customerId", value)}
                 renderInput={(params) => (
@@ -736,7 +757,9 @@ export default function DispatchView() {
                 options={transporters}
                 getOptionLabel={(option) => option.name}
                 value={form.transporterId}
-                onChange={(_, value) => handleFormChange("transporterId", value)}
+                onChange={(_, value) =>
+                  handleFormChange("transporterId", value)
+                }
                 renderInput={(params) => (
                   <TextField {...params} label="Transporter" />
                 )}
@@ -744,40 +767,75 @@ export default function DispatchView() {
               <TextField
                 label="Vehicle Number*"
                 value={form.vehicleNumber}
-                onChange={(e) => handleFormChange("vehicleNumber", e.target.value)}
+                onChange={(e) =>
+                  handleFormChange("vehicleNumber", e.target.value)
+                }
               />
             </Box>
-            
-            <Typography variant="subtitle2" color="text.secondary">Attachments</Typography>
-            <Box {...getRootProps()} sx={{ p: 3, mt: 1, border: '2px dashed #ccc', textAlign: 'center', cursor: 'pointer' }}>
+
+            <Typography variant="subtitle2" color="text.secondary">
+              Attachments
+            </Typography>
+            <Box
+              {...getRootProps()}
+              sx={{
+                p: 3,
+                mt: 1,
+                border: "2px dashed #ccc",
+                textAlign: "center",
+                cursor: "pointer",
+              }}
+            >
               <input {...getInputProps()} />
-              <Typography>Drop files here or <strong>browse</strong></Typography>
+              <Typography>
+                Drop files here or <strong>browse</strong>
+              </Typography>
             </Box>
             {attachments.length > 0 && (
-            <List>
-              {attachments.map((file, index) => (
-                <ListItem key={index} dense secondaryAction={
-                  <IconButton edge="end" onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}>
-                    <Delete fontSize="small" />
-                  </IconButton>
-                }>
-                  <ListItemIcon sx={{minWidth: '32px'}}><FilePresent fontSize="small"/></ListItemIcon>
-                  <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
-                </ListItem>
-              ))}
-            </List>
+              <List>
+                {attachments.map((file, index) => (
+                  <ListItem
+                    key={index}
+                    dense
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        onClick={() =>
+                          setAttachments((prev) =>
+                            prev.filter((_, i) => i !== index)
+                          )
+                        }
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemIcon sx={{ minWidth: "32px" }}>
+                      <FilePresent fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={file.name}
+                      secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             )}
-
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={handleDialogClose}>Cancel</Button>
           <Button variant="contained" onClick={handleSave} disabled={loading}>
-            {loading ? <CircularProgress size={24} /> : (editingId ? "Update" : "Save")}
+            {loading ? (
+              <CircularProgress size={24} />
+            ) : editingId ? (
+              "Update"
+            ) : (
+              "Save"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
-
 
       <AttachmentDialog
         open={attachmentDialogOpen}

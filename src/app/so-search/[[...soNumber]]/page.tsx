@@ -14,11 +14,7 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
-import {
-  Search,
-  Print,
-  Home,
-} from "@mui/icons-material";
+import { Search, Print, Home } from "@mui/icons-material";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/api";
 import { useRouter, useParams } from "next/navigation";
@@ -30,6 +26,7 @@ import OrderSnapshot from "../components/OrderSnapshot";
 import DispatchInfo from "../components/DispatchInfo";
 import MaterialDetails from "../components/MaterialDetails";
 import AttachmentDialogs from "../components/AttachmentDialogs";
+import { secureDownload } from "@/common/lib/secure-download";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -137,8 +134,12 @@ export default function SoSearchPage() {
   const [packingDrawerOpen, setPackingDrawerOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
 
-  const [dispatchAttachments, setDispatchAttachments] = useState<{ fileName: string }[]>([]);
-  const [materialAttachments, setMaterialAttachments] = useState<MaterialAttachment[]>([]);
+  const [dispatchAttachments, setDispatchAttachments] = useState<
+    { fileName: string }[]
+  >([]);
+  const [materialAttachments, setMaterialAttachments] = useState<
+    MaterialAttachment[]
+  >([]);
 
   const router = useRouter();
   const params = useParams<{ soNumber?: string[] }>();
@@ -217,7 +218,9 @@ export default function SoSearchPage() {
 
   const handleOpenDispatchAttachments = () => {
     if (data?.dispatchInfo) {
-      const allAttachments = data.dispatchInfo.flatMap(d => d.attachments || []);
+      const allAttachments = data.dispatchInfo.flatMap(
+        (d) => d.attachments || []
+      );
       setDispatchAttachments(allAttachments);
       setDispatchDialogOpen(true);
     }
@@ -245,7 +248,9 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.ok ? res.blob() : Promise.reject("Failed to fetch file"))
+      .then((res) =>
+        res.ok ? res.blob() : Promise.reject("Failed to fetch file")
+      )
       .then((blob) => {
         const blobUrl = window.URL.createObjectURL(blob);
         window.open(blobUrl, "_blank");
@@ -263,14 +268,7 @@ export default function SoSearchPage() {
     })
       .then((res) => res.ok ? res.blob() : Promise.reject("Download failed"))
       .then((blob) => {
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `attachment_${fileId}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(blobUrl);
+        secureDownload(blob, `attachment_${fileId}`);
       })
       .catch(() => setError("Failed to download attachment."));
   };
@@ -288,18 +286,12 @@ export default function SoSearchPage() {
     })
       .then((res) => res.ok ? res.blob() : Promise.reject("Failed to get attachment"))
       .then((blob) => {
-        const blobUrl = window.URL.createObjectURL(blob);
         if (action === "view") {
+          const blobUrl = window.URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
         } else {
-          const a = document.createElement("a");
-          a.href = blobUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          window.URL.revokeObjectURL(blobUrl);
+          secureDownload(blob, fileName);
         }
       })
       .catch(() => setError(`Failed to ${action} attachment.`));
@@ -372,9 +364,17 @@ export default function SoSearchPage() {
               onClick={handleManualSearch}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Submit"
+              )}
             </Button>
-            <Button variant="outlined" startIcon={<Print />} onClick={handlePrint}>
+            <Button
+              variant="outlined"
+              startIcon={<Print />}
+              onClick={handlePrint}
+            >
               Print
             </Button>
           </Stack>
@@ -400,7 +400,9 @@ export default function SoSearchPage() {
           </Alert>
         )}
         {!data && !loading && !error && !params.soNumber?.[0] && (
-          <Typography sx={{ textAlign: "center", color: "text.secondary", mt: 4 }}>
+          <Typography
+            sx={{ textAlign: "center", color: "text.secondary", mt: 4 }}
+          >
             Enter a Sales Order number to view details.
           </Typography>
         )}
@@ -430,10 +432,8 @@ export default function SoSearchPage() {
         dispatchAttachments={dispatchAttachments}
         onDispatchAttachmentAction={handleDispatchAttachmentAction}
         dispatchInfo={data?.dispatchInfo || []}
-
         packingDrawerOpen={packingDrawerOpen}
         onPackingDrawerClose={() => setPackingDrawerOpen(false)}
-
         materialDialogOpen={materialDialogOpen}
         onMaterialDialogClose={() => setMaterialDialogOpen(false)}
         materialAttachments={materialAttachments}

@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { API } from "@/common/lib/api";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
+import { secureDownload } from "@/common/lib/secure-download";
 
 export function useSalesDashboard() {
   const router = useRouter();
@@ -158,14 +159,7 @@ export function useSalesDashboard() {
       const disp = res.headers.get("content-disposition") || "";
       const fn = disp.match(/filename="?(.+)"?/)?.[1] || "template.xlsx";
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fn;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      secureDownload(blob, fn);
     } catch {
       setAlert({ severity: "error", message: "Failed to download template" });
     }
@@ -193,22 +187,25 @@ export function useSalesDashboard() {
 
       setAlert({ severity: "success", message: "Bulk import successful!" });
       await fetchOrders();
-    } catch (err: unknown) { 
+    } catch (err: unknown) {
       let message = "Bulk import failed. Check your file and try again.";
 
       if (axios.isAxiosError(err) && err.response?.data) {
-        const errorData = err.response.data as { message?: string; errors?: { row: number; errors: string[] }[] };
-        
+        const errorData = err.response.data as {
+          message?: string;
+          errors?: { row: number; errors: string[] }[];
+        };
+
         if (errorData.errors && errorData.errors.length > 0) {
           const detailedErrors = errorData.errors
-            .map(e => `Row ${e.row}: ${e.errors.join(', ')}`)
-            .join('\n');
+            .map((e) => `Row ${e.row}: ${e.errors.join(", ")}`)
+            .join("\n");
           message = `Import failed. Please correct the following errors:\n${detailedErrors}`;
         } else if (errorData.message) {
           message = errorData.message;
         }
       }
-      
+
       setAlert({
         severity: "error",
         message: message,
