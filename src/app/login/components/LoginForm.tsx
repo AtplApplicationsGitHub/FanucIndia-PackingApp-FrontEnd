@@ -40,8 +40,8 @@ export default function LoginForm({
     <form onSubmit={onSubmit} noValidate>
       <Box display="flex" flexDirection="column" gap={2}>
         <TextField
-          label="Email"
-          type="email"
+          label="Email or Username"
+          type="text"
           fullWidth
           variant="outlined"
           size="medium"

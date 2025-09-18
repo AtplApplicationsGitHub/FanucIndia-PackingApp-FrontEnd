@@ -121,8 +121,6 @@ const AdminUserFormModal: React.FC<Props> = ({
   const confirmPassword = watch("confirmPassword");
   const role = watch("role");
 
-  const emailValid = useMemo(() => /^\S+@\S+\.\S+$/.test(email), [email]);
-
   const isUserRole = role === "USER";
 
   const passwordStatus = useMemo(() => {
@@ -136,7 +134,7 @@ const AdminUserFormModal: React.FC<Props> = ({
   const passwordsMatch = !password || password === confirmPassword;
 
   useEffect(() => {
-    if (!email || !emailValid) {
+    if (!email) {
       setEmailStatus(null);
       return;
     }
@@ -160,7 +158,7 @@ const AdminUserFormModal: React.FC<Props> = ({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [email, editingUser, emailValid]);
+  }, [email, editingUser]);
 
   useEffect(() => {
     if (editingUser) {
@@ -203,7 +201,7 @@ const AdminUserFormModal: React.FC<Props> = ({
   const disableSubmit =
     !name.trim() ||
     name.trim().length < 3 ||
-    !emailValid ||
+    !email.trim() ||
     emailStatus !== "available" ||
     !role ||
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
@@ -241,21 +239,18 @@ const AdminUserFormModal: React.FC<Props> = ({
           />
 
           <TextField
-            label="Email"
+            label="Email or Username"
             fullWidth
             size="small"
-            type="email"
             {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^\S+@\S+\.\S+$/,
-                message: "Invalid email format",
-              },
+              required: "Email or Username is required",
             })}
             error={!!errors.email || emailStatus === "exists"}
             helperText={
               errors.email?.message ||
-              (emailStatus === "exists" ? "Email already exists" : "")
+              (emailStatus === "exists"
+                ? "This email or username already exists"
+                : "")
             }
             InputProps={{
               endAdornment: email && (
