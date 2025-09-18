@@ -9,8 +9,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
-import LoginDemoCredentials from "@/app/login/components/LoginDemoCredentials";
-import LoginSignupLink from "@/app/login/components/LoginSignupLink";
 import apiClient from "@/common/lib/apiClient";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
@@ -90,15 +88,14 @@ export default function LoginContent() {
         } else {
           setErrorMsg("Unknown user role.");
           setSuccessMsg("");
-          setLoading(false); // Also set loading to false here
+          setLoading(false);
         }
       }, 1000);
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err));
       setSuccessMsg("");
-      setLoading(false); // This is the crucial fix
+      setLoading(false); 
     }
-    // The finally block was removed to prevent setLoading(false) on successful login
   };
 
   return (
@@ -150,8 +147,6 @@ export default function LoginContent() {
               errorMsg={errorMsg}
               onSubmit={handleSubmit(onSubmitData)}
             />
-            <LoginDemoCredentials />
-            <LoginSignupLink />
           </CardContent>
         </Card>
       </Box>

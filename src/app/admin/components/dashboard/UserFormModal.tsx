@@ -42,12 +42,12 @@ const roles: UserRole[] = ["ADMIN", "SALES", "USER"];
 const passwordChecks = [
   { label: "At least 8 characters", check: (pw: string) => pw.length >= 8 },
   {
-    label: "At least 2 special characters (!@#$%^&*)",
-    check: (pw: string) => (pw.match(/[!@#$%^&*]/g) || []).length >= 2,
+    label: "At least 1 special character (!@#$%^&*)",
+    check: (pw: string) => (pw.match(/[!@#$%^&*]/g) || []).length >= 1,
   },
   {
-    label: "At least 2 numbers",
-    check: (pw: string) => (pw.match(/\d/g) || []).length >= 2,
+    label: "At least 1 number",
+    check: (pw: string) => (pw.match(/\d/g) || []).length >= 1,
   },
   {
     label: "At least 1 uppercase letter",
@@ -55,12 +55,17 @@ const passwordChecks = [
   },
 ];
 
+const pinValidation = {
+  label: "Password must be a 4-digit PIN",
+  check: (pw: string) => /^\d{4}$/.test(pw),
+};
+
 type FormFields = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
-  role: UserRole;
+  role: UserRole | "";
 };
 
 const AdminUserFormModal: React.FC<Props> = ({
@@ -114,13 +119,19 @@ const AdminUserFormModal: React.FC<Props> = ({
   const email = watch("email");
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
+  const role = watch("role");
 
   const emailValid = useMemo(() => /^\S+@\S+\.\S+$/.test(email), [email]);
 
-  const passwordStatus = useMemo(
-    () => passwordChecks.map(({ check }) => check(password || "")),
-    [password]
-  );
+  const isUserRole = role === "USER";
+
+  const passwordStatus = useMemo(() => {
+    if (isUserRole) {
+      return [pinValidation.check(password || "")];
+    }
+    return passwordChecks.map(({ check }) => check(password || ""));
+  }, [password, isUserRole]);
+
   const allSatisfied = passwordStatus.every(Boolean);
   const passwordsMatch = !password || password === confirmPassword;
 
@@ -169,6 +180,8 @@ const AdminUserFormModal: React.FC<Props> = ({
 
   const submitHandler = (data: FormFields) => {
     const { name, email, role, password } = data;
+    if (!role) return;
+
     const payload: {
       name: string;
       email: string;
@@ -192,6 +205,7 @@ const AdminUserFormModal: React.FC<Props> = ({
     name.trim().length < 3 ||
     !emailValid ||
     emailStatus !== "available" ||
+    !role ||
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
     (!!password && (!allSatisfied || !passwordsMatch));
 
@@ -243,96 +257,20 @@ const AdminUserFormModal: React.FC<Props> = ({
               errors.email?.message ||
               (emailStatus === "exists" ? "Email already exists" : "")
             }
-            slotProps={{
-              input: {
-                endAdornment: email && (
-                  <InputAdornment position="end">
-                    {emailStatus === "checking" && (
-                      <Loader2 size={18} className="animate-spin" />
-                    )}
-                    {emailStatus === "available" && (
-                      <CheckCircle size={18} color="green" />
-                    )}
-                    {emailStatus === "exists" && (
-                      <XCircle size={18} color="red" />
-                    )}
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-
-          <TextField
-            label={editingUser ? "New Password (optional)" : "Password"}
-            fullWidth
-            size="small"
-            type={showPassword ? "text" : "password"}
-            autoComplete="new-password"
-            placeholder={editingUser ? "Leave blank to keep unchanged" : ""}
-            {...register("password", {
-              validate: (val) => {
-                if (!editingUser && !val) return "Password is required";
-                if (val && val.length < 8) return "Min 8 characters";
-                return true;
-              },
-            })}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword((v) => !v)}>
-                      {showPassword ? <Eye /> : <EyeClosed />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-
-          {(password || !editingUser) && (
-            <Box>
-              {passwordChecks.map(({ label }, i) => (
-                <Box key={label} display="flex" alignItems="center" gap={1}>
-                  {passwordStatus[i] ? (
-                    <CheckCircle size={16} color="green" />
-                  ) : (
-                    <XCircle size={16} color="red" />
+            InputProps={{
+              endAdornment: email && (
+                <InputAdornment position="end">
+                  {emailStatus === "checking" && (
+                    <Loader2 size={18} className="animate-spin" />
                   )}
-                  <Typography
-                    variant="caption"
-                    color={passwordStatus[i] ? "success.main" : "error"}
-                  >
-                    {label}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
-
-          <TextField
-            label="Confirm Password"
-            fullWidth
-            size="small"
-            type={showConfirm ? "text" : "password"}
-            autoComplete="new-password"
-            {...register("confirmPassword", {
-              validate: (val) =>
-                !password || val === password || "Passwords do not match",
-            })}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword?.message}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowConfirm((v) => !v)}>
-                      {showConfirm ? <Eye /> : <EyeClosed />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
+                  {emailStatus === "available" && (
+                    <CheckCircle size={18} color="green" />
+                  )}
+                  {emailStatus === "exists" && (
+                    <XCircle size={18} color="red" />
+                  )}
+                </InputAdornment>
+              ),
             }}
           />
 
@@ -341,24 +279,120 @@ const AdminUserFormModal: React.FC<Props> = ({
             <Controller
               name="role"
               control={control}
-              rules={{ required: true }}
+              rules={{ required: "Role is required" }}
               render={({ field }) => (
                 <Select
                   labelId="role-label"
                   label="Role"
                   size="small"
-                  // Controller gives you value/onChange so it will show the current role on edit
                   {...field}
                 >
-                  {roles.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {role.charAt(0) + role.slice(1).toLowerCase()}
+                  {roles.map((r) => (
+                    <MenuItem key={r} value={r}>
+                      {r.charAt(0) + r.slice(1).toLowerCase()}
                     </MenuItem>
                   ))}
                 </Select>
               )}
             />
+            {errors.role && (
+              <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
+                {errors.role.message}
+              </Typography>
+            )}
           </FormControl>
+
+          {role && (
+            <>
+              <TextField
+                label={editingUser ? "New Password (optional)" : "Password"}
+                fullWidth
+                size="small"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder={
+                  isUserRole
+                    ? "Enter 4-digit PIN"
+                    : editingUser
+                    ? "Leave blank to keep unchanged"
+                    : ""
+                }
+                {...register("password", {
+                  validate: (val) => {
+                    if (!editingUser && !val) return "Password is required";
+                    if (val) {
+                      if (isUserRole) {
+                        return (
+                          pinValidation.check(val) || pinValidation.label
+                        );
+                      }
+                      if (val.length < 8) return "Min 8 characters";
+                    }
+                    return true;
+                  },
+                })}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword((v) => !v)}>
+                        {showPassword ? <Eye /> : <EyeClosed />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {!isUserRole && (password || !editingUser) && (
+                <Box>
+                  {passwordChecks.map(({ label }, i) => (
+                    <Box
+                      key={label}
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
+                      {passwordStatus[i] ? (
+                        <CheckCircle size={16} color="green" />
+                      ) : (
+                        <XCircle size={16} color="red" />
+                      )}
+                      <Typography
+                        variant="caption"
+                        color={passwordStatus[i] ? "success.main" : "error"}
+                      >
+                        {label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              <TextField
+                label="Confirm Password"
+                fullWidth
+                size="small"
+                type={showConfirm ? "text" : "password"}
+                autoComplete="new-password"
+                {...register("confirmPassword", {
+                  validate: (val) =>
+                    !password || val === password || "Passwords do not match",
+                })}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowConfirm((v) => !v)}>
+                        {showConfirm ? <Eye /> : <EyeClosed />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -370,31 +404,18 @@ const AdminUserFormModal: React.FC<Props> = ({
             "&:hover": {
               backgroundColor: (theme) => theme.palette.action.hover,
             },
-            borderRadius: 0,
-            textTransform: "none",
-            px: 2.5,
-            py: 1.25,
           }}
         >
-          CANCEL
+          Cancel
         </Button>
         <Button
           type="submit"
           onClick={handleSubmit(submitHandler)}
           disabled={disableSubmit}
-          variant="text"
-          sx={{
-            color: (theme) => theme.palette.text.primary,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.action.hover,
-            },
-            borderRadius: 0,
-            textTransform: "none",
-            px: 2.5,
-            py: 1.25,
-          }}
+          variant="contained"
+          color="primary"
         >
-          {editingUser ? "UPDATE" : "CREATE"}
+          {editingUser ? "Update" : "Create"}
         </Button>
       </DialogActions>
     </Dialog>
