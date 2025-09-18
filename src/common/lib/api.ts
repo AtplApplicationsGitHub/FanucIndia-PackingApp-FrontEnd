@@ -3,7 +3,7 @@ import type {
   MaterialFileListResponse,
 } from '@/app/admin/material-files/types/material-file';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://fanuc.goval.app:3011";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export const API = {
   LOOKUP: {
