@@ -12,7 +12,7 @@ import AdminOrderEditModal from "@/app/admin/components/dashboard/EditModal";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { useAdminDashboard } from "@/app/admin/components/hooks/useAdminDashboard";
 import axios from "axios";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { SalesOrder, EditableField } from "@/app/admin/components/types/admin";
 import { useRouter } from "next/navigation";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";

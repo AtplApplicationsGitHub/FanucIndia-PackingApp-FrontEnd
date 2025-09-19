@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import axios from "axios";
 import debounce from "lodash.debounce";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import {
   SalesOrder,
   Lookup,

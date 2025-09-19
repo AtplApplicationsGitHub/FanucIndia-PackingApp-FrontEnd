@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 
 export type AlertState = {
   severity: "success" | "error";
@@ -92,7 +92,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
         });
         setAlert({ severity: "success", message: "Sales entry updated." });
         setTimeout(() => {
-          onSuccess?.(); // callback from parent to close dialog
+          onSuccess?.(); 
         }, 300);
       } else {
         await axios.post(API.SALES.CREATE_ORDER, payload, {

@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { Search, Print, Home } from "@mui/icons-material";
 import axios from "axios";
-import { API, fetchWithAuth } from "@/common/lib/api";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";

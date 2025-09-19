@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { UploadCloud, X as CloseIcon, File as FileIcon } from 'lucide-react';
 import axios from 'axios';
-import { API } from '@/common/lib/api';
+import { API } from '@/common/lib/endpoints';
 
 export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOrderNumber }: {
   open: boolean;

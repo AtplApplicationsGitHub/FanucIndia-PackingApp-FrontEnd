@@ -21,7 +21,7 @@ import {
 import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
 import { User, UserRole } from "@/app/admin/components/types/admin";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 
 interface Props {
   open: boolean;

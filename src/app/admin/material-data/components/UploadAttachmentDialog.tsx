@@ -28,9 +28,9 @@ import {
   getMaterialFilesBySaleOrder,
   deleteMaterialFile,
   updateMaterialFile,
-} from "@/common/lib/api";
+} from "@/common/services/materialFile.service";
 import type { MaterialFile } from "@/app/admin/material-files/types/material-file";
-import { API, fetchWithAuth } from "@/common/lib/api";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 type Row = {
   id: number; // local row id

@@ -4,7 +4,7 @@ import { Box, Card, CardContent, Alert } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";

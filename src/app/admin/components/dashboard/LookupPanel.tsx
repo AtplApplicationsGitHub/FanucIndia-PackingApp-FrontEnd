@@ -14,7 +14,7 @@ import { Check } from "lucide-react";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, { LookupRow } from "@/app/admin/components/dashboard/LookupCrudTable";
-import { API_BASE_URL } from "@/common/lib/api";
+import { API_BASE_URL } from "@/common/lib/endpoints";
 
 const TYPE_TO_API_PATH: Record<string, string> = {
   products: "products",

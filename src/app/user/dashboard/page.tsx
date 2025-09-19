@@ -10,7 +10,7 @@ import { useUserDashboard } from "@/app/user/hooks/useUserDashboard";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
 import axios from "axios";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { SalesOrder } from "@/app/admin/components/types/admin";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 

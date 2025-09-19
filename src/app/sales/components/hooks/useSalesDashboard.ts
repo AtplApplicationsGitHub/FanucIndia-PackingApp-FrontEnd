@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { secureDownload } from "@/common/lib/secure-download";
 

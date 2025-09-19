@@ -1,0 +1,77 @@
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+
+export const API = {
+  LOOKUP: {
+    PRODUCTS:        `${API_BASE_URL}/lookup/products`,
+    PRODUCT_BY_ID:   (id: string | number) => `${API_BASE_URL}/lookup/products/${id}`,
+    TRANSPORTERS:    `${API_BASE_URL}/lookup/transporters`,
+    TRANSPORTER_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/transporters/${id}`,
+    PLANT_CODES:     `${API_BASE_URL}/lookup/plant-codes`,
+    PLANT_CODE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/plant-codes/${id}`,
+    SALES_ZONES:     `${API_BASE_URL}/lookup/sales-zones`,
+    SALES_ZONE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/sales-zones/${id}`,
+    PACK_CONFIGS:    `${API_BASE_URL}/lookup/pack-configs`,
+    PACK_CONFIG_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/pack-configs/${id}`,
+    CUSTOMERS:       `${API_BASE_URL}/lookup/customers`,
+    CUSTOMER_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/customers/${id}`,
+    PRINTERS:       `${API_BASE_URL}/lookup/printers`,
+    PRINTER_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/printers/${id}`,
+  },
+  ADMIN: {
+    SALES_ORDERS:        `${API_BASE_URL}/admin/sales-orders`,
+    SALES_ORDER_BY_ID:   (id: string | number) => `${API_BASE_URL}/admin/sales-orders/${id}`,
+    ERP_MATERIALS_BY_ORDER: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials`,
+    INCREMENT_ISSUE_STAGE: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/increment-issue-stage`,
+    UPDATE_ISSUE_STAGE: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/update-issue-stage`,
+    INCREMENT_PACKING_STAGE: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/increment-packing-stage`,
+    UPDATE_PACKING_STAGE: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/update-packing-stage`,
+    USERS:               `${API_BASE_URL}/users`,
+    USER_BY_ID:          (id: number) => `${API_BASE_URL}/users/${id}`,
+  },
+  SALES: {
+    CREATE_ORDER:                `${API_BASE_URL}/sales-crud`,
+    EDIT_ORDER:                  (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+    TEMPLATE:                    `${API_BASE_URL}/sales-orders/template`,
+    IMPORT:                      `${API_BASE_URL}/sales-orders/import`,
+    DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+  },
+  AUTH: {
+    LOGIN:               `${API_BASE_URL}/auth/login`,
+    MOBILE_LOGIN:        `${API_BASE_URL}/auth/mobile-login`,   // New endpoint for mobile login
+    SIGNUP:              `${API_BASE_URL}/auth/signup`,
+    CHECK_EMAIL:         (email: string) =>
+      `${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`,
+  },
+  USER_DASHBOARD: {
+    ORDERS: `${API_BASE_URL}/user-dashboard/orders`,
+  },
+  SO_SEARCH: {
+    BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
+  },
+  DISPATCH: { 
+    BASE: `${API_BASE_URL}/dispatch`,
+    BY_ID: (id: number) => `${API_BASE_URL}/dispatch/${id}`,
+    SO: (id: number) => `${API_BASE_URL}/dispatch/${id}/so`,
+    DELETE_SO: (soId: number) => `${API_BASE_URL}/dispatch/so/${soId}`,
+    PDF: (id: number) => `${API_BASE_URL}/dispatch/${id}/pdf`,
+    ATTACHMENT: (id: number, fileName: string) => `${API_BASE_URL}/dispatch/${id}/attachments/${encodeURIComponent(fileName)}`,
+  },
+  ERP_MATERIAL_FILES: {
+    BASE: `${API_BASE_URL}/v1/erp-material-files`,
+    BY_ID: (id: number) => `${API_BASE_URL}/v1/erp-material-files/${id}`,
+    BY_SO: (so: string) => `${API_BASE_URL}/v1/erp-material-files/by-sale-order/${encodeURIComponent(so)}`,
+  },
+  ERP_IMPORTER: {
+    UPLOAD: `${API_BASE_URL}/erp-material-importer/upload`,
+  },
+  FG_DASHBOARD: `${API_BASE_URL}/fg-dashboard`,
+};
+
+export async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers = {
+    ...(options.headers || {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+  return fetch(url, { ...options, headers });
+}

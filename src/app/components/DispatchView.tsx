@@ -46,7 +46,7 @@ import {
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
-import { API, fetchWithAuth } from "@/common/lib/api";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
 
 interface Customer {

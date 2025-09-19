@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { User } from "@/app/admin/components/types/admin";
 
 type APIErrorResponse = {

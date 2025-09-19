@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import { API } from "@/common/lib/api";
+import { API } from '@/common/lib/endpoints';
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import SearchableSelect from "@/app/admin/components/dashboard/SearchableSelect";
 

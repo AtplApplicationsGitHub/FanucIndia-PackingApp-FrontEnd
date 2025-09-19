@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { API, fetchWithAuth } from "@/common/lib/api";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import type { MaterialFile } from "@/app/admin/material-files/types/material-file";
 
 export type ListParams = {

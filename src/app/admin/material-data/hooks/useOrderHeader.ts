@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API } from '@/common/lib/api';
+import { API } from '@/common/lib/endpoints';
 
 export interface OrderHeader {
   so: string;

@@ -22,7 +22,7 @@ import {
   updateIssueStage,
   updatePackingStage,
   getErpMaterials as fetchErpMaterials,
-} from "@/common/lib/api";
+} from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
 
