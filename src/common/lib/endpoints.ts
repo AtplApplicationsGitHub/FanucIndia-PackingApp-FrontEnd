@@ -43,7 +43,8 @@ export const API = {
       `${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`,
   },
   USER_DASHBOARD: {
-    ORDERS: `${API_BASE_URL}/user-dashboard/orders`,
+    ORDERS:         `${API_BASE_URL}/user-dashboard/orders`,
+    ORDERS_SUMMARY: `${API_BASE_URL}/user-dashboard/orders-summary`,    // New endpoint for mobile orders summary
   },
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
