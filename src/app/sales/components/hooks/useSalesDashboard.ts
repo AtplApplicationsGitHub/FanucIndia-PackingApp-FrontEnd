@@ -157,7 +157,7 @@ export function useSalesDashboard() {
       });
       if (!res.ok) throw new Error();
       const disp = res.headers.get("content-disposition") || "";
-      const fn = disp.match(/filename="?(.+)"?/)?.[1] || "template.xlsx";
+      const fn = disp.match(/filename="?(.+?)"?/)?.[1] || "template.xlsx";
       const blob = await res.blob();
       secureDownload(blob, fn);
     } catch {
