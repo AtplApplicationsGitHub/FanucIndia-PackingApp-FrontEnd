@@ -7,7 +7,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { MaterialFile } from '@/app/admin/material-files/types/material-file';
-import { updateMaterialFile } from '@/common/lib/api';
+import { updateMaterialFile } from '@/common/services/materialFile.service';
 
 type Props = {
   rows: MaterialFile[];

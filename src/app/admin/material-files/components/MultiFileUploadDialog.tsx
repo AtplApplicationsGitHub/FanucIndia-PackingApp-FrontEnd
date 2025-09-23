@@ -10,7 +10,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import { useDropzone } from 'react-dropzone';
-import { uploadMaterialFiles } from '@/common/lib/api';
+import { uploadMaterialFiles } from '@/common/services/materialFile.service';
 
 type Row = {
   id: number;

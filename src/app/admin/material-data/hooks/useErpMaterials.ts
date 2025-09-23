@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage } from '@/common/lib/api';
+import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage } from '@/common/services/erp.service';
 import type { MaterialRow } from '@/app/admin/material-data/types/material-row';
 
 type ApiMaterial = {
