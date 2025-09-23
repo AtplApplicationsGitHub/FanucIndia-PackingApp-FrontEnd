@@ -11,7 +11,6 @@ import {
   TextField,
   FormControl,
   Link as MuiLink,
-  Tooltip,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -194,7 +193,6 @@ export default function AdminOrdersTable({
                 </ListItemIcon>
                 <ListItemText>Edit</ListItemText>
               </MenuItem>
-              <Tooltip title={row.hasMaterialData ? "Cannot delete an order with imported material data." : ""}>
                 <div>
                   <MenuItem
                     onClick={() => {
@@ -210,7 +208,6 @@ export default function AdminOrdersTable({
                     <ListItemText>Delete</ListItemText>
                   </MenuItem>
                 </div>
-              </Tooltip>
               <MenuItem
                 onClick={() => {
                   onDetailedView(row);
