@@ -37,14 +37,18 @@ export const API = {
   },
   AUTH: {
     LOGIN:               `${API_BASE_URL}/auth/login`,
-    MOBILE_LOGIN:        `${API_BASE_URL}/auth/mobile-login`,   // New endpoint for mobile login
+    MOBILE_LOGIN:        `${API_BASE_URL}/auth/mobile-login`,   // Endpoint for mobile login
     SIGNUP:              `${API_BASE_URL}/auth/signup`,
     CHECK_EMAIL:         (email: string) =>
       `${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`,
   },
   USER_DASHBOARD: {
     ORDERS:         `${API_BASE_URL}/user-dashboard/orders`,
-    ORDERS_SUMMARY: `${API_BASE_URL}/user-dashboard/orders-summary`,    // New endpoint for mobile orders summary
+    MOBILE_ORDERS_SUMMARY: `${API_BASE_URL}/user-dashboard/orders-summary`,    // Endpoint for mobile orders summary
+    MOBILE_DOWNLOAD_DETAILS_BY_ID: (id: number) => `${API_BASE_URL}/user-dashboard/orders/${id}/download-details`,  // Endpoint for downloading order details by Order ID (Primary Key)
+    MOBILE_DOWNLOAD_DETAILS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/download-details`,  // Endpoint for downloading order details by SO number
+    MOBILE_UPLOAD_DETAILS_BY_ID: (id: number) => `${API_BASE_URL}/user-dashboard/orders/${id}/upload-details`, // Endpoint for uploading order details by Order ID (Primary Key)
+    MOBILE_UPLOAD_DETAILS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/upload-details`, // Endpoint for uploading order details by SO number
   },
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
@@ -56,6 +60,11 @@ export const API = {
     DELETE_SO: (soId: number) => `${API_BASE_URL}/dispatch/so/${soId}`,
     PDF: (id: number) => `${API_BASE_URL}/dispatch/${id}/pdf`,
     ATTACHMENT: (id: number, fileName: string) => `${API_BASE_URL}/dispatch/${id}/attachments/${encodeURIComponent(fileName)}`,
+    MOBILE: {
+      CREATE_HEADER: `${API_BASE_URL}/dispatch/mobile/header`,
+      ADD_ATTACHMENTS: (id: number) => `${API_BASE_URL}/dispatch/mobile/${id}/attachments`,
+      LINK_SO: (id: number) => `${API_BASE_URL}/dispatch/mobile/${id}/so`,
+    },
   },
   ERP_MATERIAL_FILES: {
     BASE: `${API_BASE_URL}/v1/erp-material-files`,
@@ -66,6 +75,9 @@ export const API = {
     UPLOAD: `${API_BASE_URL}/erp-material-importer/upload`,
   },
   FG_DASHBOARD: `${API_BASE_URL}/fg-dashboard`,
+  FG_STORAGE: {
+    MOBILE_ASSIGN_LOCATION: `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
+  },
 };
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
