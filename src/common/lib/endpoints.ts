@@ -47,8 +47,9 @@ export const API = {
     MOBILE_ORDERS_SUMMARY: `${API_BASE_URL}/user-dashboard/orders-summary`,    // Endpoint for mobile orders summary
     MOBILE_DOWNLOAD_DETAILS_BY_ID: (id: number) => `${API_BASE_URL}/user-dashboard/orders/${id}/download-details`,  // Endpoint for downloading order details by Order ID (Primary Key)
     MOBILE_DOWNLOAD_DETAILS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/download-details`,  // Endpoint for downloading order details by SO number
-    MOBILE_UPLOAD_DETAILS_BY_ID: (id: number) => `${API_BASE_URL}/user-dashboard/orders/${id}/upload-details`, // Endpoint for uploading order details by Order ID (Primary Key)
-    MOBILE_UPLOAD_DETAILS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/upload-details`, // Endpoint for uploading order details by SO number
+    MOBILE_SYNC_ORDER_BY_SO:        (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/sync`,  // Endpoint for syncing order by SO number (Combined both attachments and data)
+    MOBILE_UPLOAD_DATA_BY_SO:       (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/data`,  // Endpoint for uploading data by SO number
+    MOBILE_UPLOAD_ATTACHMENTS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/attachments`, // Endpoint for uploading attachments by SO number
   },
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
