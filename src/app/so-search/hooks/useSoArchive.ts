@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { soArchiveService } from '@/common/services/soArchive.service';
 import { toast } from 'sonner';
 
+type ApiError = {
+  message?: string;
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 export const useSoArchive = (onSuccess?: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'archive' | 'delete' | null>(null);
@@ -14,8 +23,10 @@ export const useSoArchive = (onSuccess?: () => void) => {
       await soArchiveService.archive(soNumberToProcess);
       toast.success(`Sales Order ${soNumberToProcess} archived successfully.`);
       onSuccess?.();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to archive Sales Order.');
+    } catch (error: unknown) { 
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || apiError.message || 'Failed to archive Sales Order.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
       setConfirmAction(null);
@@ -29,8 +40,10 @@ export const useSoArchive = (onSuccess?: () => void) => {
       await soArchiveService.delete(soNumberToProcess);
       toast.success(`Sales Order ${soNumberToProcess} deleted successfully.`);
       onSuccess?.();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete Sales Order.');
+    } catch (error: unknown) { 
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || apiError.message || 'Failed to delete Sales Order.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
       setConfirmAction(null);
