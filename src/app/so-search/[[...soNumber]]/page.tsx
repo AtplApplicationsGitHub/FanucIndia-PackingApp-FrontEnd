@@ -1,5 +1,6 @@
 "use client";
-
+import { useSoArchive } from "../hooks/useSoArchive";
+import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Box,
@@ -74,6 +75,7 @@ interface SoDetails {
   salesOrder: SalesOrder;
   dispatchInfo: DispatchInfoData[];
   materialDetails: MaterialDetail[];
+  isArchived: boolean;
 }
 interface MaterialAttachment {
   ID: number;
@@ -145,6 +147,20 @@ export default function SoSearchPage() {
   const params = useParams<{ soNumber?: string[] }>();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState<UserRole>(null);
+
+  const {
+    isLoading: isActionLoading,
+    confirmAction,
+    handleArchive,
+    handleDelete,
+    openConfirmation,
+    closeConfirmation,
+    soNumberToProcess,
+  } = useSoArchive(() => {
+    setData(null);
+    setSoNumber("");
+    router.push("/so-search");
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -266,7 +282,7 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.ok ? res.blob() : Promise.reject("Download failed"))
+      .then((res) => (res.ok ? res.blob() : Promise.reject("Download failed")))
       .then((blob) => {
         secureDownload(blob, `attachment_${fileId}`);
       })
@@ -284,7 +300,9 @@ export default function SoSearchPage() {
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.ok ? res.blob() : Promise.reject("Failed to get attachment"))
+      .then((res) =>
+        res.ok ? res.blob() : Promise.reject("Failed to get attachment")
+      )
       .then((blob) => {
         if (action === "view") {
           const blobUrl = window.URL.createObjectURL(blob);
@@ -409,6 +427,47 @@ export default function SoSearchPage() {
 
         {data && (
           <>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 2,
+                mb: 2,
+              }}
+            >
+              {data.salesOrder.status === "Dispatched" && !data.isArchived && (
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() =>
+                    openConfirmation("archive", data.salesOrder.saleOrderNumber)
+                  }
+                  disabled={isActionLoading}
+                >
+                  {isActionLoading && confirmAction === "archive" ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Archive"
+                  )}
+                </Button>
+              )}
+              {data.isArchived && (
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() =>
+                    openConfirmation("delete", data.salesOrder.saleOrderNumber)
+                  }
+                  disabled={isActionLoading}
+                >
+                  {isActionLoading && confirmAction === "delete" ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              )}
+            </Box>
             <Box ref={snapshotRef} sx={{ height: "24px" }} />
             <OrderSnapshot
               salesOrder={data.salesOrder}
@@ -440,6 +499,26 @@ export default function SoSearchPage() {
         onMaterialAttachmentView={handleAttachmentView}
         onMaterialAttachmentDownload={handleAttachmentDownload}
       />
+      {soNumberToProcess && (
+        <>
+          <ConfirmDeleteDialog
+            open={confirmAction === "archive"}
+            onCancel={closeConfirmation}
+            onConfirm={handleArchive}
+            title="Confirm Archive"
+            description={`Are you sure you want to archive Sales Order ${soNumberToProcess}?`}
+            loading={isActionLoading}
+          />
+          <ConfirmDeleteDialog
+            open={confirmAction === "delete"}
+            onCancel={closeConfirmation}
+            onConfirm={handleDelete}
+            title="Confirm Permanent Deletion"
+            description={`Are you sure you want to permanently delete Sales Order ${soNumberToProcess}? This action cannot be undone.`}
+            loading={isActionLoading}
+          />
+        </>
+      )}
     </Box>
   );
 }

@@ -54,6 +54,10 @@ export const API = {
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) => `${API_BASE_URL}/so-search/${soNumber}`,
   },
+  SO_ARCHIVE: {
+    ARCHIVE: (soNumber: string) => `${API_BASE_URL}/so-archive/${soNumber}/archive`,
+    DELETE: (soNumber: string) => `${API_BASE_URL}/so-archive/${soNumber}/delete`,
+  },
   DISPATCH: { 
     BASE: `${API_BASE_URL}/dispatch`,
     BY_ID: (id: number) => `${API_BASE_URL}/dispatch/${id}`,

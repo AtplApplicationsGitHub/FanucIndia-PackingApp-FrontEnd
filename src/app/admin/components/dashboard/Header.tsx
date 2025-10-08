@@ -6,9 +6,10 @@ import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Home, ClipboardList, Database, Users, Truck, Grid } from "lucide-react";
+import { Home, ClipboardList, Database, Users, Truck, Grid, Search } from "lucide-react";
 import LogoutButton from "@/common/components/LogoutButton";
 import { getGreeting } from "@/app/sales/components/utils/sales";
+import { useRouter, usePathname } from "next/navigation";
 
 const FANUC_BLUE = "#3b579d";
 
@@ -23,6 +24,7 @@ type Props = {
 const menuItems = [
   { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "" },
   { label: "ORDER LIST", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "orders" },
+  { label: "SO SEARCH", icon: <Search className="mr-2 h-4 w-4" />, value: "so_search" },
   { label: "MASTER", icon: <Database className="mr-2 h-4 w-4" />, value: "master" },
   { label: "MANAGE", icon: <Users className="mr-2 h-4 w-4" />, value: "manage" },
   { label: "DISPATCH", icon: <Truck className="mr-2 h-4 w-4" />, value: "dispatch" },
@@ -30,6 +32,9 @@ const menuItems = [
 ];
 
 export default function AdminDashboardHeader({ userName, view, setView }: Props) {
+  const router = useRouter(); 
+  const pathname = usePathname(); 
+
   return (
     <AppBar
       position="static"
@@ -69,14 +74,22 @@ export default function AdminDashboardHeader({ userName, view, setView }: Props)
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {menuItems.map(item => {
-            const isSelected = view === item.value;
+            const isSelected = item.value === 'so_search'
+              ? pathname.startsWith('/so-search')
+              : view === item.value;
             return (
               <Button
                 key={item.value}
                 disableRipple
                 variant="text"
                 startIcon={item.icon}
-                onClick={() => setView(item.value as Props["view"])}
+                onClick={() => {
+                  if (item.value === 'so_search') {
+                    router.push('/so-search');
+                  } else {
+                    setView(item.value as Props["view"]);
+                  }
+                }}
                 sx={{
                   borderRadius: 0,
                   px: 2.5,

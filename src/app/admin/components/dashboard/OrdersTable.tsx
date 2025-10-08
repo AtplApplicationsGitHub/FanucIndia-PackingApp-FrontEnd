@@ -20,6 +20,9 @@ import { ListItemIcon, ListItemText } from "@mui/material";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 import Link from "next/link";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import { useSoArchive } from "@/app/so-search/hooks/useSoArchive";
+import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 type InlineEdit = {
@@ -63,6 +66,17 @@ export default function AdminOrdersTable({
   onDetailedView,
 }: Props) {
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
+
+  const {
+    isLoading,
+    confirmAction,
+    handleArchive,
+    openConfirmation,
+    closeConfirmation,
+    soNumberToProcess,
+  } = useSoArchive(() => {
+    console.log("Archive successful, please refetch the data.");
+  });
 
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
     null
@@ -193,21 +207,23 @@ export default function AdminOrdersTable({
                 </ListItemIcon>
                 <ListItemText>Edit</ListItemText>
               </MenuItem>
-                <div>
-                  <MenuItem
-                    onClick={() => {
-                      onDelete(row.id);
-                      handleMenuClose();
-                    }}
-                    sx={{ color: row.hasMaterialData ? "text.disabled" : "error.main" }}
-                    disabled={row.hasMaterialData}
-                  >
-                    <ListItemIcon sx={{ color: "inherit" }}>
-                      <DeleteIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Delete</ListItemText>
-                  </MenuItem>
-                </div>
+              <div>
+                <MenuItem
+                  onClick={() => {
+                    onDelete(row.id);
+                    handleMenuClose();
+                  }}
+                  sx={{
+                    color: row.hasMaterialData ? "text.disabled" : "error.main",
+                  }}
+                  disabled={row.hasMaterialData}
+                >
+                  <ListItemIcon sx={{ color: "inherit" }}>
+                    <DeleteIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Delete</ListItemText>
+                </MenuItem>
+              </div>
               <MenuItem
                 onClick={() => {
                   onDetailedView(row);
@@ -219,6 +235,21 @@ export default function AdminOrdersTable({
                 </ListItemIcon>
                 <ListItemText>Detailed View</ListItemText>
               </MenuItem>
+              {row.status === "Dispatched" && (
+                <MenuItem
+                  onClick={() => {
+                    if (row.saleOrderNumber) {
+                      openConfirmation("archive", row.saleOrderNumber);
+                    }
+                    handleMenuClose();
+                  }}
+                >
+                  <ListItemIcon>
+                    <ArchiveIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Archive data</ListItemText>
+                </MenuItem>
+              )}
             </Menu>
           </Box>
         );
@@ -524,6 +555,14 @@ export default function AdminOrdersTable({
             py: 1,
           },
         }}
+      />
+      <ConfirmDeleteDialog
+        open={confirmAction === "archive"}
+        onCancel={closeConfirmation}
+        onConfirm={handleArchive}
+        title="Confirm Archive"
+        description={`Are you sure you want to archive Sales Order ${soNumberToProcess}? This will move the data to archives.`} // Change 'message' to 'description'
+        loading={isLoading}
       />
     </Box>
   );
