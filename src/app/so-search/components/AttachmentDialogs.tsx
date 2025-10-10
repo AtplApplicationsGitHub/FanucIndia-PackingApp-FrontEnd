@@ -4,14 +4,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Drawer,
   IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Typography,
   Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import { Close, FilePresent } from "@mui/icons-material";
 
@@ -36,10 +38,6 @@ interface Props {
   dispatchAttachments: Attachment[];
   onDispatchAttachmentAction: (dispatchId: number, fileName: string, action: "view" | "download") => void;
   dispatchInfo: DispatchInfo[];
-
-  packingDrawerOpen: boolean;
-  onPackingDrawerClose: () => void;
-
   materialDialogOpen: boolean;
   onMaterialDialogClose: () => void;
   materialAttachments: MaterialAttachment[];
@@ -53,8 +51,6 @@ export default function AttachmentDialogs({
   dispatchAttachments,
   onDispatchAttachmentAction,
   dispatchInfo,
-  packingDrawerOpen,
-  onPackingDrawerClose,
   materialDialogOpen,
   onMaterialDialogClose,
   materialAttachments,
@@ -75,51 +71,48 @@ export default function AttachmentDialogs({
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <List>
-            {dispatchAttachments.length === 0 ? (
-              <ListItem><ListItemText primary="No attachments found." /></ListItem>
-            ) : (
-              dispatchAttachments.map((att, i) => (
-                <ListItem
-                  key={i}
-                  secondaryAction={
-                    <>
-                      <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "view")}>View</Button>
-                      <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "download")}>Download</Button>
-                    </>
-                  }
-                >
-                  <ListItemIcon><FilePresent /></ListItemIcon>
-                  <ListItemText primary={att.fileName} />
-                </ListItem>
-              ))
-            )}
-          </List>
+          <TableContainer component={Paper} elevation={0} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>File Name</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {dispatchAttachments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center">
+                      <Typography color="text.secondary" p={3}>No attachments found.</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  dispatchAttachments.map((att, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <FilePresent color="action" />
+                          <Typography variant="body2">{att.fileName}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "view")}>View</Button>
+                        <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "download")}>Download</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </DialogContent>
         <DialogActions>
           <Button onClick={onDispatchDialogClose}>Close</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Packing Attachment Drawer (Dummy) */}
-      <Drawer
-        anchor="right"
-        open={packingDrawerOpen}
-        onClose={onPackingDrawerClose}
-      >
-        <Box sx={{ width: 400, p: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Packing Attachments</Typography>
-            <IconButton onClick={onPackingDrawerClose}><Close /></IconButton>
-          </Box>
-          <List>
-            <ListItem><ListItemText primary="Dummy packing attachment." /></ListItem>
-          </List>
-        </Box>
-      </Drawer>
-
       {/* Material Attachment Dialog */}
-      <Dialog open={materialDialogOpen} onClose={onMaterialDialogClose} fullWidth maxWidth="md">
+      <Dialog open={materialDialogOpen} onClose={onMaterialDialogClose} fullWidth maxWidth="lg">
         <DialogTitle>
           Material Attachments
           <IconButton onClick={onMaterialDialogClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -127,26 +120,44 @@ export default function AttachmentDialogs({
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <List>
-            {materialAttachments.length === 0 ? (
-              <ListItem><ListItemText primary="No attachments found." /></ListItem>
-            ) : (
-              materialAttachments.map((att) => (
-                <ListItem
-                  key={att.ID}
-                  secondaryAction={
-                    <>
-                      <Button size="small" onClick={() => onMaterialAttachmentView(att.ID)}>View</Button>
-                      <Button size="small" onClick={() => onMaterialAttachmentDownload(att.ID)}>Download</Button>
-                    </>
-                  }
-                >
-                  <ListItemIcon><FilePresent /></ListItemIcon>
-                  <ListItemText primary={att.fileName} secondary={att.description} />
-                </ListItem>
-              ))
-            )}
-          </List>
+          <TableContainer component={Paper} elevation={0} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', minWidth: 200 }}>File Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {materialAttachments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                       <Typography color="text.secondary" p={3}>No attachments found.</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  materialAttachments.map((att) => (
+                    <TableRow key={att.ID}>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                           <FilePresent color="action" />
+                           <Typography variant="body2">{att.fileName}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {att.description || '—'}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button size="small" onClick={() => onMaterialAttachmentView(att.ID)}>View</Button>
+                        <Button size="small" onClick={() => onMaterialAttachmentDownload(att.ID)}>Download</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </DialogContent>
         <DialogActions>
           <Button onClick={onMaterialDialogClose}>Close</Button>

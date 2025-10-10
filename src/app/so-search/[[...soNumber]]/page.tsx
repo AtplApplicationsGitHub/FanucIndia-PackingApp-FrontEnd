@@ -1,14 +1,12 @@
 "use client";
 import { useSoArchive } from "../hooks/useSoArchive";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   TextField,
   Button,
   AppBar,
-  Tabs,
-  Tab,
   Paper,
   Typography,
   CircularProgress,
@@ -76,15 +74,17 @@ interface SoDetails {
   dispatchInfo: DispatchInfoData[];
   materialDetails: MaterialDetail[];
   isArchived: boolean;
+  materialFiles?: MaterialAttachment[];
 }
+
 interface MaterialAttachment {
   ID: number;
   fileName: string;
   description: string | null;
 }
+
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
 
-// --- Sales Header Component ---
 const SalesHeader = ({
   userName,
   onNavigate,
@@ -120,20 +120,13 @@ const SalesHeader = ({
   </AppBar>
 );
 
-// --- Main Component ---
 export default function SoSearchPage() {
   const [soNumber, setSoNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SoDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState(0);
-  const snapshotRef = useRef<HTMLDivElement>(null);
-  const dispatchRef = useRef<HTMLDivElement>(null);
-  const materialRef = useRef<HTMLDivElement>(null);
-
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
-  const [packingDrawerOpen, setPackingDrawerOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
 
   const [dispatchAttachments, setDispatchAttachments] = useState<
@@ -221,15 +214,6 @@ export default function SoSearchPage() {
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-    const refs = [snapshotRef, dispatchRef, materialRef];
-    refs[newValue]?.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   const handlePrint = () => window.print();
 
   const handleOpenDispatchAttachments = () => {
@@ -244,6 +228,13 @@ export default function SoSearchPage() {
 
   const handleOpenMaterialAttachments = async () => {
     if (!data?.salesOrder?.saleOrderNumber) return;
+
+    if (data.isArchived && data.materialFiles) {
+      setMaterialAttachments(data.materialFiles);
+      setMaterialDialogOpen(true);
+      return;
+    }
+
     try {
       const res = await fetchWithAuth(
         API.ERP_MATERIAL_FILES.BY_SO(data.salesOrder.saleOrderNumber)
@@ -257,37 +248,72 @@ export default function SoSearchPage() {
     }
   };
 
-  const handleAttachmentView = (fileId: number) => {
-    const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
+  const handleAttachmentViewOrDownload = (fileId: number, action: 'view' | 'download', fileName?: string) => {
+    // If the data is archived, use the new archive endpoint; otherwise, use the old one.
+    const url = data?.isArchived
+      ? API.SO_ARCHIVE.DOWNLOAD_ATTACHMENT(fileId)
+      : API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
+
     const token = localStorage.getItem("token");
 
-    fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) =>
-        res.ok ? res.blob() : Promise.reject("Failed to fetch file")
-      )
-      .then((blob) => {
-        const blobUrl = window.URL.createObjectURL(blob);
-        window.open(blobUrl, "_blank");
-        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) return Promise.reject(`Failed to ${action} file`);
+        return res.blob();
       })
-      .catch(() => setError("Failed to open attachment for viewing."));
+      .then(blob => {
+        if (action === 'view') {
+          const blobUrl = window.URL.createObjectURL(blob);
+          window.open(blobUrl, "_blank");
+          setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+        } else {
+          // Find the correct filename from the state for download
+          const file = materialAttachments.find(f => f.ID === fileId);
+          secureDownload(blob, fileName || file?.fileName || `attachment_${fileId}`);
+        }
+      })
+      .catch(err => setError(err.toString()));
+  };
+
+  const handleAttachmentView = (fileId: number) => {
+    handleAttachmentViewOrDownload(fileId, 'view');
   };
 
   const handleAttachmentDownload = (fileId: number) => {
-    const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
-    const token = localStorage.getItem("token");
-
-    fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.blob() : Promise.reject("Download failed")))
-      .then((blob) => {
-        secureDownload(blob, `attachment_${fileId}`);
-      })
-      .catch(() => setError("Failed to download attachment."));
+    handleAttachmentViewOrDownload(fileId, 'download');
   };
+
+  // const handleAttachmentView = (fileId: number) => {
+  //   const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
+  //   const token = localStorage.getItem("token");
+
+  //   fetch(url, {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   })
+  //     .then((res) =>
+  //       res.ok ? res.blob() : Promise.reject("Failed to fetch file")
+  //     )
+  //     .then((blob) => {
+  //       const blobUrl = window.URL.createObjectURL(blob);
+  //       window.open(blobUrl, "_blank");
+  //       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+  //     })
+  //     .catch(() => setError("Failed to open attachment for viewing."));
+  // };
+
+  // const handleAttachmentDownload = (fileId: number) => {
+  //   const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
+  //   const token = localStorage.getItem("token");
+
+  //   fetch(url, {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   })
+  //     .then((res) => (res.ok ? res.blob() : Promise.reject("Download failed")))
+  //     .then((blob) => {
+  //       secureDownload(blob, `attachment_${fileId}`);
+  //     })
+  //     .catch(() => setError("Failed to download attachment."));
+  // };
 
   const handleDispatchAttachmentAction = (
     dispatchId: number,
@@ -397,18 +423,6 @@ export default function SoSearchPage() {
             </Button>
           </Stack>
         </Box>
-        {data && (
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            centered
-            sx={{ bgcolor: "background.paper" }}
-          >
-            <Tab label="Order Snapshot" />
-            <Tab label="Dispatch Info" />
-            <Tab label="Material Details" />
-          </Tabs>
-        )}
       </Paper>
 
       <Box p={3}>
@@ -468,10 +482,9 @@ export default function SoSearchPage() {
                 </Button>
               )}
             </Box>
-            <Box ref={snapshotRef} sx={{ height: "24px" }} />
             <OrderSnapshot
               salesOrder={data.salesOrder}
-              onViewPackingAttachments={() => setPackingDrawerOpen(true)}
+              onViewPackingAttachments={handleOpenMaterialAttachments}
             />
             <DispatchInfo
               dispatchInfo={data.dispatchInfo}
@@ -491,8 +504,6 @@ export default function SoSearchPage() {
         dispatchAttachments={dispatchAttachments}
         onDispatchAttachmentAction={handleDispatchAttachmentAction}
         dispatchInfo={data?.dispatchInfo || []}
-        packingDrawerOpen={packingDrawerOpen}
-        onPackingDrawerClose={() => setPackingDrawerOpen(false)}
         materialDialogOpen={materialDialogOpen}
         onMaterialDialogClose={() => setMaterialDialogOpen(false)}
         materialAttachments={materialAttachments}

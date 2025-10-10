@@ -57,6 +57,7 @@ export const API = {
   SO_ARCHIVE: {
     ARCHIVE: (soNumber: string) => `${API_BASE_URL}/so-archive/${soNumber}/archive`,
     DELETE: (soNumber: string) => `${API_BASE_URL}/so-archive/${soNumber}/delete`,
+    DOWNLOAD_ATTACHMENT: (fileId: number) => `${API_BASE_URL}/so-archive/attachments/${fileId}/download`,
   },
   DISPATCH: { 
     BASE: `${API_BASE_URL}/dispatch`,

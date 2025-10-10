@@ -213,7 +213,7 @@ export default function MaterialDataPage() {
     try {
       let response: { issueStageCompleted?: boolean } | undefined;
       if (!allIssued) {
-        response = await incIssue(code); 
+        response = await incIssue(code);
       } else {
         await incPacking(code);
       }
@@ -222,8 +222,12 @@ export default function MaterialDataPage() {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
         setTimeout(() => {
-          sessionStorage.setItem("userDashboardView", "pick_pack");
-          router.push("/user/dashboard");
+          if (currentUser.role === 'ADMIN') {
+            router.push("/admin/dashboard");
+          } else {
+            sessionStorage.setItem("userDashboardView", "pick_pack");
+            router.push("/user/dashboard");
+          }
         }, 2500);
       } else {
         await refetch();
@@ -252,8 +256,12 @@ export default function MaterialDataPage() {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
         setTimeout(() => {
-          sessionStorage.setItem("userDashboardView", "pick_pack");
-          router.push("/user/dashboard");
+          if (currentUser.role === 'ADMIN') {
+            router.push("/admin/dashboard");
+          } else {
+            sessionStorage.setItem("userDashboardView", "pick_pack");
+            router.push("/user/dashboard");
+          }
         }, 2500);
       }
       
@@ -269,7 +277,7 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage);
-      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial })?.updatedMaterial;
+      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial, packingStageCompleted?: boolean })?.updatedMaterial; // Add packingStageCompleted
       if (!updatedMaterial) {
         throw new Error(
           "Invalid response from server when updating packing stage."
@@ -284,6 +292,20 @@ export default function MaterialDataPage() {
       setLocalRows((prev) =>
         prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
       );
+      
+      if ((data as { packingStageCompleted?: boolean })?.packingStageCompleted) {
+        setIsRedirecting(true);
+        setUploadNotice("Packing stage complete! Returning to your dashboard...");
+        setTimeout(() => {
+          if (currentUser.role === 'ADMIN') {
+            router.push("/admin/dashboard");
+          } else {
+            sessionStorage.setItem("userDashboardView", "pick_pack");
+            router.push("/user/dashboard");
+          }
+        }, 2500);
+      }
+
       return updatedRow;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
