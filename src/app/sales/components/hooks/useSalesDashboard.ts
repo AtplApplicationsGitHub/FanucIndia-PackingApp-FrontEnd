@@ -149,21 +149,30 @@ export function useSalesDashboard() {
   }, [searchTerm]);
 
   const handleDownloadTemplate = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(API.SALES.TEMPLATE, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      const disp = res.headers.get("content-disposition") || "";
-      const fn = disp.match(/filename="?(.+?)"?/)?.[1] || "template.xlsx";
-      const blob = await res.blob();
-      secureDownload(blob, fn);
-    } catch {
-      setAlert({ severity: "error", message: "Failed to download template" });
-    }
-  }, []);
+  if (typeof window === "undefined") return;
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(API.SALES.TEMPLATE, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error();
+
+    const cd = res.headers.get("content-disposition") || "";
+
+    const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
+    let filename =
+      (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
+      cd.match(/filename="([^"]+)"/i)?.[1] ||
+      cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
+      "bulk_import_excel.xlsx";
+
+    const blob = await res.blob();
+    secureDownload(blob, filename);
+  } catch {
+    setAlert({ severity: "error", message: "Failed to download template" });
+  }
+}, []);
+
 
   const handleBulkUpload = () => fileInputRef.current?.click();
 
