@@ -160,7 +160,7 @@ export function useSalesDashboard() {
     const cd = res.headers.get("content-disposition") || "";
 
     const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
-    let filename =
+    const filename =
       (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
       cd.match(/filename="([^"]+)"/i)?.[1] ||
       cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
