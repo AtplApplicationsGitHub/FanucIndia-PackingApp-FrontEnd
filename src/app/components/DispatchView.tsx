@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   TextField,
@@ -65,6 +65,8 @@ interface Dispatch {
   soCount: number;
   vehicleNumber: string;
   attachments: { fileName: string }[];
+  UpdatedBy?: string | null;
+  UpdatedDate?: string | null;
 }
 interface DispatchSO {
   id: number;
@@ -248,6 +250,7 @@ export default function DispatchView() {
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [transporters, setTransporters] = useState<Transporter[]>([]);
+  const soInputRef = useRef<HTMLInputElement>(null);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(
     null
   );
@@ -342,13 +345,18 @@ export default function DispatchView() {
     }
   }, [selectedDispatch, fetchDispatchSOs]);
 
-  // --- Handlers ---
   const handleFormChange = (
     field: "customerId" | "address" | "transporterId" | "vehicleNumber",
     value: Customer | Transporter | string | null
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (field === "customerId" && value && typeof value !== "string") {
+
+    if (
+      field === "customerId" &&
+      value &&
+      typeof value === "object" &&
+      "address" in value
+    ) {
       setForm((prev) => ({
         ...prev,
         address: (value as Customer).address || "",
@@ -380,55 +388,69 @@ export default function DispatchView() {
   };
 
   const handleSave = async () => {
-    if (!form.customerId || !form.address || !form.vehicleNumber) {
-      showSnackbar("Please fill all mandatory fields.", "error");
+    // --- Validation ---
+    const isCustomerObject =
+      typeof form.customerId === "object" && form.customerId !== null;
+    const customerValue = form.customerId; // Can be object, string, or null
+    const customerNameString =
+      typeof customerValue === "string"
+        ? customerValue.trim()
+        : (customerValue as Customer)?.name;
+
+    if (!customerValue || !customerNameString) {
+      showSnackbar("Please select or enter a customer name.", "error");
       return;
     }
+    if (!form.address.trim()) {
+      showSnackbar("Address is required.", "error");
+      return;
+    }
+    if (!form.vehicleNumber.trim()) {
+      showSnackbar("Vehicle Number is required.", "error");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const token = localStorage.getItem("token");
-      const customerId =
-        typeof form.customerId === "string"
-          ? (customers.find((c) => c.name === form.customerId) || { id: null })
-              .id
-          : form.customerId?.id;
-      if (!customerId) {
-        showSnackbar(
-          "Invalid customer. Please select a customer from the list or create a new one.",
-          "error"
-        );
-        setLoading(false);
-        return;
-      }
-      if (editingId) {
-        const payload = {
-          customerId: String(customerId),
-          transporterId: form.transporterId
-            ? String(form.transporterId.id)
-            : undefined,
-          vehicleNumber: form.vehicleNumber,
-        };
-        await axios.patch(API.DISPATCH.BY_ID(editingId), payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        const formData = new FormData();
+
+      const customerId = isCustomerObject
+        ? (form.customerId as Customer).id
+        : undefined;
+      const customerName = !isCustomerObject
+        ? String(form.customerId || "").trim()
+        : undefined;
+
+      const formData = new FormData();
+
+      if (customerId) {
         formData.append("customerId", String(customerId));
-        formData.append("address", form.address);
-        if (form.transporterId)
-          formData.append("transporterId", String(form.transporterId.id));
-        formData.append("vehicleNumber", form.vehicleNumber);
-        attachments.forEach((file) => {
-          formData.append("attachments", file);
-        });
-        await axios.post(API.DISPATCH.BASE, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      } else if (customerName) {
+        formData.append("customerName", customerName);
       }
+      formData.append("address", form.address.trim());
+
+      if (form.transporterId)
+        formData.append("transporterId", String(form.transporterId.id));
+      formData.append("vehicleNumber", form.vehicleNumber.trim());
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      const apiUrl = editingId
+        ? API.DISPATCH.BY_ID(editingId)
+        : API.DISPATCH.BASE;
+      const method = editingId ? "patch" : "post";
+
+      await axios({
+        method: method,
+        url: apiUrl,
+        data: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       showSnackbar(`Dispatch ${editingId ? "updated" : "saved"} successfully!`);
       handleDialogClose();
@@ -449,7 +471,9 @@ export default function DispatchView() {
 
   const handleAddSO = async () => {
     if (!selectedDispatch || !soInput.trim()) return;
+
     setSoLoading(true);
+
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -461,16 +485,19 @@ export default function DispatchView() {
       fetchDispatchSOs(selectedDispatch.id);
       fetchDispatches();
     } catch (error: unknown) {
+      setSoInput("");
       if (axios.isAxiosError(error)) {
         const errMsg =
-          error.response?.data?.message ||
-          `Failed to ${editingId ? "update" : "save"} dispatch`;
+          error.response?.data?.message || `Failed to add SO number`;
         showSnackbar(errMsg, "error");
       } else {
         showSnackbar("Unexpected error occurred", "error");
       }
     } finally {
       setSoLoading(false);
+      setTimeout(() => {
+        soInputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -592,6 +619,31 @@ export default function DispatchView() {
       flex: 1,
     },
     {
+      field: "UpdatedBy",
+      headerName: "Updated By",
+      flex: 0.8, 
+      minWidth: 100, 
+      valueGetter: (_value, row) => row.UpdatedBy || "-", 
+    },
+    {
+      field: "UpdatedDate",
+      headerName: "Updated Date",
+      flex: 1,
+      minWidth: 180, 
+      valueGetter: (_value, row) =>
+      row.UpdatedDate
+        ? new Date(row.UpdatedDate).toLocaleString('en-IN', { 
+            day: '2-digit',    
+            month: '2-digit',   
+            year: 'numeric',   
+            hour: '2-digit',   
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true       
+          })
+        : "-",
+    },
+    {
       field: "attachments",
       headerName: "Attachments",
       width: 120,
@@ -605,6 +657,14 @@ export default function DispatchView() {
       ),
     },
   ];
+
+  useEffect(() => {
+    if (selectedDispatch && soInputRef.current) {
+      setTimeout(() => {
+        soInputRef.current?.focus();
+      }, 300);
+    }
+  }, [selectedDispatch]);
 
   return (
     <Box p={3}>
@@ -667,6 +727,7 @@ export default function DispatchView() {
                 onChange={(e) => setSoInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleAddSO()}
                 disabled={!selectedDispatch || soLoading}
+                inputRef={soInputRef}
               />
               <Button
                 variant="contained"
@@ -743,10 +804,36 @@ export default function DispatchView() {
                   typeof option === "string" ? option : option.name
                 }
                 value={form.customerId}
-                onChange={(_, value) => handleFormChange("customerId", value)}
+                onChange={(_, value) => {
+                  handleFormChange("customerId", value);
+                }}
+                onInputChange={(_, newInputValue, reason) => {
+                  if (reason === "input") {
+                    handleFormChange("customerId", newInputValue);
+                  }
+                }}
                 renderInput={(params) => (
-                  <TextField {...params} label="Customer*" />
+                  <TextField {...params} label="  Customer*" />
                 )}
+                filterOptions={(options, params) => {
+                  const filtered = options.filter((option) =>
+                    option.name
+                      .toLowerCase()
+                      .includes(params.inputValue.toLowerCase())
+                  );
+
+                  const { inputValue } = params;
+                  const isExisting = options.some(
+                    (option) => option.name === inputValue
+                  );
+                  if (
+                    inputValue !== "" &&
+                    !isExisting &&
+                    filtered.length === 0
+                  ) {
+                  }
+                  return filtered;
+                }}
               />
               <TextField
                 label="Address"

@@ -30,35 +30,6 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
       <OrderStatusStepper status={salesOrder.status} />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Typography variant="h5" gutterBottom>
-          ORDER SNAPSHOT
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Chip
-            label={`Status: ${salesOrder.status}`}
-            color={
-              salesOrder.status === "Ready" ||
-              salesOrder.status === "Dispatched"
-                ? "success"
-                : "warning"
-            }
-          />
-          {salesOrder.priority && (
-            <Chip
-              label={`Priority: ${salesOrder.priority}`}
-              color="error"
-            />
-          )}
-        </Box>
-      </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="SO" value={salesOrder.saleOrderNumber} />
         <KVBox label="Status" value={salesOrder.status} />

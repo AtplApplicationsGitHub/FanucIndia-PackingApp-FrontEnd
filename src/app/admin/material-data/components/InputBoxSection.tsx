@@ -24,9 +24,19 @@ const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
     return updatedItems.sort((a, b) => new Date(b.updatedDate!).getTime() - new Date(a.updatedDate!).getTime())[0];
   }, [items]);
 
-  if (!lastUpdatedItem || !lastUpdatedItem.updatedBy) {
-    return <Box sx={{ flex: 1, minWidth: 300 }} />; // Maintain space
+  if (!lastUpdatedItem || !lastUpdatedItem.updatedBy || !lastUpdatedItem.updatedDate) {
+    return <Box sx={{ flex: 1, minWidth: 300 }} />; 
   }
+
+  const formattedDate = new Date(lastUpdatedItem.updatedDate).toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 
   return (
     <Box sx={{ flex: 1, minWidth: 300, textAlign: 'left' }}>
@@ -34,7 +44,7 @@ const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
         Last Updated By: {lastUpdatedItem.updatedBy}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Last Updated At: {new Date(lastUpdatedItem.updatedDate!).toLocaleString()}
+        Last Updated At: {formattedDate}
       </Typography>
     </Box>
   );

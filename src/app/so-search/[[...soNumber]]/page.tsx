@@ -421,6 +421,44 @@ export default function SoSearchPage() {
             >
               Print
             </Button>
+            {userRole === 'ADMIN' && data && (
+              <>
+                {data.salesOrder.status === "Dispatched" && !data.isArchived && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() =>
+                      openConfirmation("archive", data.salesOrder.saleOrderNumber)
+                    }
+                    disabled={isActionLoading}
+                    size="small" 
+                  >
+                    {isActionLoading && confirmAction === "archive" ? (
+                      <CircularProgress size={20} color="inherit" /> 
+                    ) : (
+                      "Archive"
+                    )}
+                  </Button>
+                )}
+                {data.isArchived && (
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() =>
+                      openConfirmation("delete", data.salesOrder.saleOrderNumber)
+                    }
+                    disabled={isActionLoading}
+                    size="small" 
+                  >
+                    {isActionLoading && confirmAction === "delete" ? (
+                      <CircularProgress size={20} color="inherit" /> 
+                    ) : (
+                      "Delete"
+                    )}
+                  </Button>
+                )}
+              </>
+            )}
           </Stack>
         </Box>
       </Paper>
@@ -441,47 +479,6 @@ export default function SoSearchPage() {
 
         {data && (
           <>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 2,
-                mb: 2,
-              }}
-            >
-              {data.salesOrder.status === "Dispatched" && !data.isArchived && (
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() =>
-                    openConfirmation("archive", data.salesOrder.saleOrderNumber)
-                  }
-                  disabled={isActionLoading}
-                >
-                  {isActionLoading && confirmAction === "archive" ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Archive"
-                  )}
-                </Button>
-              )}
-              {data.isArchived && (
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() =>
-                    openConfirmation("delete", data.salesOrder.saleOrderNumber)
-                  }
-                  disabled={isActionLoading}
-                >
-                  {isActionLoading && confirmAction === "delete" ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Delete"
-                  )}
-                </Button>
-              )}
-            </Box>
             <OrderSnapshot
               salesOrder={data.salesOrder}
               onViewPackingAttachments={handleOpenMaterialAttachments}
