@@ -29,7 +29,7 @@ interface Props {
 export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: Props) {
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
-      <OrderStatusStepper status={salesOrder.status} />
+      {/* <OrderStatusStepper status={salesOrder.status} /> */}
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="SO" value={salesOrder.saleOrderNumber} />
         <KVBox label="Status" value={salesOrder.status} />

@@ -1,5 +1,4 @@
-import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 
 interface MaterialDetail {
   ID: number;
@@ -23,19 +22,7 @@ interface Props {
 }
 
 export default function MaterialDetails({ materialDetails, onViewAttachments }: Props) {
-  const [filters, setFilters] = useState({ text: "", batch: "" });
-
-  const filteredMaterials =
-    materialDetails.filter((m) => {
-      const textMatch =
-        !filters.text ||
-        m.Material_Code?.toLowerCase().includes(filters.text.toLowerCase()) ||
-        m.Material_Description?.toLowerCase().includes(filters.text.toLowerCase());
-      const batchMatch =
-        !filters.batch ||
-        m.Batch_No?.toLowerCase().includes(filters.batch.toLowerCase());
-      return textMatch && batchMatch;
-    }) || [];
+  const displayMaterials = materialDetails || [];
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="material-section">
@@ -43,20 +30,7 @@ export default function MaterialDetails({ materialDetails, onViewAttachments }: 
         <Typography variant="h5">MATERIAL DETAILS</Typography>
         <Button onClick={onViewAttachments}>Attachments</Button>
       </Box>
-      <Box display="flex" gap={2} mb={2} flexWrap="wrap">
-        <TextField
-          size="small"
-          label="Search code/description"
-          value={filters.text}
-          onChange={(e) => setFilters((p) => ({ ...p, text: e.target.value }))}
-        />
-        <TextField
-          size="small"
-          label="Batch contains..."
-          value={filters.batch}
-          onChange={(e) => setFilters((p) => ({ ...p, batch: e.target.value }))}
-        />
-      </Box>
+
       <TableContainer>
         <Table>
           <TableHead>
@@ -76,19 +50,19 @@ export default function MaterialDetails({ materialDetails, onViewAttachments }: 
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMaterials.map((m) => (
+            {displayMaterials.map((m) => (
               <TableRow key={m.ID}>
                 <TableCell>{m.Material_Code}</TableCell>
                 <TableCell>{m.Material_Description}</TableCell>
                 <TableCell>{m.Batch_No}</TableCell>
-                <TableCell>{m.SO_Donor_Batch}</TableCell>
-                <TableCell>{m.Cert_No}</TableCell>
-                <TableCell>{m.Bin_No}</TableCell>
-                <TableCell>{m.A_D_F}</TableCell>
+                <TableCell>{m.SO_Donor_Batch || "-"}</TableCell> 
+                <TableCell>{m.Cert_No || "-"}</TableCell>
+                <TableCell>{m.Bin_No || "-"}</TableCell>
+                <TableCell>{m.A_D_F || "-"}</TableCell>
                 <TableCell>{m.Required_Qty}</TableCell>
                 <TableCell>{m.Issue_stage}</TableCell>
                 <TableCell>{m.Packing_stage}</TableCell>
-                <TableCell>{m.UpdatedBy}</TableCell>
+                <TableCell>{m.UpdatedBy || "-"}</TableCell>
                 <TableCell>
                   {m.UpdatedDate
                     ? new Date(m.UpdatedDate).toLocaleString()
@@ -96,6 +70,13 @@ export default function MaterialDetails({ materialDetails, onViewAttachments }: 
                 </TableCell>
               </TableRow>
             ))}
+             {displayMaterials.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={12} align="center" sx={{ py: 3 }}>
+                        <Typography color="text.secondary">No material details found for this order.</Typography>
+                    </TableCell>
+                </TableRow>
+             )}
           </TableBody>
         </Table>
       </TableContainer>

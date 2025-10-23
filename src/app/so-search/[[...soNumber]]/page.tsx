@@ -24,6 +24,7 @@ import LogoutButton from "@/common/components/LogoutButton";
 import OrderSnapshot from "../components/OrderSnapshot";
 import DispatchInfo from "../components/DispatchInfo";
 import MaterialDetails from "../components/MaterialDetails";
+import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload } from "@/common/lib/secure-download";
 
@@ -479,6 +480,9 @@ export default function SoSearchPage() {
 
         {data && (
           <>
+            <Paper sx={{ p: 3, mb: 3 }} id="status-section">
+              <OrderStatusStepper status={data.salesOrder.status} />
+            </Paper>
             <OrderSnapshot
               salesOrder={data.salesOrder}
               onViewPackingAttachments={handleOpenMaterialAttachments}
