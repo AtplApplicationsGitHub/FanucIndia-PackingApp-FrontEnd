@@ -4,6 +4,8 @@ import { Stack, Step, StepLabel, Stepper, StepConnector, stepConnectorClasses, s
 import { StepIconProps } from "@mui/material/StepIcon";
 import { Check } from "@mui/icons-material";
 
+const STEPPER_GREEN = '#4caf50';
+
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
     top: 10,
@@ -12,12 +14,12 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
   },
   [`&.${stepConnectorClasses.active}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      borderColor: "#784af4",
+      borderColor: STEPPER_GREEN,
     },
   },
   [`&.${stepConnectorClasses.completed}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      borderColor: "#784af4",
+      borderColor: STEPPER_GREEN,
     },
   },
   [`& .${stepConnectorClasses.line}`]: {
@@ -35,10 +37,10 @@ const QontoStepIconRoot = styled("div")<{ ownerState: { active?: boolean } }>(
     height: 22,
     alignItems: "center",
     ...(ownerState.active && {
-      color: "#784af4",
+      color: STEPPER_GREEN,
     }),
     "& .QontoStepIcon-completedIcon": {
-      color: "#784af4",
+      color: STEPPER_GREEN,
       zIndex: 1,
       fontSize: 18,
     },
@@ -77,9 +79,9 @@ export default function OrderStatusStepper({ status }: { status?: string }) {
     if (!status) return 0;
     const lowerStatus = status.toLowerCase();
     if (lowerStatus.includes("dispatched")) return 3;
-    if (lowerStatus === "f105") return 2; // Ready for Dispatch
-    if (lowerStatus === "r105") return 1; // Materials Issued
-    return 0; // Order Created
+    if (lowerStatus === "f105") return 2; 
+    if (lowerStatus === "r105") return 1; 
+    return 0; 
   };
 
   const activeStep = getActiveStep();

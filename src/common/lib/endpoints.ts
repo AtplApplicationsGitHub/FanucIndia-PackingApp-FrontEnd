@@ -68,6 +68,7 @@ export const API = {
     ATTACHMENT: (id: number, fileName: string) => `${API_BASE_URL}/dispatch/${id}/attachments/${encodeURIComponent(fileName)}`,
     MOBILE: {
       CREATE_HEADER: `${API_BASE_URL}/dispatch/mobile/header`,
+      UPDATE_HEADER: (id: number) => `${API_BASE_URL}/dispatch/mobile/${id}`,
       ADD_ATTACHMENTS: (id: number) => `${API_BASE_URL}/dispatch/mobile/${id}/attachments`,
       LINK_SO: (id: number) => `${API_BASE_URL}/dispatch/mobile/${id}/so`,
     },

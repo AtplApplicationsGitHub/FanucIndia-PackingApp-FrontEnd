@@ -71,6 +71,11 @@ export default function FgDashboardView() {
     severity: "success" | "error";
   } | null>(null);
   const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+  const [totalRows, setTotalRows] = useState(0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -82,10 +87,14 @@ export default function FgDashboardView() {
       if (date) {
         params.append("date", dayjs(date).format("YYYY-MM-DD"));
       }
+      params.append("page", (paginationModel.page + 1).toString());
+      params.append("limit", paginationModel.pageSize.toString());
+
       const res = await authFetch(`${API.FG_DASHBOARD}?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch data");
-      const data = await res.json();
+      const { data, totalCount } = await res.json();
       setRows(data);
+      setTotalRows(totalCount);
     } catch (error) {
       console.error("Error fetching FG Dashboard data:", error);
       setSnackbar({
@@ -96,7 +105,7 @@ export default function FgDashboardView() {
     } finally {
       setLoading(false);
     }
-  }, [search, date]);
+  }, [search, date, paginationModel]);
 
   useEffect(() => {
     fetchData();
@@ -148,7 +157,6 @@ export default function FgDashboardView() {
     const handleKeyDown = (e: React.KeyboardEvent) => {
       if (e.key === "Enter") onCommit(localValue.toString());
       if (e.key === "Escape") onCancel();
-      // prevent DataGrid from hijacking text-edit keys
       if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
         e.stopPropagation();
       }
@@ -247,17 +255,17 @@ export default function FgDashboardView() {
       headerName: "Updated Date",
       width: 180,
       valueGetter: (_value, row) =>
-      row.updatedDate
-        ? new Date(row.updatedDate).toLocaleString('en-IN', { 
-            day: '2-digit',   
-            month: '2-digit', 
-            year: 'numeric',  
-            hour: '2-digit',  
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true      
-          })
-        : "-",
+        row.updatedDate
+          ? new Date(row.updatedDate).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: true,
+            })
+          : "-",
     },
   ];
 
@@ -336,7 +344,11 @@ export default function FgDashboardView() {
             rows={rows}
             columns={columns}
             loading={loading}
-            pageSizeOptions={[10, 25, 50]}
+            pageSizeOptions={[5, 10, 25, 50]}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            rowCount={totalRows}
+            paginationMode="server"
             onCellKeyDown={handleCellKeyDown}
           />
         </Paper>
