@@ -87,7 +87,7 @@ export default function OrderStatusStepper({ status }: { status?: string }) {
   const activeStep = getActiveStep();
 
   return (
-    <Stack sx={{ width: "100%", mb: 4 }} spacing={4}>
+    <Stack sx={{ width: "100%", mb: 1, mt: -2 }} spacing={4}>
       <Stepper
         alternativeLabel
         activeStep={activeStep}

@@ -480,9 +480,9 @@ export default function SoSearchPage() {
 
         {data && (
           <>
-            <Paper sx={{ p: 3, mb: 3 }} id="status-section">
+            {/* <Paper sx={{ p: 3, mb: 3 }} id="status-section"> */}
               <OrderStatusStepper status={data.salesOrder.status} />
-            </Paper>
+            {/* </Paper> */}
             <OrderSnapshot
               salesOrder={data.salesOrder}
               onViewPackingAttachments={handleOpenMaterialAttachments}
