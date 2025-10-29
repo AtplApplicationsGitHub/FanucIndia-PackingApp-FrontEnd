@@ -68,7 +68,6 @@ export default function AdminDashboard() {
         }
       );
       showSnackbar("Updated!", "success");
-      admin.setCurrentPage(1);
       await admin.fetchOrders();
     } catch {
       showSnackbar("Update failed.", "error");

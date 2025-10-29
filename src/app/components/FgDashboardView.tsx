@@ -290,7 +290,7 @@ export default function FgDashboardView() {
           <TextField
             variant="outlined"
             size="small"
-            placeholder="SEARCH"
+            placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             sx={{
@@ -350,6 +350,7 @@ export default function FgDashboardView() {
             rowCount={totalRows}
             paginationMode="server"
             onCellKeyDown={handleCellKeyDown}
+            autoHeight
           />
         </Paper>
         {snackbar && (

@@ -50,7 +50,7 @@ export default function AdminOrdersToolbar({
         <TextField
           variant="outlined"
           size="small"
-          placeholder="SEARCH"
+          placeholder="Search"
           value={searchInput}
           onChange={(e) => onSearchInputChange(e.target.value)}
           sx={{
@@ -78,7 +78,7 @@ export default function AdminOrdersToolbar({
         />
 
         <DatePicker
-          label="FROM DATE"
+          label="From"
           value={startDate ? dayjs(startDate) : null}
           onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"
@@ -100,7 +100,7 @@ export default function AdminOrdersToolbar({
         />
 
         <DatePicker
-          label="TO DATE"
+          label="To"
           value={endDate ? dayjs(endDate) : null}
           onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"

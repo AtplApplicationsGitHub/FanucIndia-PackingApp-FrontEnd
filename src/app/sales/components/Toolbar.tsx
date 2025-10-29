@@ -60,7 +60,7 @@ export default function SalesDashboardToolbar({
           <TextField
             variant="outlined"
             size="small"
-            placeholder="SEARCH"
+            placeholder="Search"
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             sx={{
