@@ -4,7 +4,8 @@ interface DispatchInfoData {
   id: number;
   customer: { name: string; address: string } | null;
   customerName?: string;
-  transporter?: { name: string };
+  transporter?: { name: string } | null;
+  transporterName?: string;
   vehicleNumber: string;
   UpdatedBy?: string;
   UpdatedDate?: string;
@@ -41,7 +42,7 @@ export default function DispatchInfo({ dispatchInfo, onViewAttachments }: Props)
                 <TableCell>{dispatch.customerName || dispatch.customer?.name || "-"}</TableCell>
                 <TableCell>{dispatch.address}</TableCell>
                 <TableCell>{dispatch.vehicleNumber}</TableCell>
-                <TableCell>{dispatch.transporter?.name}</TableCell>
+                <TableCell>{dispatch.transporterName || dispatch.transporter?.name || "-"}</TableCell>
                 <TableCell>{dispatch.UpdatedBy || "-"}</TableCell>
                 <TableCell>
                   {dispatch.UpdatedDate

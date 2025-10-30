@@ -50,7 +50,8 @@ interface DispatchInfoData {
   id: number;
   customer: { name: string; address: string } | null;
   customerName?: string;
-  transporter?: { name: string };
+  transporter?: { name: string } | null;
+  transporterName?: string;
   vehicleNumber: string;
   attachments?: { fileName: string }[];
   address: string;
