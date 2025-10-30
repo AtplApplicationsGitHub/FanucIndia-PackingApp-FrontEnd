@@ -2,11 +2,13 @@ import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableH
 
 interface DispatchInfoData {
   id: number;
-  customer: { name: string; address: string };
+  customer: { name: string; address: string } | null;
+  customerName?: string;
   transporter?: { name: string };
   vehicleNumber: string;
   UpdatedBy?: string;
   UpdatedDate?: string;
+  address: string;
 }
 
 interface Props {
@@ -36,8 +38,8 @@ export default function DispatchInfo({ dispatchInfo, onViewAttachments }: Props)
           <TableBody>
             {dispatchInfo.map((dispatch) => (
               <TableRow key={dispatch.id}>
-                <TableCell>{dispatch.customer.name}</TableCell>
-                <TableCell>{dispatch.customer.address}</TableCell>
+                <TableCell>{dispatch.customerName || dispatch.customer?.name || "-"}</TableCell>
+                <TableCell>{dispatch.address}</TableCell>
                 <TableCell>{dispatch.vehicleNumber}</TableCell>
                 <TableCell>{dispatch.transporter?.name}</TableCell>
                 <TableCell>{dispatch.UpdatedBy || "-"}</TableCell>

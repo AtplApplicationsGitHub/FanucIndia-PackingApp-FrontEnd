@@ -48,10 +48,12 @@ interface SalesOrder {
 
 interface DispatchInfoData {
   id: number;
-  customer: { name: string; address: string };
+  customer: { name: string; address: string } | null;
+  customerName?: string;
   transporter?: { name: string };
   vehicleNumber: string;
   attachments?: { fileName: string }[];
+  address: string;
 }
 
 interface MaterialDetail {

@@ -60,7 +60,9 @@ interface Transporter {
 }
 interface Dispatch {
   id: number;
-  customer: { name: string };
+  customer: { name: string } | null;
+  customerName?: string | null;
+  address: string;
   transporter?: { name: string };
   soCount: number;
   vehicleNumber: string;
@@ -533,14 +535,17 @@ export default function DispatchView() {
   const handleEdit = () => {
     const dispatchToEdit = dispatches.find((d) => d.id === currentMenuId);
     if (dispatchToEdit) {
+      const customerName = dispatchToEdit.customerName || dispatchToEdit.customer?.name;
       const customer =
-        customers.find((c) => c.name === dispatchToEdit.customer.name) || null;
+        customers.find((c) => c.name === customerName) || null;
       const transporter =
         transporters.find((t) => t.name === dispatchToEdit.transporter?.name) ||
         null;
       setForm({
-        customerId: customer,
-        address: customer?.address || "",
+        // customerId: customer,
+        // address: customer?.address || "",
+        customerId: customer || customerName || null,
+        address: dispatchToEdit.address || customer?.address || "",
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
       });
@@ -600,7 +605,7 @@ export default function DispatchView() {
       field: "customerName",
       headerName: "Customer Name",
       flex: 1,
-      valueGetter: (value, row) => row.customer.name,
+      valueGetter: (value, row) => row.customerName || row.customer?.name || "-",
     },
     {
       field: "soCount",
