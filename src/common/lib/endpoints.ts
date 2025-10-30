@@ -62,6 +62,7 @@ export const API = {
   DISPATCH: { 
     BASE: `${API_BASE_URL}/dispatch`,
     BY_ID: (id: number) => `${API_BASE_URL}/dispatch/${id}`,
+    LIST_ATTACHMENTS: (id: number) => `${API_BASE_URL}/dispatch/${id}/attachments`,
     SO: (id: number) => `${API_BASE_URL}/dispatch/${id}/so`,
     DELETE_SO: (soId: number) => `${API_BASE_URL}/dispatch/so/${soId}`,
     PDF: (id: number) => `${API_BASE_URL}/dispatch/${id}/pdf`,
