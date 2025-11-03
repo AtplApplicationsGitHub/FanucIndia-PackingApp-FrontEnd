@@ -73,8 +73,15 @@ interface MaterialDetail {
   UpdatedDate?: string;
 }
 
+interface StatusStepperData {
+  id: number;
+  status: string;
+  createdDateTime: string | null;
+  updatedBy: string | null;
+}
+
 interface SoDetails {
-  salesOrder: SalesOrder;
+  salesOrder: SalesOrder & { statusStepper: StatusStepperData[] };
   dispatchInfo: DispatchInfoData[];
   materialDetails: MaterialDetail[];
   isArchived: boolean;
@@ -484,7 +491,7 @@ export default function SoSearchPage() {
         {data && (
           <>
             {/* <Paper sx={{ p: 3, mb: 3 }} id="status-section"> */}
-              <OrderStatusStepper status={data.salesOrder.status} />
+              <OrderStatusStepper status={data.salesOrder.status} stepsData={data.salesOrder.statusStepper} />
             {/* </Paper> */}
             <OrderSnapshot
               salesOrder={data.salesOrder}
