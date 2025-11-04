@@ -104,7 +104,7 @@ export default function AdminOrdersToolbar({
           value={endDate ? dayjs(endDate) : null}
           onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"
-          minDate={startDate ? dayjs(startDate) : undefined} // Prevent selecting a to-date before from-date
+          minDate={startDate ? dayjs(startDate) : undefined} 
           slotProps={{
             field: {
               clearable: true,

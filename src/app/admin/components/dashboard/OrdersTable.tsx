@@ -109,14 +109,12 @@ export default function AdminOrdersTable({
         const n = Number(val);
         return Number.isNaN(n) ? null : n;
       }
-      // text fields
       return typeof val === "string" ? val.trim() : (val ?? "");
     };
 
     const next = normalize(inlineEdit.field, overrideValue ?? inlineEdit.value);
     const prev = normalize(inlineEdit.field, inlineEdit.original);
 
-    // If nothing changed, just close edit and do nothing.
     const same =
       typeof next === "string" && typeof prev === "string"
         ? next === prev
@@ -149,7 +147,6 @@ export default function AdminOrdersTable({
     const handleKeyDown = (e: React.KeyboardEvent) => {
       if (e.key === "Enter") onCommit(localValue.toString());
       if (e.key === "Escape") onCancel();
-      // prevent DataGrid from hijacking text-edit keys
       if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
         e.stopPropagation();
       }
@@ -350,10 +347,9 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "status" ? (
-          // inside the "status" column renderCell, replace the editor JSX with:
           <CustomEditTextField
             initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCommit={(val) => handleInlineSave(val)} 
             onCancel={() => setInlineEdit(null)}
             width={80}
             maxLength={32}
@@ -385,10 +381,9 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "priority" ? (
-          // inside the "priority" column renderCell, replace the editor JSX with:
           <CustomEditTextField
             initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCommit={(val) => handleInlineSave(val)} 
             onCancel={() => setInlineEdit(null)}
             width={65}
           />
@@ -444,7 +439,6 @@ export default function AdminOrdersTable({
               <MenuItem value="">
                 <em>Unassigned</em>
               </MenuItem>
-              {/* assignableUsers is already filtered by role=user from the backend */}
               {lookup.assignableUsers.map((u) => (
                 <MenuItem key={u.id} value={u.id}>
                   {u.name}
@@ -481,10 +475,9 @@ export default function AdminOrdersTable({
         return inlineEdit &&
           inlineEdit.id === row.id &&
           inlineEdit.field === "fgLocation" ? (
-          // inside the "fgLocation" column renderCell, replace the editor JSX with:
           <CustomEditTextField
             initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} // ✅ commit with override
+            onCommit={(val) => handleInlineSave(val)} 
             onCancel={() => setInlineEdit(null)}
             width="100%"
             maxLength={100}

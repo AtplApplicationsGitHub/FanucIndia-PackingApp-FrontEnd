@@ -294,38 +294,6 @@ export default function SoSearchPage() {
     handleAttachmentViewOrDownload(fileId, 'download');
   };
 
-  // const handleAttachmentView = (fileId: number) => {
-  //   const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
-  //   const token = localStorage.getItem("token");
-
-  //   fetch(url, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   })
-  //     .then((res) =>
-  //       res.ok ? res.blob() : Promise.reject("Failed to fetch file")
-  //     )
-  //     .then((blob) => {
-  //       const blobUrl = window.URL.createObjectURL(blob);
-  //       window.open(blobUrl, "_blank");
-  //       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
-  //     })
-  //     .catch(() => setError("Failed to open attachment for viewing."));
-  // };
-
-  // const handleAttachmentDownload = (fileId: number) => {
-  //   const url = API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
-  //   const token = localStorage.getItem("token");
-
-  //   fetch(url, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   })
-  //     .then((res) => (res.ok ? res.blob() : Promise.reject("Download failed")))
-  //     .then((blob) => {
-  //       secureDownload(blob, `attachment_${fileId}`);
-  //     })
-  //     .catch(() => setError("Failed to download attachment."));
-  // };
-
   const handleDispatchAttachmentAction = (
     dispatchId: number,
     fileName: string,
@@ -393,6 +361,7 @@ export default function SoSearchPage() {
     <Box>
       {renderHeader()}
       <Paper
+        elevation={0}
         sx={{
           position: "static",
           top: userRole === "SALES" ? "72px" : "88px",
