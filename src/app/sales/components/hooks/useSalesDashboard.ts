@@ -5,6 +5,8 @@ import { API } from '@/common/lib/endpoints';
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { secureDownload } from "@/common/lib/secure-download";
 
+export type SalesDashboardView = "home" | "orders";
+
 export function useSalesDashboard() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +40,30 @@ export function useSalesDashboard() {
     message: string;
   } | null>(null);
 
+  const [view, setViewInternal] = useState<SalesDashboardView>("home");
+
+  // On initial load, check session storage for a saved view
+  useEffect(() => {
+    const savedView = sessionStorage.getItem("salesDashboardView") as SalesDashboardView;
+    if (savedView) {
+      setViewInternal(savedView);
+    }
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUserName(JSON.parse(storedUser).name || "");
+      } catch {}
+    }
+  }, []);
+
+  // Wrapper for setView to also save to session storage
+  const setView = (newView: SalesDashboardView) => {
+    sessionStorage.setItem("salesDashboardView", newView);
+    setViewInternal(newView);
+  };
+
+
   useEffect(() => {
     if (alert) {
       const timeout = setTimeout(() => setAlert(null), 2000);
@@ -60,17 +86,6 @@ export function useSalesDashboard() {
       if (!token) router.replace("/login");
     }
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          setUserName(JSON.parse(stored).name || "");
-        } catch {}
-      }
-    }
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -139,14 +154,21 @@ export function useSalesDashboard() {
   );
 
   useEffect(() => {
-    fetchOrders(currentPage, pageSize);
-  }, [currentPage, pageSize, fetchOrders]);
+    // Only fetch orders if the 'orders' view is active
+    if (view === "orders") {
+      fetchOrders(currentPage, pageSize);
+    }
+  }, [currentPage, pageSize, fetchOrders, view]); // Add view dependency
 
   useEffect(() => {
-    setCurrentPage(1);
-    fetchOrders(1, pageSize);
+    // Only refetch on search term change if in 'orders' view
+    if (view === "orders") {
+      setCurrentPage(1);
+      fetchOrders(1, pageSize);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
+  }, [searchTerm, view]); // Add view dependency
+
 
   const handleDownloadTemplate = useCallback(async () => {
   if (typeof window === "undefined") return;
@@ -303,6 +325,8 @@ export function useSalesDashboard() {
     lookupsLoading,
     error,
     userName,
+    view, // Export view
+    setView, // Export setView
     searchTerm,
     setSearchTerm,
     currentPage,

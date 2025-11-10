@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import { motion } from "framer-motion"; // Import motion
 
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import SalesDashboardToolbar from "@/app/sales/components/Toolbar";
@@ -20,6 +21,8 @@ export default function SalesDashboard() {
     lookup,
     error,
     userName,
+    view, // Get view
+    setView, // Get setView
     searchTerm,
     setSearchTerm,
     currentPage,
@@ -48,7 +51,7 @@ export default function SalesDashboard() {
     setAlert,
   } = useSalesDashboard();
 
-  if (error)
+  if (error && !orders.length) // Only show full page error if orders fail
     return (
       <Box
         minHeight="40vh"
@@ -82,58 +85,90 @@ export default function SalesDashboard() {
           ) : undefined}
         </Snackbar>
 
-        <SalesDashboardHeader userName={userName} />
+        <SalesDashboardHeader
+          userName={userName}
+          view={view}
+          setView={setView}
+        />
 
-        <Box p={{ xs: 2, md: 4 }}>
-          <SalesDashboardToolbar
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            onCreate={handleCreate}
-            onDownload={handleDownloadTemplate}
-            onBulkUpload={handleBulkUpload}
-            fileInputRef={fileInputRef}
-            onFileChange={handleFileChange}
-          />
-          {orders.length === 0 ? (
-            <Paper
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "40vh",
-                width: "100%",
-                boxShadow: 0,
-                borderRadius: 2,
-                fontSize: "1.5rem",
-                fontWeight: 500,
-                color: "text.secondary",
-                bgcolor: "background.paper",
-                border: (theme) => `1px dashed ${theme.palette.divider}`,
-              }}
-            >
-              No orders found.
-            </Paper>
-          ) : (
-            <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden" }}>
-              <Box sx={{ px: { xs: 1, md: 2 } }}>
-                <SalesOrdersTable
-                  orders={orders}
-                  lookup={lookup}
-                  totalOrders={totalOrders}
-                  onEdit={handleEdit}
-                  onDelete={setDeletingId}
-                  paginationModel={{ page: currentPage - 1, pageSize }}
-                  onPaginationModelChange={({ page, pageSize }) => {
-                    setCurrentPage(page + 1); // MUI uses 0-based index
-                    setPageSize(pageSize);
-                    fetchOrders(page + 1, pageSize);
-                  }}
-                />
-              </Box>
-            </Paper>
-          )}
-        </Box>
+        {/* --- HOME View --- */}
+        {view === "home" && (
+          <Box
+            sx={{
+              minHeight: "40vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: "bold",
+              color: (theme) =>
+                theme.palette.mode === "dark" ? "#90caf9" : "#1a237e",
+            }}
+          >
+            Welcome
+          </Box>
+        )}
 
+        {/* --- ORDERS View --- */}
+        {view === "orders" && (
+          <Box p={{ xs: 2, md: 4 }}>
+            <SalesDashboardToolbar
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              onCreate={handleCreate}
+              onDownload={handleDownloadTemplate}
+              onBulkUpload={handleBulkUpload}
+              fileInputRef={fileInputRef}
+              onFileChange={handleFileChange}
+            />
+            {orders.length === 0 ? (
+              <Paper
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "40vh",
+                  width: "100%",
+                  boxShadow: 0,
+                  borderRadius: 2,
+                  fontSize: "1.5rem",
+                  fontWeight: 500,
+                  color: "text.secondary",
+                  bgcolor: "background.paper",
+                  border: (theme) => `1px dashed ${theme.palette.divider}`,
+                }}
+              >
+                No orders found.
+              </Paper>
+            ) : (
+              <motion.div // Add motion wrapper for the table
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden", mt: 3 }}>
+                  <Box sx={{ px: { xs: 1, md: 2 } }}>
+                    <SalesOrdersTable
+                      orders={orders}
+                      lookup={lookup}
+                      totalOrders={totalOrders}
+                      onEdit={handleEdit}
+                      onDelete={setDeletingId}
+                      paginationModel={{ page: currentPage - 1, pageSize }}
+                      onPaginationModelChange={({ page, pageSize }) => {
+                        setCurrentPage(page + 1); // MUI uses 0-based index
+                        setPageSize(pageSize);
+                        fetchOrders(page + 1, pageSize);
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              </motion.div>
+            )}
+          </Box>
+        )}
+
+        {/* --- Dialogs (common to both views) --- */}
         <ConfirmDeleteDialog
           open={deletingId !== null}
           onCancel={handleDeleteModalClose}
