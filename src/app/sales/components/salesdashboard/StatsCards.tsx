@@ -31,7 +31,11 @@ const StatCard: React.FC<StatCardProps> = ({
             {title}
           </p>
           <p className="mt-2 text-4xl font-extrabold text-gray-900 leading-tight">
-            {loading ? <Skeleton width={120} height={48} /> : new Intl.NumberFormat().format(Number(value))}
+            {loading ? (
+              <Skeleton width={120} height={48} />
+            ) : (
+              new Intl.NumberFormat().format(Number(value ?? 0))
+            )}
           </p>
         </div>
 
@@ -48,8 +52,8 @@ export default function StatsCards() {
 
   const totalOrders = data?.totalSoCount ?? 0;
   const dispatched = data?.dispatchedSoCount ?? 0;
-  const overdue = data?.f105Count ?? 0;
-  const pending = totalOrders - dispatched;
+  // pending = awaiting dispatch
+  const pending = Math.max(0, totalOrders - dispatched);
 
   return (
     <div className="w-full">
@@ -66,7 +70,7 @@ export default function StatsCards() {
 
         <StatCard
           title="Awaiting for Dispatch"
-          value={overdue}
+          value={pending}
           icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
           titleColor="text-red-700"
           iconBgColor="bg-red-50"

@@ -1,5 +1,5 @@
 // src/hooks/useRecentActivity.ts
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
 import { API } from "../../../../common/lib/endpoints";
 import { SalesActivity } from "../types/sales";
@@ -27,7 +27,7 @@ export function useRecentActivity() {
     const diffInDays = diffInHours / 24;
 
     if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${Math.floor(diffInHours)} hour${diffInHours > 1 ? "s" : ""} ago`;
+    if (diffInHours < 24) return `${Math.floor(diffInHours)} hour${Math.floor(diffInHours) > 1 ? "s" : ""} ago`;
     if (diffInDays < 2) return "Yesterday";
     if (diffInDays < 7) return `${Math.floor(diffInDays)} days ago`;
     return date.toLocaleDateString();
@@ -44,43 +44,48 @@ export function useRecentActivity() {
     return map[status] || { label: status, bg: "bg-gray-50", text: "text-gray-700", icon: "?" };
   };
 
-  useEffect(() => {
-    async function fetchActivity() {
-      try {
-        setLoading(true);
-        setError(null);
+  // fetchActivity is stable so refetch can call it directly
+  const fetchActivity = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const res = await fetchWithAuth(API.DASHBOARD.SALES_ACTIVITY);
+      const res = await fetchWithAuth(API.DASHBOARD.SALES_ACTIVITY);
 
-        if (!res.ok) {
-          if (res.status === 401) throw new Error("Session expired. Please log in again.");
-          if (res.status === 403) throw new Error("You don't have permission to view this data.");
-          throw new Error(`Failed to load activity (${res.status})`);
-        }
-
-        const data: SalesActivity[] = await res.json();
-
-        const enriched = data.map((item) => ({
-          ...item,
-          timeAgo: formatTimeAgo(new Date(item.activityTimestamp)),
-          config: getStatusConfig(item.status),
-        }));
-
-        setActivities(enriched);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Session expired. Please log in again.");
+        if (res.status === 403) throw new Error("You don't have permission to view this data.");
+        throw new Error(`Failed to load activity (${res.status})`);
       }
-    }
 
-    fetchActivity();
+      const data: SalesActivity[] = await res.json();
+
+      const enriched: ActivityWithMeta[] = data.map((item) => ({
+        ...item,
+        timeAgo: formatTimeAgo(new Date(item.activityTimestamp)),
+        config: getStatusConfig(item.status),
+      }));
+
+      setActivities(enriched);
+    } catch (err: unknown) {
+      // Narrow unknown -> Error or fallback to string
+      const message = err instanceof Error ? err.message : String(err ?? "Something went wrong");
+      console.error("useRecentActivity error:", err);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    // initial load
+    fetchActivity();
+  }, [fetchActivity]);
 
   return {
     activities,
     loading,
     error,
-    refetch: () => setLoading(true), // triggers useEffect again
+    refetch: fetchActivity, // call to re-run the fetch immediately
   };
 }

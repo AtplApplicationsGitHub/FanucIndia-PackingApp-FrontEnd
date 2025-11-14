@@ -102,13 +102,23 @@ export function useViewOrder(): ViewOrderResult {
       let errorMessage = `Server responded ${res.status} ${res.statusText}`;
 
       if (!res.ok) {
-        let errorBody;
+        let errorBody: unknown;
         try {
           errorBody = await res.json();
         } catch {
-          errorBody = { message: await res.text() };
+          // if parsing json fails, try text
+          const textBody = await res.text();
+          errorBody = { message: textBody };
         }
-        errorMessage = errorBody?.message || errorMessage;
+
+        // try to read a message property safely
+        const bodyMessage =
+          errorBody && typeof errorBody === "object" && errorBody !== null && "message" in errorBody
+            ? 
+              (errorBody as { message?: unknown }).message
+            : undefined;
+
+        errorMessage = typeof bodyMessage === "string" && bodyMessage.length > 0 ? bodyMessage : errorMessage;
         setError(errorMessage);
         throw new Error(errorMessage);
       }
@@ -117,10 +127,18 @@ export function useViewOrder(): ViewOrderResult {
       setData(json);
       setError(null);
       return json;
-    } catch (err: any) {
-      const message = err?.message || "Network error. Please try again.";
+    } catch (err: unknown) {
+      // Safely extract a message from unknown
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Network error. Please try again.";
+
       setError(message);
-      throw err;
+      // Rethrow as an Error to preserve consistent error type for callers
+      throw new Error(message);
     } finally {
       setLoading(false);
     }

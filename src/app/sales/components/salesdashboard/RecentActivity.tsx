@@ -12,26 +12,36 @@ import {
   HelpCircle,
   Calendar,
   ArrowUpRight,
-  RefreshCw,
 } from "lucide-react";
 import { useRecentActivity } from "../hooks/RecentActivity";
 
-type AnyActivity = any; // adapt to your actual activity type if available
+/**
+ * Adjust this interface if your hook returns additional/different fields.
+ */
+interface RecentActivityItem {
+  salesOrderNumber?: string;
+  activityTimestamp?: string | number;
+  config?: {
+    label?: string | null;
+  };
+  timeAgo?: string;
+  // add any other fields your hook actually returns
+}
 
-function getIconByLabel(label: string) {
-  const l = label?.toLowerCase() ?? "";
+function getIconByLabel(label?: string) {
+  const l = (label ?? "").toLowerCase();
+
   if (l.includes("dispatch") || l.includes("dispatched") || l.includes("ship"))
     return <Truck size={18} className="text-blue-600" />;
-  if (l.includes("packed") || l.includes("packing")) 
+  if (l.includes("packed") || l.includes("packing"))
     return <Package size={18} className="text-orange-600" />;
-  if (l.includes("issued") || l.includes("issue")) 
+  if (l.includes("issued") || l.includes("issue"))
     return <ArrowUpRight size={18} className="text-purple-600" />;
-  if (l.includes("assigned") || l.includes("assign")) 
+  if (l.includes("assigned") || l.includes("assign"))
     return <User size={18} className="text-yellow-700" />;
-  if (l.includes("delivered") || l.includes("delivery")) 
+  if (l.includes("delivered") || l.includes("delivery"))
     return <CheckCircle size={18} className="text-green-600" />;
-  if (l.includes("created")) 
-    return <Calendar size={18} className="text-indigo-600" />;
+  if (l.includes("created")) return <Calendar size={18} className="text-indigo-600" />;
 
   return <HelpCircle size={18} className="text-gray-600" />;
 }
@@ -40,8 +50,8 @@ function getIconByLabel(label: string) {
  * returns a tailwind-compatible class string for the pill:
  * background, border, and text color plus padding / rounding
  */
-function getPillClasses(label: string) {
-  const l = label?.toLowerCase() ?? "";
+function getPillClasses(label?: string) {
+  const l = (label ?? "").toLowerCase();
 
   if (l.includes("dispatched") || l.includes("dispatch") || l.includes("ship"))
     return "bg-blue-50 border border-blue-200 text-blue-700";
@@ -57,15 +67,18 @@ function getPillClasses(label: string) {
     return "bg-amber-50 border border-amber-200 text-amber-800";
   if (l.includes("delivered") || l.includes("delivery"))
     return "bg-green-50 border border-green-200 text-green-700";
-  if (l.includes("overdue") || l.includes("late"))
-    return "bg-rose-50 border border-rose-200 text-rose-700";
+  if (l.includes("overdue") || l.includes("late")) return "bg-rose-50 border border-rose-200 text-rose-700";
 
   // fallback neutral pill
   return "bg-gray-50 border border-gray-200 text-gray-700";
 }
 
-export default function RecentActivity() {
-  const { activities, loading, error } = useRecentActivity();
+export default function RecentActivity(): JSX.Element {
+  const { activities, loading, error } = useRecentActivity() as {
+    activities?: RecentActivityItem[];
+    loading: boolean;
+    error?: string | null;
+  };
 
   if (loading) {
     return (
@@ -88,6 +101,8 @@ export default function RecentActivity() {
     );
   }
 
+  const items = activities ?? [];
+
   return (
     <Box className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
       <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -95,20 +110,22 @@ export default function RecentActivity() {
       </Typography>
 
       <Box className="mt-4 divide-y divide-gray-100">
-        {(!activities || activities.length === 0) ? (
+        {items.length === 0 ? (
           <Typography color="text.secondary" textAlign="center" py={4}>
             No recent activity
           </Typography>
         ) : (
-          activities.map((activity: AnyActivity, index: number) => {
+          items.map((activity, index) => {
             const rawLabel = activity?.config?.label ?? "activity";
             const label = String(rawLabel);
             const iconNode = getIconByLabel(label);
             const pillClasses = getPillClasses(label);
 
+            const key = `${activity.salesOrderNumber ?? "unknown"}-${activity.activityTimestamp ?? index}`;
+
             return (
               <motion.div
-                key={`${activity.salesOrderNumber}-${activity.activityTimestamp || index}`}
+                key={key}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.04 }}
@@ -119,27 +136,23 @@ export default function RecentActivity() {
                     className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white border border-gray-100 shadow-sm transition-all duration-300 group-hover:scale-105"
                     aria-hidden
                   >
-                    <span className="flex items-center justify-center">
-                      {iconNode}
-                    </span>
+                    <span className="flex items-center justify-center">{iconNode}</span>
                   </Box>
 
                   <Box className="flex flex-col">
                     <Typography variant="subtitle2" fontWeight={600} className="text-gray-900">
-                      Order #{activity.salesOrderNumber}
+                      {activity.salesOrderNumber ? `Order #${activity.salesOrderNumber}` : "Order"}
                     </Typography>
 
                     <div className="mt-2 flex items-center gap-2">
                       {/* status pill */}
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${pillClasses}`}
-                      >
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${pillClasses}`}>
                         <span className="capitalize">{label.replace(/_/g, " ")}</span>
                       </span>
 
                       {/* relative time / meta */}
                       <Typography variant="caption" color="text.secondary" className="mt-0">
-                        {activity.timeAgo}
+                        {activity.timeAgo ?? ""}
                       </Typography>
                     </div>
                   </Box>

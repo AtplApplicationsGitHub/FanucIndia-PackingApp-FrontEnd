@@ -24,6 +24,14 @@ export default function PaymentMethodsChart() {
     pending: item.paymentPending,
   }));
 
+  // helper to map dataKey -> friendly label
+  const friendlyName = (key: string | undefined) => {
+    if (!key) return "";
+    if (key === "cleared") return "Yes";
+    if (key === "pending") return "No";
+    return key;
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 1, borderRadius: 2, height: "100%", width: "130%" }}>
       <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
@@ -33,7 +41,7 @@ export default function PaymentMethodsChart() {
         Number of cleared vs pending payments across regions
       </Typography>
 
-      <Box sx={{ width: "100%", height: 400, mt: 5}}>
+      <Box sx={{ width: "100%", height: 400, mt: 5 }}>
         {loading && (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">
             <CircularProgress />
@@ -71,11 +79,15 @@ export default function PaymentMethodsChart() {
                   borderRadius: "8px",
                   fontSize: "14px",
                 }}
+                // format the value & the displayed name in tooltip
+                formatter={(value: any, name: string | undefined) => [value, friendlyName(name)]}
+                // optionally format the top label (zone) shown by tooltip
+                labelFormatter={(label: string) => `Zone: ${label}`}
               />
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
                 iconType="circle"
-                formatter={(value) => (value === "cleared" ? "Yes" : "No")}
+                formatter={(value) => (value === "cleared" ? "Yes" : value === "pending" ? "No" : value)}
               />
               <Bar dataKey="cleared" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
               <Bar dataKey="pending" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={40} />
@@ -86,3 +98,4 @@ export default function PaymentMethodsChart() {
     </Paper>
   );
 }
+         

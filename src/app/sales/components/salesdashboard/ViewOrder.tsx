@@ -26,8 +26,11 @@ export default function ViewOrderDetails() {
       if (orderData) {
         router.push(`/so-search/${encodeURIComponent(trimmed)}`);
       }
-    } catch (err: any) {
-      setLocalError(err?.message || "Failed to find order. Please try again.");
+    } catch (err: unknown) {
+      // Safely extract message from unknown error
+      const message =
+        err instanceof Error ? err.message : String(err) || "Failed to find order. Please try again.";
+      setLocalError(message);
     }
   }
 
@@ -64,7 +67,7 @@ export default function ViewOrderDetails() {
 
           {displayError && (
             <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-              <span>Warning:</span> {displayError}
+              <span></span> {displayError}
             </p>
           )}
 

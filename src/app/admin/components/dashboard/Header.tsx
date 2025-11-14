@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import { Box, Typography, useTheme, Menu, MenuItem } from "@mui/material";
+import { Box, Typography, useTheme, Menu, MenuItem , } from "@mui/material";
 import {
-  Home,
+  BarChart3 ,
   ClipboardList,
   Database,
   Users,
@@ -36,7 +36,7 @@ type Props = {
 };
 
 const allMenuItems = [
-  { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "home" },
+  { label: "DASHBOARD", icon: <BarChart3  className="mr-2 h-4 w-4" />, value: "home" },
   {
     label: "ORDER LIST",
     icon: <ClipboardList className="mr-2 h-4 w-4" />,
