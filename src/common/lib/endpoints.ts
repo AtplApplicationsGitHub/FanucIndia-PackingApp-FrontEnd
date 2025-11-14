@@ -86,6 +86,12 @@ export const API = {
   FG_STORAGE: {
     MOBILE_ASSIGN_LOCATION: `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
   },
+  DASHBOARD: {
+    SALES_KPIS: `${API_BASE_URL}/dashboard/sales-kpis`,
+    SALES_ACTIVITY: `${API_BASE_URL}/dashboard/sales-activity`,
+    SALES_PAYMENT_CLEARANCE: `${API_BASE_URL}/dashboard/sales-payment-clearance`,
+    ADMIN_KPIS:`${API_BASE_URL}/dashboard/admin-kpis`,
+  },
 };
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {

@@ -22,7 +22,7 @@ import { useRouter, usePathname } from "next/navigation";
 const FANUC_BLUE = "#3b579d";
 
 type ViewType =
-  | ""
+  | "home"
   | "orders"
   | "master"
   | "manage"
@@ -36,7 +36,7 @@ type Props = {
 };
 
 const allMenuItems = [
-  { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "" },
+  { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "home" },
   {
     label: "ORDER LIST",
     icon: <ClipboardList className="mr-2 h-4 w-4" />,
@@ -110,7 +110,9 @@ export default function AdminDashboardHeader({
     handleMenuClose();
   };
 
-  const isActiveItemHidden = hiddenItems.some(item => getIsSelected(item.value));
+  const isActiveItemHidden = hiddenItems.some((item) =>
+    getIsSelected(item.value)
+  );
 
   return (
     <AppBar
@@ -125,7 +127,7 @@ export default function AdminDashboardHeader({
           justifyContent: "space-between",
           alignItems: "center",
           px: { xs: 2, md: 4 },
-          pr: { xs: 8, md: 10 }, 
+          pr: { xs: 8, md: 10 },
           py: 1,
           minHeight: 64,
         }}
@@ -159,9 +161,7 @@ export default function AdminDashboardHeader({
 
         <Box sx={{ display: "flex", flexGrow: 1, justifyContent: "center" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-
             {visibleItems.map((item) => {
-
               const isSelected = getIsSelected(item.value);
               return (
                 <Button
@@ -176,13 +176,9 @@ export default function AdminDashboardHeader({
                     py: 1.5,
                     minWidth: "auto",
                     fontWeight: isSelected ? 700 : 500,
-                    color: isSelected
-                      ? FANUC_BLUE
-                      : theme.palette.text.secondary,
+                    color: isSelected ? FANUC_BLUE : theme.palette.text.secondary,
                     bgcolor: "transparent",
                     boxShadow: "none",
-                    outline: "none",
-                    border: "none",
                     borderBottom: isSelected
                       ? `3px solid ${FANUC_BLUE}`
                       : "3px solid transparent",
@@ -212,15 +208,11 @@ export default function AdminDashboardHeader({
                     px: 2,
                     py: 1.5,
                     minWidth: "auto",
-                    fontWeight: isActiveItemHidden ? 700 : 500, 
+                    fontWeight: isActiveItemHidden ? 700 : 500,
                     color: isActiveItemHidden
                       ? FANUC_BLUE
                       : theme.palette.text.secondary,
-                    bgcolor: "transparent",
-                    boxShadow: "none",
-                    outline: "none",
-                    border: "none",
-                    borderBottom: isActiveItemHidden 
+                    borderBottom: isActiveItemHidden
                       ? `3px solid ${FANUC_BLUE}`
                       : "3px solid transparent",
                     "&:hover": {
@@ -238,19 +230,10 @@ export default function AdminDashboardHeader({
                   anchorEl={anchorEl}
                   open={menuOpen}
                   onClose={handleMenuClose}
-                  anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                  }}
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
                   PaperProps={{
-                    style: {
-                      maxHeight: 48 * 4.5,
-                      width: "20ch",
-                    },
+                    style: { maxHeight: 48 * 4.5, width: "20ch" },
                   }}
                 >
                   {hiddenItems.map((item) => {
@@ -258,7 +241,7 @@ export default function AdminDashboardHeader({
                     return (
                       <MenuItem
                         key={item.value}
-                        selected={isSelected} 
+                        selected={isSelected}
                         onClick={() => handleMenuItemClick(item.value)}
                         sx={{
                           fontWeight: isSelected ? 600 : 400,

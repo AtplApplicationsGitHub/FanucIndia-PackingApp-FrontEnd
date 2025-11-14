@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
+import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard"; 
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -63,9 +64,7 @@ export default function AdminDashboard() {
       await axios.patch(
         API.ADMIN.SALES_ORDER_BY_ID(id),
         { [field]: value },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       showSnackbar("Updated!", "success");
       await admin.fetchOrders();
@@ -108,11 +107,7 @@ export default function AdminDashboard() {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -123,46 +118,31 @@ export default function AdminDashboard() {
         onClose={handleAdminSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleAdminSnackbarClose}
-          severity={adminSnackbar.severity}
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleAdminSnackbarClose} severity={adminSnackbar.severity} sx={{ width: "100%" }}>
           {adminSnackbar.message}
         </Alert>
       </Snackbar>
 
-      <Box
-        sx={{
-          minHeight: "100vh",
-          width: "100%",
-          bgcolor: "background.default",
-          p: 0,
-        }}
-      >
+      <Box sx={{ minHeight: "100vh", width: "100%", bgcolor: "background.default", p: 0 }}>
         <AdminDashboardHeader
           userName={admin.userName}
           view={admin.view}
           setView={admin.setView}
         />
 
-        {admin.view === "" && (
-          <Box
-            sx={{
-              minHeight: "40vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 28,
-              fontWeight: "bold",
-              color: (theme) =>
-                theme.palette.mode === "dark" ? "#90caf9" : "#1a237e",
-            }}
+        {/* HOME VIEW */}
+        {admin.view === "home" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "2rem" }}
           >
-            Welcome
-          </Box>
+            <Admindashboard />
+          </motion.div>
         )}
 
+        {/* ORDERS VIEW */}
         {admin.view === "orders" && (
           <Box sx={{ py: 4, width: "100%" }}>
             <motion.div
@@ -205,16 +185,7 @@ export default function AdminDashboard() {
                 />
               </Box>
             </motion.div>
-            <Paper
-              elevation={0}
-              sx={{
-                width: "100%",
-                mb: 2,
-                px: { xs: 1, md: 2 },
-                py: 1,
-                bgcolor: "background.paper",
-              }}
-            >
+            <Paper elevation={0} sx={{ width: "100%", mb: 2, px: { xs: 1, md: 2 }, py: 1, bgcolor: "background.paper" }}>
               <AdminOrdersTable
                 orders={admin.orders}
                 lookup={admin.lookup}
@@ -223,9 +194,7 @@ export default function AdminDashboard() {
                 rowCount={admin.totalOrders}
                 setCurrentPage={admin.setCurrentPage}
                 setPageSize={admin.setPageSize}
-                onDelete={(id: number) =>
-                  admin.setConfirmDelete({ type: "orders", id })
-                }
+                onDelete={(id: number) => admin.setConfirmDelete({ type: "orders", id })}
                 onUpdateInline={onUpdateInline}
                 onEdit={(order: SalesOrder) => {
                   setEditOrder(order);
@@ -239,13 +208,8 @@ export default function AdminDashboard() {
         )}
 
         {admin.view === "master" && <AdminMasterLookupPanel />}
-
-        {admin.view === "manage" && (
-          <AdminManageUsersPanel showSnackbar={showSnackbar} />
-        )}
-
+        {admin.view === "manage" && <AdminManageUsersPanel showSnackbar={showSnackbar} />}
         {admin.view === "dispatch" && <DispatchView />}
-
         {admin.view === "fg_dashboard" && <FgDashboardView />}
 
         {admin.error && (
@@ -282,15 +246,9 @@ export default function AdminDashboard() {
           title="Delete Confirmation"
           description={
             <>
-              Are you sure you want to delete this item? This action cannot be
-              undone.
+              Are you sure you want to delete this item? This action cannot be undone.
               {admin.deleteError && (
-                <Typography
-                  variant="caption"
-                  color="error"
-                  display="block"
-                  mt={2}
-                >
+                <Typography variant="caption" color="error" display="block" mt={2}>
                   {admin.deleteError}
                 </Typography>
               )}
@@ -318,7 +276,7 @@ export default function AdminDashboard() {
             }}
           />
         )}
-        
+
         <ErpUploadDialog
           open={isErpUploadOpen}
           onClose={() => setIsErpUploadOpen(false)}

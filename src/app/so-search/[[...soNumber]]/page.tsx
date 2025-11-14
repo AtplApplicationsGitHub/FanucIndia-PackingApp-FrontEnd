@@ -13,7 +13,8 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
-import { Search, Print, Home } from "@mui/icons-material";
+import { Search, Print, } from "@mui/icons-material";
+import {  BarChart3 } from "lucide-react";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
@@ -122,8 +123,8 @@ const SalesHeader = ({
         </Box>
       </Typography>
       <Box display="flex" alignItems="center" gap={2}>
-        <Button startIcon={<Home />} onClick={onNavigate}>
-          Home
+        <Button startIcon={<BarChart3 />} onClick={onNavigate}>
+         DASHBOARD
         </Button>
         <LogoutButton />
       </Box>
@@ -338,7 +339,7 @@ export default function SoSearchPage() {
         return (
           <UserDashboardHeader
             userName={userName}
-            view={"home"}
+            view={"BarChart3"}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
               router.push("/user/dashboard");

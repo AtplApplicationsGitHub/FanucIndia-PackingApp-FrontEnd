@@ -1,0 +1,88 @@
+// src/app/sales/components/salesdashboard/PaymentMethodsChart.tsx
+"use client";
+
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { Box, Paper, Typography, CircularProgress, Alert } from "@mui/material";
+import { usePaymentClearance } from "../hooks/PaymentMethodsChart";
+
+export default function PaymentMethodsChart() {
+  const { data, loading, error } = usePaymentClearance();
+
+  const chartData = data?.map((item) => ({
+    zone: item.zoneName.replace(" Zone", ""),
+    cleared: item.paymentCleared,
+    pending: item.paymentPending,
+  }));
+
+  return (
+    <Paper elevation={3} sx={{ p: 1, borderRadius: 2, height: "100%", width: "130%" }}>
+      <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+        Payment Status by Zone
+      </Typography>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        Number of cleared vs pending payments across regions
+      </Typography>
+
+      <Box sx={{ width: "100%", height: 400, mt: 5}}>
+        {loading && (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <CircularProgress />
+          </Box>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {!loading && !error && (!chartData || chartData.length === 0) && (
+          <Typography color="text.secondary" textAlign="center" mt={4}>
+            No payment data available.
+          </Typography>
+        )}
+
+        {!loading && chartData && chartData.length > 0 && (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis
+                dataKey="zone"
+                tick={{ fill: "#374383", fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis tick={{ fill: "#374383", fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                }}
+              />
+              <Legend
+                wrapperStyle={{ paddingTop: "20px" }}
+                iconType="circle"
+                formatter={(value) => (value === "cleared" ? "Yes" : "No")}
+              />
+              <Bar dataKey="cleared" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
+              <Bar dataKey="pending" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </Box>
+    </Paper>
+  );
+}

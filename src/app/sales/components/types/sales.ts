@@ -27,3 +27,36 @@ export type LookupData = {
   packConfigs: { id: number; configName: string }[];
   customers: { id: number; name: string }[];
 };
+
+
+// types/sales.ts
+export interface SalesKPIsResponse {
+  totalSoCount: number;
+  dispatchedSoCount: number;
+  f105Count: number;
+  statusDistribution: Record<string, number>; // e.g., { "Pending": 5, "Dispatched": 8, ... }
+  
+}
+
+export interface SalesKpisResponse {
+  totalSoCount: number;
+  dispatchedSoCount: number;
+  r105Count: number;
+  w105Count: number;
+  f105Count: number;
+}
+
+
+// types/sales.ts
+export interface SalesActivity {
+  salesOrderNumber: string;
+  status: string;
+  activityTimestamp: string; // ISO string
+}
+
+
+export interface PaymentClearanceItem {
+  zoneName: string;
+  paymentCleared: number;
+  paymentPending: number;
+}
