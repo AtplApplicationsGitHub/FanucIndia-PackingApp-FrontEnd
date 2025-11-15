@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, Box, useTheme, Button } from "@mui/materia
 import LogoutButton from "@/common/components/LogoutButton";
 import { getGreeting } from "@/app/sales/components/utils/sales";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
-import { Home, ClipboardList, BarChart3 } from "lucide-react";
+import { ClipboardList, BarChart3 } from "lucide-react";
 
 type Props = {
   userName: string;

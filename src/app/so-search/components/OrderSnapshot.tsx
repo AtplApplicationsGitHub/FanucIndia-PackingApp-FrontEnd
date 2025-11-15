@@ -1,6 +1,5 @@
-import { Box, Chip, Link, Paper, Typography } from "@mui/material";
+import { Box, Link, Paper } from "@mui/material";
 import { KVBox } from "./KVBox";
-import OrderStatusStepper from "./OrderStatusStepper";
 
 // Define a minimal type for the salesOrder prop
 interface SalesOrder {

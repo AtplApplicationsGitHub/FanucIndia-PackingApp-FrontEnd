@@ -12,24 +12,40 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import { Box, Paper, Typography, CircularProgress, Alert } from "@mui/material";
 import { usePaymentClearance } from "../hooks/PaymentMethodsChart";
+
+type ChartItem = {
+  zone: string;
+  cleared: number;
+  pending: number;
+};
 
 export default function PaymentMethodsChart() {
   const { data, loading, error } = usePaymentClearance();
 
-  const chartData = data?.map((item) => ({
+  const chartData: ChartItem[] | undefined = data?.map((item) => ({
     zone: item.zoneName.replace(" Zone", ""),
     cleared: item.paymentCleared,
     pending: item.paymentPending,
   }));
 
   // helper to map dataKey -> friendly label
-  const friendlyName = (key: string | undefined) => {
-    if (!key) return "";
-    if (key === "cleared") return "Yes";
-    if (key === "pending") return "No";
-    return key;
+  const friendlyName = (key?: string | number | null) => {
+    if (key === undefined || key === null) return "";
+    const k = String(key);
+    if (k === "cleared") return "Yes";
+    if (k === "pending") return "No";
+    return k;
+  };
+
+  // Formatter typed for numeric values (cleared/pending are numbers)
+  const tooltipFormatter: NonNullable<
+    TooltipProps<number, string | number>["formatter"]
+  > = (value, name) => {
+    // value is number (or possibly string depending on Recharts usage) - returning it as ReactNode is fine
+    return [value as React.ReactNode, friendlyName(name)];
   };
 
   return (
@@ -79,9 +95,7 @@ export default function PaymentMethodsChart() {
                   borderRadius: "8px",
                   fontSize: "14px",
                 }}
-                // format the value & the displayed name in tooltip
-                formatter={(value: any, name: string | undefined) => [value, friendlyName(name)]}
-                // optionally format the top label (zone) shown by tooltip
+                formatter={tooltipFormatter}
                 labelFormatter={(label: string) => `Zone: ${label}`}
               />
               <Legend
@@ -98,4 +112,3 @@ export default function PaymentMethodsChart() {
     </Paper>
   );
 }
-         

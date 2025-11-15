@@ -135,12 +135,12 @@ function calculateTimeTaken(start: string | null, end: string | null): string | 
 
     return formatTimeTaken(totalSeconds);
 
-  } catch (e) {
+  } catch {
     return "Error";
   }
 }
 
-export default function OrderStatusStepper({ status, stepsData = [] }: Props) {
+export default function OrderStatusStepper({ stepsData = [] }: Props) {
   
   const sortedSteps = [...stepsData].sort((a, b) => {
     return STEP_ORDER.indexOf(a.status) - STEP_ORDER.indexOf(b.status);
