@@ -10,6 +10,7 @@ import {
   EditableField,
 } from "@/app/admin/components/types/admin";
 import { formatDateLocalYYYYMMDD } from "@/app/admin/components/utils/date";
+import type { ViewType } from "@/app/admin/components/dashboard/Header";
 
 const INLINE_EDIT_FIELDS: EditableField[] = [
   "status",
@@ -20,9 +21,9 @@ const INLINE_EDIT_FIELDS: EditableField[] = [
 
 export function useAdminDashboard() {
   const [userName, setUserName] = useState<string>("");
-  type ViewType = "" | "orders" | "master" | "manage" | "dispatch" | "fg_dashboard";
+  // type ViewType = "" | "orders" | "master" | "manage" | "dispatch" | "fg_dashboard";
 
-  const [view, setViewInternal] = useState<ViewType>("");
+  const [view, setViewInternal] = useState<ViewType>("home");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("adminView") as ViewType | null;

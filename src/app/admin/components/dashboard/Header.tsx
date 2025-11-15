@@ -21,7 +21,7 @@ import { useRouter, usePathname } from "next/navigation";
 
 const FANUC_BLUE = "#3b579d";
 
-type ViewType =
+export type ViewType =
   | "home"
   | "orders"
   | "master"
