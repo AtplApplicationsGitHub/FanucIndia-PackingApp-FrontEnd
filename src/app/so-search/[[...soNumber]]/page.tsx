@@ -327,9 +327,9 @@ export default function SoSearchPage() {
         return (
           <AdminDashboardHeader
             userName={userName}
-            view={""}
+            view={"home"}
             setView={(view) => {
-              const newView = typeof view === "function" ? view("") : view;
+              const newView = typeof view === "function" ? view("home") : view;
               sessionStorage.setItem("adminView", newView);
               router.push("/admin/dashboard");
             }}
@@ -339,7 +339,7 @@ export default function SoSearchPage() {
         return (
           <UserDashboardHeader
             userName={userName}
-            view={"BarChart3"}
+            view={"home"}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
               router.push("/user/dashboard");

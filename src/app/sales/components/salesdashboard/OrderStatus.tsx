@@ -13,6 +13,7 @@ interface ChartDataItem {
   value: number;
   color: string;
   total: number;
+  [key: string]: unknown;
 }
 
 interface TooltipPayloadItem {

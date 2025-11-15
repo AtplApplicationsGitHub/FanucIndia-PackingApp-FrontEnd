@@ -73,7 +73,7 @@ function getPillClasses(label?: string) {
   return "bg-gray-50 border border-gray-200 text-gray-700";
 }
 
-export default function RecentActivity(): JSX.Element {
+export default function RecentActivity(): React.ReactElement {
   const { activities, loading, error } = useRecentActivity() as {
     activities?: RecentActivityItem[];
     loading: boolean;

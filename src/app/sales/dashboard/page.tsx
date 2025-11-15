@@ -67,7 +67,7 @@ export default function SalesDashboard() {
           onClose={() => setAlert(null)}
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
-          {alert && <Alert onClose={() => setAlert(null)} severity={alert.severity}>{alert.message}</Alert>}
+          {alert ? <Alert onClose={() => setAlert(null)} severity={alert.severity}>{alert.message}</Alert> : undefined}
         </Snackbar>
 
         <SalesDashboardHeader userName={userName} view={view} setView={setView} />
