@@ -14,13 +14,12 @@ import {
   Stack,
 } from "@mui/material";
 import { Search, Print, } from "@mui/icons-material";
-import {  BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
-import { getGreeting } from "@/app/sales/components/utils/sales";
 import LogoutButton from "@/common/components/LogoutButton";
 import OrderSnapshot from "../components/OrderSnapshot";
 import DispatchInfo from "../components/DispatchInfo";
@@ -28,6 +27,7 @@ import MaterialDetails from "../components/MaterialDetails";
 import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload } from "@/common/lib/secure-download";
+import Image from "next/image";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -98,7 +98,6 @@ interface MaterialAttachment {
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
 
 const SalesHeader = ({
-  userName,
   onNavigate,
 }: {
   userName: string;
@@ -106,27 +105,45 @@ const SalesHeader = ({
 }) => (
   <AppBar
     position="static"
-    color="default"
-    sx={{ boxShadow: 2, bgcolor: "background.paper" }}
+    color="primary" 
+    sx={{ boxShadow: 2, bgcolor: "primary.main" }}
   >
     <Box
       display="flex"
       justifyContent="space-between"
       alignItems="center"
-      p={2}
-      px={{ xs: 2, md: 8 }}
+      pl={{ xs: 2, md: 4 }}
+      pr={{ xs: '64px', md: '80px' }}
+      py={1}
+      minHeight={64}
     >
-      <Typography variant="h6" fontWeight={600}>
-        {getGreeting()},{" "}
-        <Box component="span" color="primary.main">
-          {userName}
-        </Box>
-      </Typography>
+      <Box sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }} onClick={onNavigate}>
+        <Image
+          src="/Fanuc_India.png" 
+          alt="Fanuc India Logo"
+          width={120} 
+          height={28}
+          priority
+        />
+      </Box>
+
       <Box display="flex" alignItems="center" gap={2}>
-        <Button startIcon={<BarChart3 />} onClick={onNavigate}>
-         DASHBOARD
+        <Button
+          startIcon={<BarChart3 />}
+          onClick={onNavigate}
+          sx={{
+            color: "primary.contrastText", 
+            fontWeight: 600,
+            textTransform: "uppercase",
+            "&:hover": {
+              bgcolor: "transparent",
+              opacity: 0.8,
+            },
+          }}
+        >
+          DASHBOARD
         </Button>
-        <LogoutButton />
+        <LogoutButton sx={{ height: 40 }} />
       </Box>
     </Box>
   </AppBar>
@@ -261,7 +278,6 @@ export default function SoSearchPage() {
   };
 
   const handleAttachmentViewOrDownload = (fileId: number, action: 'view' | 'download', fileName?: string) => {
-    // If the data is archived, use the new archive endpoint; otherwise, use the old one.
     const url = data?.isArchived
       ? API.SO_ARCHIVE.DOWNLOAD_ATTACHMENT(fileId)
       : API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
@@ -279,7 +295,6 @@ export default function SoSearchPage() {
           window.open(blobUrl, "_blank");
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
         } else {
-          // Find the correct filename from the state for download
           const file = materialAttachments.find(f => f.ID === fileId);
           secureDownload(blob, fileName || file?.fileName || `attachment_${fileId}`);
         }
@@ -460,9 +475,7 @@ export default function SoSearchPage() {
 
         {data && (
           <>
-            {/* <Paper sx={{ p: 3, mb: 3 }} id="status-section"> */}
-              <OrderStatusStepper status={data.salesOrder.status} stepsData={data.salesOrder.statusStepper} />
-            {/* </Paper> */}
+            <OrderStatusStepper status={data.salesOrder.status} stepsData={data.salesOrder.statusStepper} />
             <OrderSnapshot
               salesOrder={data.salesOrder}
               onViewPackingAttachments={handleOpenMaterialAttachments}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Card, CardContent, Alert } from "@mui/material";
+import { Box, Card, CardContent, Alert, AppBar, Toolbar } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -10,6 +10,7 @@ import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
+import Image from "next/image";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole } & Record<string, unknown>;
@@ -99,14 +100,44 @@ export default function LoginContent() {
   };
 
   return (
-    <>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}> 
       <LoginSnackbar
         open={loggedOutSnackbar}
         onClose={handleLoggedOutSnackbarClose}
       />
 
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          bgcolor: '#FFCC00', 
+          borderBottom: '4px solid #000000', 
+        }}
+      >
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            px: { xs: 2, md: 4 },
+            py: 1.5,
+            minHeight: 70,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Image
+              src="/Fanuc_India.png"
+              alt="Fanuc India Logo"
+              width={140}
+              height={32}
+              priority
+            />
+          </Box>
+        </Toolbar>
+      </AppBar>
+
       <Box
-        minHeight="100vh"
+        flexGrow={1}
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -114,20 +145,28 @@ export default function LoginContent() {
         sx={{
           background: (theme) =>
             theme.palette.mode === "dark"
-              ? "linear-gradient(to bottom right, #1e1e1e, #121212)"
-              : "linear-gradient(to bottom right, #f5f5f5, #ffffff)",
+              ? "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)"
+              : "linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%)",
         }}
       >
         <Card
           sx={{
-            maxWidth: 450,
+            maxWidth: 480,
             width: "100%",
-            borderRadius: 3,
-            boxShadow: 4,
+            borderRadius: 0, 
+            clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
+            boxShadow: (theme) => 
+              theme.palette.mode === "dark" 
+                ? "0 8px 32px rgba(0,0,0,0.4)"
+                : "0 8px 32px rgba(0,0,0,0.15)",
+            border: (theme) =>
+              theme.palette.mode === "dark"
+                ? "2px solid #333"
+                : "2px solid #e0e0e0",
           }}
         >
           <LoginHeader />
-          <CardContent>
+          <CardContent sx={{ px: 4, pb: 4 }}>
             {sessionExpiredAlert && (
               <Alert
                 severity="warning"
@@ -150,6 +189,6 @@ export default function LoginContent() {
           </CardContent>
         </Card>
       </Box>
-      </>
+    </Box>
   );
 }

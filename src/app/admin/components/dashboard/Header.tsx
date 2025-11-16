@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import { Box, Typography, useTheme, Menu, MenuItem , } from "@mui/material";
+import { Box, useTheme, Menu, MenuItem } from "@mui/material";
 import {
-  BarChart3 ,
+  BarChart3,
   ClipboardList,
   Database,
   Users,
@@ -16,10 +16,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import LogoutButton from "@/common/components/LogoutButton";
-import { getGreeting } from "@/app/sales/components/utils/sales";
 import { useRouter, usePathname } from "next/navigation";
-
-const FANUC_BLUE = "#3b579d";
+import Image from "next/image"; 
 
 export type ViewType =
   | "home"
@@ -30,13 +28,13 @@ export type ViewType =
   | "fg_dashboard";
 
 type Props = {
-  userName: string;
+  userName: string; 
   view: ViewType;
   setView: React.Dispatch<React.SetStateAction<ViewType>>;
 };
 
 const allMenuItems = [
-  { label: "DASHBOARD", icon: <BarChart3  className="mr-2 h-4 w-4" />, value: "home" },
+  { label: "DASHBOARD", icon: <BarChart3 className="mr-2 h-4 w-4" />, value: "home" },
   {
     label: "ORDER LIST",
     icon: <ClipboardList className="mr-2 h-4 w-4" />,
@@ -72,7 +70,6 @@ const allMenuItems = [
 const MAX_VISIBLE_ITEMS = 5;
 
 export default function AdminDashboardHeader({
-  userName,
   view,
   setView,
 }: Props) {
@@ -118,48 +115,38 @@ export default function AdminDashboardHeader({
     <AppBar
       position="static"
       elevation={1}
-      color="default"
-      sx={{ px: 0, boxShadow: 2, bgcolor: "background.paper" }}
+      color="primary" 
+      sx={{
+        px: 0,
+        boxShadow: 2,
+        bgcolor: theme.palette.primary.main, 
+      }}
     >
       <Toolbar
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          px: { xs: 2, md: 4 },
-          pr: { xs: 8, md: 10 },
+          pl: { xs: 2, md: 4 },
+          pr: { xs: '64px', md: '80px' },
           py: 1,
-          minHeight: 64,
+          minHeight: 64, 
         }}
       >
-        <Typography
-          variant="h6"
-          fontWeight={600}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            whiteSpace: "nowrap",
-            mr: 3,
-          }}
+        <Box
+          sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }}
+          onClick={() => setView("home")}
         >
-          {getGreeting()}
-          {userName && (
-            <>
-              ,&nbsp;
-              <Box
-                component="span"
-                sx={{
-                  color: FANUC_BLUE,
-                  fontWeight: 600,
-                }}
-              >
-                {userName}
-              </Box>
-            </>
-          )}
-        </Typography>
+          <Image
+            src="/Fanuc_India.png" 
+            alt="Fanuc India Logo"
+            width={120} 
+            height={28}
+            priority
+          />
+        </Box>
 
-        <Box sx={{ display: "flex", flexGrow: 1, justifyContent: "center" }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>  
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {visibleItems.map((item) => {
               const isSelected = getIsSelected(item.value);
@@ -168,25 +155,24 @@ export default function AdminDashboardHeader({
                   key={item.value}
                   disableRipple
                   variant="text"
-                  startIcon={item.icon}
                   onClick={() => handleMenuItemClick(item.value)}
                   sx={{
                     borderRadius: 0,
                     px: 2,
                     py: 1.5,
                     minWidth: "auto",
-                    fontWeight: isSelected ? 700 : 500,
-                    color: isSelected ? FANUC_BLUE : theme.palette.text.secondary,
+                    fontWeight: isSelected ? 700 : 600, 
+                    color: theme.palette.primary.contrastText, 
                     bgcolor: "transparent",
                     boxShadow: "none",
                     borderBottom: isSelected
-                      ? `3px solid ${FANUC_BLUE}`
+                      ? `3px solid ${theme.palette.primary.contrastText}` 
                       : "3px solid transparent",
                     "&:hover": {
-                      color: FANUC_BLUE,
-                      background: theme.palette.action.hover,
+                      bgcolor: "transparent",
+                      opacity: 0.8,
                     },
-                    textTransform: "none",
+                    textTransform: "uppercase", 
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                   }}
@@ -208,18 +194,16 @@ export default function AdminDashboardHeader({
                     px: 2,
                     py: 1.5,
                     minWidth: "auto",
-                    fontWeight: isActiveItemHidden ? 700 : 500,
-                    color: isActiveItemHidden
-                      ? FANUC_BLUE
-                      : theme.palette.text.secondary,
+                    fontWeight: isActiveItemHidden ? 700 : 600,
+                    color: theme.palette.primary.contrastText, 
                     borderBottom: isActiveItemHidden
-                      ? `3px solid ${FANUC_BLUE}`
+                      ? `3px solid ${theme.palette.primary.contrastText}`
                       : "3px solid transparent",
                     "&:hover": {
-                      color: FANUC_BLUE,
-                      background: theme.palette.action.hover,
+                      bgcolor: "transparent",
+                      opacity: 0.8,
                     },
-                    textTransform: "none",
+                    textTransform: "uppercase",
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                   }}
@@ -245,12 +229,10 @@ export default function AdminDashboardHeader({
                         onClick={() => handleMenuItemClick(item.value)}
                         sx={{
                           fontWeight: isSelected ? 600 : 400,
-                          color: isSelected ? FANUC_BLUE : "inherit",
-                          "& .lucide": {
+                          color: isSelected ? theme.palette.primary.main : "inherit", 
+                          "& .lucide": { 
                             marginRight: 1.5,
-                            color: isSelected
-                              ? FANUC_BLUE
-                              : theme.palette.action.active,
+                            color: theme.palette.action.active,
                             width: 18,
                             height: 18,
                           },
@@ -266,8 +248,8 @@ export default function AdminDashboardHeader({
           </Box>
         </Box>
 
-        <Box sx={{ ml: 1, whiteSpace: "nowrap" }}>
-          <LogoutButton sx={{ px: { xs: 3, md: 4 }, py: 1.5 }} />
+        <Box sx={{ ml: 3, whiteSpace: "nowrap" }}>
+          <LogoutButton sx={{ px: { xs: 3, md: 4 }, py: 1.5, height: 40 }} />
         </Box>
       </Toolbar>
     </AppBar>
