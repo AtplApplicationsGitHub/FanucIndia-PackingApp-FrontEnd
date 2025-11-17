@@ -10,14 +10,14 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
   [`&.${stepConnectorClasses.active}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundImage:
-        'linear-gradient( 95deg, rgb(139,195,74) 0%, rgb(76,175,80) 50%, rgb(56,142,60) 100%)',
+      backgroundColor: '#FFD200', // Fanuc Yellow
+      backgroundImage: 'none', // Remove old gradient
     },
   },
   [`&.${stepConnectorClasses.completed}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundImage:
-        'linear-gradient( 95deg, rgb(139,195,74) 0%, rgb(76,175,80) 50%, rgb(56,142,60) 100%)',
+      backgroundColor: '#FFD200', // Fanuc Yellow
+      backgroundImage: 'none', // Remove old gradient
     },
   },
   [`& .${stepConnectorClasses.line}`]: {

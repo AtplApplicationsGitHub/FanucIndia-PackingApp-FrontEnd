@@ -32,9 +32,9 @@ export default function LogoutButton({ sx = {} }: LogoutButtonProps) {
       disabled={loading}
       onClick={handleLogout}
       startIcon={!loading && <LogOut size={18} />}
-      sx={(theme) => ({
-        bgcolor: theme.palette.background.paper, // White
-        color: theme.palette.text.primary,       // Dark text
+      sx={{
+        bgcolor: "#FFD200", // Fanuc Yellow
+        color: "#1F2933",   // Fanuc Charcoal
         borderRadius: 0, // No border radius
         clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)", // Chamfered corners
         fontWeight: 600,
@@ -46,18 +46,20 @@ export default function LogoutButton({ sx = {} }: LogoutButtonProps) {
         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
         transition: "all 0.2s ease-in-out",
         "&:hover": {
-          bgcolor: "#ef4444", // Red background on hover
+          bgcolor: "#D00000", // Fanuc Red
           color: "#ffffff", // White text on hover
-          boxShadow: "0 4px 8px rgba(239,68,68,0.3)", // Red shadow
+          boxShadow: "0 4px 8px rgba(208,0,0,0.3)", // Red shadow
           "& .MuiSvgIcon-root, & svg": {
             color: "#ffffff", // White icon on hover
           },
         },
         "&:disabled": {
           opacity: 0.6,
+          bgcolor: "#FFD200", // Keep yellow when disabled
+          color: "#1F2933"  // Keep charcoal when disabled
         },
         ...sx,
-      })}
+      }}
     >
       {loading ? (
         <CircularProgress size={18} thickness={4.5} color="inherit" />

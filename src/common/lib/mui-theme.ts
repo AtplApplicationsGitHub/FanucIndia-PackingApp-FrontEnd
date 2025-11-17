@@ -12,6 +12,7 @@ const fanuc = {
   line: "#E5E7EB",
   surface: "#F7F7F7",
   card: "#FFFFFF",
+  link: "#0EA5E9",
 };
 
 // --- New Light Theme ---
@@ -36,6 +37,19 @@ export const LIGHT_THEME: ThemeOptions = {
     },
     divider: fanuc.line,
   },
+  components: {
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          color: fanuc.link, // Blue color
+          textDecoration: 'none',
+          '&:hover': {
+            color: '#0b8acb', // A slightly darker blue for hover
+          },
+        },
+      },
+    },
+  },
 };
 
 // --- New Dark Theme ---
@@ -52,12 +66,25 @@ export const DARK_THEME: ThemeOptions = {
     },
     background: {
       default: fanuc.charcoal, // Darkest color for background
-      paper: fanuc.graphite,   // Slightly lighter for cards
+      paper: fanuc.charcoal,   // Slightly lighter for cards
     },
     text: {
       primary: fanuc.card,     // White text
       secondary: fanuc.line,   // Light grey text
     },
     divider: fanuc.steel,
+  },
+  components: {
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          color: fanuc.link, // Blue color
+          textDecoration: 'none',
+          '&:hover': {
+            color: '#38bdf8', // A slightly lighter blue for hover
+          },
+        },
+      },
+    },
   },
 };

@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, useTheme, alpha } from "@mui/material";
 
 interface MaterialDetail {
   ID: number;
@@ -22,31 +22,40 @@ interface Props {
 }
 
 export default function MaterialDetails({ materialDetails, onViewAttachments }: Props) {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.1); // Lighter yellow
   const displayMaterials = materialDetails || [];
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="material-section">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5">MATERIAL DETAILS</Typography>
-        <Button onClick={onViewAttachments}>Attachments</Button>
+        <Button onClick={onViewAttachments} color="info">Attachments</Button>
       </Box>
 
-      <TableContainer>
-        <Table>
-          <TableHead>
+      <TableContainer component={Paper} variant="outlined" sx={{ borderColor: '#1F2933' }}>
+        <Table sx={{
+          '& .MuiTableCell-root': {
+            border: '1px solid #1F2933', // Black border for all cells
+          },
+          '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)': {
+            backgroundColor: lightYellow, // Light yellow for odd rows
+          }
+        }}>
+          <TableHead sx={{ bgcolor: 'primary.main' }}>
             <TableRow>
-              <TableCell>Material Code</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Batch</TableCell>
-              <TableCell>SO Donor</TableCell>
-              <TableCell>Cert No</TableCell>
-              <TableCell>Bin</TableCell>
-              <TableCell>A/D/F</TableCell>
-              <TableCell>Req Qty</TableCell>
-              <TableCell>Issue</TableCell>
-              <TableCell>Packing</TableCell>
-              <TableCell>Updated By</TableCell>
-              <TableCell>Updated Date</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Material Code</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Batch</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>SO Donor</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Cert No</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Bin</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>A/D/F</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Req Qty</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Issue</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Packing</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Updated By</TableCell>
+              <TableCell sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>Updated Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

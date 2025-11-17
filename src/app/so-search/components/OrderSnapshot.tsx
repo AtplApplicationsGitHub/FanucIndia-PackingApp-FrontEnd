@@ -29,7 +29,7 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-        <KVBox label="SO" value={salesOrder.saleOrderNumber} />
+        <KVBox label="Sales Order Number" value={salesOrder.saleOrderNumber} />
         <KVBox label="Status" value={salesOrder.status} />
         <KVBox
           label="Delivery Date"
@@ -38,8 +38,8 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
         <KVBox label="FG Location" value={salesOrder.fgLocation} />
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-        <KVBox label="TO" value={salesOrder.transferOrder} />
-        <KVBox label="OB" value={salesOrder.outboundDelivery} />
+        <KVBox label="Transfer Order" value={salesOrder.transferOrder} />
+        <KVBox label="Outbound Delivery" value={salesOrder.outboundDelivery} />
         <KVBox
           label="Payment Status"
           value={salesOrder.paymentClearance ? "Yes" : "No"}

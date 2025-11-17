@@ -115,16 +115,18 @@
     --sidebar-ring var(--transition-duration) var(--transition-timing);
 }
 
+/* src/app/globals.css - REPLACE the .dark block */
+
 .dark {
   --background: #1F2933;     /* fanuc.charcoal */
   --foreground: #F7F7F7;     /* fanuc.surface (as text) */
-  --card: #2C3540;           /* fanuc.graphite */
+  --card: #1F2933;           /* fanuc.charcoal (WAS graphite) */
   --card-foreground: #F7F7F7;
-  --popover: #2C3540;
+  --popover: #1F2933;         /* fanuc.charcoal (WAS graphite) */
   --popover-foreground: #F7F7F7;
   --primary: #FFD200;         /* fanuc.yellow */
   --primary-foreground: #1F2933; /* fanuc.charcoal */
-  --secondary: #2C3540;       /* fanuc.graphite */
+  --secondary: #1F2933;       /* fanuc.charcoal (WAS graphite) */
   --secondary-foreground: #F7F7F7;
   --muted: #4B5563;           /* fanuc.steel */
   --muted-foreground: #E5E7EB; /* fanuc.line (as text) */
@@ -143,7 +145,7 @@
   --chart-5: oklch(0.645 0.246 16.439);
 
   /* Sidebar colors (mapped to new theme) */
-  --sidebar: #2C3540;
+  --sidebar: #1F2933;         /* fanuc.charcoal (WAS graphite) */
   --sidebar-foreground: #F7F7F7;
   --sidebar-primary: #FFD200;
   --sidebar-primary-foreground: #1F2933;
