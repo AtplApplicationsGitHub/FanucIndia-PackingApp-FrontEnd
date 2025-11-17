@@ -366,9 +366,16 @@ export default function SoSearchPage() {
               )}
             </Button>
             <Button
-              variant="outlined"
+              variant="text"
               startIcon={<Print />}
               onClick={handlePrint}
+              sx={{
+                color: (theme) => theme.palette.text.primary,
+                "&:hover": {
+                  backgroundColor: (theme) => theme.palette.action.hover,
+                },
+                borderRadius: 0,
+              }}
             >
               Print
             </Button>

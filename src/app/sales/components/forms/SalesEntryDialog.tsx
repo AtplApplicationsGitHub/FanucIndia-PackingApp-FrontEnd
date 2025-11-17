@@ -59,10 +59,10 @@ export default function SalesEntryDialog({
             flexGrow: 1,
             textAlign: "center",
             letterSpacing: 0,
-            color: "text.primary",
+            color: "secondary.main",
           }}
         >
-          {initialData ? "Edit Sales Entry" : "Create Sales Entry"}
+          {initialData ? "EDIT ORDER" : "CREATE ORDER"}
         </Box>
         <IconButton
           aria-label="close"

@@ -310,11 +310,11 @@ export default function AdminOrderEditModal({
             fontSize: 22,
             flexGrow: 1,
             textAlign: "center",
-            color: theme.palette.text.primary,
+            color: theme.palette.secondary.main,
             letterSpacing: 0,
           })}
         >
-          Edit Order
+          EDIT ORDER
         </Box>
         <IconButton
           aria-label="close"
