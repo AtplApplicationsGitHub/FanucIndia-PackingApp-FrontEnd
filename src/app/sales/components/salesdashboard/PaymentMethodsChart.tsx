@@ -49,7 +49,19 @@ export default function PaymentMethodsChart() {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 1, borderRadius: 2, height: "100%", width: "130%" }}>
+    <Paper
+      elevation={0}
+      sx={{
+                padding: "24px",
+
+        borderRadius: "8px",
+        height: "100%",
+        width: "100%",
+        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+        backgroundColor: "#ffffff"
+      }}
+    >
+
       <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
         Payment Status by Zone
       </Typography>

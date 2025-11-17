@@ -41,27 +41,48 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
     const pct = d.total ? ((d.value / d.total) * 100).toFixed(1) : "0";
 
     return (
-      <Box
-        sx={{
-          bgcolor: "background.paper",
-          p: 1.25,
-          borderRadius: 2,
-          boxShadow: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          minWidth: 140,
+      <div
+        style={{
+          backgroundColor :"white",
+          padding: "10px 12px",
+          borderRadius: "8px",
+          boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+          border: "1px solid #e5e7eb",
+          minWidth: "140px",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         }}
       >
-        <Typography variant="subtitle2" fontWeight={700} color={d.color}>
+        <span
+          style={{
+            display: "block",
+            fontWeight: 700,
+            fontSize: "14px",
+            color: d.color,
+            marginBottom: "4px",
+          }}
+        >
           {d.name}
-        </Typography>
-        <Typography variant="body2" fontWeight={600}>
+        </span>
+        <span
+          style={{
+            display: "block",
+            fontWeight: 600,
+            fontSize: "13px",
+            marginBottom: "2px",
+          }}
+        >
           {d.value.toLocaleString()} orders
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </span>
+        <span
+          style={{
+            display: "block",
+            fontSize: "12px",
+            color: "#6b7280",
+          }}
+        >
           {pct}% of total
-        </Typography>
-      </Box>
+        </span>
+      </div>
     );
   }
   return null;
@@ -71,11 +92,9 @@ export default function OrderStatusChart() {
   const { data, totalSoCount, loading } = useSalesKpis();
 
   // Safe total orders value
-  const total = Number.isFinite(totalSoCount as number)
-    ? (totalSoCount as number)
-    : 0;
+  const total = Number.isFinite(totalSoCount as number) ? (totalSoCount as number) : 0;
 
-  // Build raw chart data from API (or empty when loading / no data)
+  // Build raw chart data
   const rawData =
     loading || !data
       ? []
@@ -102,13 +121,13 @@ export default function OrderStatusChart() {
           },
         ];
 
-  // Attach total to each item for percentage calculation
+  // Attach total for percentage
   const chartData: ChartDataItem[] = rawData.map((item) => ({
     ...item,
     total,
   }));
 
-  // Fallback data if everything is zero / empty
+  // Fallback if no data
   const displayData: ChartDataItem[] =
     chartData.length > 0 && chartData.some((d) => d.value > 0)
       ? chartData
@@ -122,50 +141,64 @@ export default function OrderStatusChart() {
         ];
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
+    <div
+      style={{
         width: "100%",
-        maxWidth: 900,
-        mx: "auto",
-        bgcolor: "#F9FAFB",
-        borderRadius: 3,
-        p: 3,
+        maxWidth: "900px",
+        margin: "0 auto",
+        backgroundColor: "#ffffff",
+        borderRadius: "12px",
+        padding: "24px",
         boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
         height: "100%",
         display: "flex",
+
         flexDirection: "column",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
       {/* Header */}
-      <Box mb={3}>
-        <Typography variant="h6" fontWeight={700}>
+      <div style={{ marginBottom: "20px" }}>
+        <h3
+          style={{
+            margin: 0,
+            fontSize: "20px",
+            fontWeight: 700,
+            color: "#111827",
+          }}
+        >
           Order Status Distribution
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </h3>
+        <p
+          style={{
+            margin: "4px 0 0",
+            fontSize: "14px",
+            color: "#6b7280",
+          }}
+        >
           Current status of all your sales orders
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
       {/* Chart Container */}
-      <Box sx={{ flex: 1, position: "relative", minHeight: 320 }}>
+      <div style={{ flex: 1, position: "relative", minHeight: "320px" }}>
         {loading ? (
-          <Box
-            sx={{
+          <div
+            style={{
               height: "100%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Typography color="text.secondary">Loading chart...</Typography>
-          </Box>
+            <span style={{ color: "#9ca3af" }}>Loading chart...</span>
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Tooltip content={<CustomTooltip />} />
               <Pie
-                data={displayData} // ✅ always a valid array
+                data={displayData}
                 dataKey="value"
                 nameKey="name"
                 outerRadius={110}
@@ -187,10 +220,10 @@ export default function OrderStatusChart() {
           </ResponsiveContainer>
         )}
 
-        {/* Center Text */}
+        {/* Center Total */}
         {!loading && (
-          <Box
-            sx={{
+          <div
+            style={{
               position: "absolute",
               left: 0,
               right: 0,
@@ -200,54 +233,72 @@ export default function OrderStatusChart() {
               flexDirection: "column",
               alignItems: "center",
               pointerEvents: "none",
+              textAlign: "center",
             }}
           >
-            <Typography variant="h5" fontWeight={800} color="#111827">
+            <span
+              style={{
+                fontSize: "28px",
+                fontWeight: 800,
+                color: "#111827",
+              }}
+            >
               {total.toLocaleString()}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "#6b7280",
+                marginTop: "2px",
+              }}
+            >
               Total Orders
-            </Typography>
-          </Box>
+            </span>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Legend */}
       {!loading && chartData.length > 0 && (
-        <Box
-          sx={{
+        <div
+          style={{
             display: "flex",
             justifyContent: "center",
-            gap: 3,
+            gap: "24px",
             flexWrap: "wrap",
-            mt: 3,
-            pt: 2,
-            borderTop: "1px solid",
-            borderColor: "divider",
+            marginTop: "20px",
+            paddingTop: "16px",
+            borderTop: "1px solid #e5e7eb",
           }}
         >
           {chartData.map((item) => (
-            <Box
+            <div
               key={item.name}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
             >
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
                   borderRadius: "50%",
-                  bgcolor: item.color,
+                  backgroundColor: item.color,
                   border: "2px solid white",
-                  boxShadow: 1,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
                 }}
               />
-              <Typography variant="caption" fontWeight={600}>
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                }}
+              >
                 {item.name} ({item.value.toLocaleString()})
-              </Typography>
-            </Box>
+              </span>
+            </div>
           ))}
-        </Box>
+        </div>
       )}
-    </Paper>
+    </div>
   );
 }

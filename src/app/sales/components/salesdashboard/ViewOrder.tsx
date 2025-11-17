@@ -1,4 +1,3 @@
-// src/app/sales/components/salesdashboard/ViewOrder.tsx
 "use client";
 
 import { useState } from "react";
@@ -38,7 +37,7 @@ export default function ViewOrderDetails() {
   const showSuccess = data && !loading && !displayError;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-5 h-full flex flex-col justify-between min-h-[380px] ml-0 md:ml-40 w-90">
+    <div className="bg-white rounded-lg shadow-sm p-5 h-full flex flex-col justify-between min-h-[380px] w-full">
       <div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">View Order Details</h2>
         <p className="text-xs text-gray-600 mb-4">

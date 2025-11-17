@@ -1,8 +1,6 @@
-// app/sales/salesdashboard/page.tsx
 "use client";
 
 import React from "react";
-import { Box, Container, Grid } from "@mui/material";
 import { motion } from "framer-motion";
 import StatsCards from "./salesdashboard/StatsCards";
 import RecentActivity from "./salesdashboard/RecentActivity";
@@ -12,41 +10,35 @@ import PaymentMethodsChart from "./salesdashboard/PaymentMethodsChart";
 
 export default function SalesDashboard() {
   return (
-    <Box py={{ xs: 3, md: 4 }}>
-      <Container
-        maxWidth={false}
-        disableGutters
-        sx={{ px: { xs: 3, md: 6 }, pb: 6 }}
-      >
+    <div className="py-6 md:py-8">
+      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* ---------- Top Stats Cards ---------- */}
+          {/* Stats Cards */}
           <StatsCards />
 
-          {/* ---------- Charts Row (Order Status / Payment Status  / ViewOrdetails)  ---------- */}
-          <Grid container spacing={2} mt={3} alignItems="stretch">
-            {/* Left: Order Status Chart */}
-            <Grid>
+          {/* 3-Column Responsive Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div className="h-full ">
               <OrderStatusChart />
-            </Grid>
-
-            <Grid>
+            </div>
+            <div className="h-full">
               <PaymentMethodsChart />
-            </Grid>
-
-            <Grid>
+            </div>
+            <div className="h-full">
               <ViewOrderDetails />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
 
-          <Box mt={4}>
+          {/* Recent Activity */}
+          <div className="mt-8">
             <RecentActivity />
-          </Box>
+          </div>
         </motion.div>
-      </Container>
-    </Box>
+      </div>
+    </div>
   );
 }
