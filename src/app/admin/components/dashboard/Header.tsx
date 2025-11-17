@@ -218,6 +218,10 @@ export default function AdminDashboardHeader({
                   transformOrigin={{ vertical: "top", horizontal: "right" }}
                   PaperProps={{
                     style: { maxHeight: 48 * 4.5, width: "20ch" },
+                    sx: {
+                      bgcolor: theme.palette.primary.main, // Fanuc Yellow
+                      boxShadow: 3,
+                    }
                   }}
                 >
                   {hiddenItems.map((item) => {
@@ -228,13 +232,22 @@ export default function AdminDashboardHeader({
                         selected={isSelected}
                         onClick={() => handleMenuItemClick(item.value)}
                         sx={{
-                          fontWeight: isSelected ? 600 : 400,
-                          color: isSelected ? theme.palette.primary.main : "inherit", 
-                          "& .lucide": { 
+                          fontWeight: isSelected ? 700 : 500,
+                          color: theme.palette.primary.contrastText, // "Black" text
+                          "& .lucide": {
                             marginRight: 1.5,
-                            color: theme.palette.action.active,
+                            color: theme.palette.primary.contrastText, // "Black" icon
                             width: 18,
                             height: 18,
+                          },
+                          "&:hover": {
+                            bgcolor: "rgba(0, 0, 0, 0.08)", // Slight darken on hover
+                          },
+                          "&.Mui-selected": {
+                            bgcolor: "rgba(0, 0, 0, 0.08)", // Selected state
+                            "&:hover": {
+                              bgcolor: "rgba(0, 0, 0, 0.12)",
+                            },
                           },
                         }}
                       >

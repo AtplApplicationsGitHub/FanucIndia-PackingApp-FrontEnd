@@ -28,6 +28,8 @@ import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload } from "@/common/lib/secure-download";
 import Image from "next/image";
+import SalesDashboardHeader from "@/app/sales/components/Header"; 
+import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -96,58 +98,6 @@ interface MaterialAttachment {
 }
 
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
-
-const SalesHeader = ({
-  onNavigate,
-}: {
-  userName: string;
-  onNavigate: () => void;
-}) => (
-  <AppBar
-    position="static"
-    color="primary" 
-    sx={{ boxShadow: 2, bgcolor: "primary.main" }}
-  >
-    <Box
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      pl={{ xs: 2, md: 4 }}
-      pr={{ xs: '64px', md: '80px' }}
-      py={1}
-      minHeight={64}
-    >
-      <Box sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }} onClick={onNavigate}>
-        <Image
-          src="/Fanuc_India.png" 
-          alt="Fanuc India Logo"
-          width={120} 
-          height={28}
-          priority
-        />
-      </Box>
-
-      <Box display="flex" alignItems="center" gap={2}>
-        <Button
-          startIcon={<BarChart3 />}
-          onClick={onNavigate}
-          sx={{
-            color: "primary.contrastText", 
-            fontWeight: 600,
-            textTransform: "uppercase",
-            "&:hover": {
-              bgcolor: "transparent",
-              opacity: 0.8,
-            },
-          }}
-        >
-          DASHBOARD
-        </Button>
-        <LogoutButton sx={{ height: 40 }} />
-      </Box>
-    </Box>
-  </AppBar>
-);
 
 export default function SoSearchPage() {
   const [soNumber, setSoNumber] = useState("");
@@ -342,7 +292,7 @@ export default function SoSearchPage() {
         return (
           <AdminDashboardHeader
             userName={userName}
-            view={"home"}
+            view={"home"} 
             setView={(view) => {
               const newView = typeof view === "function" ? view("home") : view;
               sessionStorage.setItem("adminView", newView);
@@ -363,9 +313,14 @@ export default function SoSearchPage() {
         );
       case "SALES":
         return (
-          <SalesHeader
+          <SalesDashboardHeader
             userName={userName}
-            onNavigate={() => router.push("/sales/dashboard")}
+            view={"home"} 
+            setView={(view) => {
+              const newView = view as SalesDashboardView;
+              sessionStorage.setItem("salesDashboardView", newView);
+              router.push("/sales/dashboard");
+            }}
           />
         );
       default:

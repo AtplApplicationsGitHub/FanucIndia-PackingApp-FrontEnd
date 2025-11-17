@@ -4,7 +4,7 @@ import { Box, Card, CardContent, Alert, AppBar, Toolbar } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
@@ -71,12 +71,15 @@ export default function LoginContent() {
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      const res = await apiClient.post<LoginSuccessPayload>(API.AUTH.LOGIN, data);
+      const res = await apiClient.post<LoginSuccessPayload>(
+        API.AUTH.LOGIN,
+        data
+      );
       const { accessToken, user } = res.data;
       Cookies.set("token", accessToken, { expires: 1 });
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
-      
+
       setSuccessMsg("LOGGING IN...");
 
       setTimeout(() => {
@@ -95,12 +98,12 @@ export default function LoginContent() {
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err));
       setSuccessMsg("");
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}> 
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <LoginSnackbar
         open={loggedOutSnackbar}
         onClose={handleLoggedOutSnackbarClose}
@@ -110,8 +113,10 @@ export default function LoginContent() {
         position="static"
         elevation={0}
         sx={{
-          bgcolor: '#FFCC00', 
-          borderBottom: '4px solid #000000', 
+          bgcolor: "#FFCC00", // Fanuc Yellow
+          boxShadow: "0 1px 1px rgba(0, 0, 0, 0.4)", // Stronger shadow
+          position: "relative",
+          zIndex: 10, // Ensure shadow appears above content below
         }}
       >
         <Toolbar
@@ -124,7 +129,7 @@ export default function LoginContent() {
             minHeight: 70,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <Image
               src="/Fanuc_India.png"
               alt="Fanuc India Logo"
@@ -153,10 +158,11 @@ export default function LoginContent() {
           sx={{
             maxWidth: 480,
             width: "100%",
-            borderRadius: 0, 
-            clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
-            boxShadow: (theme) => 
-              theme.palette.mode === "dark" 
+            borderRadius: 0,
+            clipPath:
+              "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)",
+            boxShadow: (theme) =>
+              theme.palette.mode === "dark"
                 ? "0 8px 32px rgba(0,0,0,0.4)"
                 : "0 8px 32px rgba(0,0,0,0.15)",
             border: (theme) =>

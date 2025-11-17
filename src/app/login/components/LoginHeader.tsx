@@ -6,7 +6,7 @@ export default function LoginHeader() {
       sx={{
         bgcolor: '#FFCC00', 
         color: '#000000', 
-        borderBottom: '3px solid #000000',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
         py: 3,
       }}
       title={
