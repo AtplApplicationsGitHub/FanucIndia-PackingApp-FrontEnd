@@ -1,7 +1,6 @@
 import {
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -14,10 +13,12 @@ import {
   TableHead,
   TableRow,
   Paper,
+  useTheme,
+  alpha,
 } from "@mui/material";
-import { Close, FilePresent } from "@mui/icons-material";
+import { Close, FilePresent, Visibility, Download } from "@mui/icons-material";
+import { Tooltip } from "@mui/material";
 
-// Define minimal types for the props
 interface Attachment {
   fileName: string;
 }
@@ -36,7 +37,11 @@ interface Props {
   dispatchDialogOpen: boolean;
   onDispatchDialogClose: () => void;
   dispatchAttachments: Attachment[];
-  onDispatchAttachmentAction: (dispatchId: number, fileName: string, action: "view" | "download") => void;
+  onDispatchAttachmentAction: (
+    dispatchId: number,
+    fileName: string,
+    action: "view" | "download"
+  ) => void;
   dispatchInfo: DispatchInfo[];
   materialDialogOpen: boolean;
   onMaterialDialogClose: () => void;
@@ -57,33 +62,67 @@ export default function AttachmentDialogs({
   onMaterialAttachmentView,
   onMaterialAttachmentDownload,
 }: Props) {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.1);
   return (
     <>
-      {/* Dispatch Attachment Dialog */}
-      <Dialog open={dispatchDialogOpen} onClose={onDispatchDialogClose} fullWidth maxWidth="md">
-        <DialogTitle>
-          Dispatch Attachments
+      <Dialog
+        open={dispatchDialogOpen}
+        onClose={onDispatchDialogClose}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+          DISPATCH ATTACHMENTS
           <IconButton
             onClick={onDispatchDialogClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ position: "absolute", right: 8, top: 8 }}
           >
             <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <TableContainer component={Paper} elevation={0} variant="outlined">
-            <Table>
-              <TableHead>
+          <TableContainer component={Paper}>
+            <Table
+              sx={{
+                "& .MuiTableCell-root": {
+                  borderBottom: "1px solid #1F2933",
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                  {
+                    borderBottom: 0,
+                  },
+              }}
+            >
+              <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>File Name</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                  <TableCell
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
+                    File Name
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "150px",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {dispatchAttachments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={2} align="center">
-                      <Typography color="text.secondary" p={3}>No attachments found.</Typography>
+                      <Typography color="text.secondary" p={3}>
+                        No attachments found.
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -92,12 +131,40 @@ export default function AttachmentDialogs({
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
                           <FilePresent color="action" />
-                          <Typography variant="body2">{att.fileName}</Typography>
+                          <Typography variant="body2">
+                            {att.fileName}
+                          </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell align="right">
-                        <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "view")}>View</Button>
-                        <Button size="small" onClick={() => onDispatchAttachmentAction(dispatchInfo[0].id, att.fileName, "download")}>Download</Button>
+                      <TableCell align="center">
+                        <Tooltip title="View">
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              onDispatchAttachmentAction(
+                                dispatchInfo[0].id,
+                                att.fileName,
+                                "view"
+                              )
+                            }
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Download">
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              onDispatchAttachmentAction(
+                                dispatchInfo[0].id,
+                                att.fileName,
+                                "download"
+                              )
+                            }
+                          >
+                            <Download />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))
@@ -106,34 +173,73 @@ export default function AttachmentDialogs({
             </Table>
           </TableContainer>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onDispatchDialogClose}>Close</Button>
-        </DialogActions>
       </Dialog>
 
-      {/* Material Attachment Dialog */}
-      <Dialog open={materialDialogOpen} onClose={onMaterialDialogClose} fullWidth maxWidth="lg">
-        <DialogTitle>
-          Material Attachments
-          <IconButton onClick={onMaterialDialogClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
+      <Dialog
+        open={materialDialogOpen}
+        onClose={onMaterialDialogClose}
+        fullWidth
+        maxWidth="lg"
+      >
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+          MATERIAL ATTACHMENTS
+          <IconButton
+            onClick={onMaterialDialogClose}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
             <Close />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <TableContainer component={Paper} elevation={0} variant="outlined">
-            <Table>
-              <TableHead>
+          <TableContainer component={Paper}>
+            <Table
+              sx={{
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                  {
+                    borderBottom: 0,
+                  },
+              }}
+            >
+              <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 200 }}>File Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "30%",
+                    }}
+                  >
+                    File Name
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
+                    Description
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "20%",
+                    }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {materialAttachments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} align="center">
-                       <Typography color="text.secondary" p={3}>No attachments found.</Typography>
+                      <Typography color="text.secondary" p={3}>
+                        No attachments found.
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -141,16 +247,34 @@ export default function AttachmentDialogs({
                     <TableRow key={att.ID}>
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
-                           <FilePresent color="action" />
-                           <Typography variant="body2">{att.fileName}</Typography>
+                          <FilePresent color="action" />
+                          <Typography variant="body2">
+                            {att.fileName}
+                          </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        {att.description || '—'}
+                      <TableCell
+                        sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                      >
+                        {att.description || "—"}
                       </TableCell>
-                      <TableCell align="right">
-                        <Button size="small" onClick={() => onMaterialAttachmentView(att.ID)}>View</Button>
-                        <Button size="small" onClick={() => onMaterialAttachmentDownload(att.ID)}>Download</Button>
+                      <TableCell align="center">
+                        <Tooltip title="View">
+                          <IconButton
+                            size="small"
+                            onClick={() => onMaterialAttachmentView(att.ID)}
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Download">
+                          <IconButton
+                            size="small"
+                            onClick={() => onMaterialAttachmentDownload(att.ID)}
+                          >
+                            <Download />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))
@@ -159,9 +283,6 @@ export default function AttachmentDialogs({
             </Table>
           </TableContainer>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onMaterialDialogClose}>Close</Button>
-        </DialogActions>
       </Dialog>
     </>
   );

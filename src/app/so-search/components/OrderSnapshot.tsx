@@ -1,4 +1,4 @@
-import { Box, Link, Paper } from "@mui/material";
+import { Box, Link, Paper, Typography } from "@mui/material";
 import { KVBox } from "./KVBox";
 
 // Define a minimal type for the salesOrder prop
@@ -28,6 +28,9 @@ interface Props {
 export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: Props) {
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>ORDER</Typography>
+      </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Sales Order Number" value={salesOrder.saleOrderNumber} />
         <KVBox label="Status" value={salesOrder.status} />

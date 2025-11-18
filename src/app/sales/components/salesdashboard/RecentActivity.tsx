@@ -41,7 +41,8 @@ function getIconByLabel(label?: string) {
     return <User size={18} className="text-yellow-700" />;
   if (l.includes("delivered") || l.includes("delivery"))
     return <CheckCircle size={18} className="text-green-600" />;
-  if (l.includes("created")) return <Calendar size={18} className="text-indigo-600" />;
+  if (l.includes("created"))
+    return <Calendar size={18} className="text-indigo-600" />;
 
   return <HelpCircle size={18} className="text-gray-600" />;
 }
@@ -55,7 +56,11 @@ function getPillClasses(label?: string) {
 
   if (l.includes("dispatched") || l.includes("dispatch") || l.includes("ship"))
     return "bg-blue-50 border border-blue-200 text-blue-700";
-  if (l.includes("in progress") || l.includes("inprogress") || l.includes("progress"))
+  if (
+    l.includes("in progress") ||
+    l.includes("inprogress") ||
+    l.includes("progress")
+  )
     return "bg-sky-50 border border-sky-200 text-sky-700";
   if (l.includes("packed") || l.includes("packing"))
     return "bg-orange-50 border border-orange-200 text-orange-700";
@@ -67,7 +72,8 @@ function getPillClasses(label?: string) {
     return "bg-amber-50 border border-amber-200 text-amber-800";
   if (l.includes("delivered") || l.includes("delivery"))
     return "bg-green-50 border border-green-200 text-green-700";
-  if (l.includes("overdue") || l.includes("late")) return "bg-rose-50 border border-rose-200 text-rose-700";
+  if (l.includes("overdue") || l.includes("late"))
+    return "bg-rose-50 border border-rose-200 text-rose-700";
 
   // fallback neutral pill
   return "bg-gray-50 border border-gray-200 text-gray-700";
@@ -83,9 +89,19 @@ export default function RecentActivity(): React.ReactElement {
   if (loading) {
     return (
       <Box className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <Typography variant="h6" fontWeight={700} gutterBottom>
+        <Typography
+          variant="body2"
+          sx={{
+            fontSize: "1rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "secondary.main",
+          }}
+        >
           Recent Activity
         </Typography>
+
         {[...Array(5)].map((_, i) => (
           <Skeleton key={i} height={64} sx={{ mt: i === 0 ? 2 : 1.5 }} />
         ))}
@@ -105,7 +121,16 @@ export default function RecentActivity(): React.ReactElement {
 
   return (
     <Box className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      <Typography variant="h6" fontWeight={700} gutterBottom>
+      <Typography
+        variant="body2"
+        sx={{
+          fontSize: "1rem",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          color: "secondary.main",
+        }}
+      >
         Recent Activity
       </Typography>
 
@@ -136,22 +161,38 @@ export default function RecentActivity(): React.ReactElement {
                     className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white border border-gray-100 shadow-sm transition-all duration-300 group-hover:scale-105"
                     aria-hidden
                   >
-                    <span className="flex items-center justify-center">{iconNode}</span>
+                    <span className="flex items-center justify-center">
+                      {iconNode}
+                    </span>
                   </Box>
 
                   <Box className="flex flex-col">
-                    <Typography variant="subtitle2" fontWeight={600} className="text-gray-900">
-                      {activity.salesOrderNumber ? `Order #${activity.salesOrderNumber}` : "Order"}
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      className="text-gray-900"
+                    >
+                      {activity.salesOrderNumber
+                        ? `Order #${activity.salesOrderNumber}`
+                        : "Order"}
                     </Typography>
 
                     <div className="mt-2 flex items-center gap-2">
                       {/* status pill */}
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${pillClasses}`}>
-                        <span className="capitalize">{label.replace(/_/g, " ")}</span>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${pillClasses}`}
+                      >
+                        <span className="capitalize">
+                          {label.replace(/_/g, " ")}
+                        </span>
                       </span>
 
                       {/* relative time / meta */}
-                      <Typography variant="caption" color="text.secondary" className="mt-0">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        className="mt-0"
+                      >
                         {activity.timeAgo ?? ""}
                       </Typography>
                     </div>

@@ -29,18 +29,23 @@ export default function MaterialDetails({ materialDetails, onViewAttachments }: 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="material-section">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">MATERIAL DETAILS</Typography>
+        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>MATERIAL DETAILS</Typography>
         <Button onClick={onViewAttachments} color="info">Attachments</Button>
       </Box>
 
-      <TableContainer component={Paper} variant="outlined" sx={{ borderColor: '#1F2933' }}>
+      <TableContainer component={Paper} 
+      // variant="outlined" sx={{ borderColor: '#1F2933' }}
+      >
         <Table sx={{
-          '& .MuiTableCell-root': {
-            border: '1px solid #1F2933', // Black border for all cells
-          },
+          // '& .MuiTableCell-root': {
+          //   borderBottom: '1px solid #1F2933', // Black border ONLY on bottom
+          // },
           '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)': {
             backgroundColor: lightYellow, // Light yellow for odd rows
-          }
+          },
+          // '& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root': {
+          //   borderBottom: 0, // Remove border from last row cells
+          // },
         }}>
           <TableHead sx={{ bgcolor: 'primary.main' }}>
             <TableRow>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useViewOrder } from "../hooks/ViewOrder";
+import { Typography } from "@mui/material";
 
 export default function ViewOrderDetails() {
   const [soNumber, setSoNumber] = useState("");
@@ -28,7 +29,9 @@ export default function ViewOrderDetails() {
     } catch (err: unknown) {
       // Safely extract message from unknown error
       const message =
-        err instanceof Error ? err.message : String(err) || "Failed to find order. Please try again.";
+        err instanceof Error
+          ? err.message
+          : String(err) || "Failed to find order. Please try again.";
       setLocalError(message);
     }
   }
@@ -39,21 +42,36 @@ export default function ViewOrderDetails() {
   return (
     <div className="bg-white rounded-lg shadow-sm p-5 h-full flex flex-col justify-between min-h-[380px] w-full">
       <div>
-        <h2 className="text-lg font-bold text-gray-800 mb-1">View Order Details</h2>
-        <p className="text-xs text-gray-600 mb-4">
-          Enter any SO Number to see its current status, dispatch info, materials, and attachments.
-        </p>
+        <Typography
+          component="h2"
+          variant="body2"
+          sx={{
+            fontSize: "1rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "error.main", // <-- red from MUI theme
+            marginBottom: "0.25rem", // roughly matches mb-1
+          }}
+        >
+          View Order Details
+        </Typography>
 
         <div className="space-y-3">
-          <label htmlFor="so-number" className="block text-xs font-medium text-gray-700">
-            Sales Order Number
+          <label
+            htmlFor="so-number"
+            className="block text-xs font-medium text-gray-700"
+          >
+            Enter Sales Order Number
           </label>
 
           <input
             id="so-number"
             type="text"
             value={soNumber}
-            onChange={(e) => setSoNumber(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+            onChange={(e) =>
+              setSoNumber(e.target.value.toUpperCase().replace(/\s+/g, ""))
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter" && !loading && soNumber.trim()) {
                 handleSearch();

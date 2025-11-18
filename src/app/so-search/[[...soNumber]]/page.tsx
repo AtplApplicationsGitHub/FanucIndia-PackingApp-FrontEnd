@@ -13,7 +13,7 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
-import { Search, Print, } from "@mui/icons-material";
+import { Search, Print, Archive, Delete } from "@mui/icons-material";
 import { BarChart3 } from "lucide-react";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
@@ -383,13 +383,19 @@ export default function SoSearchPage() {
               <>
                 {data.salesOrder.status === "Dispatched" && !data.isArchived && (
                   <Button
-                    variant="contained"
-                    color="secondary"
+                    variant="text"
+                    startIcon={<Archive fontSize="small" />}
                     onClick={() =>
                       openConfirmation("archive", data.salesOrder.saleOrderNumber)
                     }
                     disabled={isActionLoading}
-                    size="small" 
+                    sx={{
+                      color: (theme) => theme.palette.text.primary,
+                      "&:hover": {
+                        backgroundColor: (theme) => theme.palette.action.hover,
+                      },
+                      borderRadius: 0,
+                    }}
                   >
                     {isActionLoading && confirmAction === "archive" ? (
                       <CircularProgress size={20} color="inherit" /> 
@@ -400,13 +406,19 @@ export default function SoSearchPage() {
                 )}
                 {data.isArchived && (
                   <Button
-                    variant="contained"
-                    color="error"
+                    variant="text"
+                    startIcon={<Delete fontSize="small" />}
                     onClick={() =>
                       openConfirmation("delete", data.salesOrder.saleOrderNumber)
                     }
                     disabled={isActionLoading}
-                    size="small" 
+                    sx={{
+                      color: (theme) => theme.palette.text.primary,
+                      "&:hover": {
+                        backgroundColor: (theme) => theme.palette.action.hover,
+                      },
+                      borderRadius: 0,
+                    }}
                   >
                     {isActionLoading && confirmAction === "delete" ? (
                       <CircularProgress size={20} color="inherit" /> 

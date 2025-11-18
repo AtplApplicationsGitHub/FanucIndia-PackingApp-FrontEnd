@@ -43,13 +43,14 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
     return (
       <div
         style={{
-          backgroundColor :"white",
+          backgroundColor: "white",
           padding: "10px 12px",
           borderRadius: "8px",
           boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
           border: "1px solid #e5e7eb",
           minWidth: "140px",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         }}
       >
         <span
@@ -92,7 +93,9 @@ export default function OrderStatusChart() {
   const { data, totalSoCount, loading } = useSalesKpis();
 
   // Safe total orders value
-  const total = Number.isFinite(totalSoCount as number) ? (totalSoCount as number) : 0;
+  const total = Number.isFinite(totalSoCount as number)
+    ? (totalSoCount as number)
+    : 0;
 
   // Build raw chart data
   const rawData =
@@ -154,21 +157,25 @@ export default function OrderStatusChart() {
         display: "flex",
 
         flexDirection: "column",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
       {/* Header */}
       <div style={{ marginBottom: "20px" }}>
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "20px",
-            fontWeight: 700,
-            color: "#111827",
+        <Typography
+          variant="body2"
+          sx={{
+            fontSize: "1rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "secondary.main",
           }}
         >
           Order Status Distribution
-        </h3>
+        </Typography>
+
         <p
           style={{
             margin: "4px 0 0",

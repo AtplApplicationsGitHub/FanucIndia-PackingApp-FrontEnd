@@ -52,26 +52,40 @@ export default function PaymentMethodsChart() {
     <Paper
       elevation={0}
       sx={{
-                padding: "24px",
+        padding: "24px",
 
         borderRadius: "8px",
         height: "100%",
         width: "100%",
         boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
       }}
     >
-
-      <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
+      <Typography
+        variant="body2"
+        sx={{
+          fontSize: "1rem",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          color: "secondary.main",
+        }}
+      >
         Payment Status by Zone
       </Typography>
+
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Number of cleared vs pending payments across regions
       </Typography>
 
       <Box sx={{ width: "100%", height: 400, mt: 5 }}>
         {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
             <CircularProgress />
           </Box>
         )}
@@ -90,7 +104,10 @@ export default function PaymentMethodsChart() {
 
         {!loading && chartData && chartData.length > 0 && (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
               <XAxis
                 dataKey="zone"
@@ -113,10 +130,26 @@ export default function PaymentMethodsChart() {
               <Legend
                 wrapperStyle={{ paddingTop: "20px" }}
                 iconType="circle"
-                formatter={(value) => (value === "cleared" ? "Yes" : value === "pending" ? "No" : value)}
+                formatter={(value) =>
+                  value === "cleared"
+                    ? "Yes"
+                    : value === "pending"
+                      ? "No"
+                      : value
+                }
               />
-              <Bar dataKey="cleared" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
-              <Bar dataKey="pending" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={40} />
+              <Bar
+                dataKey="cleared"
+                fill="#10b981"
+                radius={[8, 8, 0, 0]}
+                barSize={40}
+              />
+              <Bar
+                dataKey="pending"
+                fill="#f59e0b"
+                radius={[8, 8, 0, 0]}
+                barSize={40}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

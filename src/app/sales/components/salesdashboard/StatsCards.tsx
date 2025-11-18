@@ -4,13 +4,12 @@
 import React from "react";
 import { ShoppingCart, Truck, AlertTriangle } from "lucide-react";
 import { useSalesDashboard } from "../../components/hooks/StatsCards";
-import { Skeleton } from "@mui/material";
+import { Skeleton, useTheme } from "@mui/material";
 
 interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  titleColor?: string;
   iconBgColor?: string;
   loading?: boolean;
 }
@@ -19,15 +18,18 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   icon,
-  titleColor = "text-gray-700",
   iconBgColor = "bg-white",
   loading = false,
 }) => {
+  const theme = useTheme();
   return (
     <div className="relative group rounded-xl bg-white border border-gray-100 px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
       <div className="flex items-center justify-between gap-6">
         <div className="flex-1">
-          <p className={`text-xs font-semibold uppercase tracking-wide ${titleColor}`}>
+          <p 
+            className="text-md font-semibold uppercase tracking-wide"
+            style={{ color: theme.palette.secondary.main }} // <-- CHANGED
+          >
             {title}
           </p>
           <p className="mt-2 text-4xl font-extrabold text-gray-900 leading-tight">
@@ -57,13 +59,11 @@ export default function StatsCards() {
 
   return (
     <div className="w-full">
-      {/* larger gaps and 3 columns on large screens so the three cards are wider */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Orders Created"
           value={totalOrders}
           icon={<ShoppingCart className="h-6 w-6 text-blue-600" />}
-          titleColor="text-gray-700"
           iconBgColor="bg-blue-50"
           loading={loading}
         />
@@ -72,7 +72,6 @@ export default function StatsCards() {
           title="Awaiting for Dispatch"
           value={pending}
           icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
-          titleColor="text-red-700"
           iconBgColor="bg-red-50"
           loading={loading}
         />
@@ -81,7 +80,6 @@ export default function StatsCards() {
           title="Dispatched Orders"
           value={dispatched}
           icon={<Truck className="h-6 w-6 text-green-600" />}
-          titleColor="text-green-700"
           iconBgColor="bg-green-50"
           loading={loading}
         />
