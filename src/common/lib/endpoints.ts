@@ -87,10 +87,18 @@ export const API = {
     MOBILE_ASSIGN_LOCATION: `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
   },
   DASHBOARD: {
+    // SALES USER DASHBOARD
     SALES_KPIS: `${API_BASE_URL}/dashboard/sales-kpis`,
     SALES_ACTIVITY: `${API_BASE_URL}/dashboard/sales-activity`,
     SALES_PAYMENT_CLEARANCE: `${API_BASE_URL}/dashboard/sales-payment-clearance`,
+
+    // ADMINDASHBOARD
     ADMIN_KPIS:`${API_BASE_URL}/dashboard/admin-kpis`,
+    ADMIN_NEW_IMPORTS:       `${API_BASE_URL}/dashboard/admin-new-imports`,
+    ADMIN_DISPATCH_SUMMARY:  `${API_BASE_URL}/dashboard/admin-dispatch-summary`,
+    ADMIN_OVERALL_STATUS:    `${API_BASE_URL}/dashboard/admin-overall-status`,
+    ADMIN_STATUS_BY_ZONE:    `${API_BASE_URL}/dashboard/admin-status-by-zone`,
+    ADMIN_PAYMENT_BY_ZONE:   `${API_BASE_URL}/dashboard/admin-payment-by-zone`,
   },
 };
 

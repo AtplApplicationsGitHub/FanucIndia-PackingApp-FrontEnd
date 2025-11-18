@@ -78,3 +78,30 @@ export interface User {
   createdAt: string; 
   updatedAt: string; 
 }
+
+// types/status-cards.ts// types/admin.ts
+export interface AdminKpisResponse {
+  totalSoCount: number;
+  totalSoCountPercentageChange: number;
+  overdueSoCount: number;
+  overdueSoCountPercentageChange: number;
+  dispatchedSoCount: number;
+  dispatchedSoCountPercentageChange: number;
+}
+
+export interface StatusCardData {
+  title: string;
+  value: string | number;
+  percentage: string;
+  isPositive: boolean;
+  iconType: "cart" | "truck" | "alert";   // ← simple identifier
+  iconColor: string;
+}
+
+
+export type AdminNewImportItem = {
+  dayLabel: string;
+  date: string; // YYYY-MM-DD
+  count: number;
+};
+
