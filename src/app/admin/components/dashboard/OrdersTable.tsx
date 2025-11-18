@@ -2,8 +2,15 @@
 
 import * as React from "react";
 import Box from "@mui/material/Box";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
   IconButton,
   Menu,
   MenuItem,
@@ -11,20 +18,24 @@ import {
   TextField,
   FormControl,
   Link as MuiLink,
+  ListItemIcon,
+  ListItemText,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { ListItemIcon, ListItemText } from "@mui/material";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import Link from "next/link";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
-import Link from "next/link";
-import ArchiveIcon from "@mui/icons-material/Archive";
 import { useSoArchive } from "@/app/so-search/hooks/useSoArchive";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
+
 type InlineEdit = {
   id: number;
   field: InlineEditField;
@@ -61,40 +72,15 @@ export default function AdminOrdersTable({
   setPageSize,
   onDelete,
   onUpdateInline,
-  loading,
+  loading, // TablePagination doesn't have a built-in loading state, but we can disable actions if needed
   onEdit,
   onDetailedView,
 }: Props) {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.1); 
+
+  // --- INLINE EDIT STATE & LOGIC ---
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
-
-  const {
-    isLoading,
-    confirmAction,
-    handleArchive,
-    openConfirmation,
-    closeConfirmation,
-    soNumberToProcess,
-  } = useSoArchive(() => {
-    console.log("Archive successful, please refetch the data.");
-  });
-
-  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
-    null
-  );
-  const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
-
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    rowId: number
-  ) => {
-    setMenuAnchorEl(event.currentTarget);
-    setMenuRowId(rowId);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setMenuRowId(null);
-  };
 
   const handleInlineSave = async (overrideValue?: string | number | null) => {
     if (!inlineEdit) return;
@@ -115,10 +101,7 @@ export default function AdminOrdersTable({
     const next = normalize(inlineEdit.field, overrideValue ?? inlineEdit.value);
     const prev = normalize(inlineEdit.field, inlineEdit.original);
 
-    const same =
-      typeof next === "string" && typeof prev === "string"
-        ? next === prev
-        : next === prev;
+    const same = next === prev;
 
     if (same) {
       setInlineEdit(null);
@@ -129,6 +112,55 @@ export default function AdminOrdersTable({
     setInlineEdit(null);
   };
 
+  // --- ARCHIVE LOGIC ---
+  const {
+    isLoading: isArchiveLoading,
+    confirmAction,
+    handleArchive,
+    openConfirmation,
+    closeConfirmation,
+    soNumberToProcess,
+  } = useSoArchive(() => {
+    console.log("Archive successful, please refetch the data.");
+  });
+
+  // --- MENU LOGIC ---
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
+    null
+  );
+  const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
+  // We need to find the full row object for the currently open menu to pass to handlers
+  const menuRow = React.useMemo(
+    () => orders.find((o) => o.id === menuRowId),
+    [orders, menuRowId]
+  );
+
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    rowId: number
+  ) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuRowId(rowId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuRowId(null);
+  };
+
+  // --- PAGINATION HANDLERS ---
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setCurrentPage(newPage + 1); // Convert 0-based to 1-based
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setPageSize(parseInt(event.target.value, 10));
+    setCurrentPage(1);
+  };
+
+  // --- CUSTOM TEXT FIELD FOR EDITING ---
   function CustomEditTextField({
     initialValue,
     onCommit,
@@ -161,401 +193,415 @@ export default function AdminOrdersTable({
         onKeyDown={handleKeyDown}
         autoFocus
         variant="standard"
-        slotProps={{
-          htmlInput: maxLength ? { maxLength } : {},
-        }}
+        inputProps={maxLength ? { maxLength } : {}}
         sx={{ width: width ?? "100%" }}
       />
     );
   }
 
-  const columns: GridColDef<SalesOrder>[] = [
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 65,
-      sortable: false,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-        return (
-          <Box>
-            <IconButton
-              onClick={(e) => handleMenuOpen(e, row.id)}
-              size="small"
-              aria-label="actions"
-            >
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={menuAnchorEl}
-              open={Boolean(menuAnchorEl) && menuRowId === row.id}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              <MenuItem
-                onClick={() => {
-                  onEdit?.(row);
-                  handleMenuClose();
-                }}
-              >
-                <ListItemIcon>
-                  <EditIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Edit</ListItemText>
-              </MenuItem>
-              <div>
-                <MenuItem
-                  onClick={() => {
-                    onDelete(row.id);
-                    handleMenuClose();
-                  }}
-                  sx={{
-                    color: row.hasMaterialData ? "text.disabled" : "error.main",
-                  }}
-                  disabled={row.hasMaterialData}
-                >
-                  <ListItemIcon sx={{ color: "inherit" }}>
-                    <DeleteIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Delete</ListItemText>
-                </MenuItem>
-              </div>
-              <MenuItem
-                onClick={() => {
-                  onDetailedView(row);
-                  handleMenuClose();
-                }}
-              >
-                <ListItemIcon>
-                  <OpenInNewIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Detailed View</ListItemText>
-              </MenuItem>
-              {row.status === "Dispatched" && (
-                <MenuItem
-                  onClick={() => {
-                    if (row.saleOrderNumber) {
-                      openConfirmation("archive", row.saleOrderNumber);
-                    }
-                    handleMenuClose();
-                  }}
-                >
-                  <ListItemIcon>
-                    <ArchiveIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Archive data</ListItemText>
-                </MenuItem>
-              )}
-            </Menu>
-          </Box>
-        );
-      },
-    },
-    {
-      field: "user",
-      headerName: "User Name",
-      width: 120,
-      valueGetter: (_value, row) => row.user?.name || "-",
-    },
-    {
-      field: "productId",
-      headerName: "Product",
-      width: 110,
-      valueGetter: (_value, row) =>
-        findName(lookup.products, row.productId ?? 0),
-    },
-    {
-      field: "saleOrderNumber",
-      headerName: "Sale Order Number",
-      width: 120,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => (
-        <MuiLink
-          component={Link}
-          href={`/so-search/${params.row.saleOrderNumber}`}
-          underline="hover"
-          sx={{ fontWeight: 500 }}
-        >
-          {params.value}
-        </MuiLink>
-      ),
-    },
-    {
-      field: "outboundDelivery",
-      headerName: "Out Bound Delivery",
-      width: 130,
-    },
-    {
-      field: "transferOrder",
-      headerName: "Transfer Order",
-      width: 110,
-    },
-    {
-      field: "deliveryDate",
-      headerName: "Required Date of Delivery",
-      width: 130,
-      valueGetter: (_value, row) =>
-        row.deliveryDate ? formatDate(row.deliveryDate) : "-",
-    },
-    {
-      field: "transporterId",
-      headerName: "Transporter",
-      width: 120,
-      valueGetter: (_value, row) =>
-        findName(lookup.transporters, row.transporterId ?? 0),
-    },
-    {
-      field: "plantCodeId",
-      headerName: "Delivery Plant Code",
-      width: 130,
-      valueGetter: (_value, row) =>
-        findName(lookup.plantCodes, row.plantCodeId ?? 0, "code"),
-    },
-    {
-      field: "paymentClearance",
-      headerName: "Payment Clearance",
-      width: 110,
-      valueGetter: (_value, row) => (row.paymentClearance ? "Yes" : "No"),
-    },
-    {
-      field: "salesZoneId",
-      headerName: "Sales Zone",
-      width: 110,
-      valueGetter: (_value, row) =>
-        findName(lookup.salesZones, row.salesZoneId ?? 0),
-    },
-    {
-      field: "packConfigId",
-      headerName: "Packing Configuration",
-      width: 130,
-      valueGetter: (_value, row) =>
-        findName(lookup.packConfigs, row.packConfigId ?? 0, "configName"),
-    },
-    {
-      field: "customerId",
-      headerName: "Customer",
-      width: 120,
-      valueGetter: (_value, row) =>
-        findName(lookup.customers, row.customerId ?? 0, "name"),
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 80,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-        return inlineEdit &&
-          inlineEdit.id === row.id &&
-          inlineEdit.field === "status" ? (
-          <CustomEditTextField
-            initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} 
-            onCancel={() => setInlineEdit(null)}
-            width={80}
-            maxLength={32}
-          />
-        ) : (
-          <Box
-            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
-            onClick={() =>
-              setInlineEdit({
-                id: row.id,
-                field: "status",
-                value: row.status || "",
-                original: row.status || "",
-              })
-            }
-            title="Click to edit"
-          >
-            {row.status || "-"}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "priority",
-      headerName: "Priority",
-      width: 80,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-        return inlineEdit &&
-          inlineEdit.id === row.id &&
-          inlineEdit.field === "priority" ? (
-          <CustomEditTextField
-            initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} 
-            onCancel={() => setInlineEdit(null)}
-            width={65}
-          />
-        ) : (
-          <Box
-            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
-            onClick={() =>
-              setInlineEdit({
-                id: row.id,
-                field: "priority",
-                value:
-                  row.priority !== undefined && row.priority !== null
-                    ? row.priority
-                    : "",
-                original: row.priority ?? "",
-              })
-            }
-            title="Click to edit"
-          >
-            {row.priority ?? "-"}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "assignedUserId",
-      headerName: "Assigned User",
-      width: 150,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-
-        return inlineEdit &&
-          inlineEdit.id === row.id &&
-          inlineEdit.field === "assignedUserId" ? (
-          <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={inlineEdit.value ?? ""}
-              onChange={(e) => {
-                const selected =
-                  e.target.value === "" ? null : Number(e.target.value);
-                handleInlineSave(selected);
-              }}
-              onKeyDown={(e) => {
-                if (
-                  e.key === " " ||
-                  (e.ctrlKey && e.key.toLowerCase() === "a")
-                ) {
-                  e.stopPropagation();
-                }
-              }}
-              autoFocus
-            >
-              <MenuItem value="">
-                <em>Unassigned</em>
-              </MenuItem>
-              {lookup.assignableUsers.map((u) => (
-                <MenuItem key={u.id} value={u.id}>
-                  {u.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : (
-          <Box
-            sx={{ cursor: "pointer", textDecoration: "underline dotted" }}
-            onClick={() =>
-              setInlineEdit({
-                id: row.id,
-                field: "assignedUserId",
-                value: row.assignedUserId ?? "",
-                original: row.assignedUserId ?? "",
-              })
-            }
-            title="Click to edit"
-          >
-            {row.assignedUser?.name ||
-              findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
-              "-"}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "fgLocation",
-      headerName: "FG Location",
-      width: 120,
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => {
-        const row = params.row;
-        return inlineEdit &&
-          inlineEdit.id === row.id &&
-          inlineEdit.field === "fgLocation" ? (
-          <CustomEditTextField
-            initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(val)} 
-            onCancel={() => setInlineEdit(null)}
-            width="100%"
-            maxLength={100}
-          />
-        ) : (
-          <Box
-            sx={{
-              cursor: "pointer",
-              textDecoration: "underline dotted",
-              width: "100%",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            onClick={() =>
-              setInlineEdit({
-                id: row.id,
-                field: "fgLocation",
-                value: row.fgLocation || "",
-                original: row.fgLocation || "",
-              })
-            }
-            title={row.fgLocation || "Click to edit"}
-          >
-            {row.fgLocation || "-"}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "specialRemarks",
-      headerName: "SpecialRemarks",
-      width: 120,
-      valueGetter: (_value, row) => row.specialRemarks || "-",
-    },
-  ];
-
   return (
-    <Box
-      sx={{
-        width: "100%",
-        border: (theme) => `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
-        overflow: "hidden",
-      }}
-    >
-      <DataGrid
-        rows={orders}
-        columns={columns}
-        getRowId={(row) => row.id}
-        pageSizeOptions={[5, 10, 25, 50]}
-        paginationModel={{ page: currentPage - 1, pageSize }}
-        onPaginationModelChange={({ page, pageSize }) => {
-          setCurrentPage(page + 1);
-          setPageSize(pageSize);
-        }}
-        rowCount={rowCount}
-        pagination
-        paginationMode="server"
-        loading={loading}
+    <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden" }}>
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
+        <Table
+          sx={{
+            minWidth: 650,
+            // Zebra striping logic:
+            "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+              backgroundColor: lightYellow,
+            },
+            "& .MuiTableBody-root .MuiTableRow-root:hover": {
+              backgroundColor: alpha(theme.palette.primary.main, 0.2),
+            },
+            // Remove all borders
+            "& .MuiTableCell-root": {
+              borderBottom: "none",
+              py: 1, 
+              px: 2,
+              fontSize: "0.875rem",
+            },
+          }}
+        >
+          <TableHead 
+            sx={{ 
+              // White background for light mode, Black for dark mode
+              bgcolor: (theme) => theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+            }}
+          >
+            <TableRow>
+              {[
+                "Actions",
+                "User Name",
+                "Product",
+                "Sale Order Number",
+                "Out Bound Delivery",
+                "Transfer Order",
+                "Required Date",
+                "Transporter",
+                "Plant Code",
+                "Payment",
+                "Sales Zone",
+                "Packing Config",
+                "Customer",
+                "Status",
+                "Priority",
+                "Assigned User",
+                "FG Location",
+                "Special Remarks",
+              ].map((head) => (
+                <TableCell
+                  key={head}
+                  sx={{
+                    color: (theme) => theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {head}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {orders.map((row) => (
+              <TableRow key={row.id}>
+                {/* ACTIONS */}
+                <TableCell>
+                  <IconButton
+                    onClick={(e) => handleMenuOpen(e, row.id)}
+                    size="small"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                </TableCell>
+
+                {/* USER NAME */}
+                <TableCell>{row.user?.name || "-"}</TableCell>
+
+                {/* PRODUCT */}
+                <TableCell>
+                  {findName(lookup.products, row.productId ?? 0)}
+                </TableCell>
+
+                {/* SO NUMBER (LINK) */}
+                <TableCell>
+                  <MuiLink
+                    component={Link}
+                    href={`/so-search/${row.saleOrderNumber}`}
+                    underline="hover"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {row.saleOrderNumber}
+                  </MuiLink>
+                </TableCell>
+
+                {/* OUTBOUND DELIVERY */}
+                <TableCell>{row.outboundDelivery}</TableCell>
+
+                {/* TRANSFER ORDER */}
+                <TableCell>{row.transferOrder}</TableCell>
+
+                {/* DELIVERY DATE */}
+                <TableCell>
+                  {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
+                </TableCell>
+
+                {/* TRANSPORTER */}
+                <TableCell>
+                  {findName(lookup.transporters, row.transporterId ?? 0)}
+                </TableCell>
+
+                {/* PLANT CODE */}
+                <TableCell>
+                  {findName(lookup.plantCodes, row.plantCodeId ?? 0, "code")}
+                </TableCell>
+
+                {/* PAYMENT */}
+                <TableCell>
+                  {row.paymentClearance ? "Yes" : "No"}
+                </TableCell>
+
+                {/* SALES ZONE */}
+                <TableCell>
+                  {findName(lookup.salesZones, row.salesZoneId ?? 0)}
+                </TableCell>
+
+                {/* PACK CONFIG */}
+                <TableCell>
+                  {findName(
+                    lookup.packConfigs,
+                    row.packConfigId ?? 0,
+                    "configName"
+                  )}
+                </TableCell>
+
+                {/* CUSTOMER */}
+                <TableCell>
+                  {findName(lookup.customers, row.customerId ?? 0, "name")}
+                </TableCell>
+
+                {/* STATUS (INLINE EDIT) */}
+                <TableCell sx={{ minWidth: 100 }}>
+                  {inlineEdit?.id === row.id && inlineEdit.field === "status" ? (
+                    <CustomEditTextField
+                      initialValue={inlineEdit.value}
+                      onCommit={(val) => handleInlineSave(val)}
+                      onCancel={() => setInlineEdit(null)}
+                      maxLength={32}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        cursor: "pointer",
+                        textDecoration: "underline dotted",
+                      }}
+                      onClick={() =>
+                        setInlineEdit({
+                          id: row.id,
+                          field: "status",
+                          value: row.status || "",
+                          original: row.status || "",
+                        })
+                      }
+                      title="Click to edit status"
+                    >
+                      {row.status || "-"}
+                    </Box>
+                  )}
+                </TableCell>
+
+                {/* PRIORITY (INLINE EDIT) */}
+                <TableCell sx={{ minWidth: 80 }}>
+                  {inlineEdit?.id === row.id && inlineEdit.field === "priority" ? (
+                    <CustomEditTextField
+                      initialValue={inlineEdit.value}
+                      onCommit={(val) => handleInlineSave(val)}
+                      onCancel={() => setInlineEdit(null)}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        cursor: "pointer",
+                        textDecoration: "underline dotted",
+                      }}
+                      onClick={() =>
+                        setInlineEdit({
+                          id: row.id,
+                          field: "priority",
+                          value:
+                            row.priority !== undefined && row.priority !== null
+                              ? row.priority
+                              : "",
+                          original: row.priority ?? "",
+                        })
+                      }
+                      title="Click to edit priority"
+                    >
+                      {row.priority ?? "-"}
+                    </Box>
+                  )}
+                </TableCell>
+
+                {/* ASSIGNED USER (INLINE EDIT - SELECT) */}
+                <TableCell sx={{ minWidth: 150 }}>
+                  {inlineEdit?.id === row.id &&
+                  inlineEdit.field === "assignedUserId" ? (
+                    <FormControl variant="standard" size="small" fullWidth>
+                      <Select
+                        value={inlineEdit.value ?? ""}
+                        onChange={(e) => {
+                          const selected =
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value);
+                          handleInlineSave(selected);
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === " " ||
+                            (e.ctrlKey && e.key.toLowerCase() === "a")
+                          ) {
+                            e.stopPropagation();
+                          }
+                        }}
+                        autoFocus
+                      >
+                        <MenuItem value="">
+                          <em>Unassigned</em>
+                        </MenuItem>
+                        {lookup.assignableUsers.map((u) => (
+                          <MenuItem key={u.id} value={u.id}>
+                            {u.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Box
+                      sx={{
+                        cursor: "pointer",
+                        textDecoration: "underline dotted",
+                      }}
+                      onClick={() =>
+                        setInlineEdit({
+                          id: row.id,
+                          field: "assignedUserId",
+                          value: row.assignedUserId ?? "",
+                          original: row.assignedUserId ?? "",
+                        })
+                      }
+                      title="Click to assign user"
+                    >
+                      {row.assignedUser?.name ||
+                        findName(
+                          lookup.assignableUsers,
+                          row.assignedUserId ?? 0
+                        ) ||
+                        "-"}
+                    </Box>
+                  )}
+                </TableCell>
+
+                {/* FG LOCATION (INLINE EDIT) */}
+                <TableCell sx={{ minWidth: 120 }}>
+                  {inlineEdit?.id === row.id &&
+                  inlineEdit.field === "fgLocation" ? (
+                    <CustomEditTextField
+                      initialValue={inlineEdit.value}
+                      onCommit={(val) => handleInlineSave(val)}
+                      onCancel={() => setInlineEdit(null)}
+                      maxLength={100}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        cursor: "pointer",
+                        textDecoration: "underline dotted",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: 120,
+                      }}
+                      onClick={() =>
+                        setInlineEdit({
+                          id: row.id,
+                          field: "fgLocation",
+                          value: row.fgLocation || "",
+                          original: row.fgLocation || "",
+                        })
+                      }
+                      title={row.fgLocation || "Click to edit FG Location"}
+                    >
+                      {row.fgLocation || "-"}
+                    </Box>
+                  )}
+                </TableCell>
+
+                {/* SPECIAL REMARKS */}
+                <TableCell>{row.specialRemarks || "-"}</TableCell>
+              </TableRow>
+            ))}
+
+            {orders.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={18} align="center" sx={{ py: 4 }}>
+                  No orders found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* PAGINATION */}
+      <TablePagination
+        component="div"
+        count={rowCount}
+        page={currentPage - 1} // 0-based index for MUI
+        onPageChange={handleChangePage}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         sx={{
-          border: "none",
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "rgba(0,0,0,0.04)",
-            fontWeight: 600,
-          },
-          "& .MuiDataGrid-cell": {
-            lineHeight: 1.3,
-            py: 1,
-          },
+          borderTop: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       />
+
+      {/* MENU */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuRow) onEdit?.(menuRow);
+            handleMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit</ListItemText>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            if (menuRowId) onDelete(menuRowId);
+            handleMenuClose();
+          }}
+          sx={{
+            color: menuRow?.hasMaterialData ? "text.disabled" : "error.main",
+          }}
+          disabled={menuRow?.hasMaterialData}
+        >
+          <ListItemIcon sx={{ color: "inherit" }}>
+            <DeleteIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            if (menuRow) onDetailedView(menuRow);
+            handleMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <OpenInNewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Detailed View</ListItemText>
+        </MenuItem>
+
+        {menuRow?.status === "Dispatched" && (
+          <MenuItem
+            onClick={() => {
+              if (menuRow.saleOrderNumber) {
+                openConfirmation("archive", menuRow.saleOrderNumber);
+              }
+              handleMenuClose();
+            }}
+          >
+            <ListItemIcon>
+              <ArchiveIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Archive data</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* CONFIRM DIALOG */}
       <ConfirmDeleteDialog
         open={confirmAction === "archive"}
         onCancel={closeConfirmation}
         onConfirm={handleArchive}
         title="Confirm Archive"
-        description={`Are you sure you want to archive Sales Order ${soNumberToProcess}? This will move the data to archives.`} // Change 'message' to 'description'
-        loading={isLoading}
+        description={`Are you sure you want to archive Sales Order ${soNumberToProcess}? This will move the data to archives.`}
+        loading={isArchiveLoading}
       />
     </Box>
   );
