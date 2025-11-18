@@ -70,7 +70,7 @@ export default function SalesDashboard() {
           {alert ? <Alert onClose={() => setAlert(null)} severity={alert.severity}>{alert.message}</Alert> : undefined}
         </Snackbar>
 
-        <SalesDashboardHeader userName={userName} view={view} setView={setView} />
+        <SalesDashboardHeader view={view} setView={setView} />
 
         {/* HOME VIEW - Beautiful Dashboard */}
         {view === "home" && <HomeDashboard />}

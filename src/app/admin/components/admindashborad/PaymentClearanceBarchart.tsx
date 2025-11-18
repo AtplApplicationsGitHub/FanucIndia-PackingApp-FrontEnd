@@ -1,4 +1,3 @@
-// components/charts/PaymentClearanceByZone.tsx
 "use client";
 
 import React from "react";
@@ -12,13 +11,9 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
-import { usePaymentClearanceBarchart, ZonePaymentData } from "../hooks/usePaymentClearanceBarchart";
+import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
 
-interface Props {
-  height?: number | string;
-}
-
-export default function PaymentClearanceByZone({ height = 340 }: Props) {
+export default function PaymentClearanceByZone() {
   const { data, loading, error } = usePaymentClearanceBarchart();
 
   if (loading) {

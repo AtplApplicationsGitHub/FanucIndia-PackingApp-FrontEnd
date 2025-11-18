@@ -66,11 +66,10 @@ export function useOrderImports(): UseOrderImportsReturn {
       });
 
       setData(merged);
-    } catch (err: any) {
+    } catch (err: unknown) { 
       setError("Failed to load import stats");
       console.error("useOrderImports error:", err);
 
-      // Even on full error, show the skeleton so UI doesn't break
       setData(generateLast5Days().map((d) => ({ ...d, count: 0 })));
     } finally {
       setLoading(false);

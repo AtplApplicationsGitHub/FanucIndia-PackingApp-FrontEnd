@@ -2,10 +2,9 @@
 
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Box, Typography, Paper } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useSalesKpis } from "../../components/hooks/OrderStatus";
 
-/* ── Colours ─────────────────────────────── */
 const COLORS = ["#3B82F6", "#F97316", "#10B981", "#8B5CF6"] as const;
 
 interface ChartDataItem {
@@ -92,12 +91,10 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
 export default function OrderStatusChart() {
   const { data, totalSoCount, loading } = useSalesKpis();
 
-  // Safe total orders value
   const total = Number.isFinite(totalSoCount as number)
     ? (totalSoCount as number)
     : 0;
 
-  // Build raw chart data
   const rawData =
     loading || !data
       ? []
@@ -124,13 +121,11 @@ export default function OrderStatusChart() {
           },
         ];
 
-  // Attach total for percentage
   const chartData: ChartDataItem[] = rawData.map((item) => ({
     ...item,
     total,
   }));
 
-  // Fallback if no data
   const displayData: ChartDataItem[] =
     chartData.length > 0 && chartData.some((d) => d.value > 0)
       ? chartData
@@ -161,7 +156,6 @@ export default function OrderStatusChart() {
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
-      {/* Header */}
       <div style={{ marginBottom: "20px" }}>
         <Typography
           variant="body2"
@@ -187,7 +181,6 @@ export default function OrderStatusChart() {
         </p>
       </div>
 
-      {/* Chart Container */}
       <div style={{ flex: 1, position: "relative", minHeight: "320px" }}>
         {loading ? (
           <div
@@ -227,7 +220,6 @@ export default function OrderStatusChart() {
           </ResponsiveContainer>
         )}
 
-        {/* Center Total */}
         {!loading && (
           <div
             style={{
@@ -265,7 +257,6 @@ export default function OrderStatusChart() {
         )}
       </div>
 
-      {/* Legend */}
       {!loading && chartData.length > 0 && (
         <div
           style={{

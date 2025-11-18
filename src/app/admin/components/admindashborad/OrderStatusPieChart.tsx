@@ -1,4 +1,3 @@
-// components/OrderStatusPieChart.tsx
 "use client";
 
 import React from "react";
@@ -20,7 +19,7 @@ type DataItem = {
 
 const COLORS = ["#3B82F6", "#F97316", "#10B981", "#8B5CF6"];
 
-const renderLabel = (entry: any) => {
+const renderLabel = (entry: { percent?: number }) => {
   const percent = Math.round((entry.percent || 0) * 100);
   return percent > 0 ? `${percent}%` : null;
 };
@@ -110,7 +109,6 @@ export default function OrderStatusPieChart() {
                 </Pie>
                 <Tooltip
                   formatter={(value: number, name: string) => {
-                    const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
                     return [
                       `${value.toLocaleString()} orders`,
                       name

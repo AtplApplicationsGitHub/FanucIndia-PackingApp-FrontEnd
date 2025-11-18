@@ -6,7 +6,6 @@ import {
   Box,
   TextField,
   Button,
-  AppBar,
   Paper,
   Typography,
   CircularProgress,
@@ -14,20 +13,17 @@ import {
   Stack,
 } from "@mui/material";
 import { Search, Print, Archive, Delete } from "@mui/icons-material";
-import { BarChart3 } from "lucide-react";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
-import LogoutButton from "@/common/components/LogoutButton";
 import OrderSnapshot from "../components/OrderSnapshot";
 import DispatchInfo from "../components/DispatchInfo";
 import MaterialDetails from "../components/MaterialDetails";
 import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload } from "@/common/lib/secure-download";
-import Image from "next/image";
 import SalesDashboardHeader from "@/app/sales/components/Header"; 
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 
@@ -303,7 +299,6 @@ export default function SoSearchPage() {
       case "USER":
         return (
           <UserDashboardHeader
-            userName={userName}
             view={"home"}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
@@ -314,7 +309,6 @@ export default function SoSearchPage() {
       case "SALES":
         return (
           <SalesDashboardHeader
-            userName={userName}
             view={"home"} 
             setView={(view) => {
               const newView = view as SalesDashboardView;

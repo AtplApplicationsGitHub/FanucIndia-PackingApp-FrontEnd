@@ -12,7 +12,6 @@ import { useTheme } from "@mui/material";
 import Image from "next/image"; 
 
 type Props = {
-  userName: string; 
   view: UserDashboardView;
   setView: (view: UserDashboardView) => void;
 };
@@ -37,7 +36,6 @@ const menuItems = [
 ];
 
 export default function UserDashboardHeader({
-  userName,
   view,
   setView,
 }: Props) {

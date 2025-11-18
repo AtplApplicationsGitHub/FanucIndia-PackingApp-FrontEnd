@@ -1,4 +1,3 @@
-// hooks/useOrderOverallStatus.ts
 import { useEffect, useState } from "react";
 import { API } from "@/common/lib/endpoints";
 import { fetchWithAuth } from "@/common/lib/endpoints";
@@ -36,7 +35,6 @@ export function useOrderOverallStatus(): UseOrderOverallStatus {
 
       const json = await res.json();
 
-      // Backend sometimes sends null/undefined — safeguard
       const normalized: OrderOverallStatus = {
         r105Count: json.r105Count ?? 0,
         w105Count: json.w105Count ?? 0,
@@ -46,9 +44,10 @@ export function useOrderOverallStatus(): UseOrderOverallStatus {
       };
 
       setData(normalized);
-    } catch (err: any) {
+    } catch (err: unknown) { 
       console.error("[useOrderOverallStatus] Error:", err);
-      setError(err.message || "Failed to load order status");
+      const message = err instanceof Error ? err.message : "Failed to load order status";
+      setError(message);
     } finally {
       setLoading(false);
     }

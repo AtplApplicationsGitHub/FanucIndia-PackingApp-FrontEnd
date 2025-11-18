@@ -1,4 +1,3 @@
-// src/app/admin/components/hooks/useStatusCards.ts
 import { useEffect, useState } from "react";
 import { API } from "../../../../common/lib/endpoints";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
@@ -61,7 +60,6 @@ export const useStatusCards = () => {
 
   useEffect(() => {
     fetchKpis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { cards, loading, error, refetch: fetchKpis };

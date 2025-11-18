@@ -16,7 +16,6 @@ import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 
 export default function UserDashboard() {
   const {
-    userName,
     view,
     setView,
     orders,
@@ -99,7 +98,6 @@ export default function UserDashboard() {
         }}
       >
         <UserDashboardHeader
-          userName={userName}
           view={view}
           setView={setView}
         />
