@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import { useDropzone } from "react-dropzone";
 import {
-  uploadMaterialFile,
+  uploadMaterialFiles,
   getMaterialFilesBySaleOrder,
   deleteMaterialFile,
   updateMaterialFile,
@@ -119,45 +119,61 @@ export default function UploadAttachmentDialog({
     onAttachedCountChange(rows.length); // if you soft-delete: rows.filter(r => !r.deleted).length
   }, [open, rows, onAttachedCountChange]);
 
-  // Begin upload of a single newly added file
-  const startUpload = useCallback(
-    async (r: Row) => {
-      if (!r.file) return;
-      // mark uploading
+  // Upload a batch of files together
+  const startBatchUpload = useCallback(
+    async (batchRows: Row[]) => {
+      // 1. Mark all these rows as uploading
       setRows((prev) =>
         prev.map((x) =>
-          x.id === r.id ? { ...x, uploading: true, error: null } : x
+          batchRows.some((b) => b.id === x.id)
+            ? { ...x, uploading: true, error: null }
+            : x
         )
       );
-      try {
-        const res = await uploadMaterialFile(
-          r.file,
-          saleOrderNumber,
-          undefined
-        );
-        const created: MaterialFile | undefined = res?.items?.[0] ?? res;
-        const newId = created?.ID;
 
+      try {
+        // 2. Extract the actual File objects
+        const filesToUpload = batchRows
+          .map((r) => r.file)
+          .filter((f): f is File => !!f);
+
+        if (filesToUpload.length === 0) return;
+
+        // 3. Send SINGLE request with all files
+        const res = await uploadMaterialFiles(
+          saleOrderNumber,
+          undefined, // no description for batch upload
+          filesToUpload
+        );
+
+        const createdItems = res.items || [];
+
+        // 4. Update rows with success status and DB IDs
+        // (Assuming backend returns items in same order as files sent)
         setRows((prev) =>
-          prev.map((x) =>
-            x.id === r.id
-              ? {
-                  ...x,
-                  uploading: false,
-                  uploaded: true,
-                  dbId: newId,
-                  descDraft: created?.description || "",
-                  persisted: true,
-                }
-              : x
-          )
+          prev.map((x) => {
+            const indexInBatch = batchRows.findIndex((b) => b.id === x.id);
+            if (indexInBatch !== -1) {
+              const created = createdItems[indexInBatch];
+              return {
+                ...x,
+                uploading: false,
+                uploaded: true,
+                dbId: created?.ID,
+                descDraft: created?.description || "",
+                persisted: true,
+              };
+            }
+            return x;
+          })
         );
         onUploaded?.();
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Upload failed";
+        // Mark all in this batch as failed
         setRows((prev) =>
           prev.map((x) =>
-            x.id === r.id
+            batchRows.some((b) => b.id === x.id)
               ? {
                   ...x,
                   uploading: false,
@@ -172,7 +188,6 @@ export default function UploadAttachmentDialog({
     [saleOrderNumber, onUploaded]
   );
 
-  // Drop handler -> add rows locally and auto-upload
   const onDrop = useCallback(
     (accepted: File[]) => {
       const now = Date.now();
@@ -189,12 +204,15 @@ export default function UploadAttachmentDialog({
         saving: false,
         persisted: false,
       }));
+
       setRows((prev) => [...newRows, ...prev]);
-      newRows.forEach((r) => {
-        void startUpload(r);
-      });
+      
+      // CALL BATCH UPLOAD INSTEAD OF LOOPING
+      if (newRows.length > 0) {
+        void startBatchUpload(newRows);
+      }
     },
-    [startUpload]
+    [startBatchUpload]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
