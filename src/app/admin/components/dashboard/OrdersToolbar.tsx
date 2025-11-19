@@ -42,7 +42,6 @@ export default function AdminOrdersToolbar({
           gap: { xs: 2, md: 2 }, // Reduced gap for tighter layout
           width: { xs: "100%", md: "auto" },
           mx: { xs: 0, md: "auto" },
-          mb: 3,
           px: { xs: 1, md: 2 },
           alignItems: { md: "center" },
         }}
