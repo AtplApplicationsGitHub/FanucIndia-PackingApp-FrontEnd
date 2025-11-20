@@ -127,7 +127,7 @@ export default function SalesOrdersTable({
               bgcolor: (theme) => theme.palette.mode === "dark" ? "#000000" : "#ffffff",
             }}
           >
-            <TableRow>
+            <TableRow sx={{ height: 60 }}>
               {[
                 "Actions",
                 "Product",

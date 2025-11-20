@@ -43,14 +43,13 @@ export default function SalesDashboardToolbar({
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          justifyContent: "center", // Changed to center the content
+          justifyContent: "center",
           alignItems: "center",
-          mb: 1, // Reduced margin bottom for a tighter look
+          mb: 1,
           px: 2,
           gap: { xs: 2, md: 4 },
         }}
       >
-
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
@@ -88,43 +87,90 @@ export default function SalesDashboardToolbar({
           />
 
           <Button
-            sx={{
-              color: (theme) => theme.palette.text.primary,
-              "&:hover": {
-                backgroundColor: (theme) => theme.palette.action.hover,
-              },
-              borderRadius: 0,
-            }}
             onClick={onCreate}
             startIcon={<Plus size={18} />}
-          >
-            Create Order
-          </Button>
-          <Button
             sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
               color: (theme) => theme.palette.text.primary,
-              "&:hover": {
-                backgroundColor: (theme) => theme.palette.action.hover,
-              },
               borderRadius: 0,
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 120,
+              height: 40,
+              px: 3,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
             }}
+          >
+            CREATE ORDER
+          </Button>
+
+          <Button
             onClick={onDownload}
             startIcon={<Download size={18} />}
-          >
-            Excel Template
-          </Button>
-          <Button
             sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
               color: (theme) => theme.palette.text.primary,
-              "&:hover": {
-                backgroundColor: (theme) => theme.palette.action.hover,
-              },
               borderRadius: 0,
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 120,
+              height: 40,
+              px: 3,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
             }}
+          >
+            EXCEL TEMPLATE
+          </Button>
+
+          <Button
             onClick={onBulkUpload}
             startIcon={<UploadCloud size={18} />}
+            sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
+              color: (theme) => theme.palette.text.primary,
+              borderRadius: 0,
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 120,
+              height: 40,
+              px: 3,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
+            }}
           >
-            Bulk Upload
+            BULK UPLOAD
           </Button>
 
           <input
