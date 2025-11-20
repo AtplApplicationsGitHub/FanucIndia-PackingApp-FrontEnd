@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, SetStateAction } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Alert, Backdrop, CircularProgress, Snackbar, Box, Container, Paper } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
@@ -21,9 +21,11 @@ import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
 
 // --- Imports for Headers ---
-import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
+import AdminDashboardHeader, { ViewType } from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
+import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import SalesDashboardHeader from "@/app/sales/components/Header";
+import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -140,18 +142,18 @@ export default function MaterialDataPage() {
   const renderHeader = () => {
     if (!currentUser.role) return null;
 
-    const handleAdminNav = (view: any) => {
-      const newView = typeof view === 'function' ? view('orders') : view;
+    const handleAdminNav = (view: SetStateAction<ViewType>) => {
+      const newView = typeof view === 'function' ? (view as (prev: ViewType) => ViewType)('orders') : view;
       sessionStorage.setItem("adminView", newView);
       router.push("/admin/dashboard");
     };
 
-    const handleUserNav = (view: any) => {
+    const handleUserNav = (view: UserDashboardView) => {
       sessionStorage.setItem("userDashboardView", view);
       router.push("/user/dashboard");
     };
 
-    const handleSalesNav = (view: any) => {
+    const handleSalesNav = (view: SalesDashboardView) => {
       sessionStorage.setItem("salesDashboardView", view);
       router.push("/sales/dashboard");
     };

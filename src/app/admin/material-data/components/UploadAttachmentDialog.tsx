@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -17,9 +17,9 @@ import {
   Tooltip,
   TextField,
   CircularProgress,
-  TableContainer, // Added
-  useTheme,       // Added
-  alpha,          // Added
+  TableContainer, 
+  useTheme,       
+  alpha,          
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -62,7 +62,7 @@ export default function UploadAttachmentDialog({
   onUploaded?: () => void;
   onAttachedCountChange?: (count: number) => void;
 }) {
-  const theme = useTheme(); // Hook to access theme colors
+  const theme = useTheme(); 
   const [rows, setRows] = useState<Row[]>([]);
   const [loadingList, setLoadingList] = useState(false);
 
@@ -70,7 +70,6 @@ export default function UploadAttachmentDialog({
     if (!open) onAttachedCountChange?.(0);
   }, [open, onAttachedCountChange]);
 
-  // Load already-uploaded files when dialog opens
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -93,7 +92,6 @@ export default function UploadAttachmentDialog({
         }));
         setRows(mapped);
       } catch {
-        // optionally toast an error
       } finally {
         if (!cancelled) setLoadingList(false);
       }
@@ -202,10 +200,6 @@ export default function UploadAttachmentDialog({
   });
 
   const hasFiles = rows.length > 0;
-  const allDone = useMemo(
-    () => rows.length > 0 && rows.every((r) => r.uploaded || r.error),
-    [rows]
-  );
 
   const handleDelete = async (r: Row) => {
     if (r.dbId) {
@@ -271,10 +265,9 @@ export default function UploadAttachmentDialog({
     }
   };
 
-  // Style constants
-  const headerBg = theme.palette.primary.main; // Fanuc Yellow
-  const headerText = theme.palette.primary.contrastText; // Charcoal
-  const titleColor = theme.palette.secondary.main; // Fanuc Red
+  const headerBg = theme.palette.primary.main; 
+  const headerText = theme.palette.primary.contrastText; 
+  const titleColor = theme.palette.secondary.main; 
   const lightYellow = alpha(theme.palette.primary.main, 0.1);
 
   return (
@@ -284,7 +277,7 @@ export default function UploadAttachmentDialog({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          color: titleColor, // Fanuc Red Heading
+          color: titleColor, 
           fontWeight: 600,
         }}
       >
@@ -325,12 +318,10 @@ export default function UploadAttachmentDialog({
           )}
         </Paper>
 
-        {/* Table Container added for styling */}
         <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: 1 }}>
           <Table
             size="small"
             sx={{
-              // Alternating row colors
               "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                 backgroundColor: lightYellow,
               },
@@ -354,8 +345,6 @@ export default function UploadAttachmentDialog({
                   <TableRow key={r.id}>
                     <TableCell>{idx + 1}</TableCell>
                     <TableCell>{r.name}</TableCell>
-
-                    {/* Description */}
                     <TableCell sx={{ maxWidth: 420 }}>
                       {r.editing ? (
                         <Box
@@ -446,7 +435,6 @@ export default function UploadAttachmentDialog({
                       )}
                     </TableCell>
 
-                    {/* Status */}
                     <TableCell>
                       {r.uploading && (
                         <Box
@@ -470,7 +458,6 @@ export default function UploadAttachmentDialog({
                       )}
                     </TableCell>
 
-                    {/* Actions */}
                     <TableCell align="center">
                       <Tooltip title="View">
                         <span>

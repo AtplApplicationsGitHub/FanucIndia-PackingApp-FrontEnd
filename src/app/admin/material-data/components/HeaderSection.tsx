@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Box, Typography, useTheme, Button, Tooltip } from '@mui/material';
 import { ArrowLeft } from 'lucide-react';
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
-import { Theme } from "@mui/material/styles";
 
 interface HeaderProps {
   so: string;
@@ -117,7 +116,7 @@ const HeaderSection: FC<HeaderProps> = ({
     <Box position="relative" width="100%" py={3} sx={{ backgroundColor: theme.palette.background.paper }}>
       <Box position="absolute" top={16} left={16}>
         <Button
-          variant="text" // Kept as text or change to contained if you want the background color visible immediately
+          variant="text" 
           startIcon={<ArrowLeft size={16} />}
           onClick={handleGoBack}
           sx={{

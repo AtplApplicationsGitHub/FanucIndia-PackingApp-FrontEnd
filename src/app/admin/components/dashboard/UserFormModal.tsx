@@ -17,7 +17,8 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  useTheme, // Add this import
+  useTheme, 
+  Theme,
 } from "@mui/material";
 import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
@@ -212,8 +213,8 @@ const AdminUserFormModal: React.FC<Props> = ({
 
   // Updated Reusable sx prop for buttons
   const buttonSx = {
-    bgcolor: (theme: any) => theme.palette.action.hover, // Grey by default
-    color: (theme: any) => theme.palette.text.primary,   // Dark text
+    bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
+    color: (theme: Theme) => theme.palette.text.primary,   // Dark text
     borderRadius: 0,
     clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
     fontWeight: 600,
@@ -225,8 +226,8 @@ const AdminUserFormModal: React.FC<Props> = ({
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      bgcolor: (theme: any) => theme.palette.primary.main, // Fanuc Yellow on hover
-      color: (theme: any) => theme.palette.primary.contrastText,
+      bgcolor: (theme: Theme) => theme.palette.primary.main, // Fanuc Yellow on hover
+      color: (theme: Theme) => theme.palette.primary.contrastText,
       boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
       "& .MuiSvgIcon-root, & svg": {
         color: "#000",
@@ -234,8 +235,8 @@ const AdminUserFormModal: React.FC<Props> = ({
     },
     "&:disabled": {
        opacity: 0.6,
-       bgcolor: (theme: any) => theme.palette.action.disabledBackground,
-       color: (theme: any) => theme.palette.text.disabled
+       bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
+       color: (theme: Theme) => theme.palette.text.disabled
     }
   };
 

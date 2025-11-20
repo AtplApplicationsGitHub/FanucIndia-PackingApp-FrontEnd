@@ -1,4 +1,3 @@
-// components/OrderImportsCard.tsx
 import React from "react";
 import { useOrderImports } from "../hooks/useOrderImports";
 import { RefreshCw , Calendar, AlertCircle } from "lucide-react";
@@ -8,15 +7,6 @@ export default function OrderImportsCard() {
   const theme = useTheme();
   const { data: stats, loading, error, refetch } = useOrderImports();
 
-  // Calculate total imports for the period
-  const totalImports = stats?.reduce((sum, day) => sum + day.count, 0) || 0;
-
-  // Calculate trend (today vs yesterday)
-  const trend = stats && stats.length >= 2
-    ? ((stats[0].count - stats[1].count) / stats[1].count * 100)
-    : 0;
-
-  // Loading skeleton with improved design
   if (loading) {
     return (
       <div className="w-full">
