@@ -170,7 +170,7 @@ export default function OrderStatusPieChart() {
 
   return (
     <div className="w-full">
-      <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-md p-8 border border-gray-100 dark:border-slate-800 min-h-[517px]">
+      <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-md p-8 border border-gray-100 dark:border-slate-800 min-h-[543px]">
         {/* Title & Subtitle */}
         <div className="mb-6">
           <h3 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">

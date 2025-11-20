@@ -12,7 +12,7 @@ export default function DispatchSummary() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 w-full min-h-[517px] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 w-full min-h-[543px] flex flex-col">
 
         {/* Header */}
         <div className="px-6 pt-6">
