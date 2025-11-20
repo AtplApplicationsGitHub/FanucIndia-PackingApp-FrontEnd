@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { Plus } from "lucide-react";
 import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
@@ -61,30 +60,33 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
       <Stack
         direction="row"
         alignItems="center"
-        justifyContent="space-between"
+        justifyContent="flex-end" // Align button to the right since heading is gone
         mb={4}
       >
-        <Typography variant="h5" fontWeight={700}>
-          Manage Users
-        </Typography>
         <Button
           onClick={onCreate}
           startIcon={<Plus size={18} />}
-          variant="text"
-          type="button"
           sx={{
-            color: (theme) =>
-              theme.palette.mode === "dark" ? "#e0e0e0" : "#222",
-            bgcolor: "transparent",
+            bgcolor: (theme) => theme.palette.action.hover, // Grey by default
+            color: (theme) => theme.palette.text.primary,   // Dark text
             borderRadius: 0,
-            px: 2.5,
-            py: 1.25,
+            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+            fontWeight: 600,
+            fontSize: 15,
+            minWidth: 120,
+            height: 40,
+            px: 3,
             textTransform: "none",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease-in-out",
             "&:hover": {
-              backgroundColor: (theme) =>
-                theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+              bgcolor: (theme) => theme.palette.primary.main, // Fanuc Yellow on hover
+              color: (theme) => theme.palette.primary.contrastText,
+              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+              "& .MuiSvgIcon-root, & svg": {
+                color: "#000",
+              },
             },
-            transition: "background 0.15s",
           }}
         >
           NEW USER

@@ -6,6 +6,7 @@ import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
 import { ShoppingCart, Truck, AlertTriangle } from "lucide-react";
 import { useStatusCards } from "../hooks/useStatuscards";
 import type { StatusCardData } from "../types/admin";
+import { useTheme } from "@mui/material";
 
 const iconMap: Record<StatusCardData["iconType"], React.ReactNode> = {
   cart: <ShoppingCart className="w-7 h-7" />,
@@ -21,11 +22,18 @@ const StatCard = ({
   iconType,
   iconColor,
 }: StatusCardData) => {
+  const theme = useTheme();
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
       <div className="flex items-center justify-between">
         <div>
-          <p className={`  text-lg  uppercase font-semibold ${iconColor}`}>{title}</p>
+          <p 
+            className="text-lg uppercase font-semibold"
+            style={{ color: theme.palette.secondary.main }}
+          >
+            {title}
+          </p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
             {value}
           </p>

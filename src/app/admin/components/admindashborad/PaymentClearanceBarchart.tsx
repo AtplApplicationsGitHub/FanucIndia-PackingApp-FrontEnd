@@ -12,6 +12,7 @@ import {
   Cell,
 } from "recharts";
 import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
+import { useTheme } from "@mui/material";
 
 /**
  * Data type for each chart row.
@@ -111,6 +112,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 export default function PaymentClearanceByZone() {
+  const theme = useTheme();
   // If your hook already types data, you can remove the type assertion below.
   const { data: rawData, loading, error } = usePaymentClearanceBarchart();
 
@@ -152,7 +154,10 @@ export default function PaymentClearanceByZone() {
     <div className="w-full bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <p 
+            className="text-lg uppercase font-semibold"
+            style={{ color: theme.palette.secondary.main }}
+          >
             Payment Clearance by Sales Zone
           </p>
           <p className="text-sm text-slate-500 dark:text-slate-400">

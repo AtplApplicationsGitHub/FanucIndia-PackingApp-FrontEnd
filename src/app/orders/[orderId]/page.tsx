@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Backdrop, CircularProgress, Snackbar, Box } from "@mui/material"; // Added Box
+import { Alert, Backdrop, CircularProgress, Snackbar, Box, Container, Paper } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
 import MaterialDataTable from "@/app/admin/material-data/components/MaterialDataTable";
@@ -23,7 +23,7 @@ import axios from "axios";
 // --- Imports for Headers ---
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
-import SalesDashboardHeader from "@/app/sales/components/Header"; // Optional: Good for completeness if SALES role uses this
+import SalesDashboardHeader from "@/app/sales/components/Header";
 
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -54,7 +54,6 @@ export default function MaterialDataPage() {
   const router = useRouter();
   const [, setIsRedirecting] = useState(false);
   
-  // Updated state to include 'name' for the Admin header
   const [currentUser, setCurrentUser] = useState<{ id: number | null; role: string | null; name: string }>({ 
     id: null, 
     role: null, 
@@ -66,7 +65,6 @@ export default function MaterialDataPage() {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        // Capture name as well
         setCurrentUser({ id: user.id, role: user.role, name: user.name || "" });
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
@@ -142,23 +140,17 @@ export default function MaterialDataPage() {
   const renderHeader = () => {
     if (!currentUser.role) return null;
 
-    // Handler to navigate back to Admin Dashboard
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleAdminNav = (view: any) => {
       const newView = typeof view === 'function' ? view('orders') : view;
       sessionStorage.setItem("adminView", newView);
       router.push("/admin/dashboard");
     };
 
-    // Handler to navigate back to User Dashboard
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleUserNav = (view: any) => {
       sessionStorage.setItem("userDashboardView", view);
       router.push("/user/dashboard");
     };
 
-    // Handler to navigate back to Sales Dashboard
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleSalesNav = (view: any) => {
       sessionStorage.setItem("salesDashboardView", view);
       router.push("/sales/dashboard");
@@ -169,14 +161,14 @@ export default function MaterialDataPage() {
         return (
           <AdminDashboardHeader
             userName={currentUser.name}
-            view={"orders"} // Highlight 'ORDER LIST' or similar
+            view={"orders"}
             setView={handleAdminNav}
           />
         );
       case "USER":
         return (
           <UserDashboardHeader
-            view={"pick_pack"} // Highlight 'PICK & PACK'
+            view={"pick_pack"}
             setView={handleUserNav}
           />
         );
@@ -343,7 +335,7 @@ export default function MaterialDataPage() {
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage);
-      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial, packingStageCompleted?: boolean })?.updatedMaterial; // Add packingStageCompleted
+      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial, packingStageCompleted?: boolean })?.updatedMaterial;
       if (!updatedMaterial) {
         throw new Error(
           "Invalid response from server when updating packing stage."
@@ -381,67 +373,135 @@ export default function MaterialDataPage() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* 1. Render the Role-Specific Header */}
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        minHeight: '100vh',
+        bgcolor: '#f5f5f5' // Light gray background for Fanuc theme
+      }}
+    >
+      {/* Role-Specific Header */}
       {renderHeader()}
 
-      {/* 2. Existing Main Content (Wrapped in flex-grow to fill space) */}
-      <main className="p-6 space-y-6 flex-grow">
-        <HeaderSection
-          so={so}
-          customerName={customerName}
-          transferOrder={transferOrder}
-          fgObd={fgObd}
-          machineModel={machineModel}
-          cncSerialNo={cncSerialNo}
-          items={localRows}
-        />
-
-        {isOrderFullyComplete ? (
-          <Alert severity="success" sx={{ my: 4 }}>
-            This order is fully packed and complete. No further actions can be
-            taken.
-          </Alert>
-        ) : (
-          <InputBoxSection
-            onSubmit={handleProcess}
-            saleOrderNumber={so}
-            onFileCreated={() => {
-              setUploadNotice("File metadata saved");
-              refetch();
-            }}
-            disabled={isOrderFullyComplete}
+      {/* Main Content with Fanuc-themed Container */}
+      <Container 
+        maxWidth="xl" 
+        sx={{ 
+          flexGrow: 1, 
+          py: 4,
+          px: { xs: 2, sm: 3, md: 4 }
+        }}
+      >
+        {/* Header Section Card */}
+        <Paper 
+          elevation={3}
+          sx={{ 
+            mb: 3,
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '2px solid #e0e0e0'
+          }}
+        >
+          <HeaderSection
+            so={so}
+            customerName={customerName}
+            transferOrder={transferOrder}
+            fgObd={fgObd}
+            machineModel={machineModel}
+            cncSerialNo={cncSerialNo}
             items={localRows}
           />
+        </Paper>
+
+        {/* Order Complete Alert or Input Section */}
+        {isOrderFullyComplete ? (
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              fontSize: '1rem',
+              fontWeight: 500,
+              boxShadow: 2
+            }}
+          >
+            This order is fully packed and complete. No further actions can be taken.
+          </Alert>
+        ) : (
+          <Paper 
+            elevation={3}
+            sx={{ 
+              mb: 3,
+              py: 3,
+              px: 2,
+              borderRadius: 2,
+              border: '2px solid #e0e0e0'
+            }}
+          >
+            <InputBoxSection
+              onSubmit={handleProcess}
+              saleOrderNumber={so}
+              onFileCreated={() => {
+                setUploadNotice("File metadata saved");
+                refetch();
+              }}
+              disabled={isOrderFullyComplete}
+              items={localRows}
+            />
+          </Paper>
         )}
 
+        {/* Error Alert */}
         {editError && (
-          <Alert severity="error" className="my-4">
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              fontSize: '0.95rem',
+              boxShadow: 2
+            }}
+          >
             {editError}
           </Alert>
         )}
 
-        <MaterialDataTable
-          rows={localRows}
-          loading={busy}
-          onUpdateIssueStage={handleUpdateIssueStage}
-          onUpdatePackingStage={handleUpdatePackingStage}
-          onProcessRowUpdateError={(err) =>
-            setEditError(extractErrorMessage(err))
-          }
-          isOrderFullyComplete={isOrderFullyComplete}
-        />
+        {/* Material Data Table */}
+        <Box sx={{ mb: 4 }}>
+          <MaterialDataTable
+            rows={localRows}
+            loading={busy}
+            onUpdateIssueStage={handleUpdateIssueStage}
+            onUpdatePackingStage={handleUpdatePackingStage}
+            onProcessRowUpdateError={(err) =>
+              setEditError(extractErrorMessage(err))
+            }
+            isOrderFullyComplete={isOrderFullyComplete}
+          />
+        </Box>
 
+        {/* Success Snackbar */}
         <Snackbar
           open={!!uploadNotice}
           autoHideDuration={3000}
           onClose={() => setUploadNotice(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert severity="success" onClose={() => setUploadNotice(null)}>
+          <Alert 
+            severity="success" 
+            onClose={() => setUploadNotice(null)}
+            sx={{ 
+              minWidth: 300,
+              fontSize: '1rem',
+              fontWeight: 500,
+              boxShadow: 4
+            }}
+          >
             {uploadNotice}
           </Alert>
         </Snackbar>
-      </main>
+      </Container>
     </Box>
   );
 }

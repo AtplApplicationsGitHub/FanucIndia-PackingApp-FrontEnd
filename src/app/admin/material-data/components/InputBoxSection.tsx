@@ -106,18 +106,32 @@ const InputBoxSection: FC<Props> = ({
 
           <Button
             type="submit"
-            sx={(theme) => ({
-              color: theme.palette.text.primary,
-              "&:hover": { backgroundColor: theme.palette.action.hover },
+            sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
+              color: (theme) => theme.palette.text.primary,
               borderRadius: 0,
-              minHeight: 40,
-              minWidth: 112,
-              whiteSpace: "nowrap",
-              "& .MuiButton-startIcon": { mr: 1 },
-            })}
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 112, 
+              height: 40,
+              px: 3,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
+              "& .MuiButton-startIcon": { mr: 1 }, 
+            }}
             disabled={disabled}
           >
-            Submit
+            SUBMIT
           </Button>
 
           <UploadErpMaterialFileButton

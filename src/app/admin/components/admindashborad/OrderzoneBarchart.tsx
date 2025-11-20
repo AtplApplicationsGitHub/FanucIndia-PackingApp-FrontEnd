@@ -13,8 +13,10 @@ import {
 } from 'recharts';
 import { Table, BarChart3 } from 'lucide-react';
 import { useOrderZoneBarChart, ZoneStatus } from '../hooks/useOrderzoneBarchart';
+import { useTheme } from "@mui/material";
 
 export default function OrderStatusByZone() {
+  const theme = useTheme();
   const { data, loading, error, refetch } = useOrderZoneBarChart();
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
 
@@ -69,7 +71,10 @@ export default function OrderStatusByZone() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <h2 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <h2 
+            className="text-lg uppercase font-semibold"
+            style={{ color: theme.palette.secondary.main }}
+          >
             Order Status by Sales Zone
           </h2>
           <p className="text-sm text-slate-500 mt-1">

@@ -81,7 +81,24 @@ const EditableCell = ({
   };
 
   if (disabled) {
-    return <Typography variant="body2">{value}</Typography>;
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          px: 1,
+          py: 0.5,
+          borderRadius: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '35px',
+        }}
+      >
+        <Typography variant="body2" fontWeight={500}>
+          {value}
+        </Typography>
+      </Box>
+    );
   }
 
   return (

@@ -17,6 +17,7 @@ import {
   Typography,
   InputAdornment,
   IconButton,
+  useTheme, // Add this import
 } from "@mui/material";
 import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
@@ -74,6 +75,8 @@ const AdminUserFormModal: React.FC<Props> = ({
   onSubmit,
   editingUser,
 }) => {
+  const theme = useTheme(); // Initialize theme hook
+
   const {
     register,
     handleSubmit,
@@ -207,9 +210,46 @@ const AdminUserFormModal: React.FC<Props> = ({
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
     (!!password && (!allSatisfied || !passwordsMatch));
 
+  // Updated Reusable sx prop for buttons
+  const buttonSx = {
+    bgcolor: (theme: any) => theme.palette.action.hover, // Grey by default
+    color: (theme: any) => theme.palette.text.primary,   // Dark text
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 120,
+    height: 40,
+    px: 3,
+    textTransform: "none",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      bgcolor: (theme: any) => theme.palette.primary.main, // Fanuc Yellow on hover
+      color: (theme: any) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+      "& .MuiSvgIcon-root, & svg": {
+        color: "#000",
+      },
+    },
+    "&:disabled": {
+       opacity: 0.6,
+       bgcolor: (theme: any) => theme.palette.action.disabledBackground,
+       color: (theme: any) => theme.palette.text.disabled
+    }
+  };
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{editingUser ? "Edit User" : "Create User"}</DialogTitle>
+      {/* Updated Title Color to Fanuc Red */}
+      <DialogTitle sx={{ 
+        color: theme.palette.secondary.main, // Fanuc Red
+        fontWeight: 'bold',
+        textTransform: 'uppercase'
+      }}>
+        {editingUser ? "Edit User" : "Create User"}
+      </DialogTitle>
+      
       <DialogContent>
         <Box
           component="form"
@@ -219,6 +259,7 @@ const AdminUserFormModal: React.FC<Props> = ({
           gap={2}
           onSubmit={handleSubmit(submitHandler)}
         >
+          {/* ... existing TextFields for Name, Email, Role, etc. ... */}
           <TextField
             label="Name"
             fullWidth
@@ -390,27 +431,21 @@ const AdminUserFormModal: React.FC<Props> = ({
           )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
+      
+      <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
         <Button
           onClick={handleClose}
-          variant="text"
-          sx={{
-            color: (theme) => theme.palette.text.primary,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.action.hover,
-            },
-          }}
+          sx={buttonSx} 
         >
-          Cancel
+          CANCEL
         </Button>
         <Button
           type="submit"
           onClick={handleSubmit(submitHandler)}
           disabled={disableSubmit}
-          variant="contained"
-          color="primary"
+          sx={buttonSx}
         >
-          {editingUser ? "Update" : "Create"}
+          {editingUser ? "UPDATE" : "CREATE"}
         </Button>
       </DialogActions>
     </Dialog>

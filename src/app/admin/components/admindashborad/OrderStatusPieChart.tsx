@@ -10,6 +10,7 @@ import {
   TooltipProps,
 } from "recharts";
 import { useOrderOverallStatus, OrderOverallStatus } from "../hooks/useOrderStatusPieChart";
+import { useTheme } from "@mui/material";
 
 type DataItem = {
   name: string;
@@ -107,6 +108,7 @@ const CustomTooltip: React.FC<
 };
 
 export default function OrderStatusPieChart() {
+  const theme = useTheme();
   const { data, loading, error } = useOrderOverallStatus();
 
   const transformRows = (api: OrderOverallStatus | null): DataItem[] => {
@@ -173,7 +175,10 @@ export default function OrderStatusPieChart() {
       <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-md p-8 border border-gray-100 dark:border-slate-800 min-h-[543px]">
         {/* Title & Subtitle */}
         <div className="mb-6">
-          <h3 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <h3 
+            className="text-lg uppercase font-semibold"
+            style={{ color: theme.palette.secondary.main }}
+          >
             Overall Order Status Count
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">

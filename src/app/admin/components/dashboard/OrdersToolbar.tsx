@@ -13,6 +13,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
+import { X } from "lucide-react"; 
 
 type Props = {
   searchInput: string;
@@ -39,7 +40,7 @@ export default function AdminOrdersToolbar({
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          gap: { xs: 2, md: 2 }, // Reduced gap for tighter layout
+          gap: { xs: 2, md: 2 },
           width: { xs: "100%", md: "auto" },
           mx: { xs: 0, md: "auto" },
           px: { xs: 1, md: 2 },
@@ -123,12 +124,28 @@ export default function AdminOrdersToolbar({
 
         <Button
           onClick={onClear}
+          startIcon={<X size={18} />}
           sx={{
+            bgcolor: (theme) => theme.palette.action.hover,
             color: (theme) => theme.palette.text.primary,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.action.hover,
-            },
             borderRadius: 0,
+            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+            fontWeight: 600,
+            fontSize: 15,
+            minWidth: 120,
+            height: 40,
+            px: 3,
+            textTransform: "none",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              bgcolor: (theme) => theme.palette.primary.main,
+              color: (theme) => theme.palette.primary.contrastText,
+              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+              "& .MuiSvgIcon-root, & svg": {
+                color: "#000",
+              },
+            },
           }}
         >
           CLEAR

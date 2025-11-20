@@ -2,8 +2,10 @@
 import React from "react";
 import { useDispatchSummary } from "../hooks/useDispatchSummary";
 import { Clock, CheckCircle } from "lucide-react";
+import { useTheme } from "@mui/material";
 
 export default function DispatchSummary() {
+  const theme = useTheme();
   const { data, loading, error } = useDispatchSummary();
 
   // Fallback defaults while loading
@@ -16,7 +18,10 @@ export default function DispatchSummary() {
 
         {/* Header */}
         <div className="px-6 pt-6">
-          <h2 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <h2 
+            className="text-lg uppercase font-semibold"
+            style={{ color: theme.palette.secondary.main }}
+          >
             Today&apos;s Dispatch
           </h2>
         </div>

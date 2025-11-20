@@ -29,8 +29,35 @@ export default function MaterialDetails({ materialDetails, onViewAttachments }: 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="material-section">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>MATERIAL DETAILS</Typography>
-        <Button onClick={onViewAttachments} color="info">Attachments</Button>
+        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>MATERIALS</Typography>
+        <Button 
+          onClick={onViewAttachments} 
+          variant="contained"
+          sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
+              color: (theme) => theme.palette.text.primary,
+              borderRadius: 0,
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 120,
+              height: 40,
+              px: 3,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
+            }}
+        >
+          ATTACHMENTS
+        </Button>
       </Box>
 
       <TableContainer component={Paper} 

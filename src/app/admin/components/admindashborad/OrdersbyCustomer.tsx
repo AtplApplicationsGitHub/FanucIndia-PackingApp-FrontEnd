@@ -1,6 +1,7 @@
 // app/admin/components/OrdersByCustomer.tsx
 import React from "react";
 import { useOrdersByCustomer } from "../hooks/useOrdersbyCustomer";
+import { useTheme } from "@mui/material";
 
 type Props = {
   maxHeight?: number | string;
@@ -23,6 +24,7 @@ export default function OrdersByCustomer({
   maxHeight = 360,
   className = "",
 }: Props) {
+  const theme = useTheme();
   const { data, loading, error } = useOrdersByCustomer();
 
   const items: Customer[] = (data as Customer[]) ?? [];
@@ -41,7 +43,8 @@ export default function OrdersByCustomer({
           <div>
             <p
               id="orders-by-customer"
-              className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold"
+              className="text-lg uppercase font-semibold"
+              style={{ color: theme.palette.secondary.main }}
             >
               Orders by Customer
             </p>

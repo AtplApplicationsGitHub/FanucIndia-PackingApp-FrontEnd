@@ -1,6 +1,7 @@
 // components/OrdersByProduct.tsx
 import React from "react";
 import { useOrdersByProduct, OrderByProduct } from "../hooks/useOrdersByProduct";
+import { useTheme } from "@mui/material";
 
 type Props = {
   /**
@@ -20,6 +21,7 @@ export default function OrdersByProduct({
   maxHeight = 360,
   className = "",
 }: Props) {
+  const theme = useTheme();
   const { data, loading, error } = useOrdersByProduct();
 
   // Safely handle null/undefined → default to empty array while loading
@@ -39,7 +41,8 @@ export default function OrdersByProduct({
           <div>
             <p
               id="orders-by-product"
-              className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold"
+              className="text-lg uppercase font-semibold"
+              style={{ color: theme.palette.secondary.main }}
             >
               Orders by Product
             </p>

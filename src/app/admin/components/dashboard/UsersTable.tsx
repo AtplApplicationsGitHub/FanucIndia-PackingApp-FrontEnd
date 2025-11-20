@@ -1,8 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
+  useTheme,
+  alpha,
+} from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -23,11 +38,18 @@ const AdminUsersTable: React.FC<Props> = ({
   onDelete,
   currentUserId,
 }) => {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.1);
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [pendingDeleteUserId, setPendingDeleteUserId] = React.useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+
+  // Pagination State
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -64,128 +86,129 @@ const AdminUsersTable: React.FC<Props> = ({
     }
   };
 
-  const columns: GridColDef<User>[] = [
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-      minWidth: 100,
-    },
-    {
-      field: "email",
-      headerName: "Email",
-      flex: 1,
-      minWidth: 100,
-    },
-    {
-      field: "role",
-      headerName: "Role",
-      flex: 0.8,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<User>) => (
-        <span style={{ textTransform: "capitalize" }}>
-          {params.value as string}
-        </span>
-      ),
-    },
-    {
-      field: "createdAt",
-      headerName: "Created",
-      flex: 1,
-      minWidth: 100,
-      valueGetter: (_value, row) =>
-        row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-",
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      sortable: false,
-      width: 100,
-      align: "center",
-      renderCell: (params: GridRenderCellParams<User>) => {
-        const row = params.row as User;
-        return (
-          <Box>
-            <IconButton
-              onClick={(e) => handleMenuOpen(e, row.id)}
-              size="small"
-              aria-label="actions"
-            >
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl) && menuRowId === row.id}
-              onClose={handleMenuClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-            >
-              <MenuItem
-                onClick={() => {
-                  onEdit(row.id);
-                  handleMenuClose();
-                }}
-              >
-                <Pencil size={16} style={{ marginRight: 10 }} /> Edit
-              </MenuItem>
-              <MenuItem
-                onClick={() => handleDeleteClick(row.id)}
-                sx={{ color: "error.main" }}
-                disabled={row.id === currentUserId}
-              >
-                <Trash2 size={16} style={{ marginRight: 10 }} />
-                {row.id === currentUserId ? "Cannot Delete Self" : "Delete"}
-              </MenuItem>
-            </Menu>
-          </Box>
-        );
-      },
-    },
-  ];
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Calculate visible rows for the current page
+  const visibleRows = React.useMemo(
+    () => users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [users, page, rowsPerPage]
+  );
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{
-          border: (theme) => `1px solid ${theme.palette.divider}`,
+      <TableContainer
+        component={Paper}
+        sx={{
           borderRadius: 2,
-          overflow: 'hidden'
-      }}>
-        <DataGrid
-            rows={users}
-            columns={columns}
-            getRowId={(row) => row.id}
-            pageSizeOptions={[5, 10, 20]}
-            initialState={{
-            pagination: { paginationModel: { pageSize: 10, page: 0 } },
-            }}
-            disableRowSelectionOnClick
-            sx={{
-            border: "none",
-            bgcolor: "background.paper",
-            "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "rgba(0,0,0,0.04)",
-                fontWeight: 600,
-            },
-            "& .MuiDataGrid-cell": {
-                py: 1,
-                lineHeight: 1.3,
-            },
-            }}
-            localeText={{
-            noRowsLabel: (
-                <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-                No users found.
-                </Typography>
-            ) as unknown as string,
-            }}
-        />
-      </Box>
+          overflow: "hidden",
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: 0,
+        }}
+      >
+        <Table size="small">
+          <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Role</TableCell>
+              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Created</TableCell>
+              <TableCell align="center" sx={{ fontWeight: "bold", width: 100, color: theme.palette.primary.contrastText }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No users found.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              visibleRows.map((row, index) => (
+                <TableRow
+                  key={row.id}
+                  sx={{
+                    // Alternating row colors
+                    backgroundColor: index % 2 === 0 ? "inherit" : lightYellow,
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.action.hover, 0.05),
+                    },
+                  }}
+                >
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.email}</TableCell>
+                  <TableCell sx={{ textTransform: "capitalize" }}>
+                    {row.role.toLowerCase()}
+                  </TableCell>
+                  <TableCell>
+                    {row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-"}
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      onClick={(e) => handleMenuOpen(e, row.id)}
+                      size="small"
+                      aria-label="actions"
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 20]}
+        component="div"
+        count={users.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuRowId) onEdit(menuRowId);
+            handleMenuClose();
+          }}
+        >
+          <Pencil size={16} style={{ marginRight: 10 }} /> Edit
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuRowId) handleDeleteClick(menuRowId);
+          }}
+          sx={{ color: "error.main" }}
+          disabled={menuRowId === currentUserId}
+        >
+          <Trash2 size={16} style={{ marginRight: 10 }} />
+          {menuRowId === currentUserId ? "Cannot Delete Self" : "Delete"}
+        </MenuItem>
+      </Menu>
 
       <ConfirmDeleteDialog
         open={deleteDialogOpen}

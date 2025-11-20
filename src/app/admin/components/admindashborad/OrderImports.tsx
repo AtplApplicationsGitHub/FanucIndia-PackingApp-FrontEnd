@@ -2,8 +2,10 @@
 import React from "react";
 import { useOrderImports } from "../hooks/useOrderImports";
 import { RefreshCw , Calendar, AlertCircle } from "lucide-react";
+import { useTheme } from "@mui/material";
 
 export default function OrderImportsCard() {
+  const theme = useTheme();
   const { data: stats, loading, error, refetch } = useOrderImports();
 
   // Calculate total imports for the period
@@ -60,7 +62,10 @@ export default function OrderImportsCard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
+            <h3 
+              className="text-lg uppercase font-semibold"
+              style={{ color: theme.palette.secondary.main }}
+            >
               Order Imports
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">

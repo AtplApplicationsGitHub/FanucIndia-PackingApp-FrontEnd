@@ -26,6 +26,7 @@ import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload } from "@/common/lib/secure-download";
 import SalesDashboardHeader from "@/app/sales/components/Header"; 
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
+import { Theme } from "@mui/material/styles";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -115,6 +116,35 @@ export default function SoSearchPage() {
   const params = useParams<{ soNumber?: string[] }>();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState<UserRole>(null);
+
+  const buttonSx = {
+    bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
+    color: (theme: Theme) => theme.palette.text.primary,   // Dark text
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 120,
+    height: 40,
+    px: 3,
+    textTransform: "none" as const,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      bgcolor: (theme: Theme) => theme.palette.primary.main, // Fanuc Yellow on hover
+      color: (theme: Theme) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+      "& .MuiSvgIcon-root, & svg": {
+        color: "#000", // Icon turns black on hover
+      },
+    },
+    "&:disabled": {
+      opacity: 0.6,
+      cursor: "not-allowed",
+      bgcolor: (theme: Theme) => theme.palette.action.hover,
+      color: (theme: Theme) => theme.palette.text.disabled,
+    },
+  };
 
   const {
     isLoading: isActionLoading,
@@ -347,77 +377,66 @@ export default function SoSearchPage() {
               onKeyPress={(e) => e.key === "Enter" && handleManualSearch()}
               sx={{ width: 400, bgcolor: "background.paper" }}
             />
+            
+            {/* SUBMIT BUTTON */}
             <Button
-              variant="contained"
+              variant="contained" // Keep contained to accept bgcolor sx override
               startIcon={<Search />}
               onClick={handleManualSearch}
               disabled={loading}
+              sx={buttonSx}
             >
               {loading ? (
-                <CircularProgress size={24} color="inherit" />
+                <CircularProgress size={20} color="inherit" />
               ) : (
-                "Submit"
+                "SUBMIT"
               )}
             </Button>
+
+            {/* PRINT BUTTON */}
             <Button
-              variant="text"
+              variant="contained"
               startIcon={<Print />}
               onClick={handlePrint}
-              sx={{
-                color: (theme) => theme.palette.text.primary,
-                "&:hover": {
-                  backgroundColor: (theme) => theme.palette.action.hover,
-                },
-                borderRadius: 0,
-              }}
+              sx={buttonSx}
             >
-              Print
+              PRINT
             </Button>
+
+            {/* ARCHIVE / DELETE BUTTONS */}
             {userRole === 'ADMIN' && data && (
               <>
                 {data.salesOrder.status === "Dispatched" && !data.isArchived && (
                   <Button
-                    variant="text"
+                    variant="contained"
                     startIcon={<Archive fontSize="small" />}
                     onClick={() =>
                       openConfirmation("archive", data.salesOrder.saleOrderNumber)
                     }
                     disabled={isActionLoading}
-                    sx={{
-                      color: (theme) => theme.palette.text.primary,
-                      "&:hover": {
-                        backgroundColor: (theme) => theme.palette.action.hover,
-                      },
-                      borderRadius: 0,
-                    }}
+                    sx={buttonSx}
                   >
                     {isActionLoading && confirmAction === "archive" ? (
                       <CircularProgress size={20} color="inherit" /> 
                     ) : (
-                      "Archive"
+                      "ARCHIVE"
                     )}
                   </Button>
                 )}
                 {data.isArchived && (
                   <Button
-                    variant="text"
+                    variant="contained"
                     startIcon={<Delete fontSize="small" />}
                     onClick={() =>
                       openConfirmation("delete", data.salesOrder.saleOrderNumber)
                     }
                     disabled={isActionLoading}
-                    sx={{
-                      color: (theme) => theme.palette.text.primary,
-                      "&:hover": {
-                        backgroundColor: (theme) => theme.palette.action.hover,
-                      },
-                      borderRadius: 0,
-                    }}
+                    sx={buttonSx}
                   >
                     {isActionLoading && confirmAction === "delete" ? (
                       <CircularProgress size={20} color="inherit" /> 
                     ) : (
-                      "Delete"
+                      "DELETE"
                     )}
                   </Button>
                 )}

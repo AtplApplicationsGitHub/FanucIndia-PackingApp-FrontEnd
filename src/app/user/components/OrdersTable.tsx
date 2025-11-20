@@ -1,110 +1,145 @@
 "use client";
 
 import * as React from "react";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Box, IconButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Paper,
+  useTheme,
+  alpha,
+  Typography,
+  CircularProgress
+} from "@mui/material";
 import { Eye } from "lucide-react";
 import { SalesOrder } from "@/app/admin/components/types/admin";
 
 interface Props {
   orders: SalesOrder[];
   loading: boolean;
-  onDetailedView: (order: SalesOrder) => void; // 👈 Add this prop
+  onDetailedView: (order: SalesOrder) => void;
 }
 
 const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView }) => {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.1);
 
-  const handleViewDetails = (order: SalesOrder) => { // 👈 Change parameter to the whole order object
-    onDetailedView(order); // 👈 Call the prop function
+  // --- Pagination State ---
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
   };
 
-  const columns: GridColDef<SalesOrder>[] = [
-    {
-      field: "actions",
-      headerName: "Action",
-      width: 80,
-      sortable: false,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params: GridRenderCellParams<SalesOrder>) => (
-        <Tooltip title="View Details">
-          <IconButton
-            onClick={() => handleViewDetails(params.row)} // 👈 Pass the full row object
-            size="small"
-          >
-            <Eye size={18} />
-          </IconButton>
-        </Tooltip>
-      ),
-    },
-    // ... (the rest of the columns remain the same)
-    {
-      field: "product",
-      headerName: "Product",
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (_value, row) => row.product?.name || "-",
-    },
-    {
-      field: "saleOrderNumber",
-      headerName: "Sale Order Number",
-      flex: 1,
-      minWidth: 150,
-    },
-    {
-      field: "outboundDelivery",
-      headerName: "Outbound Delivery",
-      flex: 1,
-      minWidth: 150,
-    },
-    {
-      field: "transferOrder",
-      headerName: "Transfer Order",
-      flex: 1,
-      minWidth: 150,
-    },
-    {
-      field: "packConfig",
-      headerName: "Packing Configuration",
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (_value, row) => row.packConfig?.configName || "-",
-    },
-    {
-      field: "specialRemarks",
-      headerName: "Special Remarks",
-      flex: 1.5,
-      minWidth: 200,
-      valueGetter: (_value, row) => row.specialRemarks || "-",
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 120,
-      valueGetter: (_value, row) => row.status || "-",
-    },
-  ];
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Calculate visible rows
+  const visibleRows = React.useMemo(
+    () => orders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [orders, page, rowsPerPage]
+  );
+
+  const handleViewDetails = (order: SalesOrder) => {
+    onDetailedView(order);
+  };
+
+  if (loading && orders.length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%" }}>
-      <DataGrid
-        rows={orders}
-        columns={columns}
-        getRowId={(row) => row.id}
-        loading={loading}
-        autoHeight
-        pageSizeOptions={[10, 25, 50]}
-        initialState={{
-          pagination: { paginationModel: { pageSize: 10 } },
-        }}
-        disableRowSelectionOnClick
+      <TableContainer
+        component={Paper}
         sx={{
-          border: "none",
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "rgba(0,0,0,0.04)",
-            fontWeight: 600,
-          },
+          borderRadius: 2,
+          overflow: "hidden",
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: 0,
         }}
+      >
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              {/* Plain Header (No background color) */}
+              <TableCell align="center" sx={{ fontWeight: "bold" }}>Action</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Product</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Sale Order Number</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Outbound Delivery</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Transfer Order</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Packing Configuration</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Special Remarks</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {orders.length === 0 ? (
+               <TableRow>
+                 <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                   <Typography variant="body2" color="text.secondary">
+                     No assigned orders found.
+                   </Typography>
+                 </TableCell>
+               </TableRow>
+            ) : (
+              visibleRows.map((row, index) => (
+                <TableRow
+                  key={row.id}
+                  sx={{
+                    // Alternating row colors: Light Yellow for every second row
+                    backgroundColor: index % 2 === 0 ? "inherit" : lightYellow,
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.action.hover, 0.05),
+                    },
+                  }}
+                >
+                  <TableCell align="center">
+                    <Tooltip title="View Details">
+                      <IconButton
+                        onClick={() => handleViewDetails(row)}
+                        size="small"
+                      >
+                        <Eye size={18} />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>{row.product?.name || "-"}</TableCell>
+                  <TableCell>{row.saleOrderNumber}</TableCell>
+                  <TableCell>{row.outboundDelivery}</TableCell>
+                  <TableCell>{row.transferOrder}</TableCell>
+                  <TableCell>{row.packConfig?.configName || "-"}</TableCell>
+                  <TableCell>{row.specialRemarks || "-"}</TableCell>
+                  <TableCell>{row.status || "-"}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 50]}
+        component="div"
+        count={orders.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
       />
     </Box>
   );
