@@ -5,7 +5,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Typography } from "@mui/material";
 import { useSalesKpis } from "../../components/hooks/OrderStatus";
 
-const COLORS = ["#3B82F6", "#F97316", "#10B981", "#8B5CF6"] as const;
+//
+// Color palette (matches image):
+// Assigned = Blue, Issued = Orange, Packed = Purple, Dispatched = Green
+//
+const COLORS = ["#3B82F6", "#F97316", "#8B5CF6", "#10B981"] as const;
 
 interface ChartDataItem {
   name: string;
@@ -102,22 +106,22 @@ export default function OrderStatusChart() {
           {
             name: "Assigned (R105)",
             value: data.r105Count ?? 0,
-            color: COLORS[0],
+            color: COLORS[0], // Blue
           },
           {
             name: "Issued (W105)",
             value: data.w105Count ?? 0,
-            color: COLORS[1],
+            color: COLORS[1], // Orange
           },
           {
             name: "Packed (F105)",
             value: data.f105Count ?? 0,
-            color: COLORS[2],
+            color: COLORS[2], // Purple
           },
           {
             name: "Dispatched",
             value: data.dispatchedSoCount ?? 0,
-            color: COLORS[3],
+            color: COLORS[3], // Green
           },
         ];
 
@@ -150,7 +154,6 @@ export default function OrderStatusChart() {
         boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
         height: "100%",
         display: "flex",
-
         flexDirection: "column",
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -194,7 +197,7 @@ export default function OrderStatusChart() {
             <span style={{ color: "#9ca3af" }}>Loading chart...</span>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={420}>
             <PieChart>
               <Tooltip content={<CustomTooltip />} />
               <Pie
@@ -257,46 +260,28 @@ export default function OrderStatusChart() {
         )}
       </div>
 
-      {!loading && chartData.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "24px",
-            flexWrap: "wrap",
-            marginTop: "20px",
-            paddingTop: "16px",
-            borderTop: "1px solid #e5e7eb",
-          }}
-        >
-          {chartData.map((item) => (
-            <div
-              key={item.name}
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            >
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  borderRadius: "50%",
-                  backgroundColor: item.color,
-                  border: "2px solid white",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                }}
-              >
-                {item.name} ({item.value.toLocaleString()})
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Legend pills — order & colors now match the chart */}
+      <div className="flex flex-wrap justify-center gap-5 mt-8">
+        <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 shadow-sm">
+          <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
+          Assigned (R105)
+        </span>
+
+        <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200 shadow-sm">
+          <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+          Issued (W105)
+        </span>
+
+        <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shadow-sm">
+          <span className="w-3 h-3 rounded-full bg-[#8B5CF6]" />
+          Packed (F105)
+        </span>
+
+        <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
+          <span className="w-3 h-3 rounded-full bg-[#10B981]" />
+          Dispatched
+        </span>
+      </div>
     </div>
   );
 }

@@ -25,7 +25,7 @@ const StatCard = ({
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
       <div className="flex items-center justify-between">
         <div>
-          <p className={`text-sm font-medium ${iconColor}`}>{title}</p>
+          <p className={`  text-xl   uppercase font-semibold ${iconColor}`}>{title}</p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
             {value}
           </p>
@@ -79,13 +79,13 @@ const StatusCards = () => {
   if (error) {
     return (
       <div className="col-span-full text-center p-8 bg-red-50 dark:bg-red-900/30 rounded-xl text-red-600">
-        Failed to load dashboard stats: {error}
+        Something went wrong while loading your data : {error}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6  text-xl  text-slate-800 dark:text-slate-100 uppercase font-semibold ">
       {cards.map((card, idx) => (
         <StatCard key={idx} {...card} />
       ))}

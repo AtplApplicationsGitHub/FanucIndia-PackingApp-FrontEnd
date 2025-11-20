@@ -99,6 +99,8 @@ export const API = {
     ADMIN_OVERALL_STATUS:    `${API_BASE_URL}/dashboard/admin-overall-status`,
     ADMIN_STATUS_BY_ZONE:    `${API_BASE_URL}/dashboard/admin-status-by-zone`,
     ADMIN_PAYMENT_BY_ZONE:   `${API_BASE_URL}/dashboard/admin-payment-by-zone`,
+    ADMIN_ORDERS_BY_PRODUCT: `${API_BASE_URL}/dashboard/admin-orders-by-product`,
+    ADMIN_ORDERS_BY_CUSTOMER: `${API_BASE_URL}/dashboard/admin-orders-by-customer`,
   },
 };
 

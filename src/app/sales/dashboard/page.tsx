@@ -9,7 +9,7 @@ import Alert from "@mui/material/Alert";
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import SalesDashboardToolbar from "@/app/sales/components/Toolbar";
 import SalesOrdersTable from "@/app/sales/components/Table";
-import HomeDashboard from "@/app/sales/components/SalesDashboard"; // Fixed path
+import HomeDashboard from "@/app/sales/components/SalesDashboard";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboard";
 import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
@@ -19,7 +19,7 @@ export default function SalesDashboard() {
     orders,
     lookup,
     error,
-    userName,
+    // userName, // ← Removed: assigned but never used
     view,
     setView,
     searchTerm,
@@ -67,7 +67,11 @@ export default function SalesDashboard() {
           onClose={() => setAlert(null)}
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
-          {alert ? <Alert onClose={() => setAlert(null)} severity={alert.severity}>{alert.message}</Alert> : undefined}
+          {alert ? (
+            <Alert onClose={() => setAlert(null)} severity={alert.severity}>
+              {alert.message}
+            </Alert>
+          ) : undefined}
         </Snackbar>
 
         <SalesDashboardHeader view={view} setView={setView} />
@@ -120,7 +124,11 @@ export default function SalesDashboard() {
           description={
             <>
               Are you sure you want to delete this order? This action cannot be undone.
-              {deleteError && <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert>}
+              {deleteError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {deleteError}
+                </Alert>
+              )}
             </>
           }
         />

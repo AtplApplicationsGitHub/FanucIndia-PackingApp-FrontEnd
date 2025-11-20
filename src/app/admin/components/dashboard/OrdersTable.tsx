@@ -72,7 +72,6 @@ export default function AdminOrdersTable({
   setPageSize,
   onDelete,
   onUpdateInline,
-  loading, // TablePagination doesn't have a built-in loading state, but we can disable actions if needed
   onEdit,
   onDetailedView,
 }: Props) {

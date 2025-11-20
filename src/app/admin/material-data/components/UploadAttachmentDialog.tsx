@@ -29,7 +29,6 @@ import {
   deleteMaterialFile,
   updateMaterialFile,
 } from "@/common/services/materialFile.service";
-import type { MaterialFile } from "@/app/admin/material-files/types/material-file";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 type Row = {

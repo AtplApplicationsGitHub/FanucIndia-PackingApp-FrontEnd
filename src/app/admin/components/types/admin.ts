@@ -99,9 +99,10 @@ export interface StatusCardData {
 }
 
 
+// types/admin.ts
 export type AdminNewImportItem = {
-  dayLabel: string;
-  date: string; // YYYY-MM-DD
+  date: string;       // "2025-11-19"
+  dayLabel: string;   // "Today", "Yesterday", "Nov 15"
   count: number;
 };
 
