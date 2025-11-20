@@ -4,20 +4,22 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Paper,
-  Typography,
   Link as MuiLink,
   TextField,
   InputAdornment,
   IconButton,
   Snackbar,
   Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  useTheme,
+  alpha,
 } from "@mui/material";
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderCellParams,
-  GridEventListener,
-} from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -61,6 +63,7 @@ type InlineEdit = {
 } | null;
 
 export default function FgDashboardView() {
+  const theme = useTheme();
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -70,11 +73,12 @@ export default function FgDashboardView() {
     message: string;
     severity: "success" | "error";
   } | null>(null);
+  
   const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
+  
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -87,8 +91,9 @@ export default function FgDashboardView() {
       if (date) {
         params.append("date", dayjs(date).format("YYYY-MM-DD"));
       }
-      params.append("page", (paginationModel.page + 1).toString());
-      params.append("limit", paginationModel.pageSize.toString());
+      // API expects 1-based page
+      params.append("page", (page + 1).toString());
+      params.append("limit", rowsPerPage.toString());
 
       const res = await authFetch(`${API.FG_DASHBOARD}?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch data");
@@ -105,7 +110,7 @@ export default function FgDashboardView() {
     } finally {
       setLoading(false);
     }
-  }, [search, date, paginationModel]);
+  }, [search, date, page, rowsPerPage]);
 
   useEffect(() => {
     fetchData();
@@ -176,116 +181,38 @@ export default function FgDashboardView() {
     );
   }
 
-  const columns: GridColDef<FgDashboardRow>[] = [
-    {
-      field: "deliveryDate",
-      headerName: "Delivery Date",
-      width: 130,
-      valueGetter: (_value, row) => formatDate(row.deliveryDate),
-    },
-    {
-      field: "saleOrderNumber",
-      headerName: "SO",
-      width: 120,
-      renderCell: (params: GridRenderCellParams<FgDashboardRow>) => (
-        <MuiLink
-          component={Link}
-          href={`/so-search/${params.row.saleOrderNumber}`}
-          underline="hover"
-          sx={{ fontWeight: 500 }}
-        >
-          {params.value}
-        </MuiLink>
-      ),
-    },
-    { field: "product", headerName: "Product", width: 150 },
-    { field: "customerName", headerName: "Customer Name", width: 150 },
-    {
-      field: "payment",
-      headerName: "Payment",
-      width: 100,
-      valueGetter: (_value, row) => (row.payment ? "Yes" : "No"),
-    },
-    { field: "status", headerName: "Status", width: 100 },
-    {
-      field: "fgLocation",
-      headerName: "FG Location",
-      width: 150,
-      renderCell: (params: GridRenderCellParams<FgDashboardRow>) => {
-        const row = params.row;
-        return inlineEdit &&
-          inlineEdit.id === row.id &&
-          inlineEdit.field === "fgLocation" ? (
-          <CustomEditTextField
-            initialValue={inlineEdit.value}
-            onCommit={(val) => handleInlineSave(row.id, val)}
-            onCancel={() => setInlineEdit(null)}
-          />
-        ) : (
-          <Box
-            sx={{
-              cursor: "pointer",
-              textDecoration: "underline dotted",
-              width: "100%",
-            }}
-            onClick={() =>
-              setInlineEdit({
-                id: row.id,
-                field: "fgLocation",
-                value: row.fgLocation || "",
-                original: row.fgLocation || "",
-              })
-            }
-            title="Click to edit"
-          >
-            {row.fgLocation || "-"}
-          </Box>
-        );
-      },
-    },
-    { field: "specialRemarks", headerName: "Special Remarks", flex: 1 },
-    {
-      field: "updatedBy",
-      headerName: "Updated By",
-      width: 130,
-      valueGetter: (_value, row) => row.updatedBy || "-",
-    },
-    {
-      field: "updatedDate",
-      headerName: "Updated Date",
-      width: 180,
-      valueGetter: (_value, row) =>
-        row.updatedDate
-          ? new Date(row.updatedDate).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            })
-          : "-",
-    },
+  // Pagination Handlers
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Define columns structure for manual mapping
+  const columns = [
+    { id: 'deliveryDate', label: 'Delivery Date', width: 130 },
+    { id: 'saleOrderNumber', label: 'SO', width: 120 },
+    { id: 'product', label: 'Product', width: 150 },
+    { id: 'customerName', label: 'Customer Name', width: 150 },
+    { id: 'payment', label: 'Payment', width: 100 },
+    { id: 'status', label: 'Status', width: 100 },
+    { id: 'fgLocation', label: 'FG Location', width: 150 },
+    { id: 'specialRemarks', label: 'Special Remarks', width: 'auto' },
+    { id: 'updatedBy', label: 'Updated By', width: 130 },
+    { id: 'updatedDate', label: 'Updated Date', width: 180 },
   ];
 
-  const handleCellKeyDown: GridEventListener<"cellKeyDown"> = (
-    params,
-    event
-  ) => {
-    const isCtrlA =
-      (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a";
-    if (isCtrlA && params.isEditable) {
-      event.stopPropagation();
-    }
-  };
+  // Styling constants
+  const lightYellow = alpha(theme.palette.primary.main, 0.1); // Light yellow for alternating rows
+  const headerBgColor = theme.palette.mode === 'dark' ? '#000000' : '#FFFFFF';
+  const headerTextColor = theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000';
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={3}>
-        <Typography variant="h5" fontWeight={700} mb={3}>
-          FG Dashboard
-        </Typography>
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <TextField
             variant="outlined"
@@ -339,20 +266,124 @@ export default function FgDashboardView() {
             }}
           />
         </Box>
-        <Paper sx={{ height: 600, width: "100%" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={loading}
-            pageSizeOptions={[5, 10, 25, 50]}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            rowCount={totalRows}
-            paginationMode="server"
-            onCellKeyDown={handleCellKeyDown}
-            autoHeight
+
+        <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
+          <TableContainer>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow sx={{ height: 60 }}>
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.id}
+                      sx={{
+                        backgroundColor: headerBgColor,
+                        color: headerTextColor,
+                        fontWeight: 700,
+                        width: col.width,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {col.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.length === 0 && !loading ? (
+                   <TableRow>
+                     <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
+                       <Box sx={{ color: 'text.secondary' }}>No records found.</Box>
+                     </TableCell>
+                   </TableRow>
+                ) : (
+                  rows.map((row, index) => (
+                    <TableRow
+                      key={row.id}
+                      sx={{
+                        backgroundColor: index % 2 === 0 ? 'inherit' : lightYellow,
+                        '&:hover': {
+                          backgroundColor: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <TableCell>{formatDate(row.deliveryDate)}</TableCell>
+                      <TableCell>
+                        <MuiLink
+                          component={Link}
+                          href={`/so-search/${row.saleOrderNumber}`}
+                          underline="hover"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          {row.saleOrderNumber}
+                        </MuiLink>
+                      </TableCell>
+                      <TableCell>{row.product}</TableCell>
+                      <TableCell>{row.customerName}</TableCell>
+                      <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
+                      <TableCell>{row.status}</TableCell>
+                      <TableCell>
+                        {inlineEdit &&
+                        inlineEdit.id === row.id &&
+                        inlineEdit.field === "fgLocation" ? (
+                          <CustomEditTextField
+                            initialValue={inlineEdit.value}
+                            onCommit={(val) => handleInlineSave(row.id, val)}
+                            onCancel={() => setInlineEdit(null)}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              cursor: "pointer",
+                              textDecoration: "underline dotted",
+                              width: "100%",
+                            }}
+                            onClick={() =>
+                              setInlineEdit({
+                                id: row.id,
+                                field: "fgLocation",
+                                value: row.fgLocation || "",
+                                original: row.fgLocation || "",
+                              })
+                            }
+                            title="Click to edit"
+                          >
+                            {row.fgLocation || "-"}
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell>{row.specialRemarks}</TableCell>
+                      <TableCell>{row.updatedBy || "-"}</TableCell>
+                      <TableCell>
+                        {row.updatedDate
+                          ? new Date(row.updatedDate).toLocaleString("en-IN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: true,
+                            })
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={totalRows}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Paper>
+
         {snackbar && (
           <Snackbar
             open={snackbar.open}
