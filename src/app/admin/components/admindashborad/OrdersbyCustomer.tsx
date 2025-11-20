@@ -39,12 +39,12 @@ export default function OrdersByCustomer({
       <div className="flex flex-col h-full rounded-2xl bg-white/95 dark:bg-slate-900/75 shadow-lg p-6 border border-gray-100 dark:border-slate-800">
         <header className="flex items-start justify-between mb-4">
           <div>
-            <h3
+            <p
               id="orders-by-customer"
-              className="text-xl text-slate-800 dark:text-slate-100 uppercase font-semibold"
+              className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold"
             >
               Orders by Customer
-            </h3>
+            </p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Top customers by order count
             </p>

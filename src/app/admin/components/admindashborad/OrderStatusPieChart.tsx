@@ -173,7 +173,7 @@ export default function OrderStatusPieChart() {
       <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-md p-8 border border-gray-100 dark:border-slate-800 min-h-[517px]">
         {/* Title & Subtitle */}
         <div className="mb-6">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+          <h3 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
             Overall Order Status Count
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -182,7 +182,7 @@ export default function OrderStatusPieChart() {
         </div>
 
         {/* Chart */}
-        <div className="relative h-80 -mt-4">
+        <div className="relative h-85 -mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -233,7 +233,7 @@ export default function OrderStatusPieChart() {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center items-center gap-3 mt-6 w-full">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap  gap-5 mt-6 w-full">
           {legendRows.map((r) => {
             const color = r.color || STATUS_CONFIG[r.name]?.color || "#ccc";
             const bg = hexToRgba(color, 0.10);
@@ -242,7 +242,7 @@ export default function OrderStatusPieChart() {
             return (
               <span
                 key={r.name}
-                className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full shadow-sm w-full sm:w-auto"
+                className="inline-flex items-center gap-2 text-xs px-1 py-1.5 rounded-full shadow-sm w-full sm:w-auto "
                 style={{
                   backgroundColor: bg,
                   color: color,

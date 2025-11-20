@@ -12,9 +12,9 @@ export default function OrderImportsCard() {
       <div className="w-full">
         <div className="rounded-xl bg-white dark:bg-slate-800 shadow-md p-6 min-h-[455px]">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            <p className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
               Order Imports (Last 5 Days)
-            </h3>
+            </p>
             <span className="text-xs text-slate-500">Loading...</span>
           </div>
 

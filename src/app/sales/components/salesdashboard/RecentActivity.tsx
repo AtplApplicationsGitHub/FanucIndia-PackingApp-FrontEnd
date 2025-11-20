@@ -173,7 +173,7 @@ export default function RecentActivity(): React.ReactElement {
                       className="text-gray-900"
                     >
                       {activity.salesOrderNumber
-                        ? `Order #${activity.salesOrderNumber}`
+                        ? `Order : ${activity.salesOrderNumber}`
                         : "Order"}
                     </Typography>
 

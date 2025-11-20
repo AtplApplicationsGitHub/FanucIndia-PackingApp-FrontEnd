@@ -152,9 +152,9 @@ export default function PaymentClearanceByZone() {
     <div className="w-full bg-white dark:bg-slate-900 rounded-2xl shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xl  text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <p className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
             Payment Clearance by Sales Zone
-          </h3>
+          </p>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Cleared vs Pending payments across sales zones
           </p>

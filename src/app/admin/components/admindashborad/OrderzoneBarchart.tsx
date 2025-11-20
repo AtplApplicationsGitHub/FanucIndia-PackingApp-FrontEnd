@@ -65,11 +65,11 @@ export default function OrderStatusByZone() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-300 select-none h-full">
+    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-300 select-none h-full chart-no-focus">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800 uppercase tracking-wider">
+          <h2 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
             Order Status by Sales Zone
           </h2>
           <p className="text-sm text-slate-500 mt-1">
@@ -77,10 +77,11 @@ export default function OrderStatusByZone() {
           </p>
         </div>
 
-        {/* Clean Toggle Button - No selected style, no yellow */}
+        {/* Toggle Button WITHOUT yellow focus ring */}
         <button
           onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 
+            text-gray-700 font-medium rounded-lg transition-all duration-200 focus:outline-none"
         >
           {viewMode === 'chart' ? (
             <>
@@ -99,13 +100,23 @@ export default function OrderStatusByZone() {
       {/* Chart View */}
       {viewMode === 'chart' ? (
         <>
-          <div className="h-[450px] -mx-6 -mb-6" style={{ userSelect: "none" }} >
-            <ResponsiveContainer width="100%" height="130%">
+          <style>
+            {`
+              /* Remove yellow border when clicking chart */
+              .chart-no-focus *:focus {
+                outline: none !important;
+                box-shadow: none !important;
+              }
+            `}
+          </style>
+
+          <div className="h-[450px] -mx-6 -mb-6">
+            <ResponsiveContainer width="100%" height="135%">
               <BarChart
                 data={chartData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="" />
+                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="zone"
                   angle={-45}
@@ -133,7 +144,7 @@ export default function OrderStatusByZone() {
             </ResponsiveContainer>
           </div>
 
-          {/* Legend Badges - Centered */}
+          {/* Legend */}
           <div className="mt-8 flex justify-center">
             <div className="flex flex-wrap gap-3 justify-center">
               <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">

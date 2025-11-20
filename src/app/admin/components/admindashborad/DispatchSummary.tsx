@@ -16,9 +16,9 @@ export default function DispatchSummary() {
 
         {/* Header */}
         <div className="px-6 pt-6">
-          <p className="text-xl text-slate-800 dark:text-slate-100 uppercase font-semibold">
+          <h2 className="text-lg text-slate-800 dark:text-slate-100 uppercase font-semibold">
             Today&apos;s Dispatch
-          </p>
+          </h2>
         </div>
 
         {/* Center Content */}
