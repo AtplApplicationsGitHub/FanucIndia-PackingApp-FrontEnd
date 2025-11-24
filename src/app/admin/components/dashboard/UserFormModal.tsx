@@ -248,7 +248,7 @@ const AdminUserFormModal: React.FC<Props> = ({
         fontWeight: 'bold',
         textTransform: 'uppercase'
       }}>
-        {editingUser ? "Edit User" : "Create User"}
+        {editingUser ? "Edit User Credentials" : "Create User Credentials"}
       </DialogTitle>
       
       <DialogContent>

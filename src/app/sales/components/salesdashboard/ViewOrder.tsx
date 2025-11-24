@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Search, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useViewOrder } from "../hooks/ViewOrder";
-import { Typography } from "@mui/material";
+import { Typography, Paper, InputBase, IconButton } from "@mui/material";
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function ViewOrderDetails() {
   const [soNumber, setSoNumber] = useState("");
@@ -65,22 +66,28 @@ export default function ViewOrderDetails() {
             Enter Sales Order Number
           </label>
 
-          <input
-            id="so-number"
-            type="text"
-            value={soNumber}
-            onChange={(e) =>
-              setSoNumber(e.target.value.toUpperCase().replace(/\s+/g, ""))
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !loading && soNumber.trim()) {
-                handleSearch();
-              }
-            }}
-            placeholder="e.g., SO12345"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            autoFocus
-          />
+          <Paper
+            component="form"
+            onSubmit={(e) => { e.preventDefault(); if (!loading && soNumber.trim()) handleSearch(); }}
+            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%', border: '1px solid #e0e0e0', boxShadow: 'none' }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1 }}
+              placeholder="Search"
+              inputProps={{ 'aria-label': 'search' }}
+              value={soNumber}
+              onChange={(e) => setSoNumber(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+            />
+            <IconButton 
+              type="button" 
+              sx={{ p: '10px' }} 
+              aria-label="search"
+              onClick={handleSearch}
+              disabled={loading || !soNumber.trim()}
+            >
+              <SearchIcon />
+            </IconButton>
+          </Paper>
 
           {displayError && (
             <p className="text-xs text-red-600 mt-1 flex items-center gap-1">

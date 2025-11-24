@@ -31,6 +31,7 @@ export const API = {
   SALES: {
     CREATE_ORDER:                `${API_BASE_URL}/sales-crud`,
     EDIT_ORDER:                  (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+    VERIFY_SO:                   (soNumber: string) => `${API_BASE_URL}/sales-crud/verify-so/${soNumber}`,
     TEMPLATE:                    `${API_BASE_URL}/sales-orders/template`,
     IMPORT:                      `${API_BASE_URL}/sales-orders/import`,
     DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
@@ -87,12 +88,12 @@ export const API = {
     MOBILE_ASSIGN_LOCATION: `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
   },
   DASHBOARD: {
-    // SALES USER DASHBOARD
+    // SALES DASHBOARD
     SALES_KPIS: `${API_BASE_URL}/dashboard/sales-kpis`,
     SALES_ACTIVITY: `${API_BASE_URL}/dashboard/sales-activity`,
     SALES_PAYMENT_CLEARANCE: `${API_BASE_URL}/dashboard/sales-payment-clearance`,
 
-    // ADMINDASHBOARD
+    // ADMIN DASHBOARD
     ADMIN_KPIS:`${API_BASE_URL}/dashboard/admin-kpis`,
     ADMIN_NEW_IMPORTS:       `${API_BASE_URL}/dashboard/admin-new-imports`,
     ADMIN_DISPATCH_SUMMARY:  `${API_BASE_URL}/dashboard/admin-dispatch-summary`,

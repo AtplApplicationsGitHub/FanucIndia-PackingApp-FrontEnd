@@ -4,13 +4,14 @@ import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
-  TextField,
+  IconButton,
   Button,
   Paper,
   Typography,
   CircularProgress,
   Alert,
   Stack,
+  InputBase,
 } from "@mui/material";
 import { Search, Print, Archive, Delete } from "@mui/icons-material";
 import axios from "axios";
@@ -368,18 +369,30 @@ export default function SoSearchPage() {
       >
         <Box display="flex" alignItems="center" justifyContent="center" p={2}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              label="Sales Order Search"
-              variant="outlined"
-              size="small"
-              value={soNumber}
-              onChange={(e) => setSoNumber(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleManualSearch()}
-              sx={{ width: 400, bgcolor: "background.paper" }}
-            />
+            <Paper
+              component="form"
+              onSubmit={(e) => { e.preventDefault(); handleManualSearch(); }}
+              sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400, border: '1px solid #e0e0e0' }}
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1 }}
+                placeholder="Search"
+                inputProps={{ 'aria-label': 'search' }}
+                value={soNumber}
+                onChange={(e) => setSoNumber(e.target.value)}
+              />
+              <IconButton 
+                type="button" 
+                sx={{ p: '10px' }} 
+                aria-label="search"
+                onClick={handleManualSearch}
+                disabled={loading}
+              >
+                <Search /> 
+              </IconButton>
+            </Paper>
             
-            {/* SUBMIT BUTTON */}
-            <Button
+            {/* <Button
               variant="contained" // Keep contained to accept bgcolor sx override
               startIcon={<Search />}
               onClick={handleManualSearch}
@@ -391,7 +404,7 @@ export default function SoSearchPage() {
               ) : (
                 "SUBMIT"
               )}
-            </Button>
+            </Button> */}
 
             {/* PRINT BUTTON */}
             <Button

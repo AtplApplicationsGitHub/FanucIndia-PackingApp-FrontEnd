@@ -3,12 +3,12 @@
 import React from "react";
 import {
   Box,
-  TextField,
   Button,
   Stack,
-  InputAdornment,
   IconButton,
 } from "@mui/material";
+import Paper from '@mui/material/Paper';
+import InputBase from '@mui/material/InputBase';
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import { Plus, Download, UploadCloud } from "lucide-react";
@@ -56,35 +56,27 @@ export default function SalesDashboardToolbar({
           alignItems="center"
           flexWrap="wrap"
         >
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search"
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            sx={{
-              width: { xs: "100%", sm: "auto" },
-              minWidth: 200,
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: searchValue && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => onSearchChange("")}
-                    aria-label="Clear search"
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Paper
+            component="form"
+            onSubmit={(e) => e.preventDefault()}
+            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: { xs: "100%", sm: 400 } }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1 }}
+              placeholder="Search"
+              inputProps={{ 'aria-label': 'search' }}
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+            {searchValue && (
+              <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => onSearchChange("")}>
+                <ClearIcon />
+              </IconButton>
+            )}
+            <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
+              <SearchIcon />
+            </IconButton>
+          </Paper>
 
           <Button
             onClick={onCreate}

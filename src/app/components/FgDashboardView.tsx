@@ -19,6 +19,7 @@ import {
   TablePagination,
   useTheme,
   alpha,
+  InputBase,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -214,35 +215,27 @@ export default function FgDashboardView() {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={3}>
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{
-              width: { xs: "100%", sm: "auto" },
-              minWidth: 200,
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: search && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => setSearch("")}
-                    aria-label="Clear search"
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Paper
+            component="form"
+            onSubmit={(e) => e.preventDefault()}
+            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: { xs: "100%", sm: 400 }, border: '1px solid #e0e0e0' }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1 }}
+              placeholder="Search"
+              inputProps={{ 'aria-label': 'search' }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => setSearch("")}>
+                <ClearIcon />
+              </IconButton>
+            )}
+            <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
+              <SearchIcon />
+            </IconButton>
+          </Paper>
           <DatePicker
             label="Delivery Date"
             value={date ? dayjs(date) : null}
