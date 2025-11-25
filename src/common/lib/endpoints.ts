@@ -31,7 +31,7 @@ export const API = {
   SALES: {
     CREATE_ORDER:                `${API_BASE_URL}/sales-crud`,
     EDIT_ORDER:                  (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
-    VERIFY_SO:                   (soNumber: string) => `${API_BASE_URL}/sales-crud/verify-so/${soNumber}`,
+    VERIFY_SO:                   (soNumber: string) => `${API_BASE_URL}/sales-crud/verify-so/${soNumber}`,  // Endpoint for Customer Label Print Mobile App
     TEMPLATE:                    `${API_BASE_URL}/sales-orders/template`,
     IMPORT:                      `${API_BASE_URL}/sales-orders/import`,
     DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,

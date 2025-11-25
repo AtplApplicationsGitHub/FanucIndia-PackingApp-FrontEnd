@@ -6,7 +6,6 @@ import {
   Paper,
   Link as MuiLink,
   TextField,
-  InputAdornment,
   IconButton,
   Snackbar,
   Alert,
@@ -37,8 +36,10 @@ interface FgDashboardRow {
   id: number;
   deliveryDate: string;
   saleOrderNumber: string;
+  transferOrder: string;
   product: string;
   customerName: string;
+  salesZone: string;
   payment: boolean;
   status: string;
   fgLocation: string;
@@ -68,7 +69,7 @@ export default function FgDashboardView() {
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [date, setDate] = useState<Date | null>(null);
+  const [date, setDate] = useState<Date | null>(new Date());
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -79,7 +80,7 @@ export default function FgDashboardView() {
   
   // Pagination state
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalRows, setTotalRows] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -195,15 +196,17 @@ export default function FgDashboardView() {
   // Define columns structure for manual mapping
   const columns = [
     { id: 'deliveryDate', label: 'Delivery Date', width: 130 },
-    { id: 'saleOrderNumber', label: 'SO', width: 120 },
+    { id: 'saleOrderNumber', label: 'Sales Order', width: 120 },
+    { id: 'transferOrder', label: 'Transfer Order', width: 140 },
     { id: 'product', label: 'Product', width: 150 },
     { id: 'customerName', label: 'Customer Name', width: 150 },
+    { id: 'salesZone', label: 'Sales Zone', width: 120 },
     { id: 'payment', label: 'Payment', width: 100 },
-    { id: 'status', label: 'Status', width: 100 },
     { id: 'fgLocation', label: 'FG Location', width: 150 },
     { id: 'specialRemarks', label: 'Special Remarks', width: 'auto' },
     { id: 'updatedBy', label: 'Updated By', width: 130 },
     { id: 'updatedDate', label: 'Updated Date', width: 180 },
+    { id: 'status', label: 'Status', width: 100 },
   ];
 
   // Styling constants
@@ -248,7 +251,7 @@ export default function FgDashboardView() {
                 onClear: () => setDate(null),
               },
               textField: {
-                size: "small",
+                size: "medium",
                 variant: "outlined",
                 sx: {
                   minWidth: 170,
@@ -310,10 +313,11 @@ export default function FgDashboardView() {
                           {row.saleOrderNumber}
                         </MuiLink>
                       </TableCell>
+                      <TableCell>{row.transferOrder}</TableCell>
                       <TableCell>{row.product}</TableCell>
                       <TableCell>{row.customerName}</TableCell>
+                      <TableCell>{row.salesZone}</TableCell>
                       <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
-                      <TableCell>{row.status}</TableCell>
                       <TableCell>
                         {inlineEdit &&
                         inlineEdit.id === row.id &&
@@ -359,6 +363,7 @@ export default function FgDashboardView() {
                             })
                           : "-"}
                       </TableCell>
+                      <TableCell>{row.status}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -367,7 +372,7 @@ export default function FgDashboardView() {
           </TableContainer>
           
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
+            rowsPerPageOptions={[10, 20, 50, 100]}
             component="div"
             count={totalRows}
             rowsPerPage={rowsPerPage}
