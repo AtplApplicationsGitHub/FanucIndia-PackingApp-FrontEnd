@@ -2,10 +2,8 @@
 
 import {
   Box,
-  TextField,
   Button,
   IconButton,
-  InputAdornment,
   Paper,
   InputBase,
 } from "@mui/material";
