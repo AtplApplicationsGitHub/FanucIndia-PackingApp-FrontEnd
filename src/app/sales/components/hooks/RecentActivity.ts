@@ -38,7 +38,7 @@ export function useRecentActivity() {
     const map: Record<string, ActivityWithMeta["config"]> = {
       Created: { label: "Created", bg: "bg-blue-50", text: "text-blue-700", icon: "+" },
       Packed: { label: "Packed", bg: "bg-amber-50", text: "text-amber-700", icon: "Package" },
-      "Stored/Ready for Dispatch": { label: "Ready", bg: "bg-emerald-50", text: "text-emerald-700", icon: "Check" },
+      "Stored/Ready for Dispatch": { label: "Ready for Dispatch", bg: "bg-emerald-50", text: "text-emerald-700", icon: "Check" },
       Dispatched: { label: "Dispatched", bg: "bg-purple-50", text: "text-purple-700", icon: "Truck" },
     };
     return map[status] || { label: status, bg: "bg-gray-50", text: "text-gray-700", icon: "?" };

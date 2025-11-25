@@ -11,6 +11,7 @@ import {
   User,
   HelpCircle,
   Calendar,
+  ClipboardCheck,
   ArrowUpRight,
 } from "lucide-react";
 import { useRecentActivity } from "../hooks/RecentActivity";
@@ -29,49 +30,58 @@ interface RecentActivityItem {
 }
 
 function getIconByLabel(label?: string) {
-  const l = (label ?? "").toLowerCase();
+  const l = (label ?? "").toLowerCase().trim();
 
-  if (l.includes("dispatch") || l.includes("dispatched") || l.includes("ship"))
+  if (l.includes("dispatched") || l.includes("ship"))
     return <Truck size={18} className="text-blue-600" />;
+
+  if (l.includes("ready for dispatch"))
+    return <ClipboardCheck size={18} className="text-teal-600" />;
+
   if (l.includes("packed") || l.includes("packing"))
     return <Package size={18} className="text-orange-600" />;
+
   if (l.includes("issued") || l.includes("issue"))
     return <ArrowUpRight size={18} className="text-purple-600" />;
+
   if (l.includes("assigned") || l.includes("assign"))
     return <User size={18} className="text-yellow-700" />;
+
   if (l.includes("delivered") || l.includes("delivery"))
     return <CheckCircle size={18} className="text-green-600" />;
+
   if (l.includes("created"))
     return <Calendar size={18} className="text-indigo-600" />;
 
+  // fallback
   return <HelpCircle size={18} className="text-gray-600" />;
 }
 
-/**
- * returns a tailwind-compatible class string for the pill:
- * background, border, and text color plus padding / rounding
- */
 function getPillClasses(label?: string) {
-  const l = (label ?? "").toLowerCase();
+  const l = (label ?? "").toLowerCase().trim();
 
-  if (l.includes("dispatched") || l.includes("dispatch") || l.includes("ship"))
+  if (l.includes("dispatched") || l.includes("ship"))
     return "bg-blue-50 border border-blue-200 text-blue-700";
-  if (
-    l.includes("in progress") ||
-    l.includes("inprogress") ||
-    l.includes("progress")
-  )
+
+  // ←←← Fixed “Ready For Dispatch” (case-insensitive + trimmed)
+  if (l.includes("ready for dispatch"))
+    return "bg-teal-50 border border-teal-200 text-teal-800";
+
+  if (l.includes("in progress") || l.includes("inprogress") || l.includes("progress"))
     return "bg-sky-50 border border-sky-200 text-sky-700";
+
   if (l.includes("packed") || l.includes("packing"))
     return "bg-orange-50 border border-orange-200 text-orange-700";
+
   if (l.includes("issued") || l.includes("issue"))
     return "bg-purple-50 border border-purple-200 text-purple-700";
+
   if (l.includes("assigned") || l.includes("assign"))
     return "bg-yellow-50 border border-yellow-200 text-yellow-800";
-  if (l.includes("readyfor") || l.includes("ready for") || l.includes("ready"))
-    return "bg-amber-50 border border-amber-200 text-amber-800";
+
   if (l.includes("delivered") || l.includes("delivery"))
     return "bg-green-50 border border-green-200 text-green-700";
+
   if (l.includes("overdue") || l.includes("late"))
     return "bg-rose-50 border border-rose-200 text-rose-700";
 
