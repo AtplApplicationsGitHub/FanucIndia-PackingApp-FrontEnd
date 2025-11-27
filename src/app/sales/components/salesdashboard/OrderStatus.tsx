@@ -7,9 +7,9 @@ import { useSalesKpis } from "../../components/hooks/OrderStatus";
 
 //
 // Color palette (matches image):
-// Assigned = Blue, Issued = Orange, Packed = Purple, Dispatched = Green
+// To be Issued = Indigo, Assigned = Blue, Issued = Orange, Packed = Purple, Dispatched = Green
 //
-const COLORS = ["#3B82F6", "#F97316", "#8B5CF6", "#10B981"] as const;
+const COLORS = ["#6366F1", "#3B82F6", "#F97316", "#8B5CF6", "#10B981"] as const;
 
 interface ChartDataItem {
   name: string;
@@ -103,6 +103,11 @@ export default function OrderStatusChart() {
     loading || !data
       ? []
       : [
+          {
+            name: "To be Issued",
+            value: data.toBeIssuedCount ?? 0,
+            color: COLORS[0], // Indigo
+          },
           {
             name: "Assigned (R105)",
             value: data.r105Count ?? 0,
@@ -262,6 +267,11 @@ export default function OrderStatusChart() {
 
       {/* Legend pills — order & colors now match the chart */}
       <div className="flex flex-wrap justify-center gap-5 mt-8">
+        <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-sm">
+          <span className="w-3 h-3 rounded-full bg-[#6366F1]" />
+          To be Issued
+        </span>
+
         <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 shadow-sm">
           <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
           Assigned (R105)

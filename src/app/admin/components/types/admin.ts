@@ -24,8 +24,10 @@ export type SalesOrder = {
   customerId?: number;
   customer?: { id: number; name: string } | null;
   specialRemarks?: string | null;
+  additionalRemarks?: string | null;
   fgLocation?: string | null; 
   hasMaterialData?: boolean;
+  address?: string | null;
 };
 
 export type Lookup = {
@@ -35,7 +37,7 @@ export type Lookup = {
   salesZones: { id: number; name: string }[];
   packConfigs: { id: number; configName: string }[];
   assignableUsers: { id: number; name: string }[]; 
-  customers: { id: number; name: string }[];
+  customers: { id: number; name: string; address: string }[];
   [key: string]: LookupRow[];
 };
 

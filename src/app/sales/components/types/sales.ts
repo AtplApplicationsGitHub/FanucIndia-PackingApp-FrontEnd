@@ -12,6 +12,8 @@ export type SalesOrder = {
   packConfigId: number;
   status?: string | null;
   specialRemarks: string;
+  additionalRemarks?: string;
+  hasMaterialData?: boolean;
   customerId: number;
   assignedUserId?: number | null;
   assignedUser?: {
@@ -44,6 +46,7 @@ export interface SalesKpisResponse {
   r105Count: number;
   w105Count: number;
   f105Count: number;
+  toBeIssuedCount: number;
 }
 
 

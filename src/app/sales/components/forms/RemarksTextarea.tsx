@@ -18,7 +18,7 @@ const RemarksTextarea: React.FC<Props> = ({
 }) => (
   <TextField
     fullWidth
-    label="Remarks"
+    label="Special Remarks"
     name="specialRemarks"
     value={value}
     onChange={(e) => onChange("specialRemarks", e.target.value ?? "")}

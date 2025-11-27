@@ -25,6 +25,7 @@ const STATUS_CONFIG: Record<
   string,
   { color: string; display: string; code?: string }
 > = {
+  ToBeIssued: { color: "#6366F1", display: "To be Issued", code: "NULL" },
   Assigned: { color: "#3B82F6", display: "Assigned (R105)", code: "R105" }, // Blue
   Issued: { color: "#F97316", display: "Issued (W105)", code: "W105" }, // Orange
   Packed: { color: "#8B5CF6", display: "Packed (F105)", code: "F105" }, // Purple
@@ -115,6 +116,12 @@ export default function OrderStatusPieChart() {
     if (!api) return [];
 
     return [
+      {
+        name: "ToBeIssued",
+        value: api.toBeIssuedCount ?? 0,
+        display: STATUS_CONFIG.ToBeIssued.display,
+        color: STATUS_CONFIG.ToBeIssued.color,
+      },
       {
         name: "Assigned",
         value: api.r105Count ?? 0,

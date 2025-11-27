@@ -22,6 +22,7 @@ export default function OrderStatusByZone() {
 
   // Stable color palette
   const COLORS = {
+    toBeIssued: '#6366F1', // Indigo
     assigned: '#3B82F6',  // Blue
     issued: '#F97316',    // Orange
     packed: '#8B5CF6',    // Purple
@@ -31,6 +32,7 @@ export default function OrderStatusByZone() {
   // Transform API data
   const chartData = (data || []).map((item: ZoneStatus) => ({
     zone: item.zoneName,
+    toBeIssued: item.toBeIssuedCount,
     assigned: item.r105Count,
     issued: item.w105Count,
     packed: item.f105Count,
@@ -141,6 +143,7 @@ export default function OrderStatusByZone() {
                   }}
                   cursor={{ fill: 'rgba(0,0,0,0.04)' }}
                 />
+                <Bar dataKey="toBeIssued" fill={COLORS.toBeIssued} name="To be Issued" radius={[6, 6, 0, 0]} barSize={28} />
                 <Bar dataKey="assigned" fill={COLORS.assigned} name="Assigned (R105)" radius={[6, 6, 0, 0]} barSize={28} />
                 <Bar dataKey="issued" fill={COLORS.issued} name="Issued (W105)" radius={[6, 6, 0, 0]} barSize={28} />
                 <Bar dataKey="packed" fill={COLORS.packed} name="Packed (F105)" radius={[6, 6, 0, 0]} barSize={28} />
@@ -152,6 +155,10 @@ export default function OrderStatusByZone() {
           {/* Legend */}
           <div className="mt-8 flex justify-center">
             <div className="flex flex-wrap gap-3 justify-center">
+              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200">
+                <span className="w-3 h-3 rounded-full bg-[#6366F1]" />
+                To be Issued
+              </span>
               <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
                 <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
                 Assigned (R105)
@@ -178,6 +185,7 @@ export default function OrderStatusByZone() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Zone</th>
+                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.toBeIssued }}>To be Issued</th>
                 <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.assigned }}>Assigned (R105)</th>
                 <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.issued }}>Issued (W105)</th>
                 <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.packed }}>Packed (F105)</th>
@@ -188,6 +196,7 @@ export default function OrderStatusByZone() {
               {chartData.map((row) => (
                 <tr key={row.zone} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 font-medium text-gray-900">{row.zone}</td>
+                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.toBeIssued }}>{row.toBeIssued}</td>
                   <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.assigned }}>{row.assigned}</td>
                   <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.issued }}>{row.issued}</td>
                   <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.packed }}>{row.packed}</td>

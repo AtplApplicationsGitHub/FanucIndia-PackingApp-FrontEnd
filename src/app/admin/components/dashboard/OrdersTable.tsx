@@ -22,6 +22,7 @@ import {
   ListItemText,
   alpha,
   useTheme,
+  Tooltip
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -198,6 +199,8 @@ export default function AdminOrdersTable({
     );
   }
 
+  const isAssigned = !!menuRow?.assignedUserId;
+
   return (
     <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden" }}>
       <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
@@ -234,8 +237,6 @@ export default function AdminOrdersTable({
                 "Out Bound Delivery",
                 "Transfer Order",
                 "Required Date",
-                "Transporter",
-                "Plant Code",
                 "Payment",
                 "Sales Zone",
                 "Packing Config",
@@ -243,7 +244,6 @@ export default function AdminOrdersTable({
                 "Status",
                 "Priority",
                 "Assigned User",
-                "FG Location",
                 "Special Remarks",
               ].map((head) => (
                 <TableCell
@@ -261,7 +261,10 @@ export default function AdminOrdersTable({
           </TableHead>
 
           <TableBody>
-            {orders.map((row) => (
+            {orders.map((row) => {
+              const isDispatched = row.status === "Dispatched";
+
+              return(
               <TableRow key={row.id}>
                 {/* ACTIONS */}
                 <TableCell>
@@ -304,16 +307,6 @@ export default function AdminOrdersTable({
                   {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
                 </TableCell>
 
-                {/* TRANSPORTER */}
-                <TableCell>
-                  {findName(lookup.transporters, row.transporterId ?? 0)}
-                </TableCell>
-
-                {/* PLANT CODE */}
-                <TableCell>
-                  {findName(lookup.plantCodes, row.plantCodeId ?? 0, "code")}
-                </TableCell>
-
                 {/* PAYMENT */}
                 <TableCell>
                   {row.paymentClearance ? "Yes" : "No"}
@@ -350,10 +343,11 @@ export default function AdminOrdersTable({
                   ) : (
                     <Box
                       sx={{
-                        cursor: "pointer",
-                        textDecoration: "underline dotted",
+                        cursor: isDispatched ? "default" : "pointer",
+                        textDecoration: isDispatched ? "none" : "underline dotted",
                       }}
                       onClick={() =>
+                        !isDispatched &&
                         setInlineEdit({
                           id: row.id,
                           field: "status",
@@ -361,7 +355,7 @@ export default function AdminOrdersTable({
                           original: row.status || "",
                         })
                       }
-                      title="Click to edit status"
+                      title={isDispatched ? "Locked (Dispatched)" : "Click to edit status"}
                     >
                       {row.status || "-"}
                     </Box>
@@ -379,10 +373,11 @@ export default function AdminOrdersTable({
                   ) : (
                     <Box
                       sx={{
-                        cursor: "pointer",
-                        textDecoration: "underline dotted",
+                        cursor: isDispatched ? "default" : "pointer",
+                        textDecoration: isDispatched ? "none" : "underline dotted",
                       }}
                       onClick={() =>
+                        !isDispatched &&
                         setInlineEdit({
                           id: row.id,
                           field: "priority",
@@ -393,7 +388,7 @@ export default function AdminOrdersTable({
                           original: row.priority ?? "",
                         })
                       }
-                      title="Click to edit priority"
+                      title={isDispatched ? "Locked (Dispatched)" : "Click to edit priority"}
                     >
                       {row.priority ?? "-"}
                     </Box>
@@ -437,10 +432,11 @@ export default function AdminOrdersTable({
                   ) : (
                     <Box
                       sx={{
-                        cursor: "pointer",
-                        textDecoration: "underline dotted",
+                        cursor: isDispatched ? "default" : "pointer",
+                        textDecoration: isDispatched ? "none" : "underline dotted",
                       }}
                       onClick={() =>
+                        !isDispatched &&
                         setInlineEdit({
                           id: row.id,
                           field: "assignedUserId",
@@ -448,7 +444,7 @@ export default function AdminOrdersTable({
                           original: row.assignedUserId ?? "",
                         })
                       }
-                      title="Click to assign user"
+                      title={isDispatched ? "Locked (Dispatched)" : "Click to assign user"}
                     >
                       {row.assignedUser?.name ||
                         findName(
@@ -460,45 +456,11 @@ export default function AdminOrdersTable({
                   )}
                 </TableCell>
 
-                {/* FG LOCATION (INLINE EDIT) */}
-                <TableCell sx={{ minWidth: 120 }}>
-                  {inlineEdit?.id === row.id &&
-                  inlineEdit.field === "fgLocation" ? (
-                    <CustomEditTextField
-                      initialValue={inlineEdit.value}
-                      onCommit={(val) => handleInlineSave(val)}
-                      onCancel={() => setInlineEdit(null)}
-                      maxLength={100}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        cursor: "pointer",
-                        textDecoration: "underline dotted",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        maxWidth: 120,
-                      }}
-                      onClick={() =>
-                        setInlineEdit({
-                          id: row.id,
-                          field: "fgLocation",
-                          value: row.fgLocation || "",
-                          original: row.fgLocation || "",
-                        })
-                      }
-                      title={row.fgLocation || "Click to edit FG Location"}
-                    >
-                      {row.fgLocation || "-"}
-                    </Box>
-                  )}
-                </TableCell>
-
                 {/* SPECIAL REMARKS */}
                 <TableCell>{row.specialRemarks || "-"}</TableCell>
               </TableRow>
-            ))}
+              );
+            })}
 
             {orders.length === 0 && (
               <TableRow>
@@ -535,17 +497,22 @@ export default function AdminOrdersTable({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem
-          onClick={() => {
-            if (menuRow) onEdit?.(menuRow);
-            handleMenuClose();
-          }}
-        >
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
-        </MenuItem>
+        <Tooltip title={isAssigned ? "Order assigned" : ""}>
+          <Box>
+            <MenuItem 
+              onClick={() => {
+                if (menuRow) onEdit?.(menuRow);
+                handleMenuClose();
+              }}
+              disabled={isAssigned || menuRow?.status === "Dispatched"}
+            >
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Edit</ListItemText>
+            </MenuItem>
+          </Box>
+        </Tooltip>
 
         <MenuItem
           onClick={() => {
@@ -555,7 +522,7 @@ export default function AdminOrdersTable({
           sx={{
             color: menuRow?.hasMaterialData ? "text.disabled" : "error.main",
           }}
-          disabled={menuRow?.hasMaterialData}
+          disabled={menuRow?.hasMaterialData || isAssigned || menuRow?.status === "Dispatched"}
         >
           <ListItemIcon sx={{ color: "inherit" }}>
             <DeleteIcon fontSize="small" />
@@ -568,6 +535,7 @@ export default function AdminOrdersTable({
             if (menuRow) onDetailedView(menuRow);
             handleMenuClose();
           }}
+          disabled={menuRow?.status === "Dispatched"}
         >
           <ListItemIcon>
             <OpenInNewIcon fontSize="small" />

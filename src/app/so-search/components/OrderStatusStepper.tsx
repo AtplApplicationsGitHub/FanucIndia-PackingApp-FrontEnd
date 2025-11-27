@@ -78,10 +78,12 @@ interface Props {
 }
 
 const STEP_ORDER = [
-  "Created",
-  "Assigned",
+  "To be Issued",
+  "Under Issue",
   "Issued",
+  "Under Packing",
   "Packed",
+  "WIP Storage",
   "Stored/Ready for Dispatch",
   "Dispatched",
 ];
@@ -164,27 +166,10 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
         {sortedSteps.map((step, index) => {
           
           let timeTaken = null;
-          if (index > 0) { // No time taken for "Created" step
+          if (index > 0) {
             const currentStepTime = step.createdDateTime;
-            let prevStepTime = null;
-
-            // Check for the special "Dispatched" skip logic
-            if (index === 5 && step.status === "Dispatched") {
-              const storedStep = sortedSteps[4]; // "Stored/Ready for Dispatch"
-              
-              // If 'Stored' was skipped (no timestamp), use 'Packed' time
-              if (storedStep && !storedStep.createdDateTime) {
-                const packedStep = sortedSteps[3]; // "Packed"
-                prevStepTime = packedStep?.createdDateTime || null;
-              } else {
-                // Otherwise, use the 'Stored' step time as normal
-                prevStepTime = storedStep?.createdDateTime || null;
-              }
-            } else {
-              // Default logic for all other steps
-              const prevStep = sortedSteps[index - 1];
-              prevStepTime = prevStep?.createdDateTime || null;
-            }
+            const prevStep = sortedSteps[index - 1];
+            const prevStepTime = prevStep?.createdDateTime || null;
             
             timeTaken = calculateTimeTaken(prevStepTime, currentStepTime);
           }

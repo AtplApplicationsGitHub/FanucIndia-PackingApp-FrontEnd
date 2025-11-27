@@ -80,7 +80,7 @@ export default function AdminOrdersToolbar({
               onClear: () => onStartDateChange(null),
             },
             textField: {
-              size: "small",
+              size: "medium",
               variant: "outlined",
               sx: {
                 minWidth: 170,
@@ -103,7 +103,7 @@ export default function AdminOrdersToolbar({
               onClear: () => onEndDateChange(null),
             },
             textField: {
-              size: "small",
+              size: "medium",
               variant: "outlined",
               sx: {
                 minWidth: 170,

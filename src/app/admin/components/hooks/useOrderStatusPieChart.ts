@@ -3,6 +3,7 @@ import { API } from "@/common/lib/endpoints";
 import { fetchWithAuth } from "@/common/lib/endpoints";
 
 export type OrderOverallStatus = {
+  toBeIssuedCount: number;
   r105Count: number;       
   w105Count: number;      
   f105Count: number;       
@@ -39,6 +40,7 @@ export function useOrderOverallStatus(): UseOrderOverallStatus {
         r105Count: json.r105Count ?? 0,
         w105Count: json.w105Count ?? 0,
         f105Count: json.f105Count ?? 0,
+        toBeIssuedCount: json.toBeIssuedCount ?? 0,
         dispatchedCount: json.dispatchedCount ?? 0,
         totalOrders: json.totalOrders ?? 0,
       };

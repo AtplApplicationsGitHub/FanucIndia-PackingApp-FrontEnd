@@ -96,8 +96,7 @@ const FIELDS: {
     type: "select",
     options: "customers",
   },
-  { key: "status", label: "Status" },
-  { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
+  { key: "address", label: "Address" },
   { key: "priority", label: "Priority", type: "number" },
   {
     key: "assignedUserId",
@@ -105,7 +104,10 @@ const FIELDS: {
     type: "select",
     options: "assignableUsers",
   },
-  { key: "fgLocation", label: "FG Location" },
+  { key: "status", label: "Status" },
+  { key: "fgLocation", label: "FG Location"},
+  { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
+  { key: "additionalRemarks", label: "Additional Remarks", colSpan: 2 },
 ];
 
 const PATCHABLE_KEYS = [
@@ -124,7 +126,9 @@ const PATCHABLE_KEYS = [
   "assignedUserId",
   "customerId",
   "specialRemarks",
+  "additionalRemarks",
   "fgLocation",
+  "address",
 ] as const;
 
 type SalesOrderPatch = Partial<
@@ -163,10 +167,36 @@ export default function AdminOrderEditModal({
   }, [open, order]);
 
   const handleChange = (key: keyof SalesOrder, value: unknown) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [key]: value };
+
+      if (key === "customerId") {
+        const selectedCustomer = lookup.customers.find(
+          (c) => String(c.id) === String(value)
+        );
+        
+        if (selectedCustomer && typeof selectedCustomer.address === "string") {
+          updated.address = selectedCustomer.address;
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleSave = async () => {
+    if (
+      form.saleOrderNumber &&
+      String(form.saleOrderNumber).trim().length < 10
+    ) {
+      setSnackbar({
+        open: true,
+        message: "Sale Order Number must be at least 10 characters long.",
+        severity: "error",
+      });
+      return;
+    }
+
     setLoading(true);
 
     const patch: SalesOrderPatch = {};
@@ -210,6 +240,7 @@ export default function AdminOrderEditModal({
         case "specialRemarks":
         case "status":
         case "fgLocation":
+        case "additionalRemarks":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
           } else if (v === null) {
@@ -221,6 +252,11 @@ export default function AdminOrderEditModal({
         case "outboundDelivery":
         case "transferOrder":
         case "deliveryDate":
+          if (typeof v === "string") {
+            patch[key] = v as SalesOrderPatch[typeof key];
+          }
+          break;
+        case "address":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
           }
@@ -350,7 +386,7 @@ export default function AdminOrderEditModal({
                   : Array.isArray(field.options)
                     ? field.options
                     : [];
-              if (field.key === "specialRemarks") {
+              if (field.colSpan === 2) {
                 return (
                   <Box key={field.key} sx={{ flex: "0 0 100%", mb: 1 }}>
                     <TextField

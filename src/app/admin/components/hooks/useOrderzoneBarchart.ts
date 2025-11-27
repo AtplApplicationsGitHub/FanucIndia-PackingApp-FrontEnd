@@ -8,6 +8,7 @@ export interface ZoneStatus {
   r105Count: number;     // Imported
   w105Count: number;     // Issued
   f105Count: number;     // Packed
+  toBeIssuedCount: number;
   dispatchedCount: number;
 }
 

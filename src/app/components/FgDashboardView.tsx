@@ -19,6 +19,8 @@ import {
   useTheme,
   alpha,
   InputBase,
+  LinearProgress,
+  Typography,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -26,7 +28,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import dayjs from "dayjs";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -75,9 +77,9 @@ export default function FgDashboardView() {
     message: string;
     severity: "success" | "error";
   } | null>(null);
-  
+
   const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
-  
+
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -117,6 +119,37 @@ export default function FgDashboardView() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const getStatusInfo = (status: string, fgLocation?: string | null) => {
+    const s = (status || "").toUpperCase();
+    
+    if (s === "DISPATCHED") {
+      return { percent: 100, current: "Dispatched", next: "Completed" };
+    }
+    
+    // New Status from Label Print
+    if (s.includes("STORED") || s.includes("READY FOR DISPATCH")) {
+      return { percent: 90, current: "Stored/Ready for Dispatch", next: "Next: Dispatched" };
+    }
+
+    if (s.includes("F105")) {
+      // Logic: If FG Location is set, it's WIP Storage, otherwise it's Packed
+      if (fgLocation && fgLocation.trim() !== "") {
+        return { percent: 80, current: "WIP Storage", next: "Next: Stored/Ready for Dispatch" };
+      }
+      return { percent: 75, current: "Packed", next: "Next: WIP Storage" };
+    }
+
+    if (s.includes("W105")) {
+      return { percent: 50, current: "Issued", next: "Next: Under Packing" };
+    }
+
+    if (s.includes("R105")) {
+      return { percent: 25, current: "To be Issued", next: "Next: Under Issue" };
+    }
+    
+    return { percent: 0, current: "Created", next: "Next: To be Issued" };
+  };
 
   const handleInlineSave = async (id: number, value: string) => {
     if (inlineEdit?.original === value) {
@@ -188,31 +221,33 @@ export default function FgDashboardView() {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  // Define columns structure for manual mapping
   const columns = [
-    { id: 'deliveryDate', label: 'Delivery Date', width: 130 },
-    { id: 'saleOrderNumber', label: 'Sales Order', width: 120 },
-    { id: 'transferOrder', label: 'Transfer Order', width: 140 },
-    { id: 'product', label: 'Product', width: 150 },
-    { id: 'customerName', label: 'Customer Name', width: 150 },
-    { id: 'salesZone', label: 'Sales Zone', width: 120 },
-    { id: 'payment', label: 'Payment', width: 100 },
-    { id: 'fgLocation', label: 'FG Location', width: 150 },
-    { id: 'specialRemarks', label: 'Special Remarks', width: 'auto' },
-    { id: 'updatedBy', label: 'Updated By', width: 130 },
-    { id: 'updatedDate', label: 'Updated Date', width: 180 },
-    { id: 'status', label: 'Status', width: 100 },
+    { id: "deliveryDate", label: "Delivery Date", width: 130 },
+    { id: "saleOrderNumber", label: "Sales Order", width: 120 },
+    { id: "transferOrder", label: "Transfer Order", width: 140 },
+    { id: "product", label: "Product", width: 150 },
+    { id: "customerName", label: "Customer Name", width: 150 },
+    { id: "salesZone", label: "Sales Zone", width: 120 },
+    { id: "payment", label: "Payment", width: 100 },
+    { id: "fgLocation", label: "FG Location", width: 150 },
+    { id: "specialRemarks", label: "Special Remarks", width: "auto" },
+    { id: "updatedBy", label: "Updated By", width: 130 },
+    { id: "updatedDate", label: "Updated Date", width: 180 },
+    { id: "status", label: "Status", width: 100 },
+    { id: 'progress', label: 'Progress', width: 140 },
   ];
 
   // Styling constants
   const lightYellow = alpha(theme.palette.primary.main, 0.1); // Light yellow for alternating rows
-  const headerBgColor = theme.palette.mode === 'dark' ? '#000000' : '#FFFFFF';
-  const headerTextColor = theme.palette.mode === 'dark' ? '#FFFFFF' : '#000000';
+  const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
+  const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -221,21 +256,31 @@ export default function FgDashboardView() {
           <Paper
             component="form"
             onSubmit={(e) => e.preventDefault()}
-            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: { xs: "100%", sm: 400 }, border: '1px solid #e0e0e0' }}
+            sx={{
+              p: "2px 4px",
+              display: "flex",
+              alignItems: "center",
+              width: { xs: "100%", sm: 400 },
+              border: "1px solid #e0e0e0",
+            }}
           >
             <InputBase
               sx={{ ml: 1, flex: 1 }}
               placeholder="Search"
-              inputProps={{ 'aria-label': 'search' }}
+              inputProps={{ "aria-label": "search" }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => setSearch("")}>
+              <IconButton
+                sx={{ p: "10px" }}
+                aria-label="clear"
+                onClick={() => setSearch("")}
+              >
                 <ClearIcon />
               </IconButton>
             )}
-            <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
+            <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
               <SearchIcon />
             </IconButton>
           </Paper>
@@ -263,7 +308,7 @@ export default function FgDashboardView() {
           />
         </Box>
 
-        <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
+        <Paper sx={{ width: "100%", overflow: "hidden", borderRadius: 2 }}>
           <TableContainer>
             <Table size="small" stickyHeader>
               <TableHead>
@@ -276,7 +321,7 @@ export default function FgDashboardView() {
                         color: headerTextColor,
                         fontWeight: 700,
                         width: col.width,
-                        whiteSpace: 'nowrap',
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {col.label}
@@ -286,91 +331,147 @@ export default function FgDashboardView() {
               </TableHead>
               <TableBody>
                 {rows.length === 0 && !loading ? (
-                   <TableRow>
-                     <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
-                       <Box sx={{ color: 'text.secondary' }}>No records found.</Box>
-                     </TableCell>
-                   </TableRow>
-                ) : (
-                  rows.map((row, index) => (
-                    <TableRow
-                      key={row.id}
-                      sx={{
-                        backgroundColor: index % 2 === 0 ? 'inherit' : lightYellow,
-                        '&:hover': {
-                          backgroundColor: theme.palette.action.hover,
-                        },
-                      }}
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      align="center"
+                      sx={{ py: 3 }}
                     >
-                      <TableCell>{formatDate(row.deliveryDate)}</TableCell>
-                      <TableCell>
-                        <MuiLink
-                          component={Link}
-                          href={`/so-search/${row.saleOrderNumber}`}
-                          underline="hover"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {row.saleOrderNumber}
-                        </MuiLink>
-                      </TableCell>
-                      <TableCell>{row.transferOrder}</TableCell>
-                      <TableCell>{row.product}</TableCell>
-                      <TableCell>{row.customerName}</TableCell>
-                      <TableCell>{row.salesZone}</TableCell>
-                      <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
-                      <TableCell>
-                        {inlineEdit &&
-                        inlineEdit.id === row.id &&
-                        inlineEdit.field === "fgLocation" ? (
-                          <CustomEditTextField
-                            initialValue={inlineEdit.value}
-                            onCommit={(val) => handleInlineSave(row.id, val)}
-                            onCancel={() => setInlineEdit(null)}
-                          />
-                        ) : (
-                          <Box
-                            sx={{
-                              cursor: "pointer",
-                              textDecoration: "underline dotted",
-                              width: "100%",
-                            }}
-                            onClick={() =>
-                              setInlineEdit({
-                                id: row.id,
-                                field: "fgLocation",
-                                value: row.fgLocation || "",
-                                original: row.fgLocation || "",
-                              })
-                            }
-                            title="Click to edit"
+                      <Box sx={{ color: "text.secondary" }}>
+                        No records found.
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((row, index) => {
+                    const isDispatched = row.status === "Dispatched";
+
+                    return (
+                      <TableRow
+                        key={row.id}
+                        sx={{
+                          backgroundColor:
+                            index % 2 === 0 ? "inherit" : lightYellow,
+                          "&:hover": {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }}
+                      >
+                        <TableCell>{formatDate(row.deliveryDate)}</TableCell>
+                        <TableCell>
+                          <MuiLink
+                            component={Link}
+                            href={`/so-search/${row.saleOrderNumber}`}
+                            underline="hover"
+                            sx={{ fontWeight: 500 }}
                           >
-                            {row.fgLocation || "-"}
-                          </Box>
-                        )}
+                            {row.saleOrderNumber}
+                          </MuiLink>
+                        </TableCell>
+                        <TableCell>{row.transferOrder}</TableCell>
+                        <TableCell>{row.product}</TableCell>
+                        <TableCell>{row.customerName}</TableCell>
+                        <TableCell>{row.salesZone}</TableCell>
+                        <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
+                        <TableCell>
+                          {inlineEdit &&
+                          inlineEdit.id === row.id &&
+                          inlineEdit.field === "fgLocation" ? (
+                            <CustomEditTextField
+                              initialValue={inlineEdit.value}
+                              onCommit={(val) => handleInlineSave(row.id, val)}
+                              onCancel={() => setInlineEdit(null)}
+                            />
+                          ) : (
+                            <Box
+                              sx={{
+                                cursor: isDispatched ? "default" : "pointer",
+                                textDecoration: isDispatched
+                                  ? "none"
+                                  : "underline dotted",
+                                width: "100%",
+                              }}
+                              onClick={() =>
+                                !isDispatched &&
+                                setInlineEdit({
+                                  id: row.id,
+                                  field: "fgLocation",
+                                  value: row.fgLocation || "",
+                                  original: row.fgLocation || "",
+                                })
+                              }
+                              title={
+                                isDispatched
+                                  ? "Locked (Dispatched)"
+                                  : "Click to edit"
+                              }
+                            >
+                              {row.fgLocation || "-"}
+                            </Box>
+                          )}
+                        </TableCell>
+                        <TableCell>{row.specialRemarks}</TableCell>
+                        <TableCell>{row.updatedBy || "-"}</TableCell>
+                        <TableCell>
+                          {row.updatedDate
+                            ? new Date(row.updatedDate).toLocaleString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                  hour12: true,
+                                }
+                              )
+                            : "-"}
+                        </TableCell>
+                        <TableCell>{row.status}</TableCell>
+                        <TableCell>
+                        {(() => {
+                          const { percent, current, next } = getStatusInfo(row.status, row.fgLocation);
+                          return (
+                            <Box sx={{ width: '100%', minWidth: 120, py: 1 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                <Typography variant="caption" fontWeight={600} color="text.primary">
+                                  {current}
+                                </Typography>
+                                <Typography variant="caption" fontWeight={600} color="text.primary">
+                                  {percent}%
+                                </Typography>
+                              </Box>
+
+                              <LinearProgress 
+                                variant="determinate" 
+                                value={percent} 
+                                sx={{
+                                  height: 6, 
+                                  borderRadius: 3,
+                                  backgroundColor: alpha(theme.palette.success.main, 0.2),
+                                  '& .MuiLinearProgress-bar': {
+                                    backgroundColor: theme.palette.success.main,
+                                    borderRadius: 3,
+                                  }
+                                }}
+                              />
+
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: '0.7rem' }}>
+                                {next}
+                              </Typography>
+                            </Box>
+                          );
+                        })()}
                       </TableCell>
-                      <TableCell>{row.specialRemarks}</TableCell>
-                      <TableCell>{row.updatedBy || "-"}</TableCell>
-                      <TableCell>
-                        {row.updatedDate
-                          ? new Date(row.updatedDate).toLocaleString("en-IN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                              hour12: true,
-                            })
-                          : "-"}
-                      </TableCell>
-                      <TableCell>{row.status}</TableCell>
-                    </TableRow>
-                  ))
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </TableContainer>
-          
+
           <TablePagination
             rowsPerPageOptions={[10, 20, 50, 100]}
             component="div"

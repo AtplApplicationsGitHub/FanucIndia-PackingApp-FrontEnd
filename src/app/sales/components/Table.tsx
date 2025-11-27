@@ -270,7 +270,7 @@ export default function SalesOrdersTable({
       >
         <Tooltip title={isAssigned ? "This order is assigned and cannot be edited." : ""}>
           <Box>
-            <MenuItem onClick={handleEdit} disabled={isAssigned}>
+            <MenuItem onClick={handleEdit} disabled={isAssigned || menuRow?.hasMaterialData}>
               Edit
             </MenuItem>
           </Box>
@@ -281,7 +281,7 @@ export default function SalesOrdersTable({
             <MenuItem
               onClick={handleDelete}
               sx={{ color: "error.main" }}
-              disabled={isAssigned}
+              disabled={isAssigned || menuRow?.hasMaterialData}
             >
               Delete
             </MenuItem>

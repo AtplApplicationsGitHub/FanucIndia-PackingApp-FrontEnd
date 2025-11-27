@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Button from "@mui/material/Button";
 import { useSalesForm } from "@/app/sales/components/hooks/useSalesForm";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import ProductSelect from "@/app/sales/components/forms/ProductSelect";
@@ -15,6 +14,8 @@ import PaymentClearanceToggle from "@/app/sales/components/forms/PaymentClearanc
 import CustomerSelect from "@/app/sales/components/forms/CustomerSelect";
 import RemarksTextarea from "@/app/sales/components/forms/RemarksTextarea";
 import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 
 interface SalesEntryFormProps {
   initialData?: SalesOrder | null;
@@ -35,6 +36,7 @@ const DEFAULT_FORM = {
   packConfigId: "",
   customerId: "",
   specialRemarks: "",
+  additionalRemarks: "",
 };
 
 const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
@@ -68,6 +70,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         packConfigId: String(initialData.packConfigId ?? ""),
         customerId: String(initialData.customerId ?? ""),
         specialRemarks: initialData.specialRemarks ?? "",
+        additionalRemarks: initialData.additionalRemarks ?? "",
       });
     }
   }, [
@@ -183,6 +186,29 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           onChange={onChange}
           error={errors.specialRemarks}
         />
+        <div className="col-span-1 md:col-span-2">
+           <TextField
+            fullWidth
+            label="Additional Remarks"
+            name="additionalRemarks"
+            value={form.additionalRemarks}
+            onChange={(e) => onChange("additionalRemarks", e.target.value)}
+            placeholder="Enter additional remarks"
+            multiline
+            minRows={3}
+            size="small"
+            variant="outlined"
+            autoComplete="off"
+            sx={{
+              mb: 1,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "4px",
+                backgroundColor: (theme) => theme.palette.background.paper,
+              },
+              "& .MuiInputLabel-root": { fontWeight: 500, fontSize: 15 },
+            }}
+          />
+        </div>
       </div>
       <div className="pt-6 flex justify-end">
         <Button
