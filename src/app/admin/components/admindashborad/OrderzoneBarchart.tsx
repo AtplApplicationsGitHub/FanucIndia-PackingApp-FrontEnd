@@ -1,35 +1,27 @@
 // components/charts/OrderStatusByZone.tsx
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { Table, BarChart3 } from 'lucide-react';
-import { useOrderZoneBarChart, ZoneStatus } from '../hooks/useOrderzoneBarchart';
+import React, { useState } from "react";
+import { BarChart } from "@mui/x-charts/BarChart";
+import { Table, BarChart3 } from "lucide-react";
+import { useOrderZoneBarChart, ZoneStatus } from "../hooks/useOrderzoneBarchart";
 import { useTheme } from "@mui/material";
 
 export default function OrderStatusByZone() {
   const theme = useTheme();
   const { data, loading, error, refetch } = useOrderZoneBarChart();
-  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
+  const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
-  // Stable color palette
+  // Finalized Colors - Updated to match new palette
   const COLORS = {
-    toBeIssued: '#6366F1', // Indigo
-    assigned: '#3B82F6',  // Blue
-    issued: '#F97316',    // Orange
-    packed: '#8B5CF6',    // Purple
-    dispatched: '#10B981', // Green
+    toBeIssued: "#FF6B6B", // Vibrant coral red
+    assigned: "#3B82F6", // Professional blue
+    issued: "#FFD93D", // Golden yellow
+    packed: "#6C5CE7", // Purple
+    dispatched: "#00B894", // Emerald green
   };
 
-  // Transform API data
+  // Transform API data (business logic unchanged)
   const chartData = (data || []).map((item: ZoneStatus) => ({
     zone: item.zoneName,
     toBeIssued: item.toBeIssuedCount,
@@ -73,7 +65,7 @@ export default function OrderStatusByZone() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <h2 
+          <h2
             className="text-lg uppercase font-semibold"
             style={{ color: theme.palette.secondary.main }}
           >
@@ -86,11 +78,11 @@ export default function OrderStatusByZone() {
 
         {/* Toggle Button WITHOUT yellow focus ring */}
         <button
-          onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
+          onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
           className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 
             text-gray-700 font-medium rounded-lg transition-all duration-200 focus:outline-none"
         >
-          {viewMode === 'chart' ? (
+          {viewMode === "chart" ? (
             <>
               <Table className="w-5 h-5" />
               <span>Table View</span>
@@ -105,7 +97,7 @@ export default function OrderStatusByZone() {
       </div>
 
       {/* Chart View */}
-      {viewMode === 'chart' ? (
+      {viewMode === "chart" ? (
         <>
           <style>
             {`
@@ -118,89 +110,157 @@ export default function OrderStatusByZone() {
           </style>
 
           <div className="h-[450px] -mx-6 -mb-6">
-            <ResponsiveContainer width="100%" height="135%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="zone"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fill: '#374151', fontSize: 13, fontWeight: 600 }}
-                  interval={0}
-                />
-                <YAxis tick={{ fill: '#374151', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111827',
-                    border: 'none',
-                    borderRadius: 8,
-                    color: '#e5e7eb',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                  }}
-                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-                />
-                <Bar dataKey="toBeIssued" fill={COLORS.toBeIssued} name="To be Issued" radius={[6, 6, 0, 0]} barSize={28} />
-                <Bar dataKey="assigned" fill={COLORS.assigned} name="Assigned (R105)" radius={[6, 6, 0, 0]} barSize={28} />
-                <Bar dataKey="issued" fill={COLORS.issued} name="Issued (W105)" radius={[6, 6, 0, 0]} barSize={28} />
-                <Bar dataKey="packed" fill={COLORS.packed} name="Packed (F105)" radius={[6, 6, 0, 0]} barSize={28} />
-                <Bar dataKey="dispatched" fill={COLORS.dispatched} name="Dispatched" radius={[6, 6, 0, 0]} barSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Legend */}
-          <div className="mt-8 flex justify-center">
-            <div className="flex flex-wrap gap-3 justify-center">
-              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200">
-                <span className="w-3 h-3 rounded-full bg-[#6366F1]" />
-                To be Issued
-              </span>
-              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
-                <span className="w-3 h-3 rounded-full bg-[#3B82F6]" />
-                Assigned (R105)
-              </span>
-              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-orange-50 text-orange-800 border border-orange-200">
-                <span className="w-3 h-3 rounded-full bg-[#F97316]" />
-                Issued (W105)
-              </span>
-              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200">
-                <span className="w-3 h-3 rounded-full bg-[#8B5CF6]" />
-                Packed (F105)
-              </span>
-              <span className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-green-50 text-green-800 border border-green-200">
-                <span className="w-3 h-3 rounded-full bg-[#10B981]" />
-                Dispatched
-              </span>
-            </div>
+            <BarChart
+              aria-label="Order status by sales zone"
+              dataset={chartData}
+              height={380}
+              margin={{ top: 20, right: 40, left: 50, bottom: 60 }}
+              xAxis={[
+                {
+                  dataKey: "zone",
+                  scaleType: "band",
+                  // keep default tick style so labels render reliably
+                },
+              ]}
+              yAxis={[
+                {
+                  scaleType: "linear",
+                  tickMinStep: 1,
+                },
+              ]}
+              series={[
+                {
+                  dataKey: "toBeIssued",
+                  label: "To be Issued",
+                  color: COLORS.toBeIssued,
+                  valueFormatter: (v: number | null) => (v ?? 0).toString(),
+                },
+                {
+                  dataKey: "assigned",
+                  label: "Assigned (R105)",
+                  color: COLORS.assigned,
+                  valueFormatter: (v: number | null) => (v ?? 0).toString(),
+                },
+                {
+                  dataKey: "issued",
+                  label: "Issued (W105)",
+                  color: COLORS.issued,
+                  valueFormatter: (v: number | null) => (v ?? 0).toString(),
+                },
+                {
+                  dataKey: "packed",
+                  label: "Packed (F105)",
+                  color: COLORS.packed,
+                  valueFormatter: (v: number | null) => (v ?? 0).toString(),
+                },
+                {
+                  dataKey: "dispatched",
+                  label: "Dispatched",
+                  color: COLORS.dispatched,
+                  valueFormatter: (v: number | null) => (v ?? 0).toString(),
+                },
+              ]}
+              slotProps={{
+                legend: {
+                  position: { vertical: "bottom", horizontal: "center" },
+                  sx: {
+                    mt: 2,
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    // circular color indicators
+                    "& .MuiChartsLegend-marker": {
+                      borderRadius: "50%",
+                      width: 12,
+                      height: 12,
+                    },
+                    // bold legend text
+                    "& .MuiChartsLegend-series tspan": {
+                      fontSize: 12,
+                      fontWeight: 600,
+                    },
+                  },
+                },
+              }}
+            />
           </div>
         </>
       ) : (
-        /* Table View */
+        /* Table View (unchanged) */
         <div className="overflow-x-auto -mx-6 -mb-6 mt-4">
           <table className="w-full text-sm border-t border-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Zone</th>
-                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.toBeIssued }}>To be Issued</th>
-                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.assigned }}>Assigned (R105)</th>
-                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.issued }}>Issued (W105)</th>
-                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.packed }}>Packed (F105)</th>
-                <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.dispatched }}>Dispatched</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-700 uppercase tracking-wider">
+                  Zone
+                </th>
+                <th
+                  className="px-6 py-4 text-center font-semibold"
+                  style={{ color: COLORS.toBeIssued }}
+                >
+                  To be Issued
+                </th>
+                <th
+                  className="px-6 py-4 text-center font-semibold"
+                  style={{ color: COLORS.assigned }}
+                >
+                  Assigned (R105)
+                </th>
+                <th
+                  className="px-6 py-4 text-center font-semibold"
+                  style={{ color: COLORS.issued }}
+                >
+                  Issued (W105)
+                </th>
+                <th
+                  className="px-6 py-4 text-center font-semibold"
+                  style={{ color: COLORS.packed }}
+                >
+                  Packed (F105)
+                </th>
+                <th
+                  className="px-6 py-4 text-center font-semibold"
+                  style={{ color: COLORS.dispatched }}
+                >
+                  Dispatched
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {chartData.map((row) => (
                 <tr key={row.zone} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-medium text-gray-900">{row.zone}</td>
-                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.toBeIssued }}>{row.toBeIssued}</td>
-                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.assigned }}>{row.assigned}</td>
-                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.issued }}>{row.issued}</td>
-                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.packed }}>{row.packed}</td>
-                  <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.dispatched }}>{row.dispatched}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {row.zone}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-center font-bold"
+                    style={{ color: COLORS.toBeIssued }}
+                  >
+                    {row.toBeIssued}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-center font-bold"
+                    style={{ color: COLORS.assigned }}
+                  >
+                    {row.assigned}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-center font-bold"
+                    style={{ color: COLORS.issued }}
+                  >
+                    {row.issued}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-center font-bold"
+                    style={{ color: COLORS.packed }}
+                  >
+                    {row.packed}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-center font-bold"
+                    style={{ color: COLORS.dispatched }}
+                  >
+                    {row.dispatched}
+                  </td>
                 </tr>
               ))}
             </tbody>
