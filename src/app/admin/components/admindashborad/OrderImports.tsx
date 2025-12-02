@@ -56,7 +56,7 @@ export default function OrderImportsCard() {
               className="text-lg uppercase font-semibold"
               style={{ color: theme.palette.secondary.main }}
             >
-              Order Imports
+              Orders Created
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
               <Calendar className="w-4 h-4" />

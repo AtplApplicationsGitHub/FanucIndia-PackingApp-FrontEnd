@@ -12,12 +12,14 @@ interface SalesOrder {
   outboundDelivery?: string;
   paymentClearance?: boolean;
   product?: { name: string };
-  customer?: { name: string };
+  customer?: { name: string; address?: string };
   packConfig?: { configName: string };
   transporter?: { name: string };
   plantCode?: { code: string };
   salesZone?: { name: string };
   specialRemarks?: string;
+  additionalRemarks?: string;
+  address?: string | null;
 }
 
 interface Props {
@@ -26,6 +28,11 @@ interface Props {
 }
 
 export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: Props) {
+  // Logic to format Customer Name - Address
+  const customerName = salesOrder.customer?.name || "—";
+  const customerAddress = salesOrder.customer?.address || salesOrder.address || "";
+  const customerDisplay = customerAddress ? `${customerName} - ${customerAddress}` : customerName;
+
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -60,10 +67,10 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Product" value={salesOrder.product?.name} />
-        <KVBox
-          label="Customer"
-          value={salesOrder.customer?.name}
-        />
+        
+        {/* Updated Customer Display: Name - Address */}
+        <KVBox label="Customer" value={customerDisplay} />
+
         <KVBox label="Priority" value={salesOrder.priority} />
         <KVBox label="Terminal" value={"-"} />
       </Box>
@@ -85,10 +92,17 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
           value={salesOrder.salesZone?.name}
         />
       </Box>
+      
+      {/* Special & Additional Remarks */}
       <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
         <KVBox
           label="Special Remarks"
           value={salesOrder.specialRemarks}
+          fullWidth
+        />
+        <KVBox
+          label="Additional Remarks"
+          value={salesOrder.additionalRemarks}
           fullWidth
         />
       </Box>

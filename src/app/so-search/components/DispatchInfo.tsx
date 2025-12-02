@@ -35,7 +35,7 @@ export default function DispatchInfo({
   onViewAttachments,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.1); // Lighter yellow
+  const lightYellow = alpha(theme.palette.primary.main, 0.25); // Lighter yellow
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="dispatch-section">

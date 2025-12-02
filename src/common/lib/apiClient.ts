@@ -30,11 +30,13 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   (err: AxiosError) => {
-    if (err.response?.status === 401 && typeof window !== 'undefined') {
+    const isLoginRequest = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/mobile-login');
+
+    if (err.response?.status === 401 && !isLoginRequest && typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setTimeout(() => {
-            window.location.href = '/login';
+            window.location.href = '/login?reason=session-expired';
         }, 500);
     }
 

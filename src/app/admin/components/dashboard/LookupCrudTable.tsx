@@ -294,7 +294,7 @@ const LookupCrudTable: React.FC<Props> = ({
                     backgroundColor:
                       index % 2 === 0
                         ? "inherit"
-                        : alpha(theme.palette.primary.main, 0.1), // Light Yellow for alternate rows
+                        : alpha(theme.palette.primary.main, 0.25), // Light Yellow for alternate rows
                     "&:hover": {
                       backgroundColor: alpha(theme.palette.action.hover, 0.05),
                     },

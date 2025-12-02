@@ -8,11 +8,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   TextField,
   Typography,
   CircularProgress,
-  TablePagination, // <--- Added import
+  TablePagination,
   useTheme,
   alpha,
   Box
@@ -248,8 +247,8 @@ export default function MaterialDataTable({
   }
 
   return (
-    // Parent Paper handles the rounded corners and shadow for both Table and Pagination
-    <Paper sx={{ width: '100%', borderRadius: 2, overflow: 'hidden', boxShadow: 2 }}>
+    // Replaced Paper with Box to remove shadow and border radius for unification
+    <Box sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer>
         <Table size="small" aria-label="Material Data Table">
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
@@ -354,6 +353,6 @@ export default function MaterialDataTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-    </Paper>
+    </Box>
   );
 }

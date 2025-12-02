@@ -49,7 +49,7 @@ export default function OrdersByCustomer({
               Orders by Customer
             </p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Top customers by order count
+              Top 5 customers by order count
             </p>
           </div>
         </header>
@@ -142,7 +142,7 @@ export default function OrdersByCustomer({
 
             <div className="mt-4 flex justify-end">
               <div className="w-fit text-xs px-3 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
-                Showing {items.length} customer{items.length !== 1 ? "s" : ""}
+                Top {items.length} Customers
               </div>
             </div>
           </>

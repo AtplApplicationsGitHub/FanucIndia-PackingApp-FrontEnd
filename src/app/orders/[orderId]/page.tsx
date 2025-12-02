@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, SetStateAction } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Backdrop, CircularProgress, Snackbar, Box, Container, Paper } from "@mui/material";
+import { Alert, Backdrop, CircularProgress, Snackbar, Box, Container, Paper, Divider } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
 import MaterialDataTable from "@/app/admin/material-data/components/MaterialDataTable";
@@ -380,31 +380,34 @@ export default function MaterialDataPage() {
         display: 'flex', 
         flexDirection: 'column', 
         minHeight: '100vh',
-        bgcolor: '#f5f5f5' // Light gray background for Fanuc theme
+        bgcolor: '#f5f5f5' 
       }}
     >
       {/* Role-Specific Header */}
       {renderHeader()}
 
-      {/* Main Content with Fanuc-themed Container */}
+      {/* Main Content with NO GAPS */}
       <Container 
-        maxWidth="xl" 
+        maxWidth={false} 
+        disableGutters 
         sx={{ 
           flexGrow: 1, 
-          py: 4,
-          px: { xs: 2, sm: 3, md: 4 }
+          py: 0, // UPDATED: Set vertical padding to 0 to remove top gap
+          px: 0 
         }}
       >
-        {/* Header Section Card */}
+        {/* UNIFIED PAPER CONTAINER FOR HEADER, INPUT, AND TABLE */}
         <Paper 
           elevation={3}
           sx={{ 
-            mb: 3,
-            borderRadius: 2,
+            // mb: 3, // Removed margin-bottom if you want it flush at the bottom too, otherwise keep it
+            borderRadius: 0, 
             overflow: 'hidden',
-            border: '2px solid #e0e0e0'
+            borderTop: '1px solid #e0e0e0',
+            borderBottom: '1px solid #e0e0e0',
           }}
         >
+          {/* 1. Header Section */}
           <HeaderSection
             so={so}
             customerName={customerName}
@@ -414,45 +417,54 @@ export default function MaterialDataPage() {
             cncSerialNo={cncSerialNo}
             items={localRows}
           />
-        </Paper>
 
-        {/* Order Complete Alert or Input Section */}
-        {isOrderFullyComplete ? (
-          <Alert 
-            severity="success" 
-            sx={{ 
-              mb: 3,
-              borderRadius: 2,
-              fontSize: '1rem',
-              fontWeight: 500,
-              boxShadow: 2
-            }}
-          >
-            This order is fully packed and complete. No further actions can be taken.
-          </Alert>
-        ) : (
-          <Paper 
-            elevation={3}
-            sx={{ 
-              mb: 3,
-              py: 3,
-              px: 2,
-              borderRadius: 2,
-              border: '2px solid #e0e0e0'
-            }}
-          >
-            <InputBoxSection
-              onSubmit={handleProcess}
-              saleOrderNumber={so}
-              onFileCreated={() => {
-                setUploadNotice("File metadata saved");
-                refetch();
-              }}
-              disabled={isOrderFullyComplete}
-              items={localRows}
+          <Divider />
+
+          {/* 2. Input/Scan Section */}
+          <Box sx={{ py: 3, px: 2, bgcolor: 'background.paper' }}>
+            {isOrderFullyComplete ? (
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  borderRadius: 1,
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  boxShadow: 1,
+                  mx: 2 
+                }}
+              >
+                This order is fully packed and complete. No further actions can be taken.
+              </Alert>
+            ) : (
+              <InputBoxSection
+                onSubmit={handleProcess}
+                saleOrderNumber={so}
+                onFileCreated={() => {
+                  setUploadNotice("File metadata saved");
+                  refetch();
+                }}
+                disabled={isOrderFullyComplete}
+                items={localRows}
+              />
+            )}
+          </Box>
+
+          <Divider />
+
+          {/* 3. Material Data Table */}
+          <Box>
+            <MaterialDataTable
+              rows={localRows}
+              loading={busy}
+              onUpdateIssueStage={handleUpdateIssueStage}
+              onUpdatePackingStage={handleUpdatePackingStage}
+              onProcessRowUpdateError={(err) =>
+                setEditError(extractErrorMessage(err))
+              }
+              isOrderFullyComplete={isOrderFullyComplete}
             />
-          </Paper>
-        )}
+          </Box>
+        </Paper>
 
         {/* Error Alert */}
         {editError && (
@@ -460,28 +472,15 @@ export default function MaterialDataPage() {
             severity="error" 
             sx={{ 
               mb: 3,
-              borderRadius: 2,
+              borderRadius: 0,
               fontSize: '0.95rem',
-              boxShadow: 2
+              boxShadow: 2,
+              mx: 2
             }}
           >
             {editError}
           </Alert>
         )}
-
-        {/* Material Data Table */}
-        <Box sx={{ mb: 4 }}>
-          <MaterialDataTable
-            rows={localRows}
-            loading={busy}
-            onUpdateIssueStage={handleUpdateIssueStage}
-            onUpdatePackingStage={handleUpdatePackingStage}
-            onProcessRowUpdateError={(err) =>
-              setEditError(extractErrorMessage(err))
-            }
-            isOrderFullyComplete={isOrderFullyComplete}
-          />
-        </Box>
 
         {/* Success Snackbar */}
         <Snackbar

@@ -39,7 +39,7 @@ const AdminUsersTable: React.FC<Props> = ({
   currentUserId,
 }) => {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.1);
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);

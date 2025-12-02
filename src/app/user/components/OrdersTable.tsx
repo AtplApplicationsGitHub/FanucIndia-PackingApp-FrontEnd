@@ -29,7 +29,7 @@ interface Props {
 
 const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView }) => {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.1);
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   // --- Pagination State ---
   const [page, setPage] = React.useState(0);

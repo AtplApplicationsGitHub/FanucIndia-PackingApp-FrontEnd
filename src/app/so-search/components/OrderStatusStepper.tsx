@@ -2,7 +2,7 @@
 
 import { Stack, Step, StepLabel, Stepper, StepConnector, stepConnectorClasses, styled, Typography, Box } from "@mui/material";
 import { StepIconProps } from "@mui/material/StepIcon";
-import { differenceInSeconds } from 'date-fns';
+import { differenceInSeconds, format } from 'date-fns'; // Added format
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
@@ -10,14 +10,14 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
   [`&.${stepConnectorClasses.active}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundColor: '#FFD200', // Fanuc Yellow
-      backgroundImage: 'none', // Remove old gradient
+      backgroundColor: '#FFD200', 
+      backgroundImage: 'none', 
     },
   },
   [`&.${stepConnectorClasses.completed}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundColor: '#FFD200', // Fanuc Yellow
-      backgroundImage: 'none', // Remove old gradient
+      backgroundColor: '#FFD200', 
+      backgroundImage: 'none', 
     },
   },
   [`& .${stepConnectorClasses.line}`]: {
@@ -84,7 +84,7 @@ const STEP_ORDER = [
   "Under Packing",
   "Packed",
   "WIP Storage",
-  "Stored/Ready for Dispatch",
+  "Ready for Dispatch",
   "Dispatched",
 ];
 
@@ -176,6 +176,12 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
 
           const isSkipped = !step.createdDateTime && index < activeStep;
 
+          // Check specifically for "To be Issued" to display its created time
+          const isToBeIssued = step.status === "To be Issued";
+          const createdTimeFormatted = isToBeIssued && step.createdDateTime 
+            ? format(new Date(step.createdDateTime), "dd MMM yyyy, hh:mm a") 
+            : null;
+
           return (
             <Step key={step.id}>
               <StepLabel 
@@ -185,14 +191,22 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
               >
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 500 }}>{step.status}</Typography>
+                  
+                  {/* Display Created Time for 'To be Issued' */}
+                  {createdTimeFormatted && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {createdTimeFormatted}
+                    </Typography>
+                  )}
+
                   {index > 0 && ( 
                     <>
                       {step.createdDateTime ? (
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" display="block">
                           Time Taken: {timeTaken || "..."}
                         </Typography>
                       ) : (
-                        <Typography variant="caption" color={isSkipped ? "text.disabled" : "text.secondary"}>
+                        <Typography variant="caption" color={isSkipped ? "text.disabled" : "text.secondary"} display="block">
                           {isSkipped ? "Skipped" : "Awaiting Completion"}
                         </Typography>
                       )}

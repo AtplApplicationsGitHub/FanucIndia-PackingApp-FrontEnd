@@ -5,6 +5,7 @@ import { fetchWithAuth } from "../../../../common/lib/endpoints";
 
 interface DispatchSummaryData {
   ordersToBeDispatched: number;
+  readyForDispatchToday: number;
   ordersDispatchedToday: number;
 }
 

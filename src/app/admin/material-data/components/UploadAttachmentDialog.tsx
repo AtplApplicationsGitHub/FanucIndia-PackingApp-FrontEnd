@@ -268,7 +268,7 @@ export default function UploadAttachmentDialog({
   const headerBg = theme.palette.primary.main; 
   const headerText = theme.palette.primary.contrastText; 
   const titleColor = theme.palette.secondary.main; 
-  const lightYellow = alpha(theme.palette.primary.main, 0.1);
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">

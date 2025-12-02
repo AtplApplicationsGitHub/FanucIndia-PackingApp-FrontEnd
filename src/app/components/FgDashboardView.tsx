@@ -5,7 +5,6 @@ import {
   Box,
   Paper,
   Link as MuiLink,
-  TextField,
   IconButton,
   Snackbar,
   Alert,
@@ -32,7 +31,15 @@ import { API } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
-import axios from "axios";
+
+// Define the color palette
+const STATUS_COLORS = {
+  toBeIssued: "#FF6B6B", // Vibrant coral red
+  assigned: "#3B82F6",   // Professional blue
+  issued: "#FFD93D",     // Golden yellow
+  packed: "#6C5CE7",     // Purple
+  dispatched: "#00B894", // Emerald green
+};
 
 interface FgDashboardRow {
   id: number;
@@ -59,13 +66,6 @@ const formatDate = (dateString?: string) => {
   }
 };
 
-type InlineEdit = {
-  id: number;
-  field: "fgLocation";
-  value: string | null;
-  original: string | null;
-} | null;
-
 export default function FgDashboardView() {
   const theme = useTheme();
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
@@ -77,8 +77,6 @@ export default function FgDashboardView() {
     message: string;
     severity: "success" | "error";
   } | null>(null);
-
-  const [inlineEdit, setInlineEdit] = useState<InlineEdit>(null);
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -120,101 +118,72 @@ export default function FgDashboardView() {
     fetchData();
   }, [fetchData]);
 
+  // Updated logic to map status to specific colors
   const getStatusInfo = (status: string, fgLocation?: string | null) => {
     const s = (status || "").toUpperCase();
     
     if (s === "DISPATCHED") {
-      return { percent: 100, current: "Dispatched", next: "Completed" };
+      return { 
+        percent: 100, 
+        current: "Dispatched", 
+        next: "Completed",
+        color: STATUS_COLORS.dispatched 
+      };
     }
     
-    // New Status from Label Print
-    if (s.includes("STORED") || s.includes("READY FOR DISPATCH")) {
-      return { percent: 90, current: "Stored/Ready for Dispatch", next: "Next: Dispatched" };
+    if (s.includes("READY FOR DISPATCH")) {
+      return { 
+        percent: 90, 
+        current: "Ready for Dispatch", 
+        next: "Dispatched",
+        color: STATUS_COLORS.dispatched // Group with dispatched color or use distinct if preferred
+      };
     }
 
     if (s.includes("F105")) {
       // Logic: If FG Location is set, it's WIP Storage, otherwise it's Packed
       if (fgLocation && fgLocation.trim() !== "") {
-        return { percent: 80, current: "WIP Storage", next: "Next: Stored/Ready for Dispatch" };
+        return { 
+          percent: 80, 
+          current: "WIP Storage", 
+          next: "Ready for Dispatch",
+          color: STATUS_COLORS.packed 
+        };
       }
-      return { percent: 75, current: "Packed", next: "Next: WIP Storage" };
+      return { 
+        percent: 75, 
+        current: "Packed", 
+        next: "WIP Storage",
+        color: STATUS_COLORS.packed 
+      };
     }
 
     if (s.includes("W105")) {
-      return { percent: 50, current: "Issued", next: "Next: Under Packing" };
+      return { 
+        percent: 50, 
+        current: "Issued", 
+        next: "Under Packing",
+        color: STATUS_COLORS.issued 
+      };
     }
 
     if (s.includes("R105")) {
-      return { percent: 25, current: "To be Issued", next: "Next: Under Issue" };
+      return { 
+        percent: 25, 
+        current: "Assigned", 
+        next: "Under Issue",
+        color: STATUS_COLORS.assigned 
+      };
     }
     
-    return { percent: 0, current: "Created", next: "Next: To be Issued" };
-  };
-
-  const handleInlineSave = async (id: number, value: string) => {
-    if (inlineEdit?.original === value) {
-      setInlineEdit(null);
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    try {
-      await axios.patch(
-        API.ADMIN.SALES_ORDER_BY_ID(id),
-        { fgLocation: value },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setSnackbar({
-        open: true,
-        message: "FG Location updated successfully!",
-        severity: "success",
-      });
-      fetchData();
-    } catch {
-      setSnackbar({
-        open: true,
-        message: "Failed to update FG Location",
-        severity: "error",
-      });
-    } finally {
-      setInlineEdit(null);
-    }
-  };
-
-  function CustomEditTextField({
-    initialValue,
-    onCommit,
-    onCancel,
-  }: {
-    initialValue: string | null;
-    onCommit: (val: string) => void;
-    onCancel: () => void;
-  }) {
-    const [localValue, setLocalValue] = React.useState(initialValue ?? "");
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") onCommit(localValue.toString());
-      if (e.key === "Escape") onCancel();
-      if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
-        e.stopPropagation();
-      }
+    // Default / To be Issued
+    return { 
+      percent: 10, 
+      current: "To be Issued", 
+      next: "Under Issue",
+      color: STATUS_COLORS.toBeIssued 
     };
-
-    return (
-      <TextField
-        value={localValue}
-        size="small"
-        onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={() => onCommit(localValue.toString())}
-        onKeyDown={handleKeyDown}
-        autoFocus
-        variant="standard"
-        sx={{ width: "100%" }}
-      />
-    );
-  }
+  };
 
   // Pagination Handlers
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -228,24 +197,25 @@ export default function FgDashboardView() {
     setPage(0);
   };
 
+  // Updated widths for Delivery Date, Payment, Updated Date
   const columns = [
-    { id: "deliveryDate", label: "Delivery Date", width: 130 },
+    { id: "deliveryDate", label: "Delivery Date", width: 90 }, // Reduced
     { id: "saleOrderNumber", label: "Sales Order", width: 120 },
     { id: "transferOrder", label: "Transfer Order", width: 140 },
     { id: "product", label: "Product", width: 150 },
     { id: "customerName", label: "Customer Name", width: 150 },
     { id: "salesZone", label: "Sales Zone", width: 120 },
-    { id: "payment", label: "Payment", width: 100 },
+    { id: "payment", label: "Payment", width: 70 }, // Reduced
     { id: "fgLocation", label: "FG Location", width: 150 },
     { id: "specialRemarks", label: "Special Remarks", width: "auto" },
     { id: "updatedBy", label: "Updated By", width: 130 },
-    { id: "updatedDate", label: "Updated Date", width: 180 },
+    { id: "updatedDate", label: "Updated Date", width: 180 }, // Reduced
     { id: "status", label: "Status", width: 100 },
-    { id: 'progress', label: 'Progress', width: 140 },
+    { id: 'progress', label: 'Progress', width: 180 },
   ];
 
   // Styling constants
-  const lightYellow = alpha(theme.palette.primary.main, 0.1); // Light yellow for alternating rows
+  const lightYellow = alpha(theme.palette.primary.main, 0.25); 
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
 
@@ -344,8 +314,6 @@ export default function FgDashboardView() {
                   </TableRow>
                 ) : (
                   rows.map((row, index) => {
-                    const isDispatched = row.status === "Dispatched";
-
                     return (
                       <TableRow
                         key={row.id}
@@ -373,45 +341,16 @@ export default function FgDashboardView() {
                         <TableCell>{row.customerName}</TableCell>
                         <TableCell>{row.salesZone}</TableCell>
                         <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
+                        
+                        {/* Inline Edit REMOVED - Plain text only */}
                         <TableCell>
-                          {inlineEdit &&
-                          inlineEdit.id === row.id &&
-                          inlineEdit.field === "fgLocation" ? (
-                            <CustomEditTextField
-                              initialValue={inlineEdit.value}
-                              onCommit={(val) => handleInlineSave(row.id, val)}
-                              onCancel={() => setInlineEdit(null)}
-                            />
-                          ) : (
-                            <Box
-                              sx={{
-                                cursor: isDispatched ? "default" : "pointer",
-                                textDecoration: isDispatched
-                                  ? "none"
-                                  : "underline dotted",
-                                width: "100%",
-                              }}
-                              onClick={() =>
-                                !isDispatched &&
-                                setInlineEdit({
-                                  id: row.id,
-                                  field: "fgLocation",
-                                  value: row.fgLocation || "",
-                                  original: row.fgLocation || "",
-                                })
-                              }
-                              title={
-                                isDispatched
-                                  ? "Locked (Dispatched)"
-                                  : "Click to edit"
-                              }
-                            >
-                              {row.fgLocation || "-"}
-                            </Box>
-                          )}
+                          {row.fgLocation || "-"}
                         </TableCell>
+
                         <TableCell>{row.specialRemarks}</TableCell>
                         <TableCell>{row.updatedBy || "-"}</TableCell>
+                        
+                        {/* Updated Date Format: No seconds */}
                         <TableCell>
                           {row.updatedDate
                             ? new Date(row.updatedDate).toLocaleString(
@@ -422,8 +361,7 @@ export default function FgDashboardView() {
                                   year: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                  second: "2-digit",
-                                  hour12: true,
+                                  hour12: true, // Seconds omitted by default when not specified
                                 }
                               )
                             : "-"}
@@ -431,7 +369,7 @@ export default function FgDashboardView() {
                         <TableCell>{row.status}</TableCell>
                         <TableCell>
                         {(() => {
-                          const { percent, current, next } = getStatusInfo(row.status, row.fgLocation);
+                          const { percent, current, next, color } = getStatusInfo(row.status, row.fgLocation);
                           return (
                             <Box sx={{ width: '100%', minWidth: 120, py: 1 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
@@ -449,9 +387,9 @@ export default function FgDashboardView() {
                                 sx={{
                                   height: 6, 
                                   borderRadius: 3,
-                                  backgroundColor: alpha(theme.palette.success.main, 0.2),
+                                  backgroundColor: alpha(color, 0.2), // Use dynamic color background
                                   '& .MuiLinearProgress-bar': {
-                                    backgroundColor: theme.palette.success.main,
+                                    backgroundColor: color, // Use dynamic color foreground
                                     borderRadius: 3,
                                   }
                                 }}

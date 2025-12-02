@@ -77,7 +77,7 @@ export default function AdminOrdersTable({
   onDetailedView,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.1); 
+  const lightYellow = alpha(theme.palette.primary.main, 0.25); 
 
   // --- INLINE EDIT STATE & LOGIC ---
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);

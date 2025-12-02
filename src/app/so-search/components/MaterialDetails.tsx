@@ -23,7 +23,7 @@ interface Props {
 
 export default function MaterialDetails({ materialDetails, onViewAttachments }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.1); // Lighter yellow
+  const lightYellow = alpha(theme.palette.primary.main, 0.25); // Lighter yellow
   const displayMaterials = materialDetails || [];
 
   return (

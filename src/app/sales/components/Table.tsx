@@ -45,7 +45,7 @@ export default function SalesOrdersTable({
   onPaginationModelChange,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.08);
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
   const hoverYellow = alpha(theme.palette.primary.main, 0.15);
 
   // --- MENU STATE ---

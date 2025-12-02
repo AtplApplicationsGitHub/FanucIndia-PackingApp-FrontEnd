@@ -47,13 +47,8 @@ export default function OrdersByProduct({
               Orders by Product
             </p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Top products by order count
+              Top 5 products by order count
             </p>
-          </div>
-
-          {/* small legend or action placeholder (kept for parity with other component) */}
-          <div aria-hidden={true} className="text-xs text-slate-400">
-            {/* reserved */}
           </div>
         </header>
 
@@ -140,7 +135,7 @@ export default function OrdersByProduct({
             {/* Footer */}
             <div className="mt-4 flex justify-end">
               <div className="w-fit text-xs px-3 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
-                Showing {items.length} product{items.length !== 1 ? "s" : ""}
+                Top {items.length} Products
               </div>
             </div>
           </>

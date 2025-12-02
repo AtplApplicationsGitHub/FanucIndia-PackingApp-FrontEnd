@@ -28,7 +28,6 @@ export default function UserDashboard() {
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
   
-  // 👇 FIX #2: Use the correct hook to get the router instance
   const router = useRouter(); 
 
   const showSnackbar = (
@@ -120,7 +119,8 @@ export default function UserDashboard() {
         )}
 
         {view === "pick_pack" && (
-          <Box sx={{ py: 4, px: { xs: 2, md: 4 }, width: "100%" }}>
+          // UPDATED: Removed horizontal padding (px) to make table wider/full width
+          <Box sx={{ py: 4, px: 0, width: "100%" }}>
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -131,9 +131,10 @@ export default function UserDashboard() {
                 sx={{
                   width: "100%",
                   mb: 2,
-                  px: { xs: 1, md: 2 },
-                  py: 1,
+                  px: 0, // UPDATED: Removed internal padding
+                  py: 0, // UPDATED: Reduced vertical padding
                   bgcolor: "background.paper",
+                  borderRadius: 0, // UPDATED: Squared corners for full-width look
                 }}
               >
                 <AssignedOrdersTable
