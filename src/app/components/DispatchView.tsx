@@ -48,21 +48,19 @@ import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs, { Dayjs } from "dayjs";
+import { alpha, useTheme, Theme } from "@mui/material";
+import { X } from "lucide-react";
 
-interface Customer {
-  id: number;
-  name: string;
-  address: string;
-}
 interface Transporter {
   id: number;
   name: string;
 }
 interface Dispatch {
   id: number;
-  customer: { name: string } | null;
-  customerName?: string | null;
-  address: string;
   transporter?: { name: string } | null;
   transporterName?: string | null;
   soCount: number;
@@ -74,6 +72,11 @@ interface Dispatch {
 interface DispatchSO {
   id: number;
   saleOrderNumber: string;
+  salesOrder?: {
+    customer?: {
+      name: string;
+    };
+  };
 }
 
 const AttachmentDialog = ({
@@ -237,21 +240,18 @@ const AttachmentDialog = ({
 
 // --- Main Component ---
 export default function DispatchView() {
-  // --- State ---
+  const theme = useTheme();
+  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().subtract(5, 'day'));
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   const [form, setForm] = useState<{
-    customerId: Customer | null | string;
-    address: string;
     transporterId: Transporter | null;
     vehicleNumber: string;
   }>({
-    customerId: null,
-    address: "",
     transporterId: null,
     vehicleNumber: "",
   });
   const [attachments, setAttachments] = useState<File[]>([]);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [transporters, setTransporters] = useState<Transporter[]>([]);
   const soInputRef = useRef<HTMLInputElement>(null);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(
@@ -287,17 +287,7 @@ export default function DispatchView() {
   ) => {
     setSnackbar({ open: true, message, severity });
   };
-
-  const fetchCustomers = useCallback(async () => {
-    try {
-      const res = await fetchWithAuth(API.LOOKUP.CUSTOMERS);
-      const data = await res.json();
-      setCustomers(data);
-    } catch {
-      showSnackbar("Failed to load customers", "error");
-    }
-  }, []);
-
+  
   const fetchTransporters = useCallback(async () => {
     try {
       const res = await fetchWithAuth(API.LOOKUP.TRANSPORTERS);
@@ -311,7 +301,11 @@ export default function DispatchView() {
   const fetchDispatches = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth(API.DISPATCH.BASE);
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
+      if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
+
+      const res = await fetchWithAuth(`${API.DISPATCH.BASE}?${params.toString()}`);
       const data = await res.json();
       setDispatches(data);
     } catch {
@@ -319,7 +313,51 @@ export default function DispatchView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchDispatches();
+  }, [fetchDispatches]);
+
+  const handleClearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  const handleVehicleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    setForm(prev => ({ ...prev, vehicleNumber: val }));
+  };
+
+  const headerBg = theme.palette.primary.main; 
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
+
+  const buttonSx = {
+    bgcolor: (theme: Theme) => theme.palette.action.hover,
+    color: (theme: Theme) => theme.palette.text.primary,
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 120,
+    height: 40,
+    px: 3,
+    textTransform: "none",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      bgcolor: (theme: Theme) => theme.palette.primary.main,
+      color: (theme: Theme) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+      "& .MuiSvgIcon-root, & svg": {
+        color: "#000",
+      },
+    },
+    "&:disabled": {
+      opacity: 0.6,
+      cursor: "not-allowed",
+    },
+  };
 
   const fetchDispatchSOs = useCallback(async (dispatchId: number) => {
     setSoLoading(true);
@@ -335,10 +373,9 @@ export default function DispatchView() {
   }, []);
 
   useEffect(() => {
-    fetchCustomers();
     fetchTransporters();
     fetchDispatches();
-  }, [fetchCustomers, fetchTransporters, fetchDispatches]);
+  }, [fetchTransporters, fetchDispatches]);
 
   useEffect(() => {
     if (selectedDispatch) {
@@ -348,31 +385,8 @@ export default function DispatchView() {
     }
   }, [selectedDispatch, fetchDispatchSOs]);
 
-  const handleFormChange = (
-    field: "customerId" | "address" | "transporterId" | "vehicleNumber",
-    value: Customer | Transporter | string | null
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-
-    if (
-      field === "customerId" &&
-      value &&
-      typeof value === "object" &&
-      "address" in value
-    ) {
-      setForm((prev) => ({
-        ...prev,
-        address: (value as Customer).address || "",
-      }));
-    } else if (field === "customerId" && !value) {
-      setForm((prev) => ({ ...prev, address: "" }));
-    }
-  };
-
   const resetForm = () => {
     setForm({
-      customerId: null,
-      address: "",
       transporterId: null,
       vehicleNumber: "",
     });
@@ -391,23 +405,6 @@ export default function DispatchView() {
   };
 
   const handleSave = async () => {
-    // --- Validation ---
-    const isCustomerObject =
-      typeof form.customerId === "object" && form.customerId !== null;
-    const customerValue = form.customerId; // Can be object, string, or null
-    const customerNameString =
-      typeof customerValue === "string"
-        ? customerValue.trim()
-        : (customerValue as Customer)?.name;
-
-    if (!customerValue || !customerNameString) {
-      showSnackbar("Please select or enter a customer name.", "error");
-      return;
-    }
-    if (!form.address.trim()) {
-      showSnackbar("Address is required.", "error");
-      return;
-    }
     if (!form.vehicleNumber.trim()) {
       showSnackbar("Vehicle Number is required.", "error");
       return;
@@ -417,26 +414,13 @@ export default function DispatchView() {
 
     try {
       const token = localStorage.getItem("token");
-
-      const customerId = isCustomerObject
-        ? (form.customerId as Customer).id
-        : undefined;
-      const customerName = !isCustomerObject
-        ? String(form.customerId || "").trim()
-        : undefined;
-
       const formData = new FormData();
-
-      if (customerId) {
-        formData.append("customerId", String(customerId));
-      } else if (customerName) {
-        formData.append("customerName", customerName);
-      }
-      formData.append("address", form.address.trim());
 
       if (form.transporterId)
         formData.append("transporterId", String(form.transporterId.id));
+
       formData.append("vehicleNumber", form.vehicleNumber.trim());
+
       attachments.forEach((file) => {
         formData.append("attachments", file);
       });
@@ -536,16 +520,10 @@ export default function DispatchView() {
   const handleEdit = () => {
     const dispatchToEdit = dispatches.find((d) => d.id === currentMenuId);
     if (dispatchToEdit) {
-      const customerName = dispatchToEdit.customerName || dispatchToEdit.customer?.name;
-      const customer =
-        customers.find((c) => c.name === customerName) || null;
       const transporterName = dispatchToEdit.transporterName || dispatchToEdit.transporter?.name;
-      const transporter =
-        transporters.find((t) => t.name === transporterName) ||
-        null;
+      const transporter = transporters.find((t) => t.name === transporterName) || null;
+      
       setForm({
-        customerId: customer || customerName || null,
-        address: dispatchToEdit.address || customer?.address || "",
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
       });
@@ -600,12 +578,6 @@ export default function DispatchView() {
       width: 70,
       valueGetter: (value, row) =>
         dispatches.findIndex((d) => d.id === row.id) + 1,
-    },
-    {
-      field: "customerName",
-      headerName: "Customer Name",
-      flex: 1,
-      valueGetter: (value, row) => row.customerName || row.customer?.name || "-",
     },
     {
       field: "soCount",
@@ -672,20 +644,36 @@ export default function DispatchView() {
   }, [selectedDispatch]);
 
   return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
     <Box p={3}>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
-        <Typography variant="h5" fontWeight={700}>
-          Dispatch
-        </Typography>
-        <Button variant="contained" onClick={handleCreateClick}>
-          Create Dispatch
-        </Button>
-      </Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" gap={2} alignItems="center">
+             <DatePicker
+              label="From"
+              value={startDate}
+              onChange={(val) => setStartDate(val)}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { size: "small", sx: { width: 150, bgcolor: 'background.paper' } } }}
+            />
+            <DatePicker
+              label="To"
+              value={endDate}
+              onChange={(val) => setEndDate(val)}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { size: "small", sx: { width: 150, bgcolor: 'background.paper' } } }}
+            />
+            <Button
+              onClick={handleClearFilters}
+              startIcon={<X size={18} />}
+              sx={buttonSx} // Using the style defined above
+            >
+              CLEAR
+            </Button>
+          </Box>
+          <Button sx={buttonSx} onClick={handleCreateClick}>
+            CREATE
+          </Button>
+        </Box>
 
       <Box sx={{ display: "flex", gap: 4, mt: 3 }}>
         <Box sx={{ width: "60%" }}>
@@ -718,7 +706,6 @@ export default function DispatchView() {
             elevation={3}
             sx={{ p: 2, height: 600, display: "flex", flexDirection: "column" }}
           >
-            <Typography variant="h6">Sale Order Numbers</Typography>
             <Box display="flex" gap={1} my={2}>
               <TextField
                 fullWidth
@@ -735,47 +722,57 @@ export default function DispatchView() {
                 inputRef={soInputRef}
               />
               <Button
-                variant="contained"
+                sx={buttonSx}
                 onClick={handleAddSO}
                 disabled={!selectedDispatch || soLoading}
               >
-                {soLoading ? <CircularProgress size={24} /> : "Add"}
+                {soLoading ? <CircularProgress size={24} /> : "ADD SO"}
               </Button>
             </Box>
-            <Box flexGrow={1} overflow="auto">
-              <List>
-                {soLoading && dispatchSOs.length === 0 ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-                    <CircularProgress />
-                  </Box>
-                ) : dispatchSOs.length === 0 ? (
-                  <Typography
-                    sx={{ textAlign: "center", color: "text.secondary", mt: 2 }}
-                  >
-                    Select a Dispatch first
-                  </Typography>
-                ) : (
-                  dispatchSOs.map((so) => (
-                    <ListItem
-                      key={so.id}
-                      secondaryAction={
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleDeleteSO(so.id)}
-                        >
-                          <Delete />
-                        </IconButton>
-                      }
-                    >
-                      <ListItemText primary={so.saleOrderNumber} />
-                    </ListItem>
-                  ))
-                )}
-              </List>
-            </Box>
-          </Paper>
+            <Box flexGrow={1} overflow="auto" mt={2}>
+                <TableContainer>
+                  <Table stickyHeader size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>Sl.No</TableCell>
+                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>SO Number</TableCell>
+                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>Customer</TableCell>
+                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText', textAlign: 'center' }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {dispatchSOs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            {selectedDispatch ? "No SOs added." : "Select a Dispatch first"}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        dispatchSOs.map((so, index) => (
+                          <TableRow 
+                            key={so.id}
+                            sx={{ 
+                              bgcolor: index % 2 === 0 ? 'inherit' : lightYellow 
+                            }}
+                          >
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>{so.saleOrderNumber}</TableCell>
+                            <TableCell>{so.salesOrder?.customer?.name || "-"}</TableCell>
+                            <TableCell align="center">
+                              <IconButton size="small" onClick={() => handleDeleteSO(so.id)}>
+                                <Delete fontSize="small" color="error" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            </Paper>
+          </Box>
         </Box>
-      </Box>
 
       <Dialog
         open={createDialogOpen}
@@ -784,7 +781,7 @@ export default function DispatchView() {
         maxWidth="md"
       >
         <DialogTitle>
-          {editingId ? "Edit Dispatch" : "Dispatch Details"}
+          {editingId ? "EDIT DISPATCH" : "CREATE DISPATCH"}
           <IconButton
             onClick={handleDialogClose}
             sx={{ position: "absolute", right: 8, top: 8 }}
@@ -793,7 +790,7 @@ export default function DispatchView() {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Box component="form" noValidate autoComplete="off" sx={{ pt: 2 }}>
+          <Box component="form" sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box
               sx={{
                 display: "grid",
@@ -803,65 +800,19 @@ export default function DispatchView() {
               }}
             >
               <Autocomplete
-                freeSolo
-                options={customers}
-                getOptionLabel={(option) =>
-                  typeof option === "string" ? option : option.name
-                }
-                value={form.customerId}
-                onChange={(_, value) => {
-                  handleFormChange("customerId", value);
-                }}
-                onInputChange={(_, newInputValue, reason) => {
-                  if (reason === "input") {
-                    handleFormChange("customerId", newInputValue);
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="  Customer*" />
-                )}
-                filterOptions={(options, params) => {
-                  const filtered = options.filter((option) =>
-                    option.name
-                      .toLowerCase()
-                      .includes(params.inputValue.toLowerCase())
-                  );
-
-                  const { inputValue } = params;
-                  const isExisting = options.some(
-                    (option) => option.name === inputValue
-                  );
-                  if (
-                    inputValue !== "" &&
-                    !isExisting &&
-                    filtered.length === 0
-                  ) {
-                  }
-                  return filtered;
-                }}
-              />
-              <TextField
-                label="Address"
-                value={form.address}
-                onChange={(e) => handleFormChange("address", e.target.value)}
-              />
-              <Autocomplete
                 options={transporters}
                 getOptionLabel={(option) => option.name}
                 value={form.transporterId}
-                onChange={(_, value) =>
-                  handleFormChange("transporterId", value)
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Transporter" />
-                )}
+                onChange={(_, value) => setForm(prev => ({...prev, transporterId: value}))}
+                renderInput={(params) => <TextField {...params} label="Transporter" />}
               />
+              
               <TextField
-                label="Vehicle Number*"
+                label="Vehicle Number"
+                required
                 value={form.vehicleNumber}
-                onChange={(e) =>
-                  handleFormChange("vehicleNumber", e.target.value)
-                }
+                onChange={handleVehicleChange}
+                helperText="Alphanumeric only (e.g., KA01XY1234)"
               />
             </Box>
 
@@ -916,14 +867,14 @@ export default function DispatchView() {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleDialogClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={loading}>
+          <Button sx={buttonSx} onClick={handleDialogClose}>CANCEL</Button>
+          <Button sx={buttonSx} onClick={handleSave} disabled={loading}>
             {loading ? (
               <CircularProgress size={24} />
             ) : editingId ? (
-              "Update"
+              "UPDATE"
             ) : (
-              "Save"
+              "SAVE"
             )}
           </Button>
         </DialogActions>
@@ -967,5 +918,6 @@ export default function DispatchView() {
         </Alert>
       </Snackbar>
     </Box>
+    </LocalizationProvider>
   );
 }

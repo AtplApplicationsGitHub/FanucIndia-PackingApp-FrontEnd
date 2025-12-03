@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Search, Print, Archive, Delete } from "@mui/icons-material";
 import axios from "axios";
-import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import { API, fetchWithAuth, API_BASE_URL } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
@@ -74,6 +74,16 @@ interface MaterialDetail {
   UpdatedDate?: string;
 }
 
+interface VehicleAttachment {
+  fileName: string;
+  [key: string]: unknown;
+}
+
+interface VehicleEntry {
+  id: number;
+  attachments: VehicleAttachment[];
+}
+
 interface StatusStepperData {
   id: number;
   status: string;
@@ -117,6 +127,33 @@ export default function SoSearchPage() {
   const params = useParams<{ soNumber?: string[] }>();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState<UserRole>(null);
+
+  const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
+  const [vehicleAttachments, setVehicleAttachments] = useState<VehicleAttachment[]>([]);
+  const [currentVehicleEntryId, setCurrentVehicleEntryId] = useState<number | null>(null);
+
+  const handleOpenVehicleAttachments = (entry: VehicleEntry) => {
+    setVehicleAttachments(entry.attachments || []);
+    setCurrentVehicleEntryId(entry.id);
+    setVehicleDialogOpen(true);
+  };
+
+  const handleVehicleAttachmentAction = (entryId: number, fileName: string, action: 'view' | 'download') => {
+    // API Call: /api/vehicle-entry/{id}/attachments/{fileName}
+    const url = `${API_BASE_URL}/vehicle-entry/${entryId}/attachments/${encodeURIComponent(fileName)}`;
+    const token = localStorage.getItem("token");
+
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.ok ? res.blob() : Promise.reject("Failed"))
+      .then(blob => {
+        if (action === 'view') {
+          const u = window.URL.createObjectURL(blob);
+          window.open(u, "_blank");
+        } else {
+          secureDownload(blob, fileName);
+        }
+      });
+  };
 
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
@@ -483,6 +520,7 @@ export default function SoSearchPage() {
             <DispatchInfo
               dispatchInfo={data.dispatchInfo}
               onViewAttachments={handleOpenDispatchAttachments}
+              onViewVehicleAttachments={handleOpenVehicleAttachments}
             />
             <MaterialDetails
               materialDetails={data.materialDetails}
@@ -503,6 +541,11 @@ export default function SoSearchPage() {
         materialAttachments={materialAttachments}
         onMaterialAttachmentView={handleAttachmentView}
         onMaterialAttachmentDownload={handleAttachmentDownload}
+        vehicleDialogOpen={vehicleDialogOpen}
+        onVehicleDialogClose={() => setVehicleDialogOpen(false)}
+        vehicleAttachments={vehicleAttachments}
+        onVehicleAttachmentAction={handleVehicleAttachmentAction}
+        currentVehicleEntryId={currentVehicleEntryId}
       />
       {soNumberToProcess && (
         <>

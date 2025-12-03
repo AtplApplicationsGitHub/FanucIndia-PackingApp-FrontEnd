@@ -11,31 +11,40 @@ import {
   Typography,
   useTheme,
   alpha,
+  Link,
 } from "@mui/material";
 
 interface DispatchInfoData {
   id: number;
-  customer: { name: string; address: string } | null;
-  customerName?: string;
   transporter?: { name: string } | null;
   transporterName?: string;
   vehicleNumber: string;
   UpdatedBy?: string;
   UpdatedDate?: string;
-  address: string;
+  vehicleEntry?: {
+    id: number;
+    attachments: { fileName: string }[];
+  } | null;
+}
+
+interface VehicleEntrySummary {
+  id: number;
+  attachments: { fileName: string }[];
 }
 
 interface Props {
   dispatchInfo: DispatchInfoData[];
   onViewAttachments: () => void;
+  onViewVehicleAttachments: (entry: VehicleEntrySummary) => void;
 }
 
 export default function DispatchInfo({
   dispatchInfo,
   onViewAttachments,
+  onViewVehicleAttachments,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.25); // Lighter yellow
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="dispatch-section">
@@ -45,81 +54,87 @@ export default function DispatchInfo({
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>DISPATCH</Typography>
-        <Button 
-          onClick={onViewAttachments} 
+        <Typography
+          variant="h5"
+          sx={{ color: "secondary.main", fontWeight: 600 }}
+        >
+          DISPATCH
+        </Typography>
+        <Button
+          onClick={onViewAttachments}
           variant="contained"
           sx={{
-              bgcolor: (theme) => theme.palette.action.hover,
-              color: (theme) => theme.palette.text.primary,
-              borderRadius: 0,
-              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-              fontWeight: 600,
-              fontSize: 15,
-              minWidth: 120,
-              height: 40,
-              px: 3,
-              textTransform: "none",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                bgcolor: (theme) => theme.palette.primary.main,
-                color: (theme) => theme.palette.primary.contrastText,
-                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-                "& .MuiSvgIcon-root, & svg": {
-                  color: "#000",
-                },
+            bgcolor: (theme) => theme.palette.action.hover,
+            color: (theme) => theme.palette.text.primary,
+            borderRadius: 0,
+            clipPath:
+              "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+            fontWeight: 600,
+            fontSize: 15,
+            minWidth: 120,
+            height: 40,
+            px: 3,
+            textTransform: "none",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              bgcolor: (theme) => theme.palette.primary.main,
+              color: (theme) => theme.palette.primary.contrastText,
+              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+              "& .MuiSvgIcon-root, & svg": {
+                color: "#000",
               },
-            }}
+            },
+          }}
         >
           ATTACHMENTS
         </Button>
       </Box>
-      <TableContainer
-        component={Paper}
-        // variant="outlined"
-        // sx={{ borderColor: "#1F2933" }}
-      >
-        <Table sx={{
-          // '& .MuiTableCell-root': {
-          //   borderBottom: '1px solid #1F2933', // Black border ONLY on bottom
-          // },
-          '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)': {
-            backgroundColor: lightYellow, // Light yellow for odd rows
-          },
-          // '& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root': {
-          //   borderBottom: 0, // Remove border from last row cells
-          // },
-        }}>
+      <TableContainer component={Paper}>
+        <Table
+          sx={{
+            tableLayout: "fixed",
+            width: "100%",
+            "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+              backgroundColor: lightYellow,
+            },
+          }}
+        >
           <TableHead sx={{ bgcolor: "primary.main" }}>
             <TableRow>
               <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Customer Name
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Address
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                sx={{ 
+                  color: "primary.contrastText", 
+                  fontWeight: "bold", 
+                  width: "40%" 
+                }}
               >
                 Vehicle Number
               </TableCell>
               <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                sx={{ 
+                  color: "primary.contrastText", 
+                  fontWeight: "bold", 
+                  width: "40%" 
+                }}
               >
                 Transporter
               </TableCell>
               <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                sx={{ 
+                  color: "primary.contrastText", 
+                  fontWeight: "bold", 
+                  width: "40%" 
+                }}
               >
                 Updated By
               </TableCell>
               <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                sx={{ 
+                  color: "primary.contrastText", 
+                  fontWeight: "bold", 
+                  width: "40%" 
+                }}
               >
                 Updated Datetime
               </TableCell>
@@ -129,14 +144,34 @@ export default function DispatchInfo({
             {dispatchInfo.map((dispatch) => (
               <TableRow key={dispatch.id}>
                 <TableCell>
-                  {dispatch.customerName || dispatch.customer?.name || "-"}
+                  <Link
+                    component="button"
+                    variant="body2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (dispatch.vehicleEntry) {
+                        onViewVehicleAttachments(dispatch.vehicleEntry);
+                      }
+                    }}
+                    sx={{
+                      fontWeight: "bold",
+                      textDecoration: dispatch.vehicleEntry ? "underline" : "none",
+                      cursor: dispatch.vehicleEntry ? "pointer" : "default",
+                      color: dispatch.vehicleEntry ? "primary.main" : "text.primary",
+                      textAlign: "left",
+                      fontSize: "inherit",
+                      verticalAlign: "baseline",
+                      border: "none",
+                      background: "none",
+                      p: 0,
+                    }}
+                  >
+                    {dispatch.vehicleNumber}
+                  </Link>
                 </TableCell>
-                <TableCell>{dispatch.address}</TableCell>
-                <TableCell>{dispatch.vehicleNumber}</TableCell>
                 <TableCell>
-                  {dispatch.transporterName ||
-                    dispatch.transporter?.name ||
-                    "-"}
+                  {dispatch.transporterName || dispatch.transporter?.name || "-"}
                 </TableCell>
                 <TableCell>{dispatch.UpdatedBy || "-"}</TableCell>
                 <TableCell>

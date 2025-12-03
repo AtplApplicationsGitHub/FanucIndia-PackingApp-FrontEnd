@@ -10,14 +10,12 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
   [`&.${stepConnectorClasses.active}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundColor: '#FFD200', 
-      backgroundImage: 'none', 
+      backgroundImage: 'linear-gradient( 95deg,rgb(255, 234, 0) 0%,rgb(255, 210, 0) 50%,rgb(255, 200, 0) 100%)',
     },
   },
   [`&.${stepConnectorClasses.completed}`]: {
     [`& .${stepConnectorClasses.line}`]: {
-      backgroundColor: '#FFD200', 
-      backgroundImage: 'none', 
+      backgroundImage: 'linear-gradient( 95deg,rgb(255, 234, 0) 0%,rgb(255, 210, 0) 50%,rgb(255, 200, 0) 100%)',
     },
   },
   [`& .${stepConnectorClasses.line}`]: {
@@ -42,12 +40,14 @@ const ColorlibStepIconRoot = styled('div')<{
   alignItems: 'center',
   ...(ownerState.active && {
     backgroundImage:
-      'linear-gradient( 136deg, rgb(139,195,74) 0%, rgb(76,175,80) 50%, rgb(56,142,60) 100%)',
+      'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)',
     boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
+    color: '#1F2933', 
   }),
   ...(ownerState.completed && {
     backgroundImage:
-      'linear-gradient( 136deg, rgb(139,195,74) 0%, rgb(76,175,80) 50%, rgb(56,142,60) 100%)',
+      'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)',
+     color: '#1F2933', 
   }),
   ...(ownerState.skipped && {
     backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#eaeaf0',

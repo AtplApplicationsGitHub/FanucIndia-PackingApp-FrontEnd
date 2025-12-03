@@ -38,6 +38,8 @@ export const API = {
     TEMPLATE:                                             `${API_BASE_URL}/sales-orders/template`,
     IMPORT:                                               `${API_BASE_URL}/sales-orders/import`,
     DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
+    // GET request to this URL lists orders
+    LIST_ORDERS:                                          `${API_BASE_URL}/sales-crud`, 
   },
   AUTH: {
     LOGIN:               `${API_BASE_URL}/auth/login`,
@@ -61,6 +63,8 @@ export const API = {
     MOBILE_UPLOAD_DATA_BY_SO:       (soNumber: string) =>  `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/data`,  
     // Endpoint for uploading attachments by SO number
     MOBILE_UPLOAD_ATTACHMENTS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/attachments`, 
+    // Get Order Details by ID
+    GET_ORDER_DETAILS: (id: number) =>                     `${API_BASE_URL}/user-dashboard/orders/${id}`,
   },
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) =>      `${API_BASE_URL}/so-search/${soNumber}`,
@@ -85,10 +89,23 @@ export const API = {
       LINK_SO: (id: number) =>         `${API_BASE_URL}/dispatch/mobile/${id}/so`,
     },
   },
+  // Endpoints for Vehicle Entry Module
+  VEHICLE_ENTRY: {
+    CREATE:                                       `${API_BASE_URL}/vehicle-entry`,
+    UPLOAD_ATTACHMENTS: (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
+    GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
+  },
   ERP_MATERIAL_FILES: {
     BASE:                    `${API_BASE_URL}/v1/erp-material-files`,
     BY_ID: (id: number) =>   `${API_BASE_URL}/v1/erp-material-files/${id}`,
     BY_SO: (so: string) =>   `${API_BASE_URL}/v1/erp-material-files/by-sale-order/${encodeURIComponent(so)}`,
+
+    //Download file stream
+    DOWNLOAD: (id: number) =>                     `${API_BASE_URL}/v1/erp-material-files/${id}/download`,
+    //Upload file endpoint
+    UPLOAD:                                       `${API_BASE_URL}/v1/erp-material-files/upload`,
+    //Upload with descriptions
+    UPLOAD_WITH_DESC:                             `${API_BASE_URL}/v1/erp-material-files/upload-with-descriptions`,
   },
   ERP_IMPORTER: {
     UPLOAD:                  `${API_BASE_URL}/erp-material-importer/upload`,

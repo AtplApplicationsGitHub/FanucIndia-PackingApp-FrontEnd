@@ -32,13 +32,16 @@ import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
 
-// Define the color palette
+// Defined Color Codes per requirements
 const STATUS_COLORS = {
-  toBeIssued: "#FF6B6B", // Vibrant coral red
-  assigned: "#3B82F6",   // Professional blue
-  issued: "#FFD93D",     // Golden yellow
-  packed: "#6C5CE7",     // Purple
-  dispatched: "#00B894", // Emerald green
+  toBeIssued: "#FF6B6B",       // Vibrant coral red
+  underIssue: "#3B82F6",       // Professional blue
+  issued: "#FFD93D",           // Golden yellow
+  underPacking: "#3B82F6",     // Professional blue (Same as Under Issue)
+  packed: "#6C5CE7",           // Purple
+  wipStorage: "#CA7373",       // Fuzzy Wuzzy
+  readyForDispatch: "#F08B51", // Big Foot Feet
+  dispatched: "#00B894",       // Emerald green
 };
 
 interface FgDashboardRow {
@@ -55,6 +58,9 @@ interface FgDashboardRow {
   specialRemarks: string;
   updatedBy?: string;
   updatedDate?: string;
+  assignedUserId?: number | null;
+  isReadyForDispatch?: boolean;
+  isWipStorage?: boolean;
 }
 
 const formatDate = (dateString?: string) => {
@@ -118,38 +124,42 @@ export default function FgDashboardView() {
     fetchData();
   }, [fetchData]);
 
-  // Updated logic to map status to specific colors
-  const getStatusInfo = (status: string, fgLocation?: string | null) => {
-    const s = (status || "").toUpperCase();
-    
+  const getStatusInfo = (row: FgDashboardRow) => {
+    const s = (row.status || "").toUpperCase();
+    const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } = row;
+
+    // 1. Dispatched (100%)
     if (s === "DISPATCHED") {
       return { 
         percent: 100, 
         current: "Dispatched", 
-        next: "Completed",
+        next: "",
         color: STATUS_COLORS.dispatched 
       };
     }
-    
-    if (s.includes("READY FOR DISPATCH")) {
+
+    // 2. Ready for Dispatch (90%)
+    if (isReadyForDispatch || s.includes("READY FOR DISPATCH")) {
       return { 
         percent: 90, 
         current: "Ready for Dispatch", 
         next: "Dispatched",
-        color: STATUS_COLORS.dispatched // Group with dispatched color or use distinct if preferred
+        color: STATUS_COLORS.readyForDispatch 
       };
     }
 
+    // 3. WIP Storage (80%)
+    if ((fgLocation && fgLocation.trim() !== "") || isWipStorage) {
+      return { 
+        percent: 80, 
+        current: "WIP Storage", 
+        next: "Ready for Dispatch",
+        color: STATUS_COLORS.wipStorage 
+      };
+    }
+
+    // 4. F105 = Packed (75%)
     if (s.includes("F105")) {
-      // Logic: If FG Location is set, it's WIP Storage, otherwise it's Packed
-      if (fgLocation && fgLocation.trim() !== "") {
-        return { 
-          percent: 80, 
-          current: "WIP Storage", 
-          next: "Ready for Dispatch",
-          color: STATUS_COLORS.packed 
-        };
-      }
       return { 
         percent: 75, 
         current: "Packed", 
@@ -158,29 +168,43 @@ export default function FgDashboardView() {
       };
     }
 
+    // 5. W105 = Issued (50%)
     if (s.includes("W105")) {
+      // If User is Assigned -> Under Packing (Blue)
+      if (assignedUserId) {
+        return { 
+          percent: 50, 
+          current: "Under Packing", 
+          next: "Packed",
+          color: STATUS_COLORS.underPacking 
+        };
+      }
+      // If No User Assigned -> Issued (Yellow)
       return { 
         percent: 50, 
         current: "Issued", 
-        next: "Under Packing",
+        next: "Under Packing", 
         color: STATUS_COLORS.issued 
       };
     }
 
+    // 6. R105 = Under Issue (25%)
+    // REPLACED "Assigned" with "Under Issue" strictly as per request
     if (s.includes("R105")) {
       return { 
         percent: 25, 
-        current: "Assigned", 
-        next: "Under Issue",
-        color: STATUS_COLORS.assigned 
+        current: "Under Issue", 
+        next: "Issued",
+        color: STATUS_COLORS.underIssue 
       };
     }
     
-    // Default / To be Issued
+    // 7. NULL = To be Issued (0%)
+    // REPLACED "Assigned" next status with "Under Issue"
     return { 
-      percent: 10, 
+      percent: 0, 
       current: "To be Issued", 
-      next: "Under Issue",
+      next: "Under Issue", 
       color: STATUS_COLORS.toBeIssued 
     };
   };
@@ -197,24 +221,22 @@ export default function FgDashboardView() {
     setPage(0);
   };
 
-  // Updated widths for Delivery Date, Payment, Updated Date
   const columns = [
-    { id: "deliveryDate", label: "Delivery Date", width: 90 }, // Reduced
+    { id: "deliveryDate", label: "Delivery Date", width: 90 },
     { id: "saleOrderNumber", label: "Sales Order", width: 120 },
     { id: "transferOrder", label: "Transfer Order", width: 140 },
     { id: "product", label: "Product", width: 150 },
     { id: "customerName", label: "Customer Name", width: 150 },
     { id: "salesZone", label: "Sales Zone", width: 120 },
-    { id: "payment", label: "Payment", width: 70 }, // Reduced
+    { id: "payment", label: "Payment", width: 70 },
     { id: "fgLocation", label: "FG Location", width: 150 },
     { id: "specialRemarks", label: "Special Remarks", width: "auto" },
     { id: "updatedBy", label: "Updated By", width: 130 },
-    { id: "updatedDate", label: "Updated Date", width: 180 }, // Reduced
+    { id: "updatedDate", label: "Updated Date", width: 180 },
     { id: "status", label: "Status", width: 100 },
     { id: 'progress', label: 'Progress', width: 180 },
   ];
 
-  // Styling constants
   const lightYellow = alpha(theme.palette.primary.main, 0.25); 
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
@@ -342,7 +364,6 @@ export default function FgDashboardView() {
                         <TableCell>{row.salesZone}</TableCell>
                         <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
                         
-                        {/* Inline Edit REMOVED - Plain text only */}
                         <TableCell>
                           {row.fgLocation || "-"}
                         </TableCell>
@@ -350,7 +371,6 @@ export default function FgDashboardView() {
                         <TableCell>{row.specialRemarks}</TableCell>
                         <TableCell>{row.updatedBy || "-"}</TableCell>
                         
-                        {/* Updated Date Format: No seconds */}
                         <TableCell>
                           {row.updatedDate
                             ? new Date(row.updatedDate).toLocaleString(
@@ -361,7 +381,7 @@ export default function FgDashboardView() {
                                   year: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                  hour12: true, // Seconds omitted by default when not specified
+                                  hour12: true,
                                 }
                               )
                             : "-"}
@@ -369,7 +389,7 @@ export default function FgDashboardView() {
                         <TableCell>{row.status}</TableCell>
                         <TableCell>
                         {(() => {
-                          const { percent, current, next, color } = getStatusInfo(row.status, row.fgLocation);
+                          const { percent, current, next, color } = getStatusInfo(row);
                           return (
                             <Box sx={{ width: '100%', minWidth: 120, py: 1 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
@@ -387,9 +407,9 @@ export default function FgDashboardView() {
                                 sx={{
                                   height: 6, 
                                   borderRadius: 3,
-                                  backgroundColor: alpha(color, 0.2), // Use dynamic color background
+                                  backgroundColor: alpha(color, 0.2),
                                   '& .MuiLinearProgress-bar': {
-                                    backgroundColor: color, // Use dynamic color foreground
+                                    backgroundColor: color,
                                     borderRadius: 3,
                                   }
                                 }}

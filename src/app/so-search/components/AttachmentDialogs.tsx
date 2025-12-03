@@ -32,6 +32,11 @@ interface DispatchInfo {
   attachments?: Attachment[];
 }
 
+interface VehicleAttachment {
+  fileName: string;
+  [key: string]: unknown; 
+}
+
 interface Props {
   dispatchDialogOpen: boolean;
   onDispatchDialogClose: () => void;
@@ -47,6 +52,11 @@ interface Props {
   materialAttachments: MaterialAttachment[];
   onMaterialAttachmentView: (id: number) => void;
   onMaterialAttachmentDownload: (id: number) => void;
+  vehicleDialogOpen: boolean;
+  onVehicleDialogClose: () => void;
+  vehicleAttachments: VehicleAttachment[];
+  onVehicleAttachmentAction: (entryId: number, fileName: string, action: 'view' | 'download') => void;
+  currentVehicleEntryId: number | null;
 }
 
 export default function AttachmentDialogs({
@@ -60,6 +70,11 @@ export default function AttachmentDialogs({
   materialAttachments,
   onMaterialAttachmentView,
   onMaterialAttachmentDownload,
+  vehicleDialogOpen,
+  onVehicleDialogClose,
+  vehicleAttachments,
+  onVehicleAttachmentAction,
+  currentVehicleEntryId,
 }: Props) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -274,6 +289,52 @@ export default function AttachmentDialogs({
                             <Download />
                           </IconButton>
                         </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={vehicleDialogOpen} onClose={onVehicleDialogClose} fullWidth maxWidth="md">
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+          VEHICLE ENTRY ATTACHMENTS
+          <IconButton onClick={onVehicleDialogClose} sx={{ position: "absolute", right: 8, top: 8 }}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <TableContainer component={Paper}>
+            <Table
+              sx={{
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+              }}
+            >
+              <TableHead sx={{ bgcolor: "primary.main" }}>
+                <TableRow>
+                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>File Name</TableCell>
+                  <TableCell align="center" sx={{ color: "primary.contrastText", fontWeight: "bold", width: "150px" }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {vehicleAttachments.length === 0 ? (
+                  <TableRow><TableCell colSpan={2} align="center">No attachments found.</TableCell></TableRow>
+                ) : (
+                  vehicleAttachments.map((att, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{att.fileName}</TableCell>
+                      <TableCell align="center">
+                        <IconButton onClick={() => currentVehicleEntryId && onVehicleAttachmentAction(currentVehicleEntryId, att.fileName, 'view')}>
+                          <Visibility />
+                        </IconButton>
+                        <IconButton onClick={() => currentVehicleEntryId && onVehicleAttachmentAction(currentVehicleEntryId, att.fileName, 'download')}>
+                          <Download />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))
