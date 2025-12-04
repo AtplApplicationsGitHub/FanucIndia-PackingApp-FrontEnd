@@ -192,7 +192,7 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
         {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={handleClose} sx={buttonSx}>Cancel</Button>
+        <Button onClick={handleClose} sx={buttonSx}>CANCEL</Button>
         <Button 
           onClick={handleUpload} 
           disabled={!file || loading} 

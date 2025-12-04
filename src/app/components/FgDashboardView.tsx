@@ -72,6 +72,65 @@ const formatDate = (dateString?: string) => {
   }
 };
 
+type StepLabel =
+  | "To be Issued"
+  | "Under Issue"
+  | "Issued"
+  | "Under Packing"
+  | "Packed"
+  | "WIP Storage"
+  | "Ready for Dispatch"
+  | "Dispatched";
+
+interface StepConfig {
+  percent: number;
+  next: string;
+  color: string;
+}
+
+const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
+  "To be Issued": {
+    percent: 0,
+    next: "Under Issue",
+    color: STATUS_COLORS.toBeIssued,
+  },
+  "Under Issue": {
+    percent: 0,
+    next: "Issued",
+    color: STATUS_COLORS.underIssue,
+  },
+  "Issued": {
+    percent: 25,
+    next: "Under Packing",
+    color: STATUS_COLORS.issued,
+  },
+  "Under Packing": {
+    percent: 25,
+    next: "Packed",
+    color: STATUS_COLORS.underPacking,
+  },
+  "Packed": {
+    percent: 50,
+    next: "WIP Storage",
+    color: STATUS_COLORS.packed,
+  },
+  "WIP Storage": {
+    percent: 75,
+    next: "Ready for Dispatch",
+    color: STATUS_COLORS.wipStorage,
+  },
+  "Ready for Dispatch": {
+    percent: 90,
+    next: "Dispatched",
+    color: STATUS_COLORS.readyForDispatch,
+  },
+  "Dispatched": {
+    percent: 100,
+    next: "",
+    color: STATUS_COLORS.dispatched,
+  },
+};
+
 export default function FgDashboardView() {
   const theme = useTheme();
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
@@ -125,91 +184,47 @@ export default function FgDashboardView() {
   }, [fetchData]);
 
   const getStatusInfo = (row: FgDashboardRow) => {
-    const s = (row.status || "").toUpperCase();
-    const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } = row;
+  const s = (row.status || "").toUpperCase();
+  const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } = row;
 
-    // 1. Dispatched (100%)
-    if (s === "DISPATCHED") {
-      return { 
-        percent: 100, 
-        current: "Dispatched", 
-        next: "",
-        color: STATUS_COLORS.dispatched 
-      };
-    }
+  let step: StepLabel;
 
-    // 2. Ready for Dispatch (90%)
-    if (isReadyForDispatch || s.includes("READY FOR DISPATCH")) {
-      return { 
-        percent: 90, 
-        current: "Ready for Dispatch", 
-        next: "Dispatched",
-        color: STATUS_COLORS.readyForDispatch 
-      };
+  if (s === "DISPATCHED") {
+    step = "Dispatched";
+  }
+  else if (isReadyForDispatch || s.includes("READY FOR DISPATCH")) {
+    step = "Ready for Dispatch";
+  }
+  else if ((fgLocation && fgLocation.trim() !== "") || isWipStorage) {
+    step = "WIP Storage";
+  }
+  else if (s.includes("F105")) {
+    step = "Packed";
+  }
+  else if (s.includes("W105")) {
+    if (assignedUserId) {
+      step = "Under Packing";
+    } else {
+      step = "Issued";
     }
+  }
+  else if (s.includes("R105")) {
+    step = "Under Issue";
+  }
+  else {
+    step = "To be Issued";
+  }
 
-    // 3. WIP Storage (80%)
-    if ((fgLocation && fgLocation.trim() !== "") || isWipStorage) {
-      return { 
-        percent: 80, 
-        current: "WIP Storage", 
-        next: "Ready for Dispatch",
-        color: STATUS_COLORS.wipStorage 
-      };
-    }
+  const cfg = PROGRESS_CONFIG[step];
 
-    // 4. F105 = Packed (75%)
-    if (s.includes("F105")) {
-      return { 
-        percent: 75, 
-        current: "Packed", 
-        next: "WIP Storage",
-        color: STATUS_COLORS.packed 
-      };
-    }
-
-    // 5. W105 = Issued (50%)
-    if (s.includes("W105")) {
-      // If User is Assigned -> Under Packing (Blue)
-      if (assignedUserId) {
-        return { 
-          percent: 50, 
-          current: "Under Packing", 
-          next: "Packed",
-          color: STATUS_COLORS.underPacking 
-        };
-      }
-      // If No User Assigned -> Issued (Yellow)
-      return { 
-        percent: 50, 
-        current: "Issued", 
-        next: "Under Packing", 
-        color: STATUS_COLORS.issued 
-      };
-    }
-
-    // 6. R105 = Under Issue (25%)
-    // REPLACED "Assigned" with "Under Issue" strictly as per request
-    if (s.includes("R105")) {
-      return { 
-        percent: 25, 
-        current: "Under Issue", 
-        next: "Issued",
-        color: STATUS_COLORS.underIssue 
-      };
-    }
-    
-    // 7. NULL = To be Issued (0%)
-    // REPLACED "Assigned" next status with "Under Issue"
-    return { 
-      percent: 0, 
-      current: "To be Issued", 
-      next: "Under Issue", 
-      color: STATUS_COLORS.toBeIssued 
-    };
+  return {
+    percent: cfg.percent,
+    current: step,
+    next: cfg.next,
+    color: cfg.color,
   };
+};
 
-  // Pagination Handlers
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };

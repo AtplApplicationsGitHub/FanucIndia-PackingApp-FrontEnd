@@ -104,7 +104,7 @@ const FIELDS: {
     type: "select",
     options: "assignableUsers",
   },
-  { key: "status", label: "Status" },
+  { key: "status", label: "Status", disabled: true },
   { key: "fgLocation", label: "FG Location"},
   { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
   { key: "additionalRemarks", label: "Additional Remarks", colSpan: 2 },
@@ -492,7 +492,7 @@ export default function AdminOrderEditModal({
                     type={field.type === "number" ? "number" : "text"}
                     value={normalizeInputValue(form[field.key])}
                     onChange={(e) => handleChange(field.key, e.target.value)}
-                    disabled={loading}
+                    disabled={loading || field.disabled}
                     sx={(theme) => ({
                       bgcolor: theme.palette.background.default,
                       borderRadius: 2,

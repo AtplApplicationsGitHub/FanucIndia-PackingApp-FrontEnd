@@ -297,16 +297,16 @@ export default function MaterialDataPage() {
     }
   };
 
-  const handleUpdateIssueStage = async (code: string, stage: number) => {
+  const handleUpdateIssueStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updateIssueStage(orderId, code, stage);
+      const data = await updateIssueStage(orderId, code, stage, id);
       const updatedMaterial = (data as { updatedMaterial?: ApiMaterial; issueStageCompleted?: boolean })?.updatedMaterial;
       if (!updatedMaterial) {
         throw new Error("Invalid response from server when updating issue stage.");
       }
 
-      const oldRow = localRows.find((r) => r.materialCode === code);
+      const oldRow = localRows.find((r) => r.id === id);
       if (!oldRow) throw new Error("Original row not found.");
       
       const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
@@ -333,17 +333,17 @@ export default function MaterialDataPage() {
     }
   };
 
-  const handleUpdatePackingStage = async (code: string, stage: number) => {
+  const handleUpdatePackingStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updatePackingStage(orderId, code, stage);
+      const data = await updatePackingStage(orderId, code, stage, id);
       const updatedMaterial = (data as { updatedMaterial?: ApiMaterial, packingStageCompleted?: boolean })?.updatedMaterial;
       if (!updatedMaterial) {
         throw new Error(
           "Invalid response from server when updating packing stage."
         );
       }
-      const oldRow = localRows.find((r) => r.materialCode === code);
+      const oldRow = localRows.find((r) => r.id === id);
       if (!oldRow) {
         throw new Error("Original row not found.");
       }
@@ -451,6 +451,22 @@ export default function MaterialDataPage() {
 
           <Divider />
 
+          {editError && (
+            <Alert 
+              severity="error" 
+              onClose={() => setEditError(null)}
+              sx={{ 
+                borderRadius: 0,
+                fontSize: '0.95rem',
+                borderBottom: '1px solid #e0e0e0',
+                px: 2,
+                py: 1
+              }}
+            >
+              {editError}
+            </Alert>
+          )}
+
           {/* 3. Material Data Table */}
           <Box>
             <MaterialDataTable
@@ -465,22 +481,6 @@ export default function MaterialDataPage() {
             />
           </Box>
         </Paper>
-
-        {/* Error Alert */}
-        {editError && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              borderRadius: 0,
-              fontSize: '0.95rem',
-              boxShadow: 2,
-              mx: 2
-            }}
-          >
-            {editError}
-          </Alert>
-        )}
 
         {/* Success Snackbar */}
         <Snackbar

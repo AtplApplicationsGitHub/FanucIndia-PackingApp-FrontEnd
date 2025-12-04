@@ -302,8 +302,10 @@ export default function DispatchView() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
-      if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
+
+      // Commented out date filters for now
+      // if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
+      // if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
 
       const res = await fetchWithAuth(`${API.DISPATCH.BASE}?${params.toString()}`);
       const data = await res.json();

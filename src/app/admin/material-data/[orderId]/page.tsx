@@ -232,10 +232,10 @@ export default function MaterialDataPage2() {
     }
   };
 
-  const handleUpdateIssueStage = async (code: string, stage: number) => {
+  const handleUpdateIssueStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updateIssueStage(orderId, code, stage);
+      const data = await updateIssueStage(orderId, code, stage, id);
       const raw = data as Record<string, unknown>;
       const candidate =
         (raw.updatedMaterial as Record<string, unknown> | undefined) ??
@@ -302,10 +302,10 @@ export default function MaterialDataPage2() {
     }
   };
 
-  const handleUpdatePackingStage = async (code: string, stage: number) => {
+  const handleUpdatePackingStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updatePackingStage(orderId, code, stage);
+      const data = await updatePackingStage(orderId, code, stage, id);
       const raw = data as Record<string, unknown>;
       const candidate =
         (raw.updatedMaterial as Record<string, unknown> | undefined) ??

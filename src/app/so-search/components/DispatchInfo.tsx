@@ -156,9 +156,9 @@ export default function DispatchInfo({
                     }}
                     sx={{
                       fontWeight: "bold",
-                      textDecoration: dispatch.vehicleEntry ? "underline" : "none",
+                      textDecoration: "none",
                       cursor: dispatch.vehicleEntry ? "pointer" : "default",
-                      color: dispatch.vehicleEntry ? "primary.main" : "text.primary",
+                      color: dispatch.vehicleEntry ? "#1976d2" : "text.primary",
                       textAlign: "left",
                       fontSize: "inherit",
                       verticalAlign: "baseline",

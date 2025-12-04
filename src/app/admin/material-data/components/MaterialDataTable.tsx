@@ -23,11 +23,13 @@ interface Props {
   loading?: boolean;
   onUpdateIssueStage?: (
     materialCode: string,
-    value: number
+    value: number,
+    materialId: number
   ) => Promise<MaterialRow | null>;
   onUpdatePackingStage?: (
     materialCode: string,
-    value: number
+    value: number,
+    materialId: number
   ) => Promise<MaterialRow | null>;
   onProcessRowUpdateError?: (error: Error) => void;
   isOrderFullyComplete?: boolean;
@@ -174,7 +176,7 @@ export default function MaterialDataTable({
       if (newValue < 0 || newValue > cap) {
         throw new Error(`Issue Stage must be between 0 and ${cap}`);
       }
-      const updated = await onUpdateIssueStage(row.materialCode, newValue);
+      const updated = await onUpdateIssueStage(row.materialCode, newValue, row.id);
       if (!updated) throw new Error("Update failed: Server returned no data.");
     } catch (error) {
       if (error instanceof Error && onProcessRowUpdateError) {
@@ -196,7 +198,7 @@ export default function MaterialDataTable({
       if (newValue < 0 || newValue > cap) {
         throw new Error(`Packing Stage must be between 0 and ${cap}`);
       }
-      const updated = await onUpdatePackingStage(row.materialCode, newValue);
+      const updated = await onUpdatePackingStage(row.materialCode, newValue, row.id);
       if (!updated) throw new Error("Update failed: Server returned no data.");
     } catch (error) {
       if (error instanceof Error && onProcessRowUpdateError) {

@@ -13,7 +13,7 @@ import apiClient from "@/common/lib/apiClient";
 import Image from "next/image";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
-type User = { role: UserRole } & Record<string, unknown>;
+type User = { role: UserRole; email: string } & Record<string, unknown>;
 
 type LoginSuccessPayload = {
   accessToken: string;
@@ -70,12 +70,34 @@ export default function LoginContent() {
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
+
+    // [Step 1] Capture previous user from LocalStorage before overwriting
+    const prevUserStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    let prevEmail = "";
+    if (prevUserStr) {
+      try {
+        const prevUser = JSON.parse(prevUserStr);
+        prevEmail = prevUser.email || "";
+      } catch {
+        // ignore parsing error
+      }
+    }
+
     try {
       const res = await apiClient.post<LoginSuccessPayload>(
         API.AUTH.LOGIN,
         data
       );
       const { accessToken, user } = res.data;
+
+      // [Step 2] Check if user changed. If so, clear view state.
+      // This ensures a new/different user always lands on the Dashboard.
+      if (user.email !== prevEmail) {
+        sessionStorage.removeItem("adminView");
+        sessionStorage.removeItem("salesDashboardView");
+        sessionStorage.removeItem("userDashboardView");
+      }
+
       Cookies.set("token", accessToken, { expires: 1 });
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));

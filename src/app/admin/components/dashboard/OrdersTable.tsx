@@ -331,35 +331,10 @@ export default function AdminOrdersTable({
                   {findName(lookup.customers, row.customerId ?? 0, "name")}
                 </TableCell>
 
-                {/* STATUS (INLINE EDIT) */}
                 <TableCell sx={{ minWidth: 100 }}>
-                  {inlineEdit?.id === row.id && inlineEdit.field === "status" ? (
-                    <CustomEditTextField
-                      initialValue={inlineEdit.value}
-                      onCommit={(val) => handleInlineSave(val)}
-                      onCancel={() => setInlineEdit(null)}
-                      maxLength={32}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        cursor: isDispatched ? "default" : "pointer",
-                        textDecoration: isDispatched ? "none" : "underline dotted",
-                      }}
-                      onClick={() =>
-                        !isDispatched &&
-                        setInlineEdit({
-                          id: row.id,
-                          field: "status",
-                          value: row.status || "",
-                          original: row.status || "",
-                        })
-                      }
-                      title={isDispatched ? "Locked (Dispatched)" : "Click to edit status"}
-                    >
-                      {row.status || "-"}
-                    </Box>
-                  )}
+                  <Box>
+                    {row.status || "-"}
+                  </Box>
                 </TableCell>
 
                 {/* PRIORITY (INLINE EDIT) */}

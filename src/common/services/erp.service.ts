@@ -38,13 +38,14 @@ export async function incrementIssueStage(
 export async function updateIssueStage(
     orderId: number,
     materialCode: string,
-    issueStage: number
+    issueStage: number,
+    materialId?: number
 ) {
     const url = API.ADMIN.UPDATE_ISSUE_STAGE(orderId);
     const res = await fetchWithAuth(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ materialCode, issueStage }),
+        body: JSON.stringify({ materialCode, issueStage, materialId }),
     });
     if (!res.ok) {
         const text = await res.text();
@@ -73,13 +74,14 @@ export async function incrementPackingStage(
 export async function updatePackingStage(
     orderId: number,
     materialCode: string,
-    packingStage: number
+    packingStage: number,
+    materialId?: number
 ) {
     const url = API.ADMIN.UPDATE_PACKING_STAGE(orderId);
     const res = await fetchWithAuth(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ materialCode, packingStage }),
+        body: JSON.stringify({ materialCode, packingStage, materialId }),
     });
     if (!res.ok) {
         const text = await res.text();

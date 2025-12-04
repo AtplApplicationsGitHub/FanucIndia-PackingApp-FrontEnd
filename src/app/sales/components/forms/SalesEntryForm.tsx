@@ -181,11 +181,13 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           options={lookup.customers}
           error={errors.customerId}
         />
-        <RemarksTextarea
-          value={form.specialRemarks}
-          onChange={onChange}
-          error={errors.specialRemarks}
-        />
+        <div className="col-span-1 md:col-span-2">
+          <RemarksTextarea
+            value={form.specialRemarks}
+            onChange={onChange}
+            error={errors.specialRemarks}
+          />
+        </div>
         <div className="col-span-1 md:col-span-2">
            <TextField
             fullWidth
