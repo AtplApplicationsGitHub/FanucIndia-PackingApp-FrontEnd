@@ -93,7 +93,9 @@ export default function DispatchSummary() {
         {/* Footer */}
         <div className="px-6 pb-6">
           <p className="text-xs text-gray-400">
-            Updated: {new Date().toLocaleDateString()}
+            <span suppressHydrationWarning>
+              Updated: {new Date().toLocaleDateString()}
+            </span>
           </p>
         </div>
       </div>

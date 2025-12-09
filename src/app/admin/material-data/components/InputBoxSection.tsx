@@ -1,10 +1,11 @@
 "use client";
 
-import { FC, useState, useMemo } from "react";
+import { FC, useState, useMemo, useCallback, useEffect } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import UploadErpMaterialFileButton from "@/app/admin/material-data/components/UploadErpMaterialFileButton";
 import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadAttachmentDialog";
 import { MaterialRow } from "../types/material-row";
+import { getMaterialFilesBySaleOrder } from "@/common/services/materialFile.service";
 
 interface Props {
   onSubmit: (value: string) => void;
@@ -59,6 +60,27 @@ const InputBoxSection: FC<Props> = ({
 }) => {
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
+
+  const [fileCount, setFileCount] = useState<number>(0);
+
+  const fetchCount = useCallback(async () => {
+    if (!saleOrderNumber) return;
+    try {
+      const files = await getMaterialFilesBySaleOrder(saleOrderNumber);
+      setFileCount(files.length);
+    } catch (e) {
+      console.error("Failed to fetch file count", e);
+    }
+  }, [saleOrderNumber]);
+
+  useEffect(() => {
+    fetchCount();
+  }, [fetchCount]);
+
+  const handleFileChange = () => {
+    onFileCreated(); 
+    fetchCount();    
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,10 +158,22 @@ const InputBoxSection: FC<Props> = ({
 
           <UploadErpMaterialFileButton
             saleOrderNumber={saleOrderNumber}
-            onCreated={onFileCreated}
+            onCreated={handleFileChange}
             onOpenDialog={() => setOpenUploadDialog(true)}
             buttonProps={{ type: "button", disabled: disabled }}
           />
+
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: 'text.secondary', 
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              minWidth: '60px' 
+            }}
+          >
+            {fileCount} {fileCount === 1 ? 'File' : 'Files'}
+          </Typography>
         </Box>
 
         <Box flex={1} /> 
@@ -149,7 +183,7 @@ const InputBoxSection: FC<Props> = ({
         open={openUploadDialog}
         onClose={() => setOpenUploadDialog(false)}
         saleOrderNumber={saleOrderNumber}
-        onUploaded={onFileCreated} 
+        onUploaded={handleFileChange} 
       />
     </div>
   );

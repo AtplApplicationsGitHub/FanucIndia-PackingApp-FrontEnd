@@ -263,6 +263,7 @@ export default function AdminOrdersTable({
           <TableBody>
             {orders.map((row) => {
               const isDispatched = row.status === "Dispatched";
+              const isAssignedUserLocked = isDispatched || row.status === "F105";
 
               return(
               <TableRow key={row.id}>
@@ -372,64 +373,56 @@ export default function AdminOrdersTable({
 
                 {/* ASSIGNED USER (INLINE EDIT - SELECT) */}
                 <TableCell sx={{ minWidth: 150 }}>
-                  {inlineEdit?.id === row.id &&
-                  inlineEdit.field === "assignedUserId" ? (
-                    <FormControl variant="standard" size="small" fullWidth>
-                      <Select
-                        value={inlineEdit.value ?? ""}
-                        onChange={(e) => {
-                          const selected =
-                            e.target.value === ""
-                              ? null
-                              : Number(e.target.value);
-                          handleInlineSave(selected);
-                        }}
-                        onKeyDown={(e) => {
-                          if (
-                            e.key === " " ||
-                            (e.ctrlKey && e.key.toLowerCase() === "a")
-                          ) {
-                            e.stopPropagation();
-                          }
-                        }}
-                        autoFocus
-                      >
-                        <MenuItem value="">
-                          <em>Unassigned</em>
-                        </MenuItem>
-                        {lookup.assignableUsers.map((u) => (
-                          <MenuItem key={u.id} value={u.id}>
-                            {u.name}
+                    {inlineEdit?.id === row.id &&
+                    inlineEdit.field === "assignedUserId" ? (
+                      <FormControl variant="standard" size="small" fullWidth>
+                        <Select
+                          value={inlineEdit.value ?? ""}
+                          onChange={(e) => {
+                            const selected =
+                              e.target.value === "" ? null : Number(e.target.value);
+                            handleInlineSave(selected);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
+                              e.stopPropagation();
+                            }
+                          }}
+                          autoFocus
+                        >
+                          <MenuItem value="">
+                            <em>Unassigned</em>
                           </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  ) : (
-                    <Box
-                      sx={{
-                        cursor: isDispatched ? "default" : "pointer",
-                        textDecoration: isDispatched ? "none" : "underline dotted",
-                      }}
-                      onClick={() =>
-                        !isDispatched &&
-                        setInlineEdit({
-                          id: row.id,
-                          field: "assignedUserId",
-                          value: row.assignedUserId ?? "",
-                          original: row.assignedUserId ?? "",
-                        })
-                      }
-                      title={isDispatched ? "Locked (Dispatched)" : "Click to assign user"}
-                    >
-                      {row.assignedUser?.name ||
-                        findName(
-                          lookup.assignableUsers,
-                          row.assignedUserId ?? 0
-                        ) ||
-                        "-"}
-                    </Box>
-                  )}
-                </TableCell>
+                          {lookup.assignableUsers.map((u) => (
+                            <MenuItem key={u.id} value={u.id}>
+                              {u.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    ) : (
+                      <Box
+                        sx={{
+                          cursor: isAssignedUserLocked ? "default" : "pointer",
+                          textDecoration: isAssignedUserLocked ? "none" : "underline dotted",
+                        }}
+                        onClick={() =>
+                          !isAssignedUserLocked &&
+                          setInlineEdit({
+                            id: row.id,
+                            field: "assignedUserId",
+                            value: row.assignedUserId ?? "",
+                            original: row.assignedUserId ?? "",
+                          })
+                        }
+                        title={isAssignedUserLocked ? "Locked (Packed/Dispatched)" : "Click to assign user"}
+                      >
+                        {row.assignedUser?.name ||
+                          findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
+                          "-"}
+                      </Box>
+                    )}
+                  </TableCell>
 
                 {/* SPECIAL REMARKS */}
                 <TableCell>{row.specialRemarks || "-"}</TableCell>

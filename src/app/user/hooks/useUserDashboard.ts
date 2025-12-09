@@ -18,13 +18,10 @@ export function useUserDashboard() {
     message: string;
   } | null>(null);
 
-  // On initial load, check session storage for a saved view
   useEffect(() => {
     const savedView = sessionStorage.getItem("userDashboardView") as UserDashboardView;
     if (savedView) {
       setViewInternal(savedView);
-      // Clean up the storage after using it
-      sessionStorage.removeItem("userDashboardView");
     }
 
     const storedUser = localStorage.getItem("user");
@@ -38,7 +35,6 @@ export function useUserDashboard() {
     }
   }, []);
 
-  // Wrapper for setView to also save to session storage
   const setView = (newView: UserDashboardView) => {
     sessionStorage.setItem("userDashboardView", newView);
     setViewInternal(newView);

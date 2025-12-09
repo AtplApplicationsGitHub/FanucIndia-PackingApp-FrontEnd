@@ -107,6 +107,11 @@ interface MaterialAttachment {
 
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
 
+const isViewable = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  return ['pdf', 'jpg', 'jpeg', 'png', 'txt', 'gif', 'webp'].includes(ext || '');
+};
+
 export default function SoSearchPage() {
   const [soNumber, setSoNumber] = useState("");
   const [loading, setLoading] = useState(false);
@@ -138,17 +143,25 @@ export default function SoSearchPage() {
     setVehicleDialogOpen(true);
   };
 
-  const handleVehicleAttachmentAction = (entryId: number, fileName: string, action: 'view' | 'download') => {
-    // API Call: /api/vehicle-entry/{id}/attachments/{fileName}
-    const url = `${API_BASE_URL}/vehicle-entry/${entryId}/attachments/${encodeURIComponent(fileName)}`;
+  const handleVehicleAttachmentAction = (
+    entryId: number, 
+    fileName: string, 
+    action: 'view' | 'download'
+  ) => {
+    const isArchived = data?.isArchived;
+    const url = isArchived
+      ? API.SO_ARCHIVE.DOWNLOAD_VEHICLE_ATTACHMENT(entryId, fileName)
+      : `${API_BASE_URL}/vehicle-entry/${entryId}/attachments/${encodeURIComponent(fileName)}`;
+
     const token = localStorage.getItem("token");
 
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.ok ? res.blob() : Promise.reject("Failed"))
       .then(blob => {
-        if (action === 'view') {
+        if (action === 'view' && isViewable(fileName)) {
           const u = window.URL.createObjectURL(blob);
           window.open(u, "_blank");
+          setTimeout(() => window.URL.revokeObjectURL(u), 100);
         } else {
           secureDownload(blob, fileName);
         }
@@ -292,6 +305,9 @@ export default function SoSearchPage() {
   };
 
   const handleAttachmentViewOrDownload = (fileId: number, action: 'view' | 'download', fileName?: string) => {
+    const fileObj = materialAttachments.find(f => f.ID === fileId);
+    const resolvedName = fileName || fileObj?.fileName || `attachment_${fileId}`;
+
     const url = data?.isArchived
       ? API.SO_ARCHIVE.DOWNLOAD_ATTACHMENT(fileId)
       : API.ERP_MATERIAL_FILES.BY_ID(fileId) + "/download";
@@ -304,13 +320,12 @@ export default function SoSearchPage() {
         return res.blob();
       })
       .then(blob => {
-        if (action === 'view') {
+        if (action === 'view' && isViewable(resolvedName)) {
           const blobUrl = window.URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
         } else {
-          const file = materialAttachments.find(f => f.ID === fileId);
-          secureDownload(blob, fileName || file?.fileName || `attachment_${fileId}`);
+          secureDownload(blob, resolvedName);
         }
       })
       .catch(err => setError(err.toString()));
@@ -329,7 +344,11 @@ export default function SoSearchPage() {
     fileName: string,
     action: "view" | "download"
   ) => {
-    const url = API.DISPATCH.ATTACHMENT(dispatchId, fileName);
+    const isArchived = data?.isArchived;
+    const url = isArchived
+      ? API.SO_ARCHIVE.DOWNLOAD_DISPATCH_ATTACHMENT(dispatchId, fileName)
+      : API.DISPATCH.ATTACHMENT(dispatchId, fileName);
+
     const token = localStorage.getItem("token");
 
     fetch(url, {
@@ -339,7 +358,7 @@ export default function SoSearchPage() {
         res.ok ? res.blob() : Promise.reject("Failed to get attachment")
       )
       .then((blob) => {
-        if (action === "view") {
+        if (action === "view" && isViewable(fileName)) {
           const blobUrl = window.URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
           setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);

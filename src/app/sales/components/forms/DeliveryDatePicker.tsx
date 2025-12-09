@@ -29,11 +29,11 @@ const DeliveryDatePicker: React.FC<Props> = ({
           label="Required Date of Delivery"
           value={dateValue}
           onChange={(newDate) => {
-            const isoString =
+            const dateString =
               newDate && dayjs.isDayjs(newDate) && newDate.isValid()
-                ? newDate.toISOString()
+                ? newDate.format('YYYY-MM-DD') 
                 : '';
-            onChange('deliveryDate', isoString);
+            onChange('deliveryDate', dateString);
           }}
           minDate={today}
           maxDate={maxDate}
