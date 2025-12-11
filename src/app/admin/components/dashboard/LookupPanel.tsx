@@ -16,7 +16,7 @@ import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, { LookupRow } from "@/app/admin/components/dashboard/LookupCrudTable";
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
-import { Button, useTheme, Theme } from "@mui/material";
+import { Button, Theme } from "@mui/material";
 
 const SCHEMA_KEYS: Record<string, string[]> = {
   products: ["id", "name", "code"],
@@ -50,7 +50,7 @@ const REQUIRED_KEYS: Record<string, string[]> = {
 
 const sanitizePayload = (obj: Partial<LookupRow>) => {
   const boolKeys = ["acceptBulkData", "remarksRequired"];
-  const newObj: any = { ...obj };
+  const newObj: Partial<LookupRow> = { ...obj };
   
   boolKeys.forEach((k) => {
     if (k in newObj && typeof newObj[k] === "string") {
@@ -98,7 +98,6 @@ type SnackbarState = {
 };
 
 export default function AdminMasterLookupPanel() {
-  const theme = useTheme();
   const [selectedType, setSelectedType] = useState<MasterLookupKey | "">("");
   const [data, setData] = useState<LookupRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
