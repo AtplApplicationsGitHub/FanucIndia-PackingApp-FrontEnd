@@ -10,11 +10,57 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
-import { Check } from "lucide-react";
+import { Check, CloudDownload, CloudUpload } from "lucide-react";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, { LookupRow } from "@/app/admin/components/dashboard/LookupCrudTable";
-import { API_BASE_URL } from "@/common/lib/endpoints";
+import { API_BASE_URL, API } from "@/common/lib/endpoints";
+import { secureDownload } from "@/common/lib/secure-download";
+import { Button, useTheme, Theme } from "@mui/material";
+
+const SCHEMA_KEYS: Record<string, string[]> = {
+  products: ["id", "name", "code"],
+  transporters: ["id", "name"],
+  plantCodes: ["id", "code", "description"],
+  salesZones: ["id", "name"],
+  packConfigs: ["id", "configName"],
+  customers: ["id", "name", "address"],
+  printers: ["id", "name"],
+  materialBarcodes: [
+    "id", 
+    "erpCode", 
+    "mappingBarcode", 
+    "group", 
+    "acceptBulkData", 
+    "remarksRequired", 
+    "classification"
+  ],
+};
+
+const REQUIRED_KEYS: Record<string, string[]> = {
+  products: ["name"], 
+  transporters: ["name"],
+  plantCodes: ["code"], 
+  salesZones: ["name"],
+  packConfigs: ["configName"],
+  customers: ["name", "address"],
+  printers: ["name"],
+  materialBarcodes: ["erpCode"],
+};
+
+const sanitizePayload = (obj: Partial<LookupRow>) => {
+  const boolKeys = ["acceptBulkData", "remarksRequired"];
+  const newObj: any = { ...obj };
+  
+  boolKeys.forEach((k) => {
+    if (k in newObj && typeof newObj[k] === "string") {
+      const val = (newObj[k] as string).toLowerCase().trim();
+      if (val === "true") newObj[k] = true;
+      if (val === "false") newObj[k] = false;
+    }
+  });
+  return newObj;
+};
 
 const TYPE_TO_API_PATH: Record<string, string> = {
   products: "products",
@@ -24,6 +70,7 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   packConfigs: "pack-configs",
   customers: "customers",
   printers: "printers",
+  materialBarcodes: "material-barcodes",
 };
 
 type MasterLookupKey = keyof typeof TYPE_TO_API_PATH;
@@ -36,6 +83,7 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Packing Configuration", key: "packConfigs" },
   { label: "Customers", key: "customers" },
   { label: "Printers", key: "printers" },
+  { label: "Material Barcode", key: "materialBarcodes" },
 ];
 
 type DeleteTarget = {
@@ -50,6 +98,7 @@ type SnackbarState = {
 };
 
 export default function AdminMasterLookupPanel() {
+  const theme = useTheme();
   const [selectedType, setSelectedType] = useState<MasterLookupKey | "">("");
   const [data, setData] = useState<LookupRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -143,7 +192,7 @@ export default function AdminMasterLookupPanel() {
       if (id === -1) {
         const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}`, {
           method: "POST",
-          body: JSON.stringify(addObj),
+          body: JSON.stringify(sanitizePayload(addObj)),
         });
         if (!res.ok) throw await res.json();
       } else {
@@ -151,7 +200,7 @@ export default function AdminMasterLookupPanel() {
         const { id: _id, ...patchObj } = editObj;
         const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, {
           method: "PATCH",
-          body: JSON.stringify(patchObj),
+          body: JSON.stringify(sanitizePayload(patchObj)),
         });
         if (!res.ok) throw await res.json();
       }
@@ -235,6 +284,73 @@ export default function AdminMasterLookupPanel() {
     setDeleteTarget(null);
   };
 
+  const buttonSx = {
+    bgcolor: (theme: Theme) => theme.palette.action.hover,
+    color: (theme: Theme) => theme.palette.text.primary,
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 120,
+    height: 40,
+    px: 3,
+    textTransform: "none" as const,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      bgcolor: (theme: Theme) => theme.palette.primary.main,
+      color: (theme: Theme) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+      "& .MuiSvgIcon-root, & svg": {
+        color: "#000",
+      },
+    },
+  };
+
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleDownloadBulk = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(API.LOOKUP.BULK_TEMPLATE, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      secureDownload(blob, "master_data_bulk.xlsx");
+    } catch {
+      showSnackbar("Failed to download template", "error");
+    }
+  };
+
+  const handleUploadBulk = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = localStorage.getItem("token");
+
+    try {
+      setLoading(true);
+      const res = await fetch(API.LOOKUP.BULK_IMPORT, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      
+      showSnackbar("Bulk import successful!", "success");
+      // Refresh current view if selected
+      if (selectedType) fetchData();
+    } catch {
+      showSnackbar("Failed to import data", "error");
+    } finally {
+      setLoading(false);
+      e.target.value = ""; // Reset input
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -252,7 +368,7 @@ export default function AdminMasterLookupPanel() {
           justifyContent: "center",
           gap: 3,
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 800,
           mb: 1,
         }}
       >
@@ -315,9 +431,33 @@ export default function AdminMasterLookupPanel() {
             ))}
           </Select>
         </FormControl>
+
+        <Box display="flex" gap={1}>
+          <Button
+            startIcon={<CloudDownload size={18} />}
+            onClick={handleDownloadBulk}
+            sx={buttonSx} 
+          >
+            DOWNLOAD
+          </Button>
+          <Button
+            component="label"
+            startIcon={<CloudUpload size={18} />}
+            sx={buttonSx} 
+          >
+            UPLOAD
+            <input
+              type="file"
+              hidden
+              accept=".xlsx"
+              ref={fileInputRef}
+              onChange={handleUploadBulk}
+            />
+          </Button>
+        </Box>
       </Box>
 
-      <Box sx={{ width: "100%", mt: 6, maxWidth: 700 }}>
+      <Box sx={{ width: "100%", mt: 6, maxWidth: "90%" }}>
         {!selectedType ? (
           <Box sx={{ textAlign: "center", color: "#888", mt: 8, fontSize: 18 }}>
             Please select a lookup type to manage.
@@ -334,6 +474,8 @@ export default function AdminMasterLookupPanel() {
           <LookupCrudTable
             type={selectedType}
             data={data}
+            explicitKeys={SCHEMA_KEYS[selectedType]}
+            requiredKeys={REQUIRED_KEYS[selectedType]}
             editingId={editingId}
             editObj={editObj}
             onEdit={handleEdit}

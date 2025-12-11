@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { Search, Print, Archive, Delete } from "@mui/icons-material";
 import axios from "axios";
-import { API, fetchWithAuth, API_BASE_URL } from "@/common/lib/endpoints";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
@@ -24,7 +24,7 @@ import DispatchInfo from "../components/DispatchInfo";
 import MaterialDetails from "../components/MaterialDetails";
 import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
-import { secureDownload } from "@/common/lib/secure-download";
+import { secureDownload, secureView } from "@/common/lib/secure-download";
 import SalesDashboardHeader from "@/app/sales/components/Header"; 
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { Theme } from "@mui/material/styles";
@@ -151,7 +151,7 @@ export default function SoSearchPage() {
     const isArchived = data?.isArchived;
     const url = isArchived
       ? API.SO_ARCHIVE.DOWNLOAD_VEHICLE_ATTACHMENT(entryId, fileName)
-      : `${API_BASE_URL}/vehicle-entry/${entryId}/attachments/${encodeURIComponent(fileName)}`;
+      : API.VEHICLE_ENTRY.DOWNLOAD_ATTACHMENT(entryId, fileName);
 
     const token = localStorage.getItem("token");
 
@@ -159,9 +159,7 @@ export default function SoSearchPage() {
       .then(res => res.ok ? res.blob() : Promise.reject("Failed"))
       .then(blob => {
         if (action === 'view' && isViewable(fileName)) {
-          const u = window.URL.createObjectURL(blob);
-          window.open(u, "_blank");
-          setTimeout(() => window.URL.revokeObjectURL(u), 100);
+          secureView(blob);
         } else {
           secureDownload(blob, fileName);
         }
@@ -321,9 +319,7 @@ export default function SoSearchPage() {
       })
       .then(blob => {
         if (action === 'view' && isViewable(resolvedName)) {
-          const blobUrl = window.URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-          setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+          secureView(blob);
         } else {
           secureDownload(blob, resolvedName);
         }
@@ -359,9 +355,7 @@ export default function SoSearchPage() {
       )
       .then((blob) => {
         if (action === "view" && isViewable(fileName)) {
-          const blobUrl = window.URL.createObjectURL(blob);
-          window.open(blobUrl, "_blank");
-          setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+          secureView(blob);
         } else {
           secureDownload(blob, fileName);
         }

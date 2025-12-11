@@ -39,6 +39,8 @@ export type LookupRow = {
 type Props = {
   type: string;
   data: LookupRow[];
+  explicitKeys?: string[];
+  requiredKeys?: string[];
   editingId: number | null;
   editObj: Partial<LookupRow>;
   onEdit: (id: number, row: LookupRow) => void;
@@ -64,6 +66,8 @@ const ADD_ROW_ID = -1;
 const LookupCrudTable: React.FC<Props> = ({
   type,
   data,
+  explicitKeys,
+  requiredKeys,
   editingId,
   editObj,
   onEdit,
@@ -80,11 +84,13 @@ const LookupCrudTable: React.FC<Props> = ({
   const theme = useTheme();
   const safeRows = data;
 
-  const keys = safeRows[0]
+  const inferredKeys = safeRows[0]
     ? Object.keys(safeRows[0]).filter(
         (col) => col !== "createdAt" && col !== "updatedAt" && col !== "type"
       )
     : [];
+    
+  const keys = explicitKeys && explicitKeys.length > 0 ? explicitKeys : inferredKeys;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
@@ -202,11 +208,13 @@ const LookupCrudTable: React.FC<Props> = ({
               onClick={() => onSave(type, ADD_ROW_ID)}
               disabled={keys
                 .filter((k) => k !== "id")
-                .some(
-                  (k) =>
-                    typeof addObj[k] !== "string" ||
-                    !addObj[k]?.toString().trim()
-                )}
+                .some((k) => {
+                  if (requiredKeys && !requiredKeys.includes(k)) {
+                    return false;
+                  }
+                  return typeof addObj[k] !== "string" || !addObj[k]?.toString().trim();
+                })
+              }
             >
               <Save size={18} />
             </IconButton>

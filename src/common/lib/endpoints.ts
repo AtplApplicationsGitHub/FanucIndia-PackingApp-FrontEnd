@@ -16,6 +16,10 @@ export const API = {
     CUSTOMER_BY_ID: (id: string | number) =>    `${API_BASE_URL}/lookup/customers/${id}`,
     PRINTERS:                                   `${API_BASE_URL}/lookup/printers`,
     PRINTER_BY_ID: (id: string | number) =>     `${API_BASE_URL}/lookup/printers/${id}`,
+    MATERIAL_BARCODES:                          `${API_BASE_URL}/lookup/material-barcodes`,
+    MATERIAL_BARCODE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/material-barcodes/${id}`,
+    BULK_TEMPLATE: `${API_BASE_URL}/lookup/bulk-template`,
+    BULK_IMPORT:   `${API_BASE_URL}/lookup/bulk-import`,
   },
   ADMIN: {
     SALES_ORDERS:                                 `${API_BASE_URL}/admin/sales-orders`,
@@ -99,6 +103,7 @@ export const API = {
     CREATE:                                       `${API_BASE_URL}/vehicle-entry`,
     UPLOAD_ATTACHMENTS: (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
     GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
+    DOWNLOAD_ATTACHMENT: (id: string | number, fileName: string) => `${API_BASE_URL}/vehicle-entry/${id}/attachments/${encodeURIComponent(fileName)}`,
   },
   ERP_MATERIAL_FILES: {
     BASE:                    `${API_BASE_URL}/v1/erp-material-files`,
