@@ -89,3 +89,40 @@ export async function updatePackingStage(
     }
     return res.json();
 }
+
+export async function bulkAcceptGroup(
+  orderId: number,
+  group: string,
+  stageType: 'issue' | 'packing'
+) {
+  const url = `${API.ADMIN.ERP_MATERIALS_BY_ORDER(orderId)}/bulk-accept-group`;
+  const res = await fetchWithAuth(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ group, stageType }),
+  });
+  
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to bulk accept group");
+  }
+  return res.json();
+}
+
+export async function updateMaterialRemarks(
+  orderId: number,
+  materialId: number,
+  remarks: string
+) {
+  const url = `${API.ADMIN.ERP_MATERIALS_BY_ORDER(orderId)}/${materialId}/remarks`;
+  const res = await fetchWithAuth(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ remarks }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to update remarks");
+  }
+  return res.json();
+}

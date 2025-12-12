@@ -18,6 +18,11 @@ type ApiMaterial = {
   CNC_Serial_No: string;
   UpdatedBy?: string;
   UpdatedDate?: string;
+  Group?: string;
+  Accept_Bulk_Data?: boolean | string; 
+  Mapping_Barcode?: string;
+  Remarks_Required?: boolean | string;
+  Remarks?: string | null;
 };
 
 function getErrorMessage(error: unknown): string {
@@ -61,6 +66,11 @@ export function useErpMaterials(orderId: number, userId: number | null) {
           cncSerialNo: m.CNC_Serial_No,
           updatedBy: m.UpdatedBy,
           updatedDate: m.UpdatedDate,
+          group: m.Group || "", 
+          mappingBarcode: m.Mapping_Barcode || "",
+          acceptBulkData: String(m.Accept_Bulk_Data).toLowerCase() === 'true',
+          remarksRequired: String(m.Remarks_Required).toLowerCase() === 'true',
+          remarks: m.Remarks || null,
         }));
 
         setRows(mapped);
@@ -87,7 +97,6 @@ export function useIncrementIssueStage(orderId: number) {
     setLoading(true);
     setError(null);
     try {
-      // await incrementIssueStage(orderId, materialCode);
       return await incrementIssueStage(orderId, materialCode);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
@@ -109,7 +118,7 @@ export function useIncrementPackingStage(orderId: number) {
     setLoading(true);
     setError(null);
     try {
-      await incrementPackingStage(orderId, materialCode);
+      return await incrementPackingStage(orderId, materialCode);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
       throw err;

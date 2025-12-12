@@ -15,4 +15,9 @@ export interface MaterialRow {
   cncSerialNo: string;
   updatedBy?: string;
   updatedDate?: string;
+  group?: string;
+  acceptBulkData?: boolean;
+  mappingBarcode?: string;
+  remarksRequired?: boolean;
+  remarks?: string | null;
 }

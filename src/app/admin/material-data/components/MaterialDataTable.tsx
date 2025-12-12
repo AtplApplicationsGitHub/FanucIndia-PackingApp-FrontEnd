@@ -14,7 +14,14 @@ import {
   TablePagination,
   useTheme,
   alpha,
-  Box
+  Box,
+  Link as MuiLink,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Theme,
 } from "@mui/material";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 
@@ -33,6 +40,7 @@ interface Props {
   ) => Promise<MaterialRow | null>;
   onProcessRowUpdateError?: (error: Error) => void;
   isOrderFullyComplete?: boolean;
+  onUpdateRemarks?: (id: number, remarks: string) => Promise<void>;
 }
 
 // Helper Component for Editable Cells
@@ -141,12 +149,85 @@ export default function MaterialDataTable({
   onUpdatePackingStage,
   onProcessRowUpdateError,
   isOrderFullyComplete = false,
+  onUpdateRemarks,
 }: Props) {
   const theme = useTheme();
 
   // --- Pagination State ---
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [remarksDialogOpen, setRemarksDialogOpen] = useState(false);
+  const [currentRemarkRow, setCurrentRemarkRow] = useState<MaterialRow | null>(null);
+  const [remarkText, setRemarkText] = useState("");
+  const [savingRemark, setSavingRemark] = useState(false);
+
+  const buttonSx = {
+    bgcolor: (theme: Theme) => theme.palette.action.hover,
+    color: (theme: Theme) => theme.palette.text.primary,
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 100,
+    height: 40,
+    px: 3,
+    textTransform: "none" as const,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      bgcolor: (theme: Theme) => theme.palette.primary.main,
+      color: (theme: Theme) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+    },
+    "&:disabled": { opacity: 0.6, cursor: "not-allowed" },
+  };
+
+  const deleteButtonSx = {
+    ...buttonSx, 
+    "&:hover": {
+      bgcolor: "#D00000", 
+      color: "#ffffff",   
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+    },
+  };
+
+  const handleOpenRemarks = (row: MaterialRow) => {
+    setCurrentRemarkRow(row);
+    setRemarkText(row.remarks || "");
+    setRemarksDialogOpen(true);
+  };
+
+  const handleCloseRemarks = () => {
+    setRemarksDialogOpen(false);
+    setCurrentRemarkRow(null);
+    setRemarkText("");
+  };
+
+  const handleSaveRemarks = async () => {
+    if (!currentRemarkRow || !onUpdateRemarks) return;
+    setSavingRemark(true);
+    try {
+      await onUpdateRemarks(currentRemarkRow.id, remarkText);
+      handleCloseRemarks();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSavingRemark(false);
+    }
+  };
+
+  const handleDeleteRemarks = async () => {
+    if (!currentRemarkRow || !onUpdateRemarks) return;
+    setSavingRemark(true);
+    try {
+      await onUpdateRemarks(currentRemarkRow.id, ""); 
+      handleCloseRemarks();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSavingRemark(false);
+    }
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -296,7 +377,37 @@ export default function MaterialDataTable({
                 }}
               >
                 <TableCell sx={getCellStyle(row, 'other')}>{row.siNo}</TableCell>
-                <TableCell sx={getCellStyle(row, 'other')}>{row.materialCode}</TableCell>
+                <TableCell sx={getCellStyle(row, 'other')}>
+                  <Box display="flex" flexDirection="column">
+                    {row.remarksRequired ? (
+                      <MuiLink
+                        component="button"
+                        variant="body2"
+                        onClick={() => handleOpenRemarks(row)}
+                        sx={{ 
+                          textAlign: 'left', 
+                          fontWeight: 'bold',
+                          textDecoration: 'none',
+                          color: '#1565c0',
+                          "&:hover": {
+                            textDecoration: 'none',
+                            color: '#0d47a1',  
+                          }
+                        }}
+                      >
+                        {row.materialCode}
+                      </MuiLink>
+                    ) : (
+                      <Typography variant="body2">{row.materialCode}</Typography>
+                    )}
+
+                    {row.mappingBarcode && (
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                        {row.mappingBarcode}
+                      </Typography>
+                    )}
+                  </Box>
+                </TableCell>
                 <TableCell sx={getCellStyle(row, 'other')}>{row.materialDescription}</TableCell>
                 <TableCell sx={getCellStyle(row, 'other')}>{row.batchNo}</TableCell>
                 <TableCell sx={getCellStyle(row, 'other')}>{row.soDonorBatch}</TableCell>
@@ -344,6 +455,54 @@ export default function MaterialDataTable({
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={remarksDialogOpen} onClose={handleCloseRemarks} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ 
+          color: theme.palette.secondary.main, 
+          fontWeight: 'bold', 
+          textTransform: 'uppercase'
+        }}>
+          {currentRemarkRow?.remarks ? "EDIT REMARKS" : "ADD REMARKS"}
+        </DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="remarks"
+            label="Remarks"
+            type="text"
+            fullWidth
+            multiline
+            minRows={4}
+            value={remarkText}
+            onChange={(e) => setRemarkText(e.target.value)}
+            variant="outlined"
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button 
+            onClick={handleDeleteRemarks} 
+            sx={{ ...deleteButtonSx, mr: 'auto' }}
+            disabled={savingRemark}
+          >
+            DELETE
+          </Button>
+          <Button 
+            onClick={handleCloseRemarks} 
+            sx={buttonSx}
+            disabled={savingRemark}
+          >
+            CANCEL
+          </Button>
+          <Button 
+            onClick={handleSaveRemarks} 
+            sx={buttonSx}
+            disabled={savingRemark}
+          >
+            {savingRemark ? "SAVING..." : "SAVE"}
+          </Button>
+        </DialogActions>
+      </Dialog>
       
       {/* --- Pagination Component --- */}
       <TablePagination

@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useMemo, SetStateAction } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Alert, Backdrop, CircularProgress, Snackbar, Box, Container, Paper, Divider } from "@mui/material";
+import {
+  Alert,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
+  Box,
+  Container,
+  Paper,
+  Divider,
+} from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
 import MaterialDataTable from "@/app/admin/material-data/components/MaterialDataTable";
@@ -16,16 +25,31 @@ import {
   updateIssueStage,
   updatePackingStage,
   getErpMaterials as fetchErpMaterials,
+  bulkAcceptGroup,
+  updateMaterialRemarks,
 } from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
 
-// --- Imports for Headers ---
-import AdminDashboardHeader, { ViewType } from "@/app/admin/components/dashboard/Header";
+import AdminDashboardHeader, {
+  ViewType,
+} from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
+
+type UpdateResponse = {
+  issueStageCompleted?: boolean;
+  packingStageCompleted?: boolean;
+  updatedMaterial?: {
+    ID: number;
+    Remarks?: string;
+    Issue_stage?: number;
+    Packing_stage?: number;
+    [key: string]: unknown;
+  };
+};
 
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -38,7 +62,6 @@ function extractErrorMessage(error: unknown): string {
       return error.message;
     }
   }
-
   if (axios.isAxiosError(error)) {
     if (
       error.response?.data &&
@@ -47,19 +70,21 @@ function extractErrorMessage(error: unknown): string {
       return error.response.data.message;
     }
   }
-
   return "An unexpected error occurred.";
 }
 
 export default function MaterialDataPage() {
   const params = useParams<{ orderId: string }>();
   const router = useRouter();
-  const [, setIsRedirecting] = useState(false);
-  
-  const [currentUser, setCurrentUser] = useState<{ id: number | null; role: string | null; name: string }>({ 
-    id: null, 
-    role: null, 
-    name: "" 
+
+  const [currentUser, setCurrentUser] = useState<{
+    id: number | null;
+    role: string | null;
+    name: string;
+  }>({
+    id: null,
+    role: null,
+    name: "",
   });
 
   useEffect(() => {
@@ -79,49 +104,42 @@ export default function MaterialDataPage() {
     [params.orderId]
   );
   const orderId = Number(idStr);
+
   const [editError, setEditError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-  const { data: header, error: hdrError } = useOrderHeader(orderId, currentUser.id);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const { data: header, error: hdrError } = useOrderHeader(
+    orderId,
+    currentUser.id
+  );
   const {
     rows: fetchedRows = [],
     error: matError,
     loading: matLoading,
   } = useErpMaterials(orderId, currentUser.id);
-  const {
-    mutate: incIssue,
-    loading: mutatingIssue,
-  } = useIncrementIssueStage(orderId);
 
-  const {
-    mutate: incPacking,
-    loading: mutatingPacking,
-  } = useIncrementPackingStage(orderId);
+  const { mutate: incIssue, loading: mutatingIssue } = useIncrementIssueStage(
+    orderId
+  );
 
-  const mapApiToMaterialRow = (
-    apiMaterial: ApiMaterial,
-    oldRow: MaterialRow
-  ): MaterialRow => {
-    return {
-      ...oldRow,
-      id: Number(apiMaterial.ID),
-      siNo: oldRow.siNo,
-      materialCode: apiMaterial.Material_Code ?? oldRow.materialCode,
-      materialDescription:
-        apiMaterial.Material_Description ?? oldRow.materialDescription,
-      batchNo: apiMaterial.Batch_No ?? oldRow.batchNo,
-      soDonorBatch: apiMaterial.SO_Donor_Batch ?? oldRow.soDonorBatch,
-      certNo: apiMaterial.Cert_No ?? oldRow.certNo,
-      binNo: apiMaterial.Bin_No ?? oldRow.binNo,
-      adf: apiMaterial.A_D_F ?? oldRow.adf,
-      reqQuantity: Number(apiMaterial.Required_Qty) ?? oldRow.reqQuantity,
-      issueStage: Number(apiMaterial.Issue_stage) ?? oldRow.issueStage,
-      packingStage: Number(apiMaterial.Packing_stage) ?? oldRow.packingStage,
-      machineModel: apiMaterial.Machine_Model ?? oldRow.machineModel,
-      cncSerialNo: apiMaterial.CNC_Serial_No ?? oldRow.cncSerialNo,
-    };
-  };
+  const { mutate: incPacking, loading: mutatingPacking } =
+    useIncrementPackingStage(orderId);
+
+  // Group Filter State
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
+  const [showAll, setShowAll] = useState(false);
+
+  // Determine global stage (Issue vs Packing)
+  const allIssued = useMemo(
+    () =>
+      localRows.length > 0 &&
+      localRows.every((r) => r.issueStage >= r.reqQuantity),
+    [localRows]
+  );
+
   useEffect(() => {
     setLocalRows(fetchedRows);
   }, [fetchedRows]);
@@ -138,12 +156,84 @@ export default function MaterialDataPage() {
     );
   }, [localRows]);
 
-  // --- Header Render Logic ---
+  const handleUpdateRemarks = async (id: number, remarks: string) => {
+    try {
+      const response = await updateMaterialRemarks(orderId, id, remarks) as UpdateResponse;
+      
+      setUploadNotice("Remarks updated successfully");
+
+      const updatedMaterial = response.updatedMaterial;
+      
+      setLocalRows((prev) =>
+        prev.map((row) =>
+          row.id === id 
+            ? { ...row, remarks: updatedMaterial ? updatedMaterial.Remarks : remarks } 
+            : row
+        )
+      );
+
+    } catch (e) {
+      setEditError(extractErrorMessage(e));
+    }
+  };
+
+  const uniqueGroups = useMemo(() => {
+    const groups = localRows
+      .map((r) => r.group)
+      .filter((g): g is string => !!g); 
+    return Array.from(new Set(groups)).sort();
+  }, [localRows]);
+
+  const displayedRows = useMemo(() => {
+    let rows = localRows;
+
+    if (selectedGroup) {
+      rows = rows.filter((r) => r.group === selectedGroup);
+    }
+
+    if (!showAll) {
+      if (!allIssued) {
+        rows = rows.filter((r) => r.issueStage < r.reqQuantity);
+      } else {
+        rows = rows.filter((r) => r.packingStage < r.reqQuantity);
+      }
+    }
+    return rows;
+  }, [localRows, showAll, allIssued, selectedGroup]);
+
+  // [UPDATED] Logic to show "Accept Group Items" button
+  // 1. Group must be selected.
+  // 2. At least one item in the group must have `acceptBulkData === true`.
+  // 3. At least one of those items must be INCOMPLETE for the current stage.
+  const showBulkButton = useMemo(() => {
+    if (!selectedGroup) return false;
+
+    // Filter strictly by the selected group first
+    const groupRows = localRows.filter((r) => r.group === selectedGroup);
+
+    return groupRows.some((r) => {
+      // Must be flagged for bulk accept
+      if (!r.acceptBulkData) return false;
+
+      // Must be incomplete
+      if (!allIssued) {
+        // Issue Stage
+        return r.issueStage < r.reqQuantity;
+      } else {
+        // Packing Stage
+        return r.packingStage < r.reqQuantity;
+      }
+    });
+  }, [selectedGroup, localRows, allIssued]);
+
   const renderHeader = () => {
     if (!currentUser.role) return null;
 
     const handleAdminNav = (view: SetStateAction<ViewType>) => {
-      const newView = typeof view === 'function' ? (view as (prev: ViewType) => ViewType)('orders') : view;
+      const newView =
+        typeof view === "function"
+          ? (view as (prev: ViewType) => ViewType)("orders")
+          : view;
       sessionStorage.setItem("adminView", newView);
       router.push("/admin/dashboard");
     };
@@ -169,31 +259,48 @@ export default function MaterialDataPage() {
         );
       case "USER":
         return (
-          <UserDashboardHeader
-            view={"pick_pack"}
-            setView={handleUserNav}
-          />
+          <UserDashboardHeader view={"pick_pack"} setView={handleUserNav} />
         );
       case "SALES":
         return (
-          <SalesDashboardHeader
-            view={"orders"}
-            setView={handleSalesNav}
-          />
+          <SalesDashboardHeader view={"orders"} setView={handleSalesNav} />
         );
       default:
         return null;
     }
   };
 
-  if (!idStr || isNaN(orderId)) {
-    return (
-      <Alert severity="error" sx={{ m: 6 }}>
-        Invalid Order ID in URL.
-      </Alert>
-    );
-  }
+  const handleBulkAccept = async () => {
+    if (!selectedGroup) return;
+    const stageType = !allIssued ? "issue" : "packing";
 
+    try {
+      setUploadNotice("Processing bulk update...");
+      const res = await bulkAcceptGroup(orderId, selectedGroup, stageType);
+
+      if (res.issueStageCompleted || res.packingStageCompleted) {
+        setUploadNotice("Stage complete! Redirecting...");
+        setIsRedirecting(true);
+        setTimeout(() => {
+          if (currentUser.role === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else {
+            sessionStorage.setItem("userDashboardView", "pick_pack");
+            router.push("/user/dashboard");
+          }
+        }, 2500);
+      } else {
+        setUploadNotice("Group accepted successfully");
+        await refetch();
+      }
+    } catch (e) {
+      setEditError(extractErrorMessage(e));
+    }
+  };
+
+  if (!idStr || isNaN(orderId)) {
+    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID.</Alert>;
+  }
   if (hdrError || matError) {
     return (
       <Alert severity="error" sx={{ m: 6 }}>
@@ -203,27 +310,16 @@ export default function MaterialDataPage() {
   }
   if (!header) {
     return (
-      <Backdrop
-        open
-        sx={{
-          color: "#fff",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-        }}
-      >
+      <Backdrop open sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <CircularProgress color="inherit" />
       </Backdrop>
     );
   }
 
-  const busy = matLoading || mutatingIssue || mutatingPacking;
-
+  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting;
   const { so, customerName, transferOrder, fgObd } = header;
   const machineModel = localRows[0]?.machineModel ?? "";
   const cncSerialNo = localRows[0]?.cncSerialNo ?? "";
-
-  const allIssued =
-    localRows.length > 0 &&
-    localRows.every((r) => r.issueStage >= r.reqQuantity);
 
   type ApiMaterial = {
     ID: number;
@@ -239,13 +335,16 @@ export default function MaterialDataPage() {
     Packing_stage?: number;
     Machine_Model?: string;
     CNC_Serial_No?: string;
+    Group?: string;
+    Accept_Bulk_Data?: boolean | string;
+    Mapping_Barcode?: string;
+    Remarks_Required?: boolean | string;
   };
+
   const refetch = async () => {
     try {
       const data = await fetchErpMaterials(orderId);
-      const apiRows = (
-        Array.isArray(data?.items) ? data.items : data
-      ) as ApiMaterial[];
+      const apiRows = (Array.isArray(data?.items) ? data.items : data) as ApiMaterial[];
       const mapped: MaterialRow[] = apiRows.map((m, idx) => ({
         id: Number(m.ID),
         siNo: idx + 1,
@@ -261,6 +360,10 @@ export default function MaterialDataPage() {
         packingStage: m.Packing_stage ?? 0,
         machineModel: m.Machine_Model ?? "",
         cncSerialNo: m.CNC_Serial_No ?? "",
+        group: m.Group || "",
+        mappingBarcode: m.Mapping_Barcode || "",
+        acceptBulkData: String(m.Accept_Bulk_Data).toLowerCase() === "true",
+        remarksRequired: String(m.Remarks_Required).toLowerCase() === "true",
       }));
       setLocalRows(mapped);
     } catch (e) {
@@ -271,18 +374,18 @@ export default function MaterialDataPage() {
   const handleProcess = async (code: string) => {
     setEditError(null);
     try {
-      let response: { issueStageCompleted?: boolean } | undefined;
+      let response: UpdateResponse | undefined;
       if (!allIssued) {
-        response = await incIssue(code);
+        response = await incIssue(code) as UpdateResponse;
       } else {
-        await incPacking(code);
+        response = await incPacking(code) as UpdateResponse;
       }
-      
+
       if (response && response.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
         setTimeout(() => {
-          if (currentUser.role === 'ADMIN') {
+          if (currentUser.role === "ADMIN") {
             router.push("/admin/dashboard");
           } else {
             sessionStorage.setItem("userDashboardView", "pick_pack");
@@ -297,26 +400,36 @@ export default function MaterialDataPage() {
     }
   };
 
+  const mapApiToMaterialRow = (
+    apiMaterial: { ID: number | string; Issue_stage?: number; Packing_stage?: number }, 
+    oldRow: MaterialRow
+  ): MaterialRow => {
+    return {
+      ...oldRow,
+      id: Number(apiMaterial.ID),
+      issueStage: apiMaterial.Issue_stage != null ? Number(apiMaterial.Issue_stage) : oldRow.issueStage,
+      packingStage: apiMaterial.Packing_stage != null ? Number(apiMaterial.Packing_stage) : oldRow.packingStage,
+    };
+  };
+
   const handleUpdateIssueStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updateIssueStage(orderId, code, stage, id);
-      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial; issueStageCompleted?: boolean })?.updatedMaterial;
-      if (!updatedMaterial) {
-        throw new Error("Invalid response from server when updating issue stage.");
-      }
+      const data = await updateIssueStage(orderId, code, stage, id) as UpdateResponse;
+      const updatedMaterial = data?.updatedMaterial;
+      if (!updatedMaterial) throw new Error("Invalid response.");
 
       const oldRow = localRows.find((r) => r.id === id);
-      if (!oldRow) throw new Error("Original row not found.");
-      
-      const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
-      setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+      if (oldRow) {
+        const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
+        setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+      }
 
-      if ((data as { issueStageCompleted?: boolean })?.issueStageCompleted) {
+      if (data?.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
         setTimeout(() => {
-          if (currentUser.role === 'ADMIN') {
+          if (currentUser.role === "ADMIN") {
             router.push("/admin/dashboard");
           } else {
             sessionStorage.setItem("userDashboardView", "pick_pack");
@@ -324,8 +437,7 @@ export default function MaterialDataPage() {
           }
         }, 2500);
       }
-      
-      return updatedRow;
+      return oldRow!;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
       await refetch();
@@ -336,28 +448,21 @@ export default function MaterialDataPage() {
   const handleUpdatePackingStage = async (code: string, stage: number, id: number) => {
     setEditError(null);
     try {
-      const data = await updatePackingStage(orderId, code, stage, id);
-      const updatedMaterial = (data as { updatedMaterial?: ApiMaterial, packingStageCompleted?: boolean })?.updatedMaterial;
-      if (!updatedMaterial) {
-        throw new Error(
-          "Invalid response from server when updating packing stage."
-        );
-      }
-      const oldRow = localRows.find((r) => r.id === id);
-      if (!oldRow) {
-        throw new Error("Original row not found.");
-      }
-      const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
+      const data = await updatePackingStage(orderId, code, stage, id) as UpdateResponse;
+      const updatedMaterial = data?.updatedMaterial;
+      if (!updatedMaterial) throw new Error("Invalid response.");
 
-      setLocalRows((prev) =>
-        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
-      );
-      
-      if ((data as { packingStageCompleted?: boolean })?.packingStageCompleted) {
+      const oldRow = localRows.find((r) => r.id === id);
+      if (oldRow) {
+        const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
+        setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+      }
+
+      if (data?.packingStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Packing stage complete! Returning to your dashboard...");
         setTimeout(() => {
-          if (currentUser.role === 'ADMIN') {
+          if (currentUser.role === "ADMIN") {
             router.push("/admin/dashboard");
           } else {
             sessionStorage.setItem("userDashboardView", "pick_pack");
@@ -365,49 +470,19 @@ export default function MaterialDataPage() {
           }
         }, 2500);
       }
-
-      return updatedRow;
+      return oldRow!;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
-      await refetch(); 
+      await refetch();
       throw err;
     }
   };
 
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        minHeight: '100vh',
-        bgcolor: '#f5f5f5' 
-      }}
-    >
-      {/* Role-Specific Header */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
       {renderHeader()}
-
-      {/* Main Content with NO GAPS */}
-      <Container 
-        maxWidth={false} 
-        disableGutters 
-        sx={{ 
-          flexGrow: 1, 
-          py: 0, // UPDATED: Set vertical padding to 0 to remove top gap
-          px: 0 
-        }}
-      >
-        {/* UNIFIED PAPER CONTAINER FOR HEADER, INPUT, AND TABLE */}
-        <Paper 
-          elevation={3}
-          sx={{ 
-            // mb: 3, // Removed margin-bottom if you want it flush at the bottom too, otherwise keep it
-            borderRadius: 0, 
-            overflow: 'hidden',
-            borderTop: '1px solid #e0e0e0',
-            borderBottom: '1px solid #e0e0e0',
-          }}
-        >
-          {/* 1. Header Section */}
+      <Container maxWidth={false} disableGutters sx={{ flexGrow: 1, py: 0, px: 0 }}>
+        <Paper elevation={3} sx={{ borderRadius: 0, overflow: "hidden", borderTop: "1px solid #e0e0e0", borderBottom: "1px solid #e0e0e0" }}>
           <HeaderSection
             so={so}
             customerName={customerName}
@@ -417,88 +492,54 @@ export default function MaterialDataPage() {
             cncSerialNo={cncSerialNo}
             items={localRows}
           />
-
           <Divider />
-
-          {/* 2. Input/Scan Section */}
-          <Box sx={{ py: 3, px: 2, bgcolor: 'background.paper' }}>
+          <Box sx={{ py: 3, px: 2, bgcolor: "background.paper" }}>
             {isOrderFullyComplete ? (
-              <Alert 
-                severity="success" 
-                sx={{ 
-                  borderRadius: 1,
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  boxShadow: 1,
-                  mx: 2 
-                }}
-              >
+              <Alert severity="success" sx={{ borderRadius: 1, fontSize: "1rem", fontWeight: 500, boxShadow: 1, mx: 2 }}>
                 This order is fully packed and complete. No further actions can be taken.
               </Alert>
             ) : (
               <InputBoxSection
                 onSubmit={handleProcess}
                 saleOrderNumber={so}
-                onFileCreated={() => {
-                  setUploadNotice("File metadata saved");
-                  refetch();
-                }}
+                onFileCreated={() => { setUploadNotice("File metadata saved"); refetch(); }}
                 disabled={isOrderFullyComplete}
                 items={localRows}
+                uniqueGroups={uniqueGroups}
+                selectedGroup={selectedGroup}
+                onGroupChange={setSelectedGroup}
+                onBulkAccept={handleBulkAccept}
+                // [FIX] Pass calculated boolean to hide button if done
+                showBulkButton={showBulkButton} 
+                // [NEW] Pass toggle props to child
+                showAll={showAll}
+                onToggleShowAll={setShowAll}
               />
             )}
           </Box>
-
           <Divider />
+          
+          {/* [FIX] Removed the old FormControlLabel switch from here */}
 
           {editError && (
-            <Alert 
-              severity="error" 
-              onClose={() => setEditError(null)}
-              sx={{ 
-                borderRadius: 0,
-                fontSize: '0.95rem',
-                borderBottom: '1px solid #e0e0e0',
-                px: 2,
-                py: 1
-              }}
-            >
+            <Alert severity="error" onClose={() => setEditError(null)} sx={{ borderRadius: 0, fontSize: "0.95rem", borderBottom: "1px solid #e0e0e0", px: 2, py: 1 }}>
               {editError}
             </Alert>
           )}
-
-          {/* 3. Material Data Table */}
           <Box>
             <MaterialDataTable
-              rows={localRows}
+              rows={displayedRows}
               loading={busy}
               onUpdateIssueStage={handleUpdateIssueStage}
               onUpdatePackingStage={handleUpdatePackingStage}
-              onProcessRowUpdateError={(err) =>
-                setEditError(extractErrorMessage(err))
-              }
+              onUpdateRemarks={handleUpdateRemarks}
+              onProcessRowUpdateError={(err) => setEditError(extractErrorMessage(err))}
               isOrderFullyComplete={isOrderFullyComplete}
             />
           </Box>
         </Paper>
-
-        {/* Success Snackbar */}
-        <Snackbar
-          open={!!uploadNotice}
-          autoHideDuration={3000}
-          onClose={() => setUploadNotice(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <Alert 
-            severity="success" 
-            onClose={() => setUploadNotice(null)}
-            sx={{ 
-              minWidth: 300,
-              fontSize: '1rem',
-              fontWeight: 500,
-              boxShadow: 4
-            }}
-          >
+        <Snackbar open={!!uploadNotice} autoHideDuration={3000} onClose={() => setUploadNotice(null)} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
+          <Alert severity="success" onClose={() => setUploadNotice(null)} sx={{ minWidth: 300, fontSize: "1rem", fontWeight: 500, boxShadow: 4 }}>
             {uploadNotice}
           </Alert>
         </Snackbar>
