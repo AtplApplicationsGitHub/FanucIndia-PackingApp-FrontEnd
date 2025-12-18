@@ -159,18 +159,44 @@ export default function MaterialDataPage() {
   const handleUpdateRemarks = async (id: number, remarks: string) => {
     try {
       const response = await updateMaterialRemarks(orderId, id, remarks) as UpdateResponse;
-      
       setUploadNotice("Remarks updated successfully");
 
       const updatedMaterial = response.updatedMaterial;
       
-      setLocalRows((prev) =>
-        prev.map((row) =>
+      let shouldRedirect = false;
+      
+      setLocalRows((prev) => {
+        const nextRows = prev.map((row) =>
           row.id === id 
             ? { ...row, remarks: updatedMaterial ? updatedMaterial.Remarks : remarks } 
             : row
-        )
-      );
+        );
+
+        const allPacked = nextRows.every(
+            (r) => r.reqQuantity > 0 && r.reqQuantity === r.issueStage && r.issueStage === r.packingStage
+        );
+        const allRemarksFilled = nextRows.every(
+            (r) => !r.remarksRequired || (r.remarks && r.remarks.trim() !== "")
+        );
+
+        if (allPacked && allRemarksFilled) {
+             shouldRedirect = true;
+        }
+
+        return nextRows;
+      });
+
+      if (shouldRedirect) {
+        setIsRedirecting(true);
+        setUploadNotice("Order Complete! Redirecting...");
+        setTimeout(() => {
+          if (currentUser.role === "ADMIN") router.push("/admin/dashboard");
+          else {
+            sessionStorage.setItem("userDashboardView", "pick_pack");
+            router.push("/user/dashboard");
+          }
+        }, 2000);
+      }
 
     } catch (e) {
       setEditError(extractErrorMessage(e));
@@ -381,6 +407,9 @@ export default function MaterialDataPage() {
         response = await incPacking(code) as UpdateResponse;
       }
 
+      const targetRow = localRows.find(r => r.materialCode === code || r.mappingBarcode === code);
+      const isMandatoryMissing = targetRow?.remarksRequired && !targetRow?.remarks;
+
       if (response && response.issueStageCompleted) {
         setIsRedirecting(true);
         setUploadNotice("Issue stage complete! Returning to your dashboard...");
@@ -392,6 +421,20 @@ export default function MaterialDataPage() {
             router.push("/user/dashboard");
           }
         }, 2500);
+      } else if (response && response.packingStageCompleted) {
+        if (!isMandatoryMissing) {
+            setIsRedirecting(true);
+            setUploadNotice("Packing stage complete! Returning to your dashboard...");
+            setTimeout(() => {
+            if (currentUser.role === "ADMIN") router.push("/admin/dashboard");
+            else {
+                sessionStorage.setItem("userDashboardView", "pick_pack");
+                router.push("/user/dashboard");
+            }
+            }, 2500);
+        } else {
+            await refetch();
+        }
       } else {
         await refetch();
       }
@@ -453,12 +496,16 @@ export default function MaterialDataPage() {
       if (!updatedMaterial) throw new Error("Invalid response.");
 
       const oldRow = localRows.find((r) => r.id === id);
+      
+      const isMandatory = oldRow?.remarksRequired;
+      const hasRemarks = updatedMaterial.Remarks || oldRow?.remarks;
+      
       if (oldRow) {
         const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
         setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
       }
 
-      if (data?.packingStageCompleted) {
+      if (data?.packingStageCompleted && (!isMandatory || hasRemarks)) {
         setIsRedirecting(true);
         setUploadNotice("Packing stage complete! Returning to your dashboard...");
         setTimeout(() => {

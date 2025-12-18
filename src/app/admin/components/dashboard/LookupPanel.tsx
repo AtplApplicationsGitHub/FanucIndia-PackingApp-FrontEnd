@@ -186,6 +186,7 @@ export default function AdminMasterLookupPanel() {
 
   const handleSave = async (type: MasterLookupKey, id: number) => {
     setLoading(true);
+    setError("");
     try {
       const apiPath = getApiPath();
       if (id === -1) {
@@ -205,19 +206,23 @@ export default function AdminMasterLookupPanel() {
       }
       handleCancel();
       await fetchData();
+      showSnackbar("Saved successfully!", "success");
     } catch (err: unknown) {
       let errorMsg =
         "Failed to save. Ensure all required fields are filled as strings.";
       if (
         err &&
         typeof err === "object" &&
-        "message" in err &&
-        typeof (err as { message?: unknown }).message === "string"
+        "message" in err
       ) {
-        errorMsg = (err as { message: string }).message;
+        const msg = (err as { message?: unknown }).message;
+        if (typeof msg === "string") {
+          errorMsg = msg;
+        } else if (Array.isArray(msg)) {
+           errorMsg = msg.join(", ");
+        }
       }
-      setError(errorMsg);
-      console.error(err);
+      showSnackbar(errorMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -502,7 +507,7 @@ export default function AdminMasterLookupPanel() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >

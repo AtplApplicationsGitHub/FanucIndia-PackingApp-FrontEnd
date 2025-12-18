@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState, useMemo, useCallback, useEffect } from "react";
+import { FC, useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   TextField,
   Button,
@@ -91,6 +91,8 @@ const InputBoxSection: FC<Props> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileCount, setFileCount] = useState<number>(0);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const fetchCount = useCallback(async () => {
     if (!saleOrderNumber) return;
     try {
@@ -105,6 +107,13 @@ const InputBoxSection: FC<Props> = ({
     fetchCount();
   }, [fetchCount]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [selectedGroup, showAll]);
+
   const handleFileChange = () => {
     onFileCreated();
     fetchCount();
@@ -118,12 +127,8 @@ const InputBoxSection: FC<Props> = ({
     setValue("");
   };
 
-  // Reusable Fanuc Button Style
   const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover, // Fanuc Yellow (via hover logic usually, but here action.hover is greyish)
-    // Actually, based on your screenshot, SUBMIT is grey. 
-    // If you want Fanuc Yellow, change bgcolor to 'primary.main'.
-    // Assuming standard layout:
+    bgcolor: (theme: Theme) => theme.palette.action.hover, 
     color: (theme: Theme) => theme.palette.text.primary,
     borderRadius: 0,
     clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
@@ -137,7 +142,7 @@ const InputBoxSection: FC<Props> = ({
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main, // Yellow on hover
+      bgcolor: (theme: Theme) => theme.palette.primary.main, 
       color: (theme: Theme) => theme.palette.primary.contrastText,
       boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
       "& .MuiSvgIcon-root, & svg": {
@@ -198,6 +203,7 @@ const InputBoxSection: FC<Props> = ({
           )}
 
           <TextField
+            inputRef={inputRef}
             size="small"
             label="Scan / Enter Material Code"
             placeholder="e.g., ROB-HAND-001"

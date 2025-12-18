@@ -72,6 +72,8 @@ interface MaterialDetail {
   Packing_stage: number;
   UpdatedBy?: string;
   UpdatedDate?: string;
+  Remarks?: string;
+  Remarks_Required?: boolean;
 }
 
 interface VehicleAttachment {
@@ -380,6 +382,7 @@ export default function SoSearchPage() {
       case "USER":
         return (
           <UserDashboardHeader
+            userName={userName}
             view={"home"}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
@@ -390,6 +393,7 @@ export default function SoSearchPage() {
       case "SALES":
         return (
           <SalesDashboardHeader
+            userName={userName}
             view={"home"} 
             setView={(view) => {
               const newView = view as SalesDashboardView;

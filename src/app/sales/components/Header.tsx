@@ -7,8 +7,10 @@ import LogoutButton from "@/common/components/LogoutButton";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { ClipboardList, BarChart3, Search } from "lucide-react"; 
 import Image from "next/image";
+import UserMenu from "@/common/components/UserMenu";
 
 type Props = {
+  userName: string;
   view: SalesDashboardView;
   setView: (view: SalesDashboardView) => void;
 };
@@ -19,7 +21,7 @@ const menuItems = [
   { label: "SO SEARCH", icon: <Search className="mr-2 h-4 w-4" />, value: "so_search" },
 ];
 
-export default function SalesDashboardHeader({ view, setView }: Props) {
+export default function SalesDashboardHeader({ userName,view, setView }: Props) {
   const theme = useTheme();
   const router = useRouter(); 
   const pathname = usePathname(); 
@@ -107,7 +109,7 @@ export default function SalesDashboardHeader({ view, setView }: Props) {
         </Box>
 
         <Box sx={{ ml: 3 }}>
-          <LogoutButton sx={{ px: 4, py: 1.5, height: 40 }} />
+          <UserMenu username={userName} userRole="SALES" variant="full" />
         </Box>
       </Toolbar>
     </AppBar>

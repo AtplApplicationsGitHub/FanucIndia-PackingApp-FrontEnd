@@ -6,6 +6,10 @@ import {
   IconButton,
   Paper,
   InputBase,
+  FormControl, 
+  InputLabel,  
+  Select,      
+  MenuItem,    
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -14,10 +18,28 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { X } from "lucide-react"; 
+import { LookupRow } from "@/app/admin/components/types/admin"; 
+
+const STATUS_OPTIONS = [
+  "None",
+  "R105",
+  "W105",
+  "F105",
+  "Dispatched"
+];
 
 type Props = {
   searchInput: string;
   onSearchInputChange: (val: string) => void;
+  
+  paymentFilter: string;
+  onPaymentFilterChange: (val: string) => void;
+  zoneFilter: string;
+  onZoneFilterChange: (val: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (val: string) => void;
+  salesZones: LookupRow[];
+
   startDate: Date | null;
   onStartDateChange: (val: Date | null) => void;
   endDate: Date | null;
@@ -28,6 +50,13 @@ type Props = {
 export default function AdminOrdersToolbar({
   searchInput,
   onSearchInputChange,
+  paymentFilter,
+  onPaymentFilterChange,
+  zoneFilter,
+  onZoneFilterChange,
+  statusFilter,
+  onStatusFilterChange,
+  salesZones,
   startDate,
   onStartDateChange,
   endDate,
@@ -45,12 +74,18 @@ export default function AdminOrdersToolbar({
           mx: { xs: 0, md: "auto" },
           px: { xs: 1, md: 2 },
           alignItems: { md: "center" },
+          flexWrap: "wrap", 
         }}
       >
         <Paper
           component="form"
           onSubmit={(e) => e.preventDefault()}
-          sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: { xs: "100%", sm: 400 } }}
+          sx={{ 
+            p: '2px 4px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            width: { xs: "100%", sm: 220 } 
+          }}
         >
           <InputBase
             sx={{ ml: 1, flex: 1 }}
@@ -69,6 +104,51 @@ export default function AdminOrdersToolbar({
           </IconButton>
         </Paper>
 
+        <FormControl size="small" sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}>
+          <InputLabel>Payment</InputLabel>
+          <Select
+            value={paymentFilter}
+            label="Payment"
+            onChange={(e) => onPaymentFilterChange(e.target.value)}
+          >
+            <MenuItem value=""><em>All</em></MenuItem>
+            <MenuItem value="true">Yes</MenuItem>
+            <MenuItem value="false">No</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+          <InputLabel>Sales Zone</InputLabel>
+          <Select
+            value={zoneFilter}
+            label="Sales Zone"
+            onChange={(e) => onZoneFilterChange(e.target.value)}
+          >
+            <MenuItem value=""><em>All Zones</em></MenuItem>
+            {salesZones.map((zone) => (
+              <MenuItem key={zone.id} value={String(zone.id)}>
+                {String(zone.name || zone.code || zone.id)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+          <InputLabel>Status</InputLabel>
+          <Select
+            value={statusFilter}
+            label="Status"
+            onChange={(e) => onStatusFilterChange(e.target.value)}
+          >
+            <MenuItem value=""><em>All Statuses</em></MenuItem>
+            {STATUS_OPTIONS.map((status) => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <DatePicker
           label="From"
           value={startDate ? dayjs(startDate) : null}
@@ -80,10 +160,10 @@ export default function AdminOrdersToolbar({
               onClear: () => onStartDateChange(null),
             },
             textField: {
-              size: "medium",
+              size: "small", 
               variant: "outlined",
               sx: {
-                minWidth: 170,
+                minWidth: 150, 
                 bgcolor: "background.paper",
                 "& .MuiOutlinedInput-root": { borderRadius: 1 },
               },
@@ -103,10 +183,10 @@ export default function AdminOrdersToolbar({
               onClear: () => onEndDateChange(null),
             },
             textField: {
-              size: "medium",
+              size: "small", 
               variant: "outlined",
               sx: {
-                minWidth: 170,
+                minWidth: 150, 
                 bgcolor: "background.paper",
                 "& .MuiOutlinedInput-root": { borderRadius: 1 },
               },
@@ -124,9 +204,9 @@ export default function AdminOrdersToolbar({
             clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
             fontWeight: 600,
             fontSize: 15,
-            minWidth: 120,
+            minWidth: 100, 
             height: 40,
-            px: 3,
+            px: 2,
             textTransform: "none",
             boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             transition: "all 0.2s ease-in-out",

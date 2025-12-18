@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import LogoutButton from "@/common/components/LogoutButton";
+import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image"; 
 
@@ -70,6 +71,7 @@ const allMenuItems = [
 const MAX_VISIBLE_ITEMS = 5;
 
 export default function AdminDashboardHeader({
+  userName,
   view,
   setView,
 }: Props) {
@@ -261,8 +263,8 @@ export default function AdminDashboardHeader({
           </Box>
         </Box>
 
-        <Box sx={{ ml: 3, whiteSpace: "nowrap" }}>
-          <LogoutButton sx={{ px: { xs: 3, md: 4 }, py: 1.5, height: 40 }} />
+        <Box sx={{ ml: 3 }}>
+          <UserMenu username={userName} userRole="ADMIN" variant="full" />
         </Box>
       </Toolbar>
     </AppBar>

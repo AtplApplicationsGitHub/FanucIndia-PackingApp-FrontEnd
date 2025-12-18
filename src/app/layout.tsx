@@ -1,7 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeToggle } from "@/common/components/ThemeToggle";
 import ThemeRegistry from "@/common/components/ThemeRegistry";
 import AppProviders from "@/common/components/AppProviders";
 import PageAnimationWrapper from "@/common/components/PageAnimationWrapper";
@@ -40,9 +39,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeRegistry>
           <AppProviders>
-          <div className="absolute top-4 right-4 z-50">
-            <ThemeToggle />
-          </div>
           <PageAnimationWrapper>
               {children}
           </PageAnimationWrapper>

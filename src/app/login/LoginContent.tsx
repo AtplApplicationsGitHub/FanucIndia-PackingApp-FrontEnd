@@ -11,6 +11,7 @@ import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
 import Image from "next/image";
+import UserMenu from "@/common/components/UserMenu";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole; email: string } & Record<string, unknown>;
@@ -161,6 +162,9 @@ export default function LoginContent() {
             />
           </Box>
         </Toolbar>
+        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
+          <UserMenu variant="minimal" />
+        </Box>
       </AppBar>
 
       <Box

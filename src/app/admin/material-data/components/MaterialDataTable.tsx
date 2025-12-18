@@ -22,6 +22,8 @@ import {
   DialogActions,
   Button,
   Theme,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 
@@ -161,6 +163,10 @@ export default function MaterialDataTable({
   const [remarkText, setRemarkText] = useState("");
   const [savingRemark, setSavingRemark] = useState(false);
 
+  const [isMandatoryMode, setIsMandatoryMode] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover,
     color: (theme: Theme) => theme.palette.text.primary,
@@ -191,16 +197,21 @@ export default function MaterialDataTable({
     },
   };
 
-  const handleOpenRemarks = (row: MaterialRow) => {
+  const handleOpenRemarks = (row: MaterialRow, mandatory = false) => {
     setCurrentRemarkRow(row);
     setRemarkText(row.remarks || "");
+    setIsMandatoryMode(mandatory);
     setRemarksDialogOpen(true);
   };
 
   const handleCloseRemarks = () => {
+    if (isMandatoryMode && !remarkText.trim()) {
+       return; 
+    }
     setRemarksDialogOpen(false);
     setCurrentRemarkRow(null);
     setRemarkText("");
+    setIsMandatoryMode(false);
   };
 
   const handleSaveRemarks = async () => {
@@ -208,7 +219,10 @@ export default function MaterialDataTable({
     setSavingRemark(true);
     try {
       await onUpdateRemarks(currentRemarkRow.id, remarkText);
-      handleCloseRemarks();
+      setRemarksDialogOpen(false);
+      setCurrentRemarkRow(null);
+      setRemarkText("");
+      setIsMandatoryMode(false);
     } catch (e) {
       console.error(e);
     } finally {
@@ -267,7 +281,6 @@ export default function MaterialDataTable({
     }
   };
 
-  // Logic to update Packing Stage
   const handlePackingUpdate = async (row: MaterialRow, newValue: number) => {
     if (!onUpdatePackingStage) return;
     const cap = Math.min(row.reqQuantity, row.issueStage);
@@ -281,6 +294,13 @@ export default function MaterialDataTable({
       }
       const updated = await onUpdatePackingStage(row.materialCode, newValue, row.id);
       if (!updated) throw new Error("Update failed: Server returned no data.");
+
+      if (newValue === row.reqQuantity && row.remarksRequired && !row.remarks) {
+          setSnackbarMessage(`Remarks Mandatory for ${row.materialCode}`);
+          setSnackbarOpen(true);
+          handleOpenRemarks(row, true); 
+      }
+
     } catch (error) {
       if (error instanceof Error && onProcessRowUpdateError) {
         onProcessRowUpdateError(error);
@@ -477,34 +497,42 @@ export default function MaterialDataTable({
             value={remarkText}
             onChange={(e) => setRemarkText(e.target.value)}
             variant="outlined"
+            error={isMandatoryMode && !remarkText.trim()}
+            helperText={isMandatoryMode && !remarkText.trim() ? "Remarks are mandatory." : ""}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button 
-            onClick={handleDeleteRemarks} 
-            sx={{ ...deleteButtonSx, mr: 'auto' }}
-            disabled={savingRemark}
-          >
-            DELETE
-          </Button>
-          <Button 
-            onClick={handleCloseRemarks} 
-            sx={buttonSx}
-            disabled={savingRemark}
-          >
-            CANCEL
-          </Button>
-          <Button 
-            onClick={handleSaveRemarks} 
-            sx={buttonSx}
-            disabled={savingRemark}
-          >
-            {savingRemark ? "SAVING..." : "SAVE"}
-          </Button>
+            {!isMandatoryMode && (
+                <Button 
+                    onClick={handleCloseRemarks} 
+                    sx={buttonSx}
+                    disabled={savingRemark}
+                >
+                    CANCEL
+                </Button>
+            )}
+            
+            <Button 
+                onClick={handleSaveRemarks} 
+                sx={buttonSx}
+                disabled={savingRemark || (isMandatoryMode && !remarkText.trim())}
+            >
+                {savingRemark ? "SAVING..." : "SAVE"}
+            </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="warning" sx={{ width: '100%', fontWeight: 'bold' }} onClose={() => setSnackbarOpen(false)}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
       
-      {/* --- Pagination Component --- */}
       <TablePagination
         rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"

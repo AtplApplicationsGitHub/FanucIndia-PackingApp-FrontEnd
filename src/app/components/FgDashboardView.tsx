@@ -20,6 +20,10 @@ import {
   InputBase,
   LinearProgress,
   Typography,
+  FormControl, 
+  InputLabel,  
+  Select,      
+  MenuItem,    
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -27,7 +31,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import dayjs from "dayjs";
-import { API } from "@/common/lib/endpoints";
+import { API, API_BASE_URL } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -131,22 +135,51 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
   },
 };
 
+const STATUS_OPTIONS = [
+  "None",
+  "R105",
+  "W105",
+  "F105",
+  "Dispatched"
+];
+
 export default function FgDashboardView() {
   const theme = useTheme();
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
+  const [paymentFilter, setPaymentFilter] = useState(""); 
+  const [zoneFilter, setZoneFilter] = useState("");       
+  const [statusFilter, setStatusFilter] = useState("");   
+
+  const [salesZones, setSalesZones] = useState<{id: number, name: string}[]>([]); 
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error";
   } | null>(null);
 
-  // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalRows, setTotalRows] = useState(0);
+
+  useEffect(() => {
+    const fetchZones = async () => {
+      try {
+        const res = await authFetch(`${API_BASE_URL}/lookup/sales-zones`);
+        if (res.ok) {
+          const data = await res.json();
+          setSalesZones(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch sales zones", e);
+      }
+    };
+    fetchZones();
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -158,7 +191,10 @@ export default function FgDashboardView() {
       if (date) {
         params.append("date", dayjs(date).format("YYYY-MM-DD"));
       }
-      // API expects 1-based page
+      if (paymentFilter) params.append("payment", paymentFilter);
+      if (zoneFilter) params.append("zone", zoneFilter);
+      if (statusFilter) params.append("status", statusFilter);
+
       params.append("page", (page + 1).toString());
       params.append("limit", rowsPerPage.toString());
 
@@ -177,7 +213,7 @@ export default function FgDashboardView() {
     } finally {
       setLoading(false);
     }
-  }, [search, date, page, rowsPerPage]);
+  }, [search, date, paymentFilter, zoneFilter, statusFilter, page, rowsPerPage]);
 
   useEffect(() => {
     fetchData();
@@ -259,7 +295,19 @@ export default function FgDashboardView() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={3}>
-        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 2, md: 2 },
+            width: { xs: "100%", md: "auto" },
+            mx: { xs: 0, md: "auto" }, 
+            alignItems: { md: "center" },
+            justifyContent: "center",  
+            flexWrap: "wrap",
+            mb: 3
+          }}
+        >
           <Paper
             component="form"
             onSubmit={(e) => e.preventDefault()}
@@ -267,7 +315,7 @@ export default function FgDashboardView() {
               p: "2px 4px",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 400 },
+              width: { xs: "100%", sm: 220 }, 
               border: "1px solid #e0e0e0",
             }}
           >
@@ -291,22 +339,78 @@ export default function FgDashboardView() {
               <SearchIcon />
             </IconButton>
           </Paper>
+
+          <FormControl size="small" sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}>
+            <InputLabel>Payment</InputLabel>
+            <Select
+              value={paymentFilter}
+              label="Payment"
+              onChange={(e) => {
+                setPaymentFilter(e.target.value);
+                setPage(0); 
+              }}
+            >
+              <MenuItem value=""><em>All</em></MenuItem>
+              <MenuItem value="true">Yes</MenuItem>
+              <MenuItem value="false">No</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+            <InputLabel>Sales Zone</InputLabel>
+            <Select
+              value={zoneFilter}
+              label="Sales Zone"
+              onChange={(e) => {
+                setZoneFilter(e.target.value);
+                setPage(0);
+              }}
+            >
+              <MenuItem value=""><em>All Zones</em></MenuItem>
+              {salesZones.map((zone) => (
+                <MenuItem key={zone.id} value={String(zone.id)}>
+                  {zone.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Status"
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
+            >
+              <MenuItem value=""><em>All Statuses</em></MenuItem>
+              {STATUS_OPTIONS.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <DatePicker
             label="Delivery Date"
             value={date ? dayjs(date) : null}
-            onChange={(newValue) =>
-              setDate(newValue ? newValue.toDate() : null)
-            }
+            onChange={(newValue) => {
+              setDate(newValue ? newValue.toDate() : null);
+              setPage(0);
+            }}
             slotProps={{
               field: {
                 clearable: true,
                 onClear: () => setDate(null),
               },
               textField: {
-                size: "medium",
+                size: "small", 
                 variant: "outlined",
                 sx: {
-                  minWidth: 170,
+                  minWidth: 150,
                   bgcolor: "background.paper",
                   "& .MuiOutlinedInput-root": { borderRadius: 1 },
                 },

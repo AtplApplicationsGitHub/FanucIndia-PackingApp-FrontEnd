@@ -32,6 +32,11 @@ export default function AdminDashboard() {
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
 
+  // [ADD] New Filter States
+  const [paymentFilter, setPaymentFilter] = React.useState("");
+  const [zoneFilter, setZoneFilter] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("");
+
   const admin = useAdminDashboard();
   const router = useRouter();
   const {
@@ -98,6 +103,30 @@ export default function AdminDashboard() {
       router.push(`/orders/${erpUploadOrder.id}`);
     }
   };
+
+  const displayedOrders = React.useMemo(() => {
+    if (!admin.orders) return [];
+    
+    return admin.orders.filter((order) => {
+      if (paymentFilter) {
+        const isPaid = String(order.paymentClearance);
+        if (isPaid !== paymentFilter) return false;
+      }
+
+      if (zoneFilter) {
+        if (String(order.salesZoneId) !== zoneFilter) return false;
+      }
+
+      if (statusFilter) {
+        if (statusFilter === "None") {
+           if (order.status && order.status.trim() !== "") return false;
+        } else {
+           if (order.status !== statusFilter) return false;
+        }
+      }
+      return true;
+    });
+  }, [admin.orders, paymentFilter, zoneFilter, statusFilter]);
 
   return (
     <>
@@ -168,6 +197,13 @@ export default function AdminDashboard() {
                     admin.setSearchProduct(val);
                     admin.setCurrentPage(1);
                   }}
+                  paymentFilter={paymentFilter}
+                  onPaymentFilterChange={setPaymentFilter}
+                  zoneFilter={zoneFilter}
+                  onZoneFilterChange={setZoneFilter}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  salesZones={admin.lookup?.salesZones ?? []} 
                   startDate={admin.startDate}
                   onStartDateChange={(date: Date | null) => {
                     admin.setStartDate(date);
@@ -180,13 +216,16 @@ export default function AdminDashboard() {
                   }}
                   onClear={() => {
                     admin.handleClearFilters();
+                    setPaymentFilter("");
+                    setZoneFilter("");
+                    setStatusFilter("");
                   }}
                 />
               </Box>
             </motion.div>
             <Paper elevation={0} sx={{ width: "100%", mb: 2, px: { xs: 1, md: 2 }, py: 1, bgcolor: "background.paper" }}>
               <AdminOrdersTable
-                orders={admin.orders}
+                orders={displayedOrders} 
                 lookup={admin.lookup}
                 currentPage={admin.currentPage}
                 pageSize={admin.pageSize}

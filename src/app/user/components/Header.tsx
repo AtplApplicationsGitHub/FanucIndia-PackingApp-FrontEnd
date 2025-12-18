@@ -10,8 +10,10 @@ import LogoutButton from "@/common/components/LogoutButton";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme } from "@mui/material";
 import Image from "next/image"; 
+import UserMenu from "@/common/components/UserMenu";
 
 type Props = {
+  userName: string;
   view: UserDashboardView;
   setView: (view: UserDashboardView) => void;
 };
@@ -36,6 +38,7 @@ const menuItems = [
 ];
 
 export default function UserDashboardHeader({
+  userName,
   view,
   setView,
 }: Props) {
@@ -134,8 +137,8 @@ export default function UserDashboardHeader({
           </Box>
         </Box>
 
-        <Box sx={{ ml: 3, whiteSpace: "nowrap" }}>
-          <LogoutButton sx={{ px: 4, py: 1.5, height: 40 }} />
+        <Box sx={{ ml: 3 }}>
+          <UserMenu username={userName} userRole="USER" variant="full" />
         </Box>
       </Toolbar>
     </AppBar>

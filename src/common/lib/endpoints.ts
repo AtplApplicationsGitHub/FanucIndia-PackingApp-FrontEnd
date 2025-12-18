@@ -70,6 +70,9 @@ export const API = {
     // Get Order Details by ID
     GET_ORDER_DETAILS: (id: number) =>                     `${API_BASE_URL}/user-dashboard/orders/${id}`,
   },
+  USER: {
+    RESET_PASSWORD:                          `${API_BASE_URL}/users/reset-password`,
+  },
   SO_SEARCH: {
     BY_SO_NUMBER: (soNumber: string) =>      `${API_BASE_URL}/so-search/${soNumber}`,
   },

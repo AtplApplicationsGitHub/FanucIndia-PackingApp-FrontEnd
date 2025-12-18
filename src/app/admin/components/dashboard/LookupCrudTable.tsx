@@ -20,6 +20,9 @@ import {
   useTheme,
   alpha,
   Theme,
+  Radio,           
+  RadioGroup,      
+  FormControlLabel,
 } from "@mui/material";
 import {
   MoreVertical,
@@ -180,29 +183,81 @@ const LookupCrudTable: React.FC<Props> = ({
           >
             {keys
               .filter((key) => key !== "id")
-              .map((key, index) => (
-                <input
-                  key={key}
-                  ref={index === 0 ? firstAddInputRef : undefined}
-                  autoFocus={index === 0}
-                  value={
-                    typeof addObj[key] === "boolean"
-                      ? String(addObj[key])
-                      : (addObj[key] as string ?? "")
-                  }
-                  onChange={(e) => onAddChange(key, e.target.value)}
-                  placeholder={key}
-                  className="MuiInputBase-input MuiInput-input"
-                  style={{
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 4,
-                    padding: 6,
-                    width: 260,
-                    maxWidth: "100%",
-                    background: "inherit",
-                  }}
-                />
-              ))}
+              .map((key, index) => {
+                // [UPDATED] Check for boolean columns to render Radio Buttons
+                if (key === "acceptBulkData" || key === "remarksRequired") {
+                  const valStr = String(addObj[key]);
+                  return (
+                    <Box 
+                      key={key} 
+                      sx={{ 
+                        border: "1px solid #e0e0e0", 
+                        borderRadius: 1, 
+                        px: 1, 
+                        height: 36, // Match approximate input height
+                        display: 'flex', 
+                        alignItems: 'center',
+                        bgcolor: 'background.paper'
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ mr: 1, fontWeight: 'bold', color: 'text.secondary' }}>
+                        {key === "acceptBulkData" ? "Accept Bulk:" : "Remarks Req:"}
+                      </Typography>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            size="small"
+                            checked={valStr === "true"}
+                            onChange={() => onAddChange(key, "true")}
+                            sx={{ p: 0.5 }}
+                          />
+                        }
+                        label={<Typography variant="body2">Yes</Typography>}
+                        sx={{ mr: 1, ml: 0 }}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            size="small"
+                            checked={valStr === "false"}
+                            onChange={() => onAddChange(key, "false")}
+                            sx={{ p: 0.5 }}
+                          />
+                        }
+                        label={<Typography variant="body2">No</Typography>}
+                        sx={{ mr: 0, ml: 0 }}
+                      />
+                    </Box>
+                  );
+                }
+
+                // [EXISTING] Standard Input for other fields
+                return (
+                  <input
+                    key={key}
+                    ref={index === 0 ? firstAddInputRef : undefined}
+                    autoFocus={index === 0}
+                    value={
+                      typeof addObj[key] === "boolean"
+                        ? String(addObj[key])
+                        : (addObj[key] as string ?? "")
+                    }
+                    onChange={(e) => onAddChange(key, e.target.value)}
+                    placeholder={key}
+                    className="MuiInputBase-input MuiInput-input"
+                    style={{
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 4,
+                      padding: 6,
+                      width: 260,
+                      maxWidth: "100%",
+                      background: "inherit",
+                    }}
+                  />
+                );
+              })}
+            
+            {/* ... Save and Cancel Buttons ... */}
             <IconButton
               color="primary"
               onClick={() => onSave(type, ADD_ROW_ID)}
@@ -212,6 +267,8 @@ const LookupCrudTable: React.FC<Props> = ({
                   if (requiredKeys && !requiredKeys.includes(k)) {
                     return false;
                   }
+                  // Allow boolean fields to pass validation
+                  if (k === "acceptBulkData" || k === "remarksRequired") return false;
                   return typeof addObj[k] !== "string" || !addObj[k]?.toString().trim();
                 })
               }
@@ -302,7 +359,7 @@ const LookupCrudTable: React.FC<Props> = ({
                     backgroundColor:
                       index % 2 === 0
                         ? "inherit"
-                        : alpha(theme.palette.primary.main, 0.25), // Light Yellow for alternate rows
+                        : alpha(theme.palette.primary.main, 0.25), 
                     "&:hover": {
                       backgroundColor: alpha(theme.palette.action.hover, 0.05),
                     },
@@ -311,33 +368,61 @@ const LookupCrudTable: React.FC<Props> = ({
                   {keys.map((col) => {
                     const field = col === "type" ? "_type" : col;
                     const key = field === "_type" ? "type" : field;
+                    const isBooleanCol = key === "acceptBulkData" || key === "remarksRequired";
 
                     return (
                       <TableCell key={col}>
                         {isEditing && field !== "id" ? (
-                          <input
-                            value={
-                              typeof editObj[key] === "boolean"
-                                ? String(editObj[key])
-                                : (editObj[key] as string ?? "")
-                            }
-                            onChange={(e) =>
-                              onEditChange(key, e.target.value)
-                            }
-                            className="MuiInputBase-input MuiInput-input"
-                            style={{
-                              border: "1px solid #e0e0e0",
-                              borderRadius: 4,
-                              padding: "4px 8px",
-                              width: "100%",
-                              background: theme.palette.background.paper,
-                              color: theme.palette.text.primary,
-                            }}
-                          />
+                          isBooleanCol ? (
+                            <Box display="flex" alignItems="center">
+                              <FormControlLabel
+                                control={
+                                  <Radio
+                                    size="small"
+                                    checked={String(editObj[key]) === "true"}
+                                    onChange={() => onEditChange(key, "true")}
+                                  />
+                                }
+                                label="Yes"
+                                sx={{ mr: 2 }}
+                              />
+                              <FormControlLabel
+                                control={
+                                  <Radio
+                                    size="small"
+                                    checked={String(editObj[key]) === "false"}
+                                    onChange={() => onEditChange(key, "false")}
+                                  />
+                                }
+                                label="No"
+                                sx={{ mr: 0 }}
+                              />
+                            </Box>
+                          ) : (
+                            <input
+                              value={
+                                typeof editObj[key] === "boolean"
+                                  ? String(editObj[key])
+                                  : (editObj[key] as string ?? "")
+                              }
+                              onChange={(e) => onEditChange(key, e.target.value)}
+                              className="MuiInputBase-input MuiInput-input"
+                              style={{
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 4,
+                                padding: "4px 8px",
+                                width: "100%",
+                                background: theme.palette.background.paper,
+                                color: theme.palette.text.primary,
+                              }}
+                            />
+                          )
                         ) : field === "id" ? (
                           row[field]
                         ) : (
-                          String(row[field] ?? "")
+                          isBooleanCol 
+                            ? (String(row[field]) === "true" ? "Yes" : "No")
+                            : String(row[field] ?? "")
                         )}
                       </TableCell>
                     );
