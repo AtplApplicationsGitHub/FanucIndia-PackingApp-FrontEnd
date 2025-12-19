@@ -6,7 +6,6 @@ import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { Home, Package, Truck, Grid } from "lucide-react";
-import LogoutButton from "@/common/components/LogoutButton";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme } from "@mui/material";
 import Image from "next/image"; 

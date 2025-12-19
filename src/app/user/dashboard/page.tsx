@@ -23,6 +23,7 @@ export default function UserDashboard() {
     error,
     alert,
     setAlert,
+    userName,
   } = useUserDashboard();
 
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
@@ -97,6 +98,7 @@ export default function UserDashboard() {
         }}
       >
         <UserDashboardHeader
+          userName={userName}
           view={view}
           setView={setView}
         />

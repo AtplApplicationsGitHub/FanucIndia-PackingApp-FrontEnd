@@ -188,15 +188,6 @@ export default function MaterialDataTable({
     "&:disabled": { opacity: 0.6, cursor: "not-allowed" },
   };
 
-  const deleteButtonSx = {
-    ...buttonSx, 
-    "&:hover": {
-      bgcolor: "#D00000", 
-      color: "#ffffff",   
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-    },
-  };
-
   const handleOpenRemarks = (row: MaterialRow, mandatory = false) => {
     setCurrentRemarkRow(row);
     setRemarkText(row.remarks || "");
@@ -223,19 +214,6 @@ export default function MaterialDataTable({
       setCurrentRemarkRow(null);
       setRemarkText("");
       setIsMandatoryMode(false);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSavingRemark(false);
-    }
-  };
-
-  const handleDeleteRemarks = async () => {
-    if (!currentRemarkRow || !onUpdateRemarks) return;
-    setSavingRemark(true);
-    try {
-      await onUpdateRemarks(currentRemarkRow.id, ""); 
-      handleCloseRemarks();
     } catch (e) {
       console.error(e);
     } finally {

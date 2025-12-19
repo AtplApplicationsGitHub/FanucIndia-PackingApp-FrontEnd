@@ -78,7 +78,12 @@ export interface User {
   email: string;
   role: UserRole;
   createdAt: string; 
-  updatedAt: string; 
+  updatedAt: string;
+  accessPickPack?: boolean;
+  accessLabelPrint?: boolean;
+  accessMaterialFgTransfer?: boolean;
+  accessMaterialDispatch?: boolean;
+  accessVehicleEntry?: boolean; 
 }
 
 // types/status-cards.ts// types/admin.ts

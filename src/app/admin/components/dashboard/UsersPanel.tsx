@@ -5,8 +5,7 @@ import Button from "@mui/material/Button";
 import { Plus } from "lucide-react";
 import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
 import AdminUsersTable from "@/app/admin/components/dashboard/UsersTable";
-import AdminUserFormModal from "@/app/admin/components/dashboard/UserFormModal";
-import { UserRole } from "@/app/admin/components/types/admin";
+import AdminUserFormModal, { UserSubmitData } from "@/app/admin/components/dashboard/UserFormModal"; // Import UserSubmitData
 
 interface AdminManageUsersPanelProps {
   showSnackbar: (msg: string, severity: "success" | "error" | "info" | "warning") => void;
@@ -41,17 +40,16 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
     setModalOpen(true);
   };
 
-  const handleSubmit = (
-    data: { name: string; email: string; role: UserRole; password?: string },
-    id?: number
-  ) => {
+  // Update signature to use UserSubmitData
+  const handleSubmit = (data: UserSubmitData, id?: number) => {
     if (id) {
       const updateData = { ...data };
       if (!updateData.password) delete updateData.password;
       updateUser(id, updateData);
     } else {
       if (!data.password) return;
-      createUser(data as { name: string; email: string; role: UserRole; password: string });
+      // We know password is present here because validation in Modal ensures it
+      createUser(data as UserSubmitData & { password: string }); 
     }
   };
 
@@ -60,15 +58,15 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
       <Stack
         direction="row"
         alignItems="center"
-        justifyContent="flex-end" // Align button to the right since heading is gone
+        justifyContent="flex-end"
         mb={4}
       >
         <Button
           onClick={onCreate}
           startIcon={<Plus size={18} />}
           sx={{
-            bgcolor: (theme) => theme.palette.action.hover, // Grey by default
-            color: (theme) => theme.palette.text.primary,   // Dark text
+            bgcolor: (theme) => theme.palette.action.hover,
+            color: (theme) => theme.palette.text.primary,
             borderRadius: 0,
             clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
             fontWeight: 600,
@@ -80,7 +78,7 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
             boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             transition: "all 0.2s ease-in-out",
             "&:hover": {
-              bgcolor: (theme) => theme.palette.primary.main, // Fanuc Yellow on hover
+              bgcolor: (theme) => theme.palette.primary.main,
               color: (theme) => theme.palette.primary.contrastText,
               boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
               "& .MuiSvgIcon-root, & svg": {

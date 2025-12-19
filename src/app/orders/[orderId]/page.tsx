@@ -285,11 +285,19 @@ export default function MaterialDataPage() {
         );
       case "USER":
         return (
-          <UserDashboardHeader view={"pick_pack"} setView={handleUserNav} />
+          <UserDashboardHeader 
+            userName={currentUser.name} 
+            view={"pick_pack"} 
+            setView={handleUserNav} 
+          />
         );
       case "SALES":
         return (
-          <SalesDashboardHeader view={"orders"} setView={handleSalesNav} />
+          <SalesDashboardHeader
+            userName={currentUser.name} 
+            view={"orders"} 
+            setView={handleSalesNav} 
+          />
         );
       default:
         return null;

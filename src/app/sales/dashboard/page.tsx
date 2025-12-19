@@ -19,7 +19,7 @@ export default function SalesDashboard() {
     orders,
     lookup,
     error,
-    // userName, // ← Removed: assigned but never used
+    userName, 
     view,
     setView,
     searchTerm,
@@ -74,7 +74,7 @@ export default function SalesDashboard() {
           ) : undefined}
         </Snackbar>
 
-        <SalesDashboardHeader view={view} setView={setView} />
+        <SalesDashboardHeader userName={userName} view={view} setView={setView} />
 
         {/* HOME VIEW - Beautiful Dashboard */}
         {view === "home" && <HomeDashboard />}

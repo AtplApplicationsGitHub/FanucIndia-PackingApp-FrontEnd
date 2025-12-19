@@ -15,7 +15,6 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react";
-import LogoutButton from "@/common/components/LogoutButton";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image"; 

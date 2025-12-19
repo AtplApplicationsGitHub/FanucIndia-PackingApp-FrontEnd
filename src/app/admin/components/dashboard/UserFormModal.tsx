@@ -19,26 +19,53 @@ import {
   IconButton,
   useTheme, 
   Theme,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
+  SelectChangeEvent,
 } from "@mui/material";
 import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
 import { User, UserRole } from "@/app/admin/components/types/admin";
 import { API } from '@/common/lib/endpoints';
 
+export interface UserSubmitData {
+  name: string;
+  email: string;
+  role: UserRole;
+  password?: string;
+  accessPickPack?: boolean;
+  accessLabelPrint?: boolean;
+  accessMaterialFgTransfer?: boolean;
+  accessMaterialDispatch?: boolean;
+  accessVehicleEntry?: boolean;
+}
+
 interface Props {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSubmit: (
-    data: {
-      name: string;
-      email: string;
-      role: UserRole;
-      password?: string;
-    },
-    id?: number
-  ) => void;
+  onSubmit: (data: UserSubmitData, id?: number) => void;
   editingUser: User | null;
 }
+
+const MOBILE_MODULES = [
+  { label: "Pick & Pack", key: "accessPickPack" },
+  { label: "Customer Label Print", key: "accessLabelPrint" },
+  { label: "Material FG/Transfer", key: "accessMaterialFgTransfer" },
+  { label: "Material Dispatch", key: "accessMaterialDispatch" },
+  { label: "Vehicle Entry", key: "accessVehicleEntry" },
+];
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
 
 const roles: UserRole[] = ["ADMIN", "SALES", "USER"];
 const passwordChecks = [
@@ -104,6 +131,7 @@ const AdminUserFormModal: React.FC<Props> = ({
   >(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
   const { ref: nameFieldRef } = register("name", {
     required: "Name is required",
@@ -124,7 +152,6 @@ const AdminUserFormModal: React.FC<Props> = ({
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
   const role = watch("role");
-
   const isUserRole = role === "USER";
 
   const passwordStatus = useMemo(() => {
@@ -165,16 +192,32 @@ const AdminUserFormModal: React.FC<Props> = ({
   }, [email, editingUser]);
 
   useEffect(() => {
-    if (editingUser) {
-      setValue("name", editingUser.name);
-      setValue("email", editingUser.email);
-      setValue("password", "");
-      setValue("confirmPassword", "");
-      setValue("role", editingUser.role);
-    } else {
-      reset();
-    }
-  }, [editingUser, open, setValue, reset]);
+  if (editingUser) {
+    setValue("name", editingUser.name);
+    setValue("email", editingUser.email);
+    setValue("password", "");
+    setValue("confirmPassword", "");
+    setValue("role", editingUser.role);
+
+    const currentAccess: string[] = [];
+    if (editingUser.accessPickPack) currentAccess.push("accessPickPack");
+    if (editingUser.accessLabelPrint) currentAccess.push("accessLabelPrint");
+    if (editingUser.accessMaterialFgTransfer) currentAccess.push("accessMaterialFgTransfer");
+    if (editingUser.accessMaterialDispatch) currentAccess.push("accessMaterialDispatch");
+    if (editingUser.accessVehicleEntry) currentAccess.push("accessVehicleEntry");
+    setSelectedModules(currentAccess);
+  } else {
+    reset();
+    setSelectedModules([]); 
+  }
+}, [editingUser, open, setValue, reset]);
+
+const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
+  const {
+    target: { value },
+  } = event;
+  setSelectedModules(typeof value === 'string' ? value.split(',') : value);
+};
 
   const handleClose = () => {
     setOpen(false);
@@ -184,17 +227,29 @@ const AdminUserFormModal: React.FC<Props> = ({
     const { name, email, role, password } = data;
     if (!role) return;
 
-    const payload: {
-      name: string;
-      email: string;
-      role: UserRole;
-      password?: string;
-    } = {
+    const payload: UserSubmitData = {
       name: name.trim(),
       email: email.trim(),
       role,
+      accessPickPack: false,
+      accessLabelPrint: false,
+      accessMaterialFgTransfer: false,
+      accessMaterialDispatch: false,
+      accessVehicleEntry: false,
     };
-    if (password) payload.password = password;
+
+    if (password) {
+      payload.password = password;
+    }
+
+    if (role === 'USER') {
+      payload.accessPickPack = selectedModules.includes("accessPickPack");
+      payload.accessLabelPrint = selectedModules.includes("accessLabelPrint");
+      payload.accessMaterialFgTransfer = selectedModules.includes("accessMaterialFgTransfer");
+      payload.accessMaterialDispatch = selectedModules.includes("accessMaterialDispatch");
+      payload.accessVehicleEntry = selectedModules.includes("accessVehicleEntry");
+    }
+
     if (editingUser) {
       onSubmit(payload, editingUser.id);
     } else {
@@ -211,10 +266,9 @@ const AdminUserFormModal: React.FC<Props> = ({
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
     (!!password && (!allSatisfied || !passwordsMatch));
 
-  // Updated Reusable sx prop for buttons
   const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
-    color: (theme: Theme) => theme.palette.text.primary,   // Dark text
+    bgcolor: (theme: Theme) => theme.palette.action.hover, 
+    color: (theme: Theme) => theme.palette.text.primary,   
     borderRadius: 0,
     clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
     fontWeight: 600,
@@ -226,7 +280,7 @@ const AdminUserFormModal: React.FC<Props> = ({
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main, // Fanuc Yellow on hover
+      bgcolor: (theme: Theme) => theme.palette.primary.main, 
       color: (theme: Theme) => theme.palette.primary.contrastText,
       boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
       "& .MuiSvgIcon-root, & svg": {
@@ -338,6 +392,33 @@ const AdminUserFormModal: React.FC<Props> = ({
               </Typography>
             )}
           </FormControl>
+
+          {isUserRole && (
+            <FormControl fullWidth size="small">
+              <InputLabel id="mobile-access-label">Module Access</InputLabel>
+              <Select
+                labelId="mobile-access-label"
+                multiple
+                value={selectedModules}
+                onChange={handleModuleChange}
+                input={<OutlinedInput label="Module Access" />}
+                renderValue={(selected) => 
+                  MOBILE_MODULES
+                    .filter(m => selected.includes(m.key))
+                    .map(m => m.label)
+                    .join(', ')
+                }
+                MenuProps={MenuProps}
+              >
+                {MOBILE_MODULES.map((module) => (
+                  <MenuItem key={module.key} value={module.key}>
+                    <Checkbox checked={selectedModules.indexOf(module.key) > -1} />
+                    <ListItemText primary={module.label} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           {role && (
             <>

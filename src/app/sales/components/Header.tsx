@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter, usePathname } from "next/navigation"; 
 import { AppBar, Toolbar, Box, useTheme, Button } from "@mui/material";
-import LogoutButton from "@/common/components/LogoutButton";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { ClipboardList, BarChart3, Search } from "lucide-react"; 
 import Image from "next/image";
