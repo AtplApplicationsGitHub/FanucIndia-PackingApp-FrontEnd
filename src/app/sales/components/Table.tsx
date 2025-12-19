@@ -248,11 +248,11 @@ export default function SalesOrdersTable({
       <TablePagination
         component="div"
         count={totalOrders}
-        page={paginationModel.page} // 0-based index
+        page={paginationModel.page}
         onPageChange={handleChangePage}
         rowsPerPage={paginationModel.pageSize}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rowsPerPageOptions={[10, 20, 50, 100]}
         sx={{
           borderTop: "1px solid",
           borderColor: "divider",

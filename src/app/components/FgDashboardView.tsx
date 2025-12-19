@@ -23,7 +23,8 @@ import {
   FormControl, 
   InputLabel,  
   Select,      
-  MenuItem,    
+  MenuItem,
+  Button,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -35,6 +36,7 @@ import { API, API_BASE_URL } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
+import { X } from "lucide-react";
 
 // Defined Color Codes per requirements
 const STATUS_COLORS = {
@@ -161,6 +163,15 @@ export default function FgDashboardView() {
     message: string;
     severity: "success" | "error";
   } | null>(null);
+
+  const handleClear = () => {
+    setSearch("");
+    setPaymentFilter("");
+    setZoneFilter("");
+    setStatusFilter("");
+    setDate(null);
+    setPage(0);
+  };
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -324,13 +335,16 @@ export default function FgDashboardView() {
               placeholder="Search"
               inputProps={{ "aria-label": "search" }}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             />
             {search && (
               <IconButton
                 sx={{ p: "10px" }}
                 aria-label="clear"
-                onClick={() => setSearch("")}
+                onClick={() => {
+                  setSearch("");
+                  setPage(0); 
+                }}
               >
                 <ClearIcon />
               </IconButton>
@@ -417,6 +431,34 @@ export default function FgDashboardView() {
               },
             }}
           />
+          <Button
+            onClick={handleClear}
+            startIcon={<X size={18} />}
+            sx={{
+              bgcolor: (theme) => theme.palette.action.hover,
+              color: (theme) => theme.palette.text.primary,
+              borderRadius: 0,
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              fontWeight: 600,
+              fontSize: 15,
+              minWidth: 100, 
+              height: 40,
+              px: 2,
+              textTransform: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
+                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+                "& .MuiSvgIcon-root, & svg": {
+                  color: "#000",
+                },
+              },
+            }}
+          >
+            CLEAR
+          </Button>
         </Box>
 
         <Paper sx={{ width: "100%", overflow: "hidden", borderRadius: 2 }}>

@@ -72,6 +72,10 @@ export function useAdminDashboard() {
   const [searchInput, setSearchInput] = useState<string>("");
   const [searchProduct, setSearchProduct] = useState<string>("");
 
+  const [paymentFilter, setPaymentFilter] = useState<string>("");
+  const [zoneFilter, setZoneFilter] = useState<string>("");   
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   
@@ -167,6 +171,9 @@ export function useAdminDashboard() {
             ? { limit: 10000 }
             : { page: currentPage, limit: pageSize }),
           search: searchInput || undefined,
+          paymentClearance: paymentFilter || undefined,
+          salesZoneId: zoneFilter || undefined,
+          statusFilter: statusFilter || undefined,
           startDate: formatDateLocalYYYYMMDD(startDate ?? undefined),
           endDate: formatDateLocalYYYYMMDD(endDate ?? undefined),
           sortBy,
@@ -194,7 +201,7 @@ export function useAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchProduct, searchInput, startDate, endDate, sortBy, sortOrder]);
+  }, [currentPage, pageSize, searchProduct, searchInput, paymentFilter, zoneFilter, statusFilter, startDate, endDate, sortBy, sortOrder]);
 
   useEffect(() => {
     if (view === "orders") {
@@ -355,6 +362,9 @@ export function useAdminDashboard() {
 
   const handleClearFilters = () => {
     setSearchInput("");
+    setPaymentFilter("");
+    setZoneFilter("");
+    setStatusFilter("");
     setStartDate(null);
     setEndDate(null);
     setCurrentPage(1);
@@ -653,6 +663,13 @@ export function useAdminDashboard() {
 
     confirmDelete,
     setConfirmDelete,
+
+    paymentFilter,
+    setPaymentFilter,
+    zoneFilter,
+    setZoneFilter,
+    statusFilter,
+    setStatusFilter,
 
     snackbar,
     onSnackbarClose: () => setSnackbar((prev) => ({ ...prev, open: false })),

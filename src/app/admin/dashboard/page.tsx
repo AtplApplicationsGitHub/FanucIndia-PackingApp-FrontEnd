@@ -12,13 +12,13 @@ import AdminOrderEditModal from "@/app/admin/components/dashboard/EditModal";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { useAdminDashboard } from "@/app/admin/components/hooks/useAdminDashboard";
 import axios from "axios";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { SalesOrder, EditableField } from "@/app/admin/components/types/admin";
 import { useRouter } from "next/navigation";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
-import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard"; 
+import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard";
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -29,20 +29,15 @@ export default function AdminDashboard() {
     severity: "success" | "error" | "info" | "warning";
   }>({ open: false, message: "", severity: "success" });
 
-  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
+  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(
+    null
+  );
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
-
-  // [ADD] New Filter States
-  const [paymentFilter, setPaymentFilter] = React.useState("");
-  const [zoneFilter, setZoneFilter] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState("");
 
   const admin = useAdminDashboard();
   const router = useRouter();
-  const {
-    snackbar: adminSnackbar,
-    onSnackbarClose: handleAdminSnackbarClose,
-  } = admin;
+  const { snackbar: adminSnackbar, onSnackbarClose: handleAdminSnackbarClose } =
+    admin;
 
   const showSnackbar = (
     message: string,
@@ -80,11 +75,11 @@ export default function AdminDashboard() {
 
   const handleDetailedViewClick = async (order: SalesOrder) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await axios.get(API.ADMIN.ERP_MATERIALS_BY_ORDER(order.id), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (res.data && res.data.length > 0) {
         router.push(`/orders/${order.id}`);
       } else {
@@ -92,7 +87,10 @@ export default function AdminDashboard() {
         setIsErpUploadOpen(true);
       }
     } catch (error) {
-      showSnackbar('Could not check for material data. Please try again.', 'error');
+      showSnackbar(
+        "Could not check for material data. Please try again.",
+        "error"
+      );
       console.error("Failed to check ERP materials:", error);
     }
   };
@@ -104,29 +102,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const displayedOrders = React.useMemo(() => {
-    if (!admin.orders) return [];
-    
-    return admin.orders.filter((order) => {
-      if (paymentFilter) {
-        const isPaid = String(order.paymentClearance);
-        if (isPaid !== paymentFilter) return false;
-      }
-
-      if (zoneFilter) {
-        if (String(order.salesZoneId) !== zoneFilter) return false;
-      }
-
-      if (statusFilter) {
-        if (statusFilter === "None") {
-           if (order.status && order.status.trim() !== "") return false;
-        } else {
-           if (order.status !== statusFilter) return false;
-        }
-      }
-      return true;
-    });
-  }, [admin.orders, paymentFilter, zoneFilter, statusFilter]);
+  const displayedOrders = admin.orders;
 
   return (
     <>
@@ -136,7 +112,11 @@ export default function AdminDashboard() {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -147,12 +127,23 @@ export default function AdminDashboard() {
         onClose={handleAdminSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleAdminSnackbarClose} severity={adminSnackbar.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={handleAdminSnackbarClose}
+          severity={adminSnackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {adminSnackbar.message}
         </Alert>
       </Snackbar>
 
-      <Box sx={{ minHeight: "100vh", width: "100%", bgcolor: "background.default", p: 0 }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          width: "100%",
+          bgcolor: "background.default",
+          p: 0,
+        }}
+      >
         <AdminDashboardHeader
           userName={admin.userName}
           view={admin.view}
@@ -197,13 +188,23 @@ export default function AdminDashboard() {
                     admin.setSearchProduct(val);
                     admin.setCurrentPage(1);
                   }}
-                  paymentFilter={paymentFilter}
-                  onPaymentFilterChange={setPaymentFilter}
-                  zoneFilter={zoneFilter}
-                  onZoneFilterChange={setZoneFilter}
-                  statusFilter={statusFilter}
-                  onStatusFilterChange={setStatusFilter}
-                  salesZones={admin.lookup?.salesZones ?? []} 
+                  paymentFilter={admin.paymentFilter}
+                  onPaymentFilterChange={(val) => {
+                    admin.setPaymentFilter(val);
+                    admin.setCurrentPage(1);
+                  }}
+                  zoneFilter={admin.zoneFilter}
+                  onZoneFilterChange={(val) => {
+                    admin.setZoneFilter(val);
+                    admin.setCurrentPage(1);
+                  }}
+                  statusFilter={admin.statusFilter}
+                  onStatusFilterChange={(val) => {
+                    admin.setStatusFilter(val);
+                    admin.setCurrentPage(1);
+                  }}
+                  onClear={admin.handleClearFilters}
+                  salesZones={admin.lookup?.salesZones ?? []}
                   startDate={admin.startDate}
                   onStartDateChange={(date: Date | null) => {
                     admin.setStartDate(date);
@@ -214,25 +215,30 @@ export default function AdminDashboard() {
                     admin.setEndDate(date);
                     admin.setCurrentPage(1);
                   }}
-                  onClear={() => {
-                    admin.handleClearFilters();
-                    setPaymentFilter("");
-                    setZoneFilter("");
-                    setStatusFilter("");
-                  }}
                 />
               </Box>
             </motion.div>
-            <Paper elevation={0} sx={{ width: "100%", mb: 2, px: { xs: 1, md: 2 }, py: 1, bgcolor: "background.paper" }}>
+            <Paper
+              elevation={0}
+              sx={{
+                width: "100%",
+                mb: 2,
+                px: { xs: 1, md: 2 },
+                py: 1,
+                bgcolor: "background.paper",
+              }}
+            >
               <AdminOrdersTable
-                orders={displayedOrders} 
+                orders={displayedOrders}
                 lookup={admin.lookup}
                 currentPage={admin.currentPage}
                 pageSize={admin.pageSize}
                 rowCount={admin.totalOrders}
                 setCurrentPage={admin.setCurrentPage}
                 setPageSize={admin.setPageSize}
-                onDelete={(id: number) => admin.setConfirmDelete({ type: "orders", id })}
+                onDelete={(id: number) =>
+                  admin.setConfirmDelete({ type: "orders", id })
+                }
                 onUpdateInline={onUpdateInline}
                 onEdit={(order: SalesOrder) => {
                   setEditOrder(order);
@@ -246,7 +252,9 @@ export default function AdminDashboard() {
         )}
 
         {admin.view === "master" && <AdminMasterLookupPanel />}
-        {admin.view === "manage" && <AdminManageUsersPanel showSnackbar={showSnackbar} />}
+        {admin.view === "manage" && (
+          <AdminManageUsersPanel showSnackbar={showSnackbar} />
+        )}
         {admin.view === "dispatch" && <DispatchView />}
         {admin.view === "fg_dashboard" && <FgDashboardView />}
 
@@ -284,9 +292,15 @@ export default function AdminDashboard() {
           title="Delete Confirmation"
           description={
             <>
-              Are you sure you want to delete this item? This action cannot be undone.
+              Are you sure you want to delete this item? This action cannot be
+              undone.
               {admin.deleteError && (
-                <Typography variant="caption" color="error" display="block" mt={2}>
+                <Typography
+                  variant="caption"
+                  color="error"
+                  display="block"
+                  mt={2}
+                >
                   {admin.deleteError}
                 </Typography>
               )}
