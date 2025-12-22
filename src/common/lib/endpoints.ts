@@ -140,6 +140,12 @@ export const API = {
     ADMIN_ORDERS_BY_PRODUCT: `${API_BASE_URL}/dashboard/admin-orders-by-product`,
     ADMIN_ORDERS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-orders-by-customer`,
   },
+  SO_CHAT: {
+    MENTION_USERS:                  `${API_BASE_URL}/so-chat/mention-users`,
+    MESSAGES: (soNumber: string) => `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
+    SEND: (soNumber: string) =>     `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
+  },
+
 };
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {

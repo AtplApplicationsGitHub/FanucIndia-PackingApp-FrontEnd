@@ -25,9 +25,11 @@ import MaterialDetails from "../components/MaterialDetails";
 import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
 import { secureDownload, secureView } from "@/common/lib/secure-download";
-import SalesDashboardHeader from "@/app/sales/components/Header"; 
+import SalesDashboardHeader from "@/app/sales/components/Header";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { Theme } from "@mui/material/styles";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import SoChatDrawer from "@/app/components/SoChatDrawer";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -110,8 +112,10 @@ interface MaterialAttachment {
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
 
 const isViewable = (fileName: string) => {
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  return ['pdf', 'jpg', 'jpeg', 'png', 'txt', 'gif', 'webp'].includes(ext || '');
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  return ["pdf", "jpg", "jpeg", "png", "txt", "gif", "webp"].includes(
+    ext || ""
+  );
 };
 
 export default function SoSearchPage() {
@@ -134,10 +138,15 @@ export default function SoSearchPage() {
   const params = useParams<{ soNumber?: string[] }>();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
-  const [vehicleAttachments, setVehicleAttachments] = useState<VehicleAttachment[]>([]);
-  const [currentVehicleEntryId, setCurrentVehicleEntryId] = useState<number | null>(null);
+  const [vehicleAttachments, setVehicleAttachments] = useState<
+    VehicleAttachment[]
+  >([]);
+  const [currentVehicleEntryId, setCurrentVehicleEntryId] = useState<
+    number | null
+  >(null);
 
   const handleOpenVehicleAttachments = (entry: VehicleEntry) => {
     setVehicleAttachments(entry.attachments || []);
@@ -146,9 +155,9 @@ export default function SoSearchPage() {
   };
 
   const handleVehicleAttachmentAction = (
-    entryId: number, 
-    fileName: string, 
-    action: 'view' | 'download'
+    entryId: number,
+    fileName: string,
+    action: "view" | "download"
   ) => {
     const isArchived = data?.isArchived;
     const url = isArchived
@@ -158,9 +167,9 @@ export default function SoSearchPage() {
     const token = localStorage.getItem("token");
 
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.ok ? res.blob() : Promise.reject("Failed"))
-      .then(blob => {
-        if (action === 'view' && isViewable(fileName)) {
+      .then((res) => (res.ok ? res.blob() : Promise.reject("Failed")))
+      .then((blob) => {
+        if (action === "view" && isViewable(fileName)) {
           secureView(blob);
         } else {
           secureDownload(blob, fileName);
@@ -170,9 +179,10 @@ export default function SoSearchPage() {
 
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
-    color: (theme: Theme) => theme.palette.text.primary,   // Dark text
+    color: (theme: Theme) => theme.palette.text.primary, // Dark text
     borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    clipPath:
+      "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
     fontWeight: 600,
     fontSize: 15,
     minWidth: 120,
@@ -304,9 +314,14 @@ export default function SoSearchPage() {
     }
   };
 
-  const handleAttachmentViewOrDownload = (fileId: number, action: 'view' | 'download', fileName?: string) => {
-    const fileObj = materialAttachments.find(f => f.ID === fileId);
-    const resolvedName = fileName || fileObj?.fileName || `attachment_${fileId}`;
+  const handleAttachmentViewOrDownload = (
+    fileId: number,
+    action: "view" | "download",
+    fileName?: string
+  ) => {
+    const fileObj = materialAttachments.find((f) => f.ID === fileId);
+    const resolvedName =
+      fileName || fileObj?.fileName || `attachment_${fileId}`;
 
     const url = data?.isArchived
       ? API.SO_ARCHIVE.DOWNLOAD_ATTACHMENT(fileId)
@@ -315,26 +330,26 @@ export default function SoSearchPage() {
     const token = localStorage.getItem("token");
 
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) return Promise.reject(`Failed to ${action} file`);
         return res.blob();
       })
-      .then(blob => {
-        if (action === 'view' && isViewable(resolvedName)) {
+      .then((blob) => {
+        if (action === "view" && isViewable(resolvedName)) {
           secureView(blob);
         } else {
           secureDownload(blob, resolvedName);
         }
       })
-      .catch(err => setError(err.toString()));
+      .catch((err) => setError(err.toString()));
   };
 
   const handleAttachmentView = (fileId: number) => {
-    handleAttachmentViewOrDownload(fileId, 'view');
+    handleAttachmentViewOrDownload(fileId, "view");
   };
 
   const handleAttachmentDownload = (fileId: number) => {
-    handleAttachmentViewOrDownload(fileId, 'download');
+    handleAttachmentViewOrDownload(fileId, "download");
   };
 
   const handleDispatchAttachmentAction = (
@@ -371,7 +386,7 @@ export default function SoSearchPage() {
         return (
           <AdminDashboardHeader
             userName={userName}
-            view={"home"} 
+            view={"home"}
             setView={(view) => {
               const newView = typeof view === "function" ? view("home") : view;
               sessionStorage.setItem("adminView", newView);
@@ -394,7 +409,7 @@ export default function SoSearchPage() {
         return (
           <SalesDashboardHeader
             userName={userName}
-            view={"home"} 
+            view={"home"}
             setView={(view) => {
               const newView = view as SalesDashboardView;
               sessionStorage.setItem("salesDashboardView", newView);
@@ -425,27 +440,36 @@ export default function SoSearchPage() {
           <Stack direction="row" spacing={2} alignItems="center">
             <Paper
               component="form"
-              onSubmit={(e) => { e.preventDefault(); handleManualSearch(); }}
-              sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400, border: '1px solid #e0e0e0' }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleManualSearch();
+              }}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                width: 400,
+                border: "1px solid #e0e0e0",
+              }}
             >
               <InputBase
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Search"
-                inputProps={{ 'aria-label': 'search' }}
+                inputProps={{ "aria-label": "search" }}
                 value={soNumber}
                 onChange={(e) => setSoNumber(e.target.value)}
               />
-              <IconButton 
-                type="button" 
-                sx={{ p: '10px' }} 
+              <IconButton
+                type="button"
+                sx={{ p: "10px" }}
                 aria-label="search"
                 onClick={handleManualSearch}
                 disabled={loading}
               >
-                <Search /> 
+                <Search />
               </IconButton>
             </Paper>
-            
+
             {/* <Button
               variant="contained" // Keep contained to accept bgcolor sx override
               startIcon={<Search />}
@@ -470,38 +494,62 @@ export default function SoSearchPage() {
               PRINT
             </Button>
 
+            <Button
+              variant="contained"
+              startIcon={<ChatBubbleOutlineIcon />}
+              onClick={() => setChatOpen(true)}
+              sx={buttonSx}
+              disabled={!data?.salesOrder?.saleOrderNumber}
+            >
+              CHAT
+            </Button>
+
+            <SoChatDrawer
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              soNumber={data?.salesOrder?.saleOrderNumber || null}
+              buttonSx={buttonSx}
+            />
+
             {/* ARCHIVE / DELETE BUTTONS */}
-            {userRole === 'ADMIN' && data && (
+            {userRole === "ADMIN" && data && (
               <>
-                {data.salesOrder.status === "Dispatched" && !data.isArchived && (
-                  <Button
-                    variant="contained"
-                    startIcon={<Archive fontSize="small" />}
-                    onClick={() =>
-                      openConfirmation("archive", data.salesOrder.saleOrderNumber)
-                    }
-                    disabled={isActionLoading}
-                    sx={buttonSx}
-                  >
-                    {isActionLoading && confirmAction === "archive" ? (
-                      <CircularProgress size={20} color="inherit" /> 
-                    ) : (
-                      "ARCHIVE"
-                    )}
-                  </Button>
-                )}
+                {data.salesOrder.status === "Dispatched" &&
+                  !data.isArchived && (
+                    <Button
+                      variant="contained"
+                      startIcon={<Archive fontSize="small" />}
+                      onClick={() =>
+                        openConfirmation(
+                          "archive",
+                          data.salesOrder.saleOrderNumber
+                        )
+                      }
+                      disabled={isActionLoading}
+                      sx={buttonSx}
+                    >
+                      {isActionLoading && confirmAction === "archive" ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        "ARCHIVE"
+                      )}
+                    </Button>
+                  )}
                 {data.isArchived && (
                   <Button
                     variant="contained"
                     startIcon={<Delete fontSize="small" />}
                     onClick={() =>
-                      openConfirmation("delete", data.salesOrder.saleOrderNumber)
+                      openConfirmation(
+                        "delete",
+                        data.salesOrder.saleOrderNumber
+                      )
                     }
                     disabled={isActionLoading}
                     sx={buttonSx}
                   >
                     {isActionLoading && confirmAction === "delete" ? (
-                      <CircularProgress size={20} color="inherit" /> 
+                      <CircularProgress size={20} color="inherit" />
                     ) : (
                       "DELETE"
                     )}
@@ -529,7 +577,10 @@ export default function SoSearchPage() {
 
         {data && (
           <>
-            <OrderStatusStepper status={data.salesOrder.status} stepsData={data.salesOrder.statusStepper} />
+            <OrderStatusStepper
+              status={data.salesOrder.status}
+              stepsData={data.salesOrder.statusStepper}
+            />
             <OrderSnapshot
               salesOrder={data.salesOrder}
               onViewPackingAttachments={handleOpenMaterialAttachments}
