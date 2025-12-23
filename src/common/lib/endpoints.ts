@@ -18,8 +18,8 @@ export const API = {
     PRINTER_BY_ID: (id: string | number) =>     `${API_BASE_URL}/lookup/printers/${id}`,
     MATERIAL_BARCODES:                          `${API_BASE_URL}/lookup/material-barcodes`,
     MATERIAL_BARCODE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/material-barcodes/${id}`,
-    BULK_TEMPLATE: `${API_BASE_URL}/lookup/bulk-template`,
-    BULK_IMPORT:   `${API_BASE_URL}/lookup/bulk-import`,
+    BULK_TEMPLATE:                                   `${API_BASE_URL}/lookup/bulk-template`,
+    BULK_IMPORT:                                     `${API_BASE_URL}/lookup/bulk-import`,
   },
   ADMIN: {
     SALES_ORDERS:                                 `${API_BASE_URL}/admin/sales-orders`,
@@ -146,8 +146,9 @@ export const API = {
     SEND: (soNumber: string) =>          `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
   },
   SO_NOTIFICATIONS: {
-    LIST:                   `${API_BASE_URL}/so-notifications`,
-    DELETE: (id: number) => `${API_BASE_URL}/so-notifications/${id}`,
+    LIST:                     `${API_BASE_URL}/so-notifications`,
+    DELETE: (id: number) =>   `${API_BASE_URL}/so-notifications/${id}`,
+    CLEAR_SO: (id: number) => `${API_BASE_URL}/so-notifications/clear-so/${id}`,
   },
   SO_SOCKET_BASE: API_BASE_URL,
 };

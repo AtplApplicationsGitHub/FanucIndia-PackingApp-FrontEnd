@@ -28,6 +28,7 @@ export type SalesOrder = {
   fgLocation?: string | null; 
   hasMaterialData?: boolean;
   address?: string | null;
+  notificationCount?: number;
 };
 
 export type Lookup = {

@@ -34,6 +34,8 @@ import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 import { useSoArchive } from "@/app/so-search/hooks/useSoArchive";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
+import Badge from "@mui/material/Badge";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 
@@ -61,6 +63,7 @@ type Props = {
   loading: boolean;
   onEdit?: (order: SalesOrder) => void;
   onDetailedView: (order: SalesOrder) => void;
+  onOpenChat: (soNumber: string, orderId: number) => void;
 };
 
 export default function AdminOrdersTable({
@@ -75,6 +78,7 @@ export default function AdminOrdersTable({
   onUpdateInline,
   onEdit,
   onDetailedView,
+  onOpenChat,
 }: Props) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25); 
@@ -231,6 +235,7 @@ export default function AdminOrdersTable({
             <TableRow sx={{ height: 60 }}>
               {[
                 "Actions",
+                "Notifications",
                 "User Name",
                 "Product",
                 "Sale Order Number",
@@ -276,6 +281,17 @@ export default function AdminOrdersTable({
                     <MoreVertIcon />
                   </IconButton>
                 </TableCell>
+
+                <TableCell>
+                     <IconButton 
+                       onClick={() => row.saleOrderNumber && onOpenChat(row.saleOrderNumber, row.id)}
+                       size="small"
+                     >
+                       <Badge badgeContent={row.notificationCount || 0} color="error">
+                         <ChatBubbleOutlineIcon fontSize="small" />
+                       </Badge>
+                     </IconButton>
+                  </TableCell>
 
                 {/* USER NAME */}
                 <TableCell>{row.user?.name || "-"}</TableCell>

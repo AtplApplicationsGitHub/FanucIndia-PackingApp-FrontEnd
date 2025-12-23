@@ -19,6 +19,7 @@ import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
 import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard";
+import SoChatDrawer from "@/app/components/SoChatDrawer";
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -33,6 +34,25 @@ export default function AdminDashboard() {
     null
   );
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
+
+  const [chatOpen, setChatOpen] = React.useState(false);
+  const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
+
+  const handleOpenChat = async (soNumber: string, orderId: number) => {
+    setChatSoNumber(soNumber);
+    setChatOpen(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      await admin.fetchOrders();
+    } catch (err) {
+      console.error("Failed to clear notifications", err);
+    }
+  };
 
   const admin = useAdminDashboard();
   const router = useRouter();
@@ -240,6 +260,7 @@ export default function AdminDashboard() {
                   admin.setConfirmDelete({ type: "orders", id })
                 }
                 onUpdateInline={onUpdateInline}
+                onOpenChat={handleOpenChat}
                 onEdit={(order: SalesOrder) => {
                   setEditOrder(order);
                   setEditModalOpen(true);
@@ -334,6 +355,13 @@ export default function AdminDashboard() {
           onClose={() => setIsErpUploadOpen(false)}
           onUploadSuccess={handleUploadSuccess}
           saleOrderNumber={erpUploadOrder?.saleOrderNumber ?? null}
+        />
+
+        <SoChatDrawer
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          soNumber={chatSoNumber}
+          buttonSx={{ bgcolor: "primary.main" }}
         />
       </Box>
     </>
