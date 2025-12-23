@@ -10,6 +10,7 @@ import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme } from "@mui/material";
 import Image from "next/image"; 
 import UserMenu from "@/common/components/UserMenu";
+import SoNotificationBell from "@/common/components/SoNotificationBell";
 
 type Props = {
   userName: string;
@@ -135,7 +136,7 @@ export default function UserDashboardHeader({
             })}
           </Box>
         </Box>
-
+            <SoNotificationBell />
         <Box sx={{ ml: 3 }}>
           <UserMenu username={userName} userRole="USER" variant="full" />
         </Box>

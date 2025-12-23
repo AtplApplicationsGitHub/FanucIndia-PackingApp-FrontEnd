@@ -7,6 +7,7 @@ import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboa
 import { ClipboardList, BarChart3, Search } from "lucide-react"; 
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+import SoNotificationBell from "@/common/components/SoNotificationBell";
 
 type Props = {
   userName: string;
@@ -106,7 +107,7 @@ export default function SalesDashboardHeader({ userName,view, setView }: Props) 
             );
           })}
         </Box>
-
+          <SoNotificationBell />
         <Box sx={{ ml: 3 }}>
           <UserMenu username={userName} userRole="SALES" variant="full" />
         </Box>

@@ -18,6 +18,8 @@ import {
   Paper,
   ClickAwayListener,
   ListItemButton,
+  SxProps,
+  Theme,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
@@ -43,7 +45,7 @@ export default function SoChatDrawer({
   open: boolean;
   onClose: () => void;
   soNumber: string | null;
-  buttonSx: any;
+  buttonSx: SxProps<Theme>;
 }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);

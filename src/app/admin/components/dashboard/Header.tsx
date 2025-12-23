@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image"; 
+import Image from "next/image";
+import SoNotificationBell from "@/common/components/SoNotificationBell";
 
 export type ViewType =
   | "home"
@@ -261,7 +262,7 @@ export default function AdminDashboardHeader({
             )}
           </Box>
         </Box>
-
+            <SoNotificationBell />
         <Box sx={{ ml: 3 }}>
           <UserMenu username={userName} userRole="ADMIN" variant="full" />
         </Box>

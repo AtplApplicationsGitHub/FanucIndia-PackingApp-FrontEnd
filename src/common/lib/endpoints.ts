@@ -145,7 +145,11 @@ export const API = {
     MESSAGES: (soNumber: string) => `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
     SEND: (soNumber: string) =>     `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
   },
-
+  SO_NOTIFICATIONS: {
+    LIST:                   `${API_BASE_URL}/so-notifications`,
+    DELETE: (id: number) => `${API_BASE_URL}/so-notifications/${id}`,
+  },
+  SO_SOCKET_BASE: API_BASE_URL,
 };
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {

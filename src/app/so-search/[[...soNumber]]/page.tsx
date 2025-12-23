@@ -30,6 +30,7 @@ import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboa
 import { Theme } from "@mui/material/styles";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
+import { useSearchParams } from "next/navigation";
 
 interface SalesOrder {
   saleOrderNumber: string;
@@ -147,6 +148,14 @@ export default function SoSearchPage() {
   const [currentVehicleEntryId, setCurrentVehicleEntryId] = useState<
     number | null
   >(null);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("chat") === "1") {
+      setChatOpen(true);
+    }
+  }, [searchParams]);
 
   const handleOpenVehicleAttachments = (entry: VehicleEntry) => {
     setVehicleAttachments(entry.attachments || []);
