@@ -58,6 +58,8 @@ export default function SoChatDrawer({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionOpen, setMentionOpen] = useState(false);
 
+  const [accessDenied, setAccessDenied] = useState(false);
+
   // Keep focus in the textbox, anchor popper to it
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -70,9 +72,10 @@ export default function SoChatDrawer({
   const refresh = async () => {
     if (!soNumber || !token) return;
     setLoading(true);
+    setAccessDenied(false);
     try {
       const [u, m] = await Promise.all([
-        axios.get(API.SO_CHAT.MENTION_USERS, {
+        axios.get(API.SO_CHAT.MENTION_USERS(soNumber), {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(API.SO_CHAT.MESSAGES(soNumber), {
@@ -81,6 +84,12 @@ export default function SoChatDrawer({
       ]);
       setUsers(u.data || []);
       setMessages(m.data || []);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        console.error("Failed to fetch chat data:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -196,6 +205,12 @@ export default function SoChatDrawer({
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <CircularProgress />
             </Box>
+          ) : accessDenied ? (  
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4, px: 2, textAlign: "center" }}>
+              <Typography variant="body1" color="text.secondary">
+                You are not authorized to access the chat for this order.
+              </Typography>
+            </Box>
           ) : messages.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               No messages yet. Start by tagging someone using @
@@ -235,6 +250,7 @@ export default function SoChatDrawer({
           )}
         </Box>
 
+        {!accessDenied && (
         <Box sx={{ p: 2, borderTop: "1px solid #eee", position: "relative" }}>
           <TextField
             fullWidth
@@ -322,6 +338,7 @@ export default function SoChatDrawer({
             </Button>
           </Box>
         </Box>
+        )}
       </Box>
     </Drawer>
   );

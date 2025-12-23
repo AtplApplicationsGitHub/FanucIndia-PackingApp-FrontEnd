@@ -141,9 +141,9 @@ export const API = {
     ADMIN_ORDERS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-orders-by-customer`,
   },
   SO_CHAT: {
-    MENTION_USERS:                  `${API_BASE_URL}/so-chat/mention-users`,
-    MESSAGES: (soNumber: string) => `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
-    SEND: (soNumber: string) =>     `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
+    MENTION_USERS: (soNumber: string) => `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/mention-users`,
+    MESSAGES: (soNumber: string) =>      `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
+    SEND: (soNumber: string) =>          `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
   },
   SO_NOTIFICATIONS: {
     LIST:                   `${API_BASE_URL}/so-notifications`,
