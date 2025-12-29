@@ -35,6 +35,7 @@ const DEFAULT_FORM = {
   salesZoneId: "",
   packConfigId: "",
   customerId: "",
+  customerName: "",
   specialRemarks: "",
   additionalRemarks: "",
 };
@@ -69,6 +70,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         salesZoneId: String(initialData.salesZoneId ?? ""),
         packConfigId: String(initialData.packConfigId ?? ""),
         customerId: String(initialData.customerId ?? ""),
+        customerName: initialData.customerNameText ?? initialData.customer?.name ?? "",
         specialRemarks: initialData.specialRemarks ?? "",
         additionalRemarks: initialData.additionalRemarks ?? "",
       });
@@ -176,10 +178,11 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           error={errors.packConfigId}
         />
         <CustomerSelect
-          value={form.customerId}
+          valueId={form.customerId}
+          valueName={form.customerName ?? ""}
           onChange={onChange}
           options={lookup.customers}
-          error={errors.customerId}
+          error={errors.customerId || errors.customerName}
         />
         <div className="col-span-1 md:col-span-2">
           <RemarksTextarea

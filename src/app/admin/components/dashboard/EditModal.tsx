@@ -4,6 +4,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -13,7 +14,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import SearchableSelect from "@/app/admin/components/dashboard/SearchableSelect";
 
@@ -24,6 +25,8 @@ type OptionItem = {
   configName?: string;
 };
 type FieldOption = keyof Lookup | OptionItem[];
+type CustomerOption = Lookup["customers"][number];
+type CustomerValue = CustomerOption | string | null;
 
 function normalizeInputValue(val: unknown): string | number {
   if (val == null) return "";
@@ -105,7 +108,7 @@ const FIELDS: {
     options: "assignableUsers",
   },
   { key: "status", label: "Status", disabled: true },
-  { key: "fgLocation", label: "FG Location"},
+  { key: "fgLocation", label: "FG Location" },
   { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
   { key: "additionalRemarks", label: "Additional Remarks", colSpan: 2 },
 ];
@@ -125,6 +128,7 @@ const PATCHABLE_KEYS = [
   "priority",
   "assignedUserId",
   "customerId",
+  "customerNameText",
   "specialRemarks",
   "additionalRemarks",
   "fgLocation",
@@ -144,6 +148,9 @@ export default function AdminOrderEditModal({
 }: Props) {
   const [form, setForm] = useState<Partial<SalesOrder>>(() => ({
     ...order,
+    // ✅ If ERP override exists, keep customerId empty so dropdown doesn't visually override it
+    customerId: order.customerNameText?.trim() ? undefined : order.customerId,
+    customerNameText: order.customerNameText ?? order.customer?.name ?? "",
     deliveryDate: order.deliveryDate
       ? dayjs(order.deliveryDate).toISOString()
       : "",
@@ -160,6 +167,9 @@ export default function AdminOrderEditModal({
     if (!open) return;
     setForm({
       ...order,
+      // ✅ same logic here too
+      customerId: order.customerNameText?.trim() ? undefined : order.customerId,
+      customerNameText: order.customerNameText ?? order.customer?.name ?? "",
       deliveryDate: order.deliveryDate
         ? dayjs(order.deliveryDate).toISOString()
         : "",
@@ -171,13 +181,18 @@ export default function AdminOrderEditModal({
       const updated = { ...prev, [key]: value };
 
       if (key === "customerId") {
+        updated.customerNameText = "";
         const selectedCustomer = lookup.customers.find(
           (c) => String(c.id) === String(value)
         );
-        
+
         if (selectedCustomer && typeof selectedCustomer.address === "string") {
           updated.address = selectedCustomer.address;
         }
+      }
+
+      if (key === "customerNameText") {
+        updated.customerId = undefined;
       }
 
       return updated;
@@ -219,6 +234,12 @@ export default function AdminOrderEditModal({
           }
           break;
 
+        case "customerNameText":
+          if (typeof v === "string" && v.trim() !== "") {
+            patch.customerNameText = v.trim();
+          }
+          break;
+
         case "priority":
           if (typeof v === "string" && v.trim() !== "") {
             patch.priority = Number(v);
@@ -256,6 +277,7 @@ export default function AdminOrderEditModal({
             patch[key] = v as SalesOrderPatch[typeof key];
           }
           break;
+
         case "address":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
@@ -365,6 +387,7 @@ export default function AdminOrderEditModal({
           <CloseIcon />
         </IconButton>
       </Box>
+
       <DialogContent
         sx={(theme) => ({
           bgcolor: theme.palette.background.paper,
@@ -386,6 +409,7 @@ export default function AdminOrderEditModal({
                   : Array.isArray(field.options)
                     ? field.options
                     : [];
+
               if (field.colSpan === 2) {
                 return (
                   <Box key={field.key} sx={{ flex: "0 0 100%", mb: 1 }}>
@@ -415,6 +439,7 @@ export default function AdminOrderEditModal({
                   typeof raw === "string" && dayjs(raw).isValid()
                     ? dayjs(raw)
                     : null;
+
                 return (
                   <Box
                     key={field.key}
@@ -453,6 +478,87 @@ export default function AdminOrderEditModal({
               }
 
               if (field.type === "select") {
+                if (field.key === "customerId") {
+                  const selected =
+                    lookup.customers.find(
+                      (c) =>
+                        form.customerId != null &&
+                        String(c.id) === String(form.customerId)
+                    ) || null;
+
+                  const value: CustomerValue =
+                    form.customerNameText &&
+                    String(form.customerNameText).trim() !== ""
+                      ? String(form.customerNameText)
+                      : selected;
+
+                  return (
+                    <Box
+                      key={field.key}
+                      sx={{
+                        flex: { xs: "1 1 100%", sm: "1 1 47%" },
+                        minWidth: { xs: "100%", sm: "47%" },
+                      }}
+                    >
+                      <Autocomplete
+                        disablePortal
+                        fullWidth
+                        freeSolo
+                        options={lookup.customers}
+                        getOptionLabel={(option: CustomerOption | string) =>
+                          typeof option === "string"
+                            ? option
+                            : (option?.name ?? "")
+                        }
+                        value={value}
+                        isOptionEqualToValue={(
+                          option: CustomerOption | string,
+                          v: CustomerValue
+                        ) => {
+                          if (typeof option === "string") {
+                            return typeof v === "string"
+                              ? option === v
+                              : option === (v?.name ?? "");
+                          }
+                          if (typeof v === "string") return option.name === v;
+                          return String(option.id) === String(v?.id);
+                        }}
+                        onChange={(_, newValue: CustomerValue) => {
+                          if (typeof newValue === "string") {
+                            handleChange("customerNameText", newValue);
+                            handleChange("customerId", "");
+                            return;
+                          }
+
+                          if (newValue && typeof newValue === "object") {
+                            handleChange("customerId", String(newValue.id));
+                            handleChange("customerNameText", "");
+                            return;
+                          }
+
+                          handleChange("customerId", "");
+                          handleChange("customerNameText", "");
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Customer Name"
+                            placeholder="Select customer or type a new name"
+                            size="medium"
+                            disabled={loading}
+                            sx={(theme) => ({
+                              bgcolor: theme.palette.background.default,
+                              borderRadius: 2,
+                              input: { color: theme.palette.text.primary },
+                              label: { color: theme.palette.text.secondary },
+                            })}
+                          />
+                        )}
+                      />
+                    </Box>
+                  );
+                }
+
                 const searchableOptions = options.map((opt) => ({
                   value: opt.id,
                   label: opt.name || opt.code || opt.configName || "",
@@ -504,6 +610,7 @@ export default function AdminOrderEditModal({
               );
             })}
           </Box>
+
           <DialogActions sx={{ mt: 2, px: 0 }}>
             <Button
               type="submit"

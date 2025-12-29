@@ -38,6 +38,8 @@ interface Props {
   showBulkButton?: boolean; // [UPDATED] Boolean passed from parent
   showAll: boolean; // [NEW]
   onToggleShowAll: (val: boolean) => void; // [NEW]
+  showAcceptAllIssueButton?: boolean; 
+  onAcceptAllIssue?: () => void;
 }
 
 const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
@@ -83,13 +85,16 @@ const InputBoxSection: FC<Props> = ({
   onBulkAccept,
   showBulkButton = false,
   showAll,
-  onToggleShowAll
+  onToggleShowAll,
+  showAcceptAllIssueButton = false,
+  onAcceptAllIssue,
 }) => {
   const theme = useTheme();
   const [value, setValue] = useState("");
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileCount, setFileCount] = useState<number>(0);
+  const [confirmAllOpen, setConfirmAllOpen] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -229,6 +234,17 @@ const InputBoxSection: FC<Props> = ({
             </Button>
           )}
 
+          {showAcceptAllIssueButton && (
+            <Button
+              variant="contained"
+              onClick={() => setConfirmAllOpen(true)}
+              sx={buttonSx}
+              disabled={disabled}
+            >
+              ACCEPT ALL
+            </Button>
+          )}
+
           <UploadErpMaterialFileButton
             saleOrderNumber={saleOrderNumber}
             onCreated={handleFileChange}
@@ -302,6 +318,34 @@ const InputBoxSection: FC<Props> = ({
             onClick={() => {
               setConfirmOpen(false);
               onBulkAccept?.();
+            }}
+            sx={buttonSx}
+            autoFocus
+          >
+            YES, ACCEPT ALL
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={confirmAllOpen} onClose={() => setConfirmAllOpen(false)}>
+        <DialogTitle sx={{ color: theme.palette.warning.main, fontWeight: 700, textTransform: 'uppercase' }}>
+          ADMIN: Accept All Issue Stage?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to COMPLETE the Issue Stage for <strong>ALL ITEMS</strong> in this order?
+            <br /><br />
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setConfirmAllOpen(false)} sx={buttonSx}>
+            CANCEL
+          </Button>
+          <Button
+            onClick={() => {
+              setConfirmAllOpen(false);
+              onAcceptAllIssue?.();
             }}
             sx={buttonSx}
             autoFocus

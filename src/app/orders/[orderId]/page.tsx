@@ -27,6 +27,7 @@ import {
   getErpMaterials as fetchErpMaterials,
   bulkAcceptGroup,
   updateMaterialRemarks,
+  acceptAllIssueStage,
 } from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
@@ -198,6 +199,26 @@ export default function MaterialDataPage() {
         }, 2000);
       }
 
+    } catch (e) {
+      setEditError(extractErrorMessage(e));
+    }
+  };
+
+  const handleAcceptAllIssue = async () => {
+    setUploadNotice("Processing Admin Override...");
+    try {
+      const res = await acceptAllIssueStage(orderId);
+
+      if (res.issueStageCompleted) {
+        setUploadNotice("Issue stage completed by Admin! Redirecting...");
+        setIsRedirecting(true);
+        setTimeout(() => {
+           router.push("/admin/dashboard");
+        }, 2000);
+      } else {
+        setUploadNotice("All items accepted successfully.");
+        await refetch();
+      }
     } catch (e) {
       setEditError(extractErrorMessage(e));
     }
@@ -569,6 +590,8 @@ export default function MaterialDataPage() {
                 // [NEW] Pass toggle props to child
                 showAll={showAll}
                 onToggleShowAll={setShowAll}
+                showAcceptAllIssueButton={currentUser.role === 'ADMIN' && !allIssued}
+                onAcceptAllIssue={handleAcceptAllIssue}
               />
             )}
           </Box>

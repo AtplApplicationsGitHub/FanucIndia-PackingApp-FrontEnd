@@ -14,7 +14,10 @@ export type SalesOrder = {
   specialRemarks: string;
   additionalRemarks?: string;
   hasMaterialData?: boolean;
-  customerId: number;
+  customerId?: number;
+  customer?: { id?: number; name?: string; address?: string } | null;
+  customerNameText?: string | null;
+  customerName?: string;
   assignedUserId?: number | null;
   assignedUser?: {
     name: string;
@@ -30,13 +33,11 @@ export type LookupData = {
   customers: { id: number; name: string }[];
 };
 
-
-// types/sales.ts
 export interface SalesKPIsResponse {
   totalSoCount: number;
   dispatchedSoCount: number;
   f105Count: number;
-  statusDistribution: Record<string, number>; // e.g., { "Pending": 5, "Dispatched": 8, ... }
+  statusDistribution: Record<string, number>; 
   
 }
 
@@ -49,14 +50,11 @@ export interface SalesKpisResponse {
   toBeIssuedCount: number;
 }
 
-
-// types/sales.ts
 export interface SalesActivity {
   salesOrderNumber: string;
   status: string;
-  activityTimestamp: string; // ISO string
+  activityTimestamp: string;
 }
-
 
 export interface PaymentClearanceItem {
   zoneName: string;

@@ -244,12 +244,12 @@ export default function AdminOrdersTable({
                 "Required Date",
                 "Payment",
                 "Sales Zone",
-                "Packing Config",
+                // "Packing Config",
                 "Customer",
                 "Status",
                 "Priority",
                 "Assigned User",
-                "Special Remarks",
+                // "Special Remarks",
               ].map((head) => (
                 <TableCell
                   key={head}
@@ -335,13 +335,13 @@ export default function AdminOrdersTable({
                 </TableCell>
 
                 {/* PACK CONFIG */}
-                <TableCell>
+                {/* <TableCell>
                   {findName(
                     lookup.packConfigs,
                     row.packConfigId ?? 0,
                     "configName"
                   )}
-                </TableCell>
+                </TableCell> */}
 
                 {/* CUSTOMER */}
                 <TableCell>
@@ -441,7 +441,7 @@ export default function AdminOrdersTable({
                   </TableCell>
 
                 {/* SPECIAL REMARKS */}
-                <TableCell>{row.specialRemarks || "-"}</TableCell>
+                {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}
               </TableRow>
               );
             })}

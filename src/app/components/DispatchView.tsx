@@ -315,7 +315,8 @@ export default function DispatchView() {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate]);
+  // }, [startDate, endDate]);
+  }, []);
 
   useEffect(() => {
     fetchDispatches();

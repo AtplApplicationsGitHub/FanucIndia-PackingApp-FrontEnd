@@ -23,6 +23,8 @@ export type SalesOrder = {
   assignedUserId?: number;
   customerId?: number;
   customer?: { id: number; name: string } | null;
+  customerNameText?: string | null;
+  customerName?: string | null;
   specialRemarks?: string | null;
   additionalRemarks?: string | null;
   fgLocation?: string | null; 
@@ -87,7 +89,6 @@ export interface User {
   accessVehicleEntry?: boolean; 
 }
 
-// types/status-cards.ts// types/admin.ts
 export interface AdminKpisResponse {
   totalSoCount: number;
   totalSoCountPercentageChange: number;
@@ -102,15 +103,13 @@ export interface StatusCardData {
   value: string | number;
   percentage: string;
   isPositive: boolean;
-  iconType: "cart" | "truck" | "alert";   // ← simple identifier
+  iconType: "cart" | "truck" | "alert";  
   iconColor: string;
 }
 
 
-// types/admin.ts
 export type AdminNewImportItem = {
-  date: string;       // "2025-11-19"
-  dayLabel: string;   // "Today", "Yesterday", "Nov 15"
+  date: string;       
+  dayLabel: string;   
   count: number;
 };
-

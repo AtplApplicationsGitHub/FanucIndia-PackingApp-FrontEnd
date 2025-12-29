@@ -1,11 +1,28 @@
 import { useState } from "react";
 import axios from "axios";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 
 export type AlertState = {
   severity: "success" | "error";
   message: string;
 } | null;
+
+export type SalesFormValues = {
+  productId: string;
+  saleOrderNumber: string;
+  outboundDelivery: string;
+  transferOrder: string;
+  deliveryDate: string;
+  transporterId: string;
+  plantCodeId: string;
+  paymentClearance: string | boolean;
+  salesZoneId: string;
+  packConfigId: string;
+  customerId: string;
+  customerName: string;
+  specialRemarks: string;
+  additionalRemarks?: string;
+};
 
 export const useSalesForm = (onSuccess?: () => void) => {
   const [submitting, setSubmitting] = useState(false);
@@ -13,7 +30,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
   const [alert, setAlert] = useState<AlertState>(null);
 
   const handleSubmit = async (
-    form: Record<string, unknown>,
+    form: SalesFormValues,
     isEdit: boolean,
     id?: number
   ) => {
@@ -58,7 +75,12 @@ export const useSalesForm = (onSuccess?: () => void) => {
     if (!form.packConfigId) {
       newErrors.packConfigId = "Packing Configuration is required";
     }
-    if (!form.customerId) {
+    const hasCustomerId =
+      !!form.customerId && String(form.customerId).trim() !== "";
+    const hasCustomerNameText =
+      !!form.customerName && String(form.customerName).trim() !== "";
+
+    if (!hasCustomerId && !hasCustomerNameText) {
       newErrors.customerId = "Customer is required";
     }
 
@@ -71,17 +93,28 @@ export const useSalesForm = (onSuccess?: () => void) => {
     setErrors({});
 
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         ...form,
         productId: Number(form.productId),
         transporterId: Number(form.transporterId),
         plantCodeId: Number(form.plantCodeId),
         salesZoneId: Number(form.salesZoneId),
         packConfigId: Number(form.packConfigId),
-        customerId: Number(form.customerId),
+        ...(hasCustomerId ? { customerId: Number(form.customerId) } : {}),
+        ...(hasCustomerId
+          ? { customerNameText: undefined }
+          : { customerNameText: String(form.customerName || "").trim() }),
         paymentClearance:
           form.paymentClearance === "true" || form.paymentClearance === true,
       };
+
+      if (!hasCustomerId) {
+        delete payload.customerId;
+      }
+
+      if (!payload.customerNameText) {
+        delete payload.customerNameText;
+      }
 
       const token = localStorage.getItem("token");
 
@@ -94,7 +127,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
         });
         setAlert({ severity: "success", message: "Sales entry updated." });
         setTimeout(() => {
-          onSuccess?.(); 
+          onSuccess?.();
         }, 300);
       } else {
         await axios.post(API.SALES.CREATE_ORDER, payload, {

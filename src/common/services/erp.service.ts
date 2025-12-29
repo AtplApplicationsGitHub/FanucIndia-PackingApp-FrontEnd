@@ -126,3 +126,17 @@ export async function updateMaterialRemarks(
   }
   return res.json();
 }
+
+export async function acceptAllIssueStage(orderId: number) {
+  const url = `${API.ADMIN.ERP_MATERIALS_BY_ORDER(orderId)}/accept-all-issue-stage`;
+  const res = await fetchWithAuth(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to accept all issue stage");
+  }
+  return res.json();
+}

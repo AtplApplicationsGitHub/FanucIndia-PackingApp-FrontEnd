@@ -49,7 +49,9 @@ export default function SalesOrdersTable({
   const hoverYellow = alpha(theme.palette.primary.main, 0.15);
 
   // --- MENU STATE ---
-  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
+    null
+  );
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
 
   const menuRow = React.useMemo(
@@ -57,7 +59,10 @@ export default function SalesOrdersTable({
     [orders, menuRowId]
   );
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    rowId: number
+  ) => {
     setMenuAnchorEl(event.currentTarget);
     setMenuRowId(rowId);
   };
@@ -82,7 +87,9 @@ export default function SalesOrdersTable({
     onPaginationModelChange({ ...paginationModel, page: newPage });
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     onPaginationModelChange({
       ...paginationModel,
       pageSize: parseInt(event.target.value, 10),
@@ -121,10 +128,11 @@ export default function SalesOrdersTable({
             },
           }}
         >
-          <TableHead 
-            sx={{ 
+          <TableHead
+            sx={{
               // White background for light mode, Black for dark mode
-              bgcolor: (theme) => theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark" ? "#000000" : "#ffffff",
             }}
           >
             <TableRow sx={{ height: 60 }}>
@@ -147,7 +155,8 @@ export default function SalesOrdersTable({
                 <TableCell
                   key={head}
                   sx={{
-                    color: (theme) => theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                    color: (theme) =>
+                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                   }}
@@ -169,7 +178,10 @@ export default function SalesOrdersTable({
                 <TableRow key={row.id}>
                   {/* ACTIONS */}
                   <TableCell>
-                    <IconButton onClick={(e) => handleMenuOpen(e, row.id)} size="small">
+                    <IconButton
+                      onClick={(e) => handleMenuOpen(e, row.id)}
+                      size="small"
+                    >
                       <MoreVertIcon />
                     </IconButton>
                   </TableCell>
@@ -213,9 +225,7 @@ export default function SalesOrdersTable({
                   </TableCell>
 
                   {/* PAYMENT */}
-                  <TableCell>
-                    {row.paymentClearance ? "Yes" : "No"}
-                  </TableCell>
+                  <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
 
                   {/* SALES ZONE */}
                   <TableCell>
@@ -224,12 +234,18 @@ export default function SalesOrdersTable({
 
                   {/* PACK CONFIG */}
                   <TableCell>
-                    {findName(lookup.packConfigs, row.packConfigId, "configName")}
+                    {findName(
+                      lookup.packConfigs,
+                      row.packConfigId,
+                      "configName"
+                    )}
                   </TableCell>
 
                   {/* CUSTOMER */}
                   <TableCell>
-                    {findName(lookup.customers, row.customerId, "name")}
+                    {row.customerId != null
+                      ? findName(lookup.customers, row.customerId ?? 0, "name")
+                      : ""}
                   </TableCell>
 
                   {/* SPECIAL REMARKS */}
@@ -268,15 +284,26 @@ export default function SalesOrdersTable({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Tooltip title={isAssigned ? "This order is assigned and cannot be edited." : ""}>
+        <Tooltip
+          title={
+            isAssigned ? "This order is assigned and cannot be edited." : ""
+          }
+        >
           <Box>
-            <MenuItem onClick={handleEdit} disabled={isAssigned || menuRow?.hasMaterialData}>
+            <MenuItem
+              onClick={handleEdit}
+              disabled={isAssigned || menuRow?.hasMaterialData}
+            >
               Edit
             </MenuItem>
           </Box>
         </Tooltip>
 
-        <Tooltip title={isAssigned ? "This order is assigned and cannot be deleted." : ""}>
+        <Tooltip
+          title={
+            isAssigned ? "This order is assigned and cannot be deleted." : ""
+          }
+        >
           <Box>
             <MenuItem
               onClick={handleDelete}

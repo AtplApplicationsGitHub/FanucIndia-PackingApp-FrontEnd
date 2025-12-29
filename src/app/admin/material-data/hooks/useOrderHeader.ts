@@ -58,6 +58,7 @@ export function useOrderHeader(orderId: number, userId: number | null) {
 
         const json = await res.json() as {
           saleOrderNumber: string;
+          customerNameText?: string | null;
           customer?: { name?: string };
           transferOrder: string;
           outboundDelivery: string;
@@ -66,7 +67,7 @@ export function useOrderHeader(orderId: number, userId: number | null) {
         if (!cancelled) {
           setData({
             so: json.saleOrderNumber,
-            customerName: json.customer?.name ?? '',
+            customerName: json.customerNameText ?? json.customer?.name ?? '',
             transferOrder: json.transferOrder,
             fgObd: json.outboundDelivery,
           });
