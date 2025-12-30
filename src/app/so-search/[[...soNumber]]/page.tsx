@@ -47,6 +47,8 @@ interface SalesOrder {
   transporter?: { name: string };
   plantCode?: { code: string };
   salesZone?: { name: string };
+  customerNameText?: string | null;
+  address?: string | null;
   specialRemarks?: string;
 }
 

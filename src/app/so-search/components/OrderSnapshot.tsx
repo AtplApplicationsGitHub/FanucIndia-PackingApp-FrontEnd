@@ -13,6 +13,7 @@ interface SalesOrder {
   paymentClearance?: boolean;
   product?: { name: string };
   customer?: { name: string; address?: string };
+  customerNameText?: string | null;
   packConfig?: { configName: string };
   transporter?: { name: string };
   plantCode?: { code: string };
@@ -27,16 +28,34 @@ interface Props {
   onViewPackingAttachments: () => void;
 }
 
-export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: Props) {
-  // Logic to format Customer Name - Address
-  const customerName = salesOrder.customer?.name || "—";
-  const customerAddress = salesOrder.customer?.address || salesOrder.address || "";
-  const customerDisplay = customerAddress ? `${customerName} - ${customerAddress}` : customerName;
+export default function OrderSnapshot({
+  salesOrder,
+  onViewPackingAttachments,
+}: Props) {
+  const customerName =
+    salesOrder.customerNameText?.trim() || salesOrder.customer?.name || "—";
+
+  const customerAddress =
+    salesOrder.address?.trim() || salesOrder.customer?.address || "";
+
+  const customerDisplay = customerAddress
+    ? `${customerName}\n${customerAddress}`
+    : customerName;
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" sx={{ color: 'secondary.main', fontWeight: 600 }}>ORDER</Typography>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography
+          variant="h5"
+          sx={{ color: "secondary.main", fontWeight: 600 }}
+        >
+          ORDER
+        </Typography>
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Sales Order Number" value={salesOrder.saleOrderNumber} />
@@ -67,9 +86,16 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Product" value={salesOrder.product?.name} />
-        
-        {/* Updated Customer Display: Name - Address */}
-        <KVBox label="Customer" value={customerDisplay} />
+
+        <KVBox
+          label="Customer"
+          value={customerDisplay}
+          valueSx={{
+            fontSize: "0.85rem", 
+            lineHeight: 1.25,
+            fontWeight: 600,
+          }}
+        />
 
         <KVBox label="Priority" value={salesOrder.priority} />
         <KVBox label="Terminal" value={"-"} />
@@ -79,20 +105,11 @@ export default function OrderSnapshot({ salesOrder, onViewPackingAttachments }: 
           label="Packing Config"
           value={salesOrder.packConfig?.configName}
         />
-        <KVBox
-          label="Transporter"
-          value={salesOrder.transporter?.name}
-        />
-        <KVBox
-          label="Delivery Plant Code"
-          value={salesOrder.plantCode?.code}
-        />
-        <KVBox
-          label="Sales Zone"
-          value={salesOrder.salesZone?.name}
-        />
+        <KVBox label="Transporter" value={salesOrder.transporter?.name} />
+        <KVBox label="Delivery Plant Code" value={salesOrder.plantCode?.code} />
+        <KVBox label="Sales Zone" value={salesOrder.salesZone?.name} />
       </Box>
-      
+
       {/* Special & Additional Remarks */}
       <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
         <KVBox

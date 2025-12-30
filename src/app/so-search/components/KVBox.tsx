@@ -1,15 +1,18 @@
 import { Box, Typography } from "@mui/material";
+import { SxProps, Theme } from "@mui/material/styles";
 
 export const KVBox = ({
   label,
   value,
   children,
   fullWidth = false,
+  valueSx,
 }: {
   label: string;
   value?: string | number | null;
   children?: React.ReactNode;
   fullWidth?: boolean;
+  valueSx?: SxProps<Theme>;
 }) => (
   <Box
     sx={{
@@ -33,7 +36,7 @@ export const KVBox = ({
     <Typography
       variant="body1"
       fontWeight={600}
-      sx={{ whiteSpace: "pre-wrap" }}
+      sx={{ whiteSpace: "pre-wrap", ...valueSx }}
     >
       {children || value || "—"}
     </Typography>
