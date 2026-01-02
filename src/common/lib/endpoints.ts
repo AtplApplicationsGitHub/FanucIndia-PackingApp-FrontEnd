@@ -122,6 +122,7 @@ export const API = {
   },
   ERP_IMPORTER: {
     UPLOAD:                  `${API_BASE_URL}/erp-material-importer/upload`,
+    IMPORT_FROM_DRIVE:       `${API_BASE_URL}/erp-material-importer/import-from-drive`,
   },
   FG_DASHBOARD:              `${API_BASE_URL}/fg-dashboard`,
   FG_STORAGE: {

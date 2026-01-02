@@ -16,6 +16,7 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
   const theme = useTheme();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false); 
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -97,9 +98,35 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
     }
   };
 
+  const handleImportDrive = async () => {
+    if (!saleOrderNumber) return;
+    
+    setImportLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(API.ERP_IMPORTER.IMPORT_FROM_DRIVE, { saleOrderNumber }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      onUploadSuccess(); 
+    } catch (err: unknown) {
+      let msg = 'An unexpected error occurred during drive import.';
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        msg = Array.isArray(err.response.data.message) ? err.response.data.message.join(', ') : err.response.data.message;
+      }
+      setError(msg);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const resetState = () => {
     setFile(null);
     setLoading(false);
+    setImportLoading(false);
     setError(null);
   };
 
@@ -194,8 +221,15 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button onClick={handleClose} sx={buttonSx}>CANCEL</Button>
         <Button 
+          onClick={handleImportDrive}
+          disabled={loading || importLoading}
+          sx={buttonSx}
+        >
+           {importLoading ? <CircularProgress size={22} color="inherit" /> : 'IMPORT ERP DATA'}
+        </Button>
+        <Button 
           onClick={handleUpload} 
-          disabled={!file || loading} 
+          disabled={!file || loading || importLoading} 
           sx={buttonSx}
         >
           {loading ? <CircularProgress size={22} color="inherit" /> : 'UPLOAD & VIEW'}
