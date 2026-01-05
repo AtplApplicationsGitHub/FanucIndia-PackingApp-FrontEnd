@@ -27,6 +27,7 @@ export type SalesOrder = {
   customerName?: string | null;
   specialRemarks?: string | null;
   additionalRemarks?: string | null;
+  labelRemarks?: string | null;
   fgLocation?: string | null; 
   hasMaterialData?: boolean;
   address?: string | null;
@@ -69,6 +70,8 @@ export type EditableField =
   | "priority"
   | "assignedUserId" 
   | "specialRemarks"
+  | "additionalRemarks"
+  | "labelRemarks"
   | "fgLocation";
 
 export type EditingCell = { id: number; field: EditableField } | null;

@@ -22,6 +22,7 @@ export type SalesFormValues = {
   customerName: string;
   specialRemarks: string;
   additionalRemarks?: string;
+  labelRemarks?: string;
 };
 
 export const useSalesForm = (onSuccess?: () => void) => {
@@ -138,7 +139,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
         });
         setAlert({ severity: "success", message: "Sales entry created." });
         setTimeout(() => {
-          onSuccess?.(); // callback from parent to close dialog
+          onSuccess?.(); 
         }, 300);
       }
     } catch (error: unknown) {

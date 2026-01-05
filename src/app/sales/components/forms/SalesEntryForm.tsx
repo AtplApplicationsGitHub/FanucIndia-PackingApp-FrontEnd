@@ -38,6 +38,7 @@ const DEFAULT_FORM = {
   customerName: "",
   specialRemarks: "",
   additionalRemarks: "",
+  labelRemarks: "",
 };
 
 const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
@@ -73,6 +74,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         customerName: initialData.customerNameText ?? initialData.customer?.name ?? "",
         specialRemarks: initialData.specialRemarks ?? "",
         additionalRemarks: initialData.additionalRemarks ?? "",
+        labelRemarks: initialData.labelRemarks ?? "",
       });
     }
   }, [
@@ -213,6 +215,29 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
               "& .MuiInputLabel-root": { fontWeight: 500, fontSize: 15 },
             }}
           />
+        </div>
+        <div className="col-span-1 md:col-span-2"> 
+           <TextField 
+            fullWidth 
+            label="Label Remarks" 
+            name="labelRemarks" 
+            value={form.labelRemarks} 
+            onChange={(e) => onChange("labelRemarks", e.target.value)} 
+            placeholder="Enter label remarks" 
+            multiline 
+            minRows={3} 
+            size="small" 
+            variant="outlined" 
+            autoComplete="off" 
+            sx={{ 
+              mb: 1, 
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "4px", 
+                backgroundColor: (theme) => theme.palette.background.paper, 
+              }, 
+              "& .MuiInputLabel-root": { fontWeight: 500, fontSize: 15 }, 
+            }} 
+          /> 
         </div>
       </div>
       <div className="pt-6 flex justify-end">

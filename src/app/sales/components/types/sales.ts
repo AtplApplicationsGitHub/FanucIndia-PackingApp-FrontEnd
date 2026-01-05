@@ -13,6 +13,7 @@ export type SalesOrder = {
   status?: string | null;
   specialRemarks: string;
   additionalRemarks?: string;
+  labelRemarks?: string;
   hasMaterialData?: boolean;
   customerId?: number;
   customer?: { id?: number; name?: string; address?: string } | null;

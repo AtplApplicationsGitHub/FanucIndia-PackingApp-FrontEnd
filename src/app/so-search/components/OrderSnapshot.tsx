@@ -20,6 +20,7 @@ interface SalesOrder {
   salesZone?: { name: string };
   specialRemarks?: string;
   additionalRemarks?: string;
+  labelRemarks?: string;
   address?: string | null;
 }
 
@@ -121,6 +122,11 @@ export default function OrderSnapshot({
           label="Additional Remarks"
           value={salesOrder.additionalRemarks}
           fullWidth
+        />
+        <KVBox
+          label="Label Remarks"
+          value={salesOrder.labelRemarks} 
+          fullWidth 
         />
       </Box>
     </Paper>

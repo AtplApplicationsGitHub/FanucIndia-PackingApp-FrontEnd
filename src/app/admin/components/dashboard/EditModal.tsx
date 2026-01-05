@@ -111,6 +111,7 @@ const FIELDS: {
   { key: "fgLocation", label: "FG Location" },
   { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
   { key: "additionalRemarks", label: "Additional Remarks", colSpan: 2 },
+  { key: "labelRemarks", label: "Label Remarks", colSpan: 2 },
 ];
 
 const PATCHABLE_KEYS = [
@@ -131,6 +132,7 @@ const PATCHABLE_KEYS = [
   "customerNameText",
   "specialRemarks",
   "additionalRemarks",
+  "labelRemarks",
   "fgLocation",
   "address",
 ] as const;
@@ -262,6 +264,7 @@ export default function AdminOrderEditModal({
         case "status":
         case "fgLocation":
         case "additionalRemarks":
+        case "labelRemarks":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
           } else if (v === null) {
