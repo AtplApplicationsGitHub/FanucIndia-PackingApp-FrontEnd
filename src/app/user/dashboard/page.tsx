@@ -13,6 +13,7 @@ import axios from "axios";
 import { API } from '@/common/lib/endpoints';
 import { SalesOrder } from "@/app/admin/components/types/admin";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
+import UserDashboardMain from "@/app/user/components/UserdashboradMain";
 
 export default function UserDashboard() {
   const {
@@ -104,20 +105,7 @@ export default function UserDashboard() {
         />
 
         {view === "home" && (
-          <Box
-            sx={{
-              minHeight: "40vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 28,
-              fontWeight: "bold",
-              color: (theme) =>
-                theme.palette.mode === "dark" ? "#90caf9" : "#1a237e",
-            }}
-          >
-            Welcome
-          </Box>
+          <UserDashboardMain userName={userName} setView={setView} />
         )}
 
         {view === "pick_pack" && (

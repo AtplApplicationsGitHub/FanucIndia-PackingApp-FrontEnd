@@ -19,7 +19,7 @@ type Props = {
 };
 
 const menuItems = [
-  { label: "HOME", icon: <Home className="mr-2 h-4 w-4" />, value: "home" },
+  { label: "DASHBOARD", icon: <Home className="mr-2 h-4 w-4" />, value: "home" },
   {
     label: "PICK & PACK",
     icon: <Package className="mr-2 h-4 w-4" />,
