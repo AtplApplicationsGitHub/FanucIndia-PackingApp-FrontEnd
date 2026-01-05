@@ -508,6 +508,7 @@ export default function AdminOrderEditModal({
                         fullWidth
                         freeSolo
                         options={lookup.customers}
+                        disabled={loading || !!order.hasMaterialData}
                         getOptionLabel={(option: CustomerOption | string) =>
                           typeof option === "string"
                             ? option
@@ -548,7 +549,7 @@ export default function AdminOrderEditModal({
                             label="Customer Name"
                             placeholder="Select customer or type a new name"
                             size="medium"
-                            disabled={loading}
+                            disabled={loading || !!order.hasMaterialData}
                             sx={(theme) => ({
                               bgcolor: theme.palette.background.default,
                               borderRadius: 2,
@@ -601,7 +602,11 @@ export default function AdminOrderEditModal({
                     type={field.type === "number" ? "number" : "text"}
                     value={normalizeInputValue(form[field.key])}
                     onChange={(e) => handleChange(field.key, e.target.value)}
-                    disabled={loading || field.disabled}
+                    disabled={
+                      loading || 
+                      field.disabled || 
+                      (field.key === "address" && !!order.hasMaterialData)
+                    }
                     sx={(theme) => ({
                       bgcolor: theme.palette.background.default,
                       borderRadius: 2,
