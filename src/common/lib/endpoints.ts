@@ -149,7 +149,7 @@ export const API = {
   SO_NOTIFICATIONS: {
     LIST:                     `${API_BASE_URL}/so-notifications`,
     DELETE: (id: number) =>   `${API_BASE_URL}/so-notifications/${id}`,
-    CLEAR_SO: (id: number) => `${API_BASE_URL}/so-notifications/clear-so/${id}`,
+    CLEAR_SO: (soNumber: string) => `${API_BASE_URL}/so-notifications/clear-so/${encodeURIComponent(soNumber)}`,
   },
   SO_SOCKET_BASE: API_BASE_URL,
 };

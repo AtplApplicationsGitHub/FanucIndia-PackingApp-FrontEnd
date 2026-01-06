@@ -24,6 +24,8 @@ import Link from "next/link";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { findName, formatDate } from "@/app/sales/components/utils/sales";
 import { GridPaginationModel } from "@mui/x-data-grid";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import Badge from "@mui/material/Badge";
 
 type Props = {
   orders: SalesOrder[];
@@ -33,6 +35,7 @@ type Props = {
   onDelete: (id: number) => void;
   paginationModel: GridPaginationModel;
   onPaginationModelChange: (model: GridPaginationModel) => void;
+  onOpenChat: (soNumber: string, orderId: number) => void;
 };
 
 export default function SalesOrdersTable({
@@ -43,6 +46,7 @@ export default function SalesOrdersTable({
   onDelete,
   paginationModel,
   onPaginationModelChange,
+  onOpenChat,
 }: Props) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -138,6 +142,7 @@ export default function SalesOrdersTable({
             <TableRow sx={{ height: 60 }}>
               {[
                 "Actions",
+                "Notifications",
                 "Product",
                 "Sale Order Number",
                 "OutBound Delivery",
@@ -184,6 +189,18 @@ export default function SalesOrdersTable({
                     >
                       <MoreVertIcon />
                     </IconButton>
+                  </TableCell>
+
+                  {/* NOTIFICATIONS */}
+                  <TableCell>
+                     <IconButton 
+                       onClick={() => row.saleOrderNumber && onOpenChat(row.saleOrderNumber, row.id)}
+                       size="small"
+                     >
+                       <Badge badgeContent={row.notificationCount || 0} color="error">
+                         <ChatBubbleOutlineIcon fontSize="small" />
+                       </Badge>
+                     </IconButton>
                   </TableCell>
 
                   {/* PRODUCT */}

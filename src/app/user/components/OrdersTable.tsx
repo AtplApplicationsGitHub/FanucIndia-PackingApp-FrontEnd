@@ -20,14 +20,17 @@ import {
 } from "@mui/material";
 import { Eye } from "lucide-react";
 import { SalesOrder } from "@/app/admin/components/types/admin";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import Badge from "@mui/material/Badge";
 
 interface Props {
   orders: SalesOrder[];
   loading: boolean;
   onDetailedView: (order: SalesOrder) => void;
+  onOpenChat: (soNumber: string, orderId: number) => void;
 }
 
-const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView }) => {
+const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView, onOpenChat }) => {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
@@ -78,6 +81,7 @@ const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView 
             <TableRow>
               {/* Plain Header (No background color) */}
               <TableCell align="center" sx={{ fontWeight: "bold" }}>Action</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Notifications</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Product</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Sale Order Number</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Outbound Delivery</TableCell>
@@ -117,6 +121,16 @@ const AssignedOrdersTable: React.FC<Props> = ({ orders, loading, onDetailedView 
                         <Eye size={18} />
                       </IconButton>
                     </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                     <IconButton 
+                       onClick={() => row.saleOrderNumber && onOpenChat(row.saleOrderNumber, row.id)}
+                       size="small"
+                     >
+                       <Badge badgeContent={row.notificationCount || 0} color="error">
+                         <ChatBubbleOutlineIcon fontSize="small" />
+                       </Badge>
+                     </IconButton>
                   </TableCell>
                   <TableCell>{row.product?.name || "-"}</TableCell>
                   <TableCell>{row.saleOrderNumber}</TableCell>

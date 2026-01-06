@@ -14,8 +14,11 @@ import { API } from '@/common/lib/endpoints';
 import { SalesOrder } from "@/app/admin/components/types/admin";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import UserDashboardMain from "@/app/user/components/UserdashboradMain";
+import SoChatDrawer from "@/app/components/SoChatDrawer";
+import { useTheme } from "@mui/material";
 
 export default function UserDashboard() {
+  const theme = useTheme();
   const {
     view,
     setView,
@@ -29,8 +32,21 @@ export default function UserDashboard() {
 
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
+  const [chatOpen, setChatOpen] = React.useState(false);
+  const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   
   const router = useRouter(); 
+
+  const handleOpenChat = (soNumber: string, orderId: number) => {
+    setChatSoNumber(soNumber);
+    setChatOpen(true);
+  };
+  
+  const handleChatClose = () => {
+    setChatOpen(false);
+    setChatSoNumber(null);
+    window.location.reload(); 
+  };
 
   const showSnackbar = (
     message: string,
@@ -109,7 +125,6 @@ export default function UserDashboard() {
         )}
 
         {view === "pick_pack" && (
-          // UPDATED: Removed horizontal padding (px) to make table wider/full width
           <Box sx={{ py: 4, px: 0, width: "100%" }}>
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -121,16 +136,17 @@ export default function UserDashboard() {
                 sx={{
                   width: "100%",
                   mb: 2,
-                  px: 0, // UPDATED: Removed internal padding
-                  py: 0, // UPDATED: Reduced vertical padding
+                  px: 0,
+                  py: 0,
                   bgcolor: "background.paper",
-                  borderRadius: 0, // UPDATED: Squared corners for full-width look
+                  borderRadius: 0,
                 }}
               >
                 <AssignedOrdersTable
                   orders={orders}
                   loading={loading}
                   onDetailedView={handleDetailedViewClick}
+                  onOpenChat={handleOpenChat}
                 />
               </Paper>
             </motion.div>
@@ -163,6 +179,19 @@ export default function UserDashboard() {
         onUploadSuccess={handleUploadSuccess}
         saleOrderNumber={erpUploadOrder?.saleOrderNumber ?? null}
       />
+
+      <SoChatDrawer
+          open={chatOpen}
+          onClose={handleChatClose}
+          soNumber={chatSoNumber}
+          buttonSx={{
+            bgcolor: theme.palette.primary.main,
+            color: "#fff",
+            "&:hover": {
+              bgcolor: theme.palette.primary.dark,
+            },
+          }}
+        />
     </>
   );
 }

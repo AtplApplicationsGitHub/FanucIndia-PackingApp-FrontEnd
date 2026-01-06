@@ -74,6 +74,10 @@ export default function SoChatDrawer({
     setLoading(true);
     setAccessDenied(false);
     try {
+      axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(err => console.error("Failed to clear notifications", err));
+
       const [u, m] = await Promise.all([
         axios.get(API.SO_CHAT.MENTION_USERS(soNumber), {
           headers: { Authorization: `Bearer ${token}` },

@@ -23,6 +23,7 @@ export type SalesOrder = {
   assignedUser?: {
     name: string;
   } | null;
+  notificationCount?: number;
 };
 
 export type LookupData = {

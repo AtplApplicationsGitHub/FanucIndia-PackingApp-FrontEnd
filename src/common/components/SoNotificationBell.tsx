@@ -112,6 +112,10 @@ export default function SoNotificationBell() {
       setItems((prev) => [payload, ...prev]);
     });
 
+    s.on("notification:cleared", (payload: { salesOrderNumber: string }) => {
+      setItems((prev) => prev.filter(item => item.salesOrderNumber !== payload.salesOrderNumber));
+    });
+
     return () => {
       s.disconnect();
       socketRef.current = null;

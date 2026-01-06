@@ -5,7 +5,8 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-
+import SoChatDrawer from "@/app/components/SoChatDrawer";
+import { useTheme } from "@mui/material";
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import SalesDashboardToolbar from "@/app/sales/components/Toolbar";
 import SalesOrdersTable from "@/app/sales/components/Table";
@@ -15,6 +16,7 @@ import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboar
 import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
 
 export default function SalesDashboard() {
+  const theme = useTheme();
   const {
     orders,
     lookup,
@@ -49,6 +51,20 @@ export default function SalesDashboard() {
     alert,
     setAlert,
   } = useSalesDashboard();
+
+  const [chatOpen, setChatOpen] = React.useState(false);
+  const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
+
+  const handleOpenChat = (soNumber: string, orderId: number) => {
+    setChatSoNumber(soNumber);
+    setChatOpen(true);
+  };
+
+  const handleChatClose = () => {
+    setChatOpen(false);
+    setChatSoNumber(null);
+    fetchOrders(currentPage, pageSize); 
+  };
 
   if (error && !orders.length) {
     return (
@@ -102,6 +118,7 @@ export default function SalesDashboard() {
                 lookup={lookup}
                 totalOrders={totalOrders}
                 onEdit={handleEdit}
+                onOpenChat={handleOpenChat}
                 onDelete={setDeletingId}
                 paginationModel={{ page: currentPage - 1, pageSize }}
                 onPaginationModelChange={({ page, pageSize }) => {
@@ -145,6 +162,19 @@ export default function SalesDashboard() {
             setShowForm(false);
             handleModalClose();
             fetchOrders();
+          }}
+        />
+
+        <SoChatDrawer
+          open={chatOpen}
+          onClose={handleChatClose}
+          soNumber={chatSoNumber}
+          buttonSx={{
+            bgcolor: theme.palette.primary.main,
+            color: "#fff",
+            "&:hover": {
+              bgcolor: theme.palette.primary.dark,
+            },
           }}
         />
       </Box>

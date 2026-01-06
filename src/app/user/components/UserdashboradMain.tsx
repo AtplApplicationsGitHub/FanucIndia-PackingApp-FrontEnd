@@ -9,8 +9,12 @@ import UserDispatch from "./UserDashboard/UserDispatch";
 import UserPieChart from "./UserDashboard/UserPieChart";
 import UserRecentActivity from "./UserDashboard/UserRecentActivity";
 
+interface Props {
+  userName: string;
+  setView: (view: any) => void;
+}
 
-export default function UserDashboard() {
+export default function UserDashboard({ userName, setView }: Props) {
   return (
     <div className="py-6 md:py-8">
       <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
