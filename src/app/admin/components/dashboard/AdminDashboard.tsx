@@ -52,8 +52,6 @@ export default function AdminDashboard() {
               <OrdersByProduct />
             </div>
           </div>
-
-
         </motion.div>
       </div>
     </div>

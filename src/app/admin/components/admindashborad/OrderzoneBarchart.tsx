@@ -5,10 +5,8 @@ import React, { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { Table, BarChart3 } from "lucide-react";
 import { useOrderZoneBarChart, ZoneStatus } from "../hooks/useOrderzoneBarchart";
-import { useTheme } from "@mui/material";
 
 export default function OrderStatusByZone() {
-  const theme = useTheme();
   const { data, loading, error, refetch } = useOrderZoneBarChart();
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
@@ -33,9 +31,9 @@ export default function OrderStatusByZone() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+      <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-500 flex items-center gap-3">
+          <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-3">
             <BarChart3 className="w-6 h-6 animate-spin" />
             Loading order status by zone...
           </div>
@@ -46,12 +44,12 @@ export default function OrderStatusByZone() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+      <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading data: {error}</p>
+          <p className="text-[#D00000] dark:text-red-400 mb-4">Error loading data: {error}</p>
           <button
             onClick={refetch}
-            className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            className="px-5 py-2 bg-[#D00000] text-white rounded-lg hover:bg-red-700 transition"
           >
             Retry
           </button>
@@ -61,26 +59,23 @@ export default function OrderStatusByZone() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-300 select-none h-full chart-no-focus">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <h2
-            className="text-lg uppercase font-semibold"
-            style={{ color: theme.palette.secondary.main }}
-          >
+          <h2 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Order Status by Sales Zone
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">
             Real-time counts per zone — Assigned, Issued, Packed, Dispatched
           </p>
         </div>
 
-        {/* Toggle Button WITHOUT yellow focus ring */}
+        {/* Toggle Button */}
         <button
           onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 
-            text-gray-700 font-medium rounded-lg transition-all duration-200 focus:outline-none"
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F7F7F7] dark:bg-[#2C3540] hover:bg-gray-200 dark:hover:bg-gray-600 
+            text-[#1F2933] dark:text-[#F7F7F7] font-medium rounded-lg transition-all duration-200 focus:outline-none border border-[#E5E7EB] dark:border-[#4B5563]"
         >
           {viewMode === "chart" ? (
             <>
@@ -109,7 +104,7 @@ export default function OrderStatusByZone() {
             `}
           </style>
 
-          <div className="h-[450px] -mx-6 -mb-6">
+          <div className="h-[450px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
             <BarChart
               aria-label="Order status by sales zone"
               dataset={chartData}
@@ -118,8 +113,14 @@ export default function OrderStatusByZone() {
               xAxis={[
                 {
                   dataKey: "zone",
-                  scaleType: "band",
-                  // keep default tick style so labels render reliably
+                   scaleType: "band",
+                   tickLabelStyle: {
+                     angle: 0,
+                     textAnchor: 'middle',
+                     fontSize: 12,
+                     // We rely on MUI ThemeProvider to swap text color in dark mode
+                     // or we can pass explicit fill if the theme provider isn't enough
+                   },
                 },
               ]}
               yAxis={[
@@ -164,33 +165,42 @@ export default function OrderStatusByZone() {
                 legend: {
                   position: { vertical: "bottom", horizontal: "center" },
                   sx: {
-                    mt: 2,
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    // circular color indicators
-                    "& .MuiChartsLegend-marker": {
-                      borderRadius: "50%",
-                      width: 12,
-                      height: 12,
-                    },
-                    // bold legend text
-                    "& .MuiChartsLegend-series tspan": {
+                    gap: 2, // Use gap in sx if it's a flex container, or rely on default spacing
+                    "& .MuiChartsLegend-label": {
                       fontSize: 12,
                       fontWeight: 600,
+                      fill: "currentColor",
                     },
                   },
                 },
               }}
+
+              sx={{
+                // Ensure text colors adapt to theme context if inherited
+                "& .MuiChartsAxis-tickLabel": {
+                   fill: "currentColor !important"
+                },
+                "& .MuiChartsAxis-line": {
+                  stroke: "currentColor !important"
+                },
+                "& .MuiChartsAxis-tick": {
+                  stroke: "currentColor !important"
+                },
+                "& .MuiChartsLegend-label": {
+                   fill: "currentColor !important"
+                }
+              }}
+              className="dark:text-[#E5E7EB] text-[#4B5563]"
             />
           </div>
         </>
       ) : (
-        /* Table View (unchanged) */
+        /* Table View */
         <div className="overflow-x-auto -mx-6 -mb-6 mt-4">
-          <table className="w-full text-sm border-t border-gray-200">
-            <thead className="bg-gray-50">
+          <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
+            <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
               <tr>
-                <th className="px-6 py-4 text-left font-semibold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
                   Zone
                 </th>
                 <th
@@ -225,10 +235,10 @@ export default function OrderStatusByZone() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
               {chartData.map((row) => (
-                <tr key={row.zone} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                <tr key={row.zone} className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]">
+                  <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
                     {row.zone}
                   </td>
                   <td

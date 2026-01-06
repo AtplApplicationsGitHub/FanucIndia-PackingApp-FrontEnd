@@ -48,17 +48,14 @@ export default function OrderImportsCard() {
 
   return (
     <div className="w-full">
-      <div className="rounded-2xl bg-white dark:bg-slate-800 shadow-lg p-6 min-h-[500px] border border-slate-100 dark:border-slate-700 hover:shadow-xl transition-all duration-300">
+      <div className="rounded-xl bg-white dark:bg-[#1F2933] shadow-sm p-6 min-h-[500px] border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 
-              className="text-lg uppercase font-semibold"
-              style={{ color: theme.palette.secondary.main }}
-            >
+            <h3 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               Orders Created
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
+            <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-1 mt-1">
               <Calendar className="w-4 h-4" />
               Last 5 Days
             </p>
@@ -66,15 +63,15 @@ export default function OrderImportsCard() {
         </div>
 
         {error && (
-          <div className="mt-8 text-center py-12 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <p className="text-red-600 dark:text-red-400 mb-2 font-medium">Failed to load data</p>
+          <div className="mt-8 text-center py-12 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
+            <AlertCircle className="w-12 h-12 text-[#D00000] dark:text-[#FF6B6B] mx-auto mb-4" />
+            <p className="text-[#D00000] dark:text-[#FF6B6B] mb-2 font-medium">Failed to load data</p>
             <p className="text-sm text-red-500 dark:text-red-300 mb-6 max-w-sm mx-auto">
               {error}
             </p>
             <button
               onClick={refetch}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#D00000] text-white rounded-lg hover:bg-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <RefreshCw className="w-4 h-4" />
               Try Again
@@ -89,30 +86,30 @@ export default function OrderImportsCard() {
               <div
                 key={s.date}
                 // All items use the yellow hover styles — default bg/border still differ for the first item
-                className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:bg-yellow-100 dark:hover:bg-yellow-900/30 hover:border-yellow-300 dark:hover:border-yellow-700 ${idx === 0
+                className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-sm hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] ${idx === 0
                     ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700"
-                    : "bg-slate-50 dark:bg-slate-700/30 border-slate-100 dark:border-slate-600"
+                    : "bg-[#F7F7F7] dark:bg-[#2C3540]/30 border-[#E5E7EB] dark:border-[#4B5563]"
                   }`}
               >
                 <div className="flex items-center gap-4">
                   {/* Day indicator with different colors */}
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm ${idx === 0
-                      ? "bg-sky-500 text-white"
+                      ? "bg-[#3B82F6] text-white"
                       : idx === 1
-                        ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300"
-                        : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
+                        ? "bg-blue-100 dark:bg-blue-900/40 text-[#3B82F6] dark:text-[#3B82F6]"
+                        : "bg-gray-200 dark:bg-gray-700 text-[#4B5563] dark:text-[#E5E7EB]"
                     }`}>
                     {s.dayLabel.substring(0, 3)}
                   </div>
 
                   <div>
                     <span className={`text-sm font-medium block ${idx === 0
-                        ? "text-sky-700 dark:text-sky-300"
-                        : "text-slate-700 dark:text-slate-300"
+                        ? "text-[#3B82F6] dark:text-[#3B82F6]"
+                        : "text-[#1F2933] dark:text-[#E5E7EB]"
                       }`}>
                       {s.dayLabel}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">
                       {s.date}
                     </span>
                   </div>
@@ -121,12 +118,12 @@ export default function OrderImportsCard() {
                 {/* Count with visual indicator for today */}
                 <div className="flex items-center gap-3">
                   {idx === 0 && (
-                    <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-[#3B82F6] rounded-full animate-pulse" />
                   )}
                   <span
                     className={`text-lg font-bold tabular-nums ${idx === 0
-                        ? "text-sky-600 dark:text-sky-400"
-                        : "text-slate-800 dark:text-slate-100"
+                        ? "text-[#3B82F6] dark:text-[#3B82F6]"
+                        : "text-[#1F2933] dark:text-[#E5E7EB]"
                       }`}
                   >
                     {s.count.toLocaleString()}
@@ -139,15 +136,14 @@ export default function OrderImportsCard() {
 
         {/* Empty state */}
         {!error && (!stats || stats.length === 0) && (
-          <div className="mt-8 text-center py-12 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600">
-            <div className="w-16 h-16 bg-slate-200 dark:bg-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-slate-400 dark:text-slate-300" />
+          <div className="mt-8 text-center py-12 rounded-xl bg-[#F7F7F7] dark:bg-[#2C3540] border border-[#E5E7EB] dark:border-[#4B5563]">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-[#4B5563] dark:text-[#9CA3AF]" />
             </div>
-            <p className="text-slate-600 dark:text-slate-300 mb-2 font-medium">No data available</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            <p className="text-[#1F2933] dark:text-[#E5E7EB] mb-2 font-medium">No data available</p>
+            <p className="text-sm text-[#4B5563] dark:text-[#9CA3AF] mb-4">
               No order imports found for the last 5 days
             </p>
-            
           </div>
         )}
       </div>

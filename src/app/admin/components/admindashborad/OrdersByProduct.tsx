@@ -18,9 +18,8 @@ function formatNumber(n: number): string {
 }
 
 export default function OrdersByProduct({
-  maxHeight = 360,
   className = "",
-}: Props) {
+}: { className?: string }) {
   const theme = useTheme();
   const { data, loading, error } = useOrdersByProduct();
 
@@ -28,26 +27,22 @@ export default function OrdersByProduct({
   const items: OrderByProduct[] = (data ?? []) as OrderByProduct[];
   const hasData = items.length > 0;
 
-  const resolvedMaxHeight =
-    typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
-
   return (
     <section
       className={`h-full ${className}`}
       aria-labelledby="orders-by-product"
     >
-      <div className="flex flex-col h-full rounded-2xl bg-white/95 dark:bg-slate-900/75 shadow-lg p-6 border border-gray-100 dark:border-slate-800">
+      <div className="flex flex-col h-full rounded-xl bg-white dark:bg-[#1F2933] shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
         <header className="flex items-start justify-between mb-4">
           <div>
             <p
               id="orders-by-product"
-              className="text-lg uppercase font-semibold"
-              style={{ color: theme.palette.secondary.main }}
+              className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]"
             >
               Orders by Product
             </p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Top 5 products by order count
+            <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
+              Products by order count
             </p>
           </div>
         </header>
@@ -55,7 +50,7 @@ export default function OrdersByProduct({
         {/* Loading State */}
         {loading && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+            <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-2">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden>
                 <circle
                   className="opacity-25"
@@ -80,14 +75,14 @@ export default function OrdersByProduct({
         {/* Error State */}
         {error && !loading && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <p className="text-red-600 dark:text-red-400 text-sm">Error: {error}</p>
+            <p className="text-[#D00000] dark:text-[#FF6B6B] text-sm">Error: {error}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && !error && !hasData && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No orders yet</p>
+            <p className="text-[#4B5563] dark:text-[#E5E7EB] text-sm">No orders yet</p>
           </div>
         )}
 
@@ -95,24 +90,22 @@ export default function OrdersByProduct({
         {!loading && !error && hasData && (
           <>
             <div
-              className="content flex-1 overflow-y-auto overflow-x-hidden divide-y divide-slate-100 dark:divide-slate-800 rounded-md"
-              style={{ maxHeight: resolvedMaxHeight }}
+              className="content flex-1 divide-y divide-[#E5E7EB] dark:divide-[#4B5563] rounded-md"
               role="list"
-              tabIndex={0}
               aria-label="Orders by product list"
             >
               {items.map((item, idx) => {
                 return (
                   <div
                     key={`${item.name ?? "product"}-${idx}`}
-                    className="flex items-center justify-between gap-4 px-2 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                    className="flex items-center justify-between gap-4 px-2 py-4 hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition-colors"
                     role="listitem"
                     aria-label={`${item.name} — ${item.count} orders`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Name */}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                        <p className="text-sm font-medium text-[#1F2933] dark:text-[#E5E7EB] truncate">
                           {item.name}
                         </p>
                       </div>
@@ -121,10 +114,10 @@ export default function OrdersByProduct({
                     {/* Count badge */}
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <span className="text-2xl font-semibold text-yellow-600 dark:text-yellow-400">
+                        <span className="text-2xl font-semibold text-[#FFD93D] dark:text-[#FFD93D]">
                           {formatNumber(item.count)}
                         </span>
-                        <div className="text-xs text-slate-400 dark:text-slate-500">orders</div>
+                        <div className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">orders</div>
                       </div>
                     </div>
                   </div>
@@ -135,7 +128,7 @@ export default function OrdersByProduct({
             {/* Footer */}
             <div className="mt-4 flex justify-end">
               <div className="w-fit text-xs px-3 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
-                Top {items.length} Products
+                Total {items.length} Products
               </div>
             </div>
           </>

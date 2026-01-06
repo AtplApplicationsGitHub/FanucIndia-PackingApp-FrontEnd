@@ -40,6 +40,14 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     [effectiveMode]
   );
 
+  React.useEffect(() => {
+    if (effectiveMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [effectiveMode]);
+
   return (
     <NextAppDirEmotionCacheProvider options={{ key: 'mui' }}>
       <ColorModeContext.Provider value={{ mode, setMode }}>

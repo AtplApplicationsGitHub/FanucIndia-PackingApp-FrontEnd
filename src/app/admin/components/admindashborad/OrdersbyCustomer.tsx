@@ -21,35 +21,30 @@ function formatNumber(n: number): string {
 }
 
 export default function OrdersByCustomer({
-  maxHeight = 360,
   className = "",
-}: Props) {
+}: { className?: string }) {
   const theme = useTheme();
   const { data, loading, error } = useOrdersByCustomer();
 
   const items: Customer[] = (data as Customer[]) ?? [];
   const hasData = items.length > 0;
 
-  const resolvedMaxHeight =
-    typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
-
   return (
     <section
       className={`h-full ${className}`}
       aria-labelledby="orders-by-customer"
     >
-      <div className="flex flex-col h-full rounded-2xl bg-white/95 dark:bg-slate-900/75 shadow-lg p-6 border border-gray-100 dark:border-slate-800">
+      <div className="flex flex-col h-full rounded-xl bg-white dark:bg-[#1F2933] shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
         <header className="flex items-start justify-between mb-4">
           <div>
             <p
               id="orders-by-customer"
-              className="text-lg uppercase font-semibold"
-              style={{ color: theme.palette.secondary.main }}
+              className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]"
             >
               Orders by Customer
             </p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Top 5 customers by order count
+            <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
+              Customers by order count
             </p>
           </div>
         </header>
@@ -57,7 +52,7 @@ export default function OrdersByCustomer({
         {/* Loading State */}
         {loading && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+            <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-2">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
@@ -82,14 +77,14 @@ export default function OrdersByCustomer({
         {/* Error State */}
         {error && !loading && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <p className="text-[#D00000] dark:text-[#FF6B6B] text-sm">{error}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && !error && !hasData && (
           <div className="flex-1 flex items-center justify-center py-12">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-[#4B5563] dark:text-[#E5E7EB] text-sm">
               No customers found
             </p>
           </div>
@@ -99,11 +94,9 @@ export default function OrdersByCustomer({
         {!loading && !error && hasData && (
           <>
             <div
-              className="content flex-1 overflow-y-auto overflow-x-hidden divide-y divide-slate-100 dark:divide-slate-800 rounded-md"
-              style={{ maxHeight: resolvedMaxHeight }}
+              className="content flex-1 divide-y divide-[#E5E7EB] dark:divide-[#4B5563] rounded-md"
               role="list"
-              tabIndex={0}
-              aria-label="Top customers by order count"
+              aria-label="Customers by order count"
             >
               {items.map((c, idx) => {
                 const active = !!c.isActive;
@@ -111,7 +104,7 @@ export default function OrdersByCustomer({
                 return (
                   <div
                     key={`${c.name}-${idx}`}
-                    className="flex items-center justify-between gap-4 px-2 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                    className="flex items-center justify-between gap-4 px-2 py-4 hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition-colors"
                     role="listitem"
                     aria-label={`${c.name} — ${c.count} orders — ${
                       active ? "Active" : "Inactive"
@@ -119,7 +112,7 @@ export default function OrdersByCustomer({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                        <p className="text-sm font-medium text-[#1F2933] dark:text-[#E5E7EB] truncate">
                           {c.name}
                         </p>
                       </div>
@@ -127,10 +120,10 @@ export default function OrdersByCustomer({
 
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <span className="text-2xl font-semibold text-yellow-600 dark:text-yellow-400">
+                        <span className="text-2xl font-semibold text-[#FFD93D] dark:text-[#FFD93D]">
                           {formatNumber(c.count)}
                         </span>
-                        <div className="text-xs text-slate-400 dark:text-slate-500">
+                        <div className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">
                           orders
                         </div>
                       </div>
@@ -142,7 +135,7 @@ export default function OrdersByCustomer({
 
             <div className="mt-4 flex justify-end">
               <div className="w-fit text-xs px-3 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
-                Top {items.length} Customers
+                Total {items.length} Customers
               </div>
             </div>
           </>

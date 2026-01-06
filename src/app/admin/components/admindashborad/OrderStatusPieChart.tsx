@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { useOrderOverallStatus } from "../hooks/useOrderStatusPieChart";
 
 // Finalized Colors - Updated to match new palette
@@ -19,54 +19,20 @@ export default function OrderStatusPieChart() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "900px",
-          margin: "0 auto",
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-          height: "100%",
-          minHeight: "500px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        }}
-      >
-        <CircularProgress />
-        <span style={{ color: "#9ca3af", marginLeft: "12px" }}>
+      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
+        <CircularProgress className="text-[#FFD200]" />
+        <span className="ml-3 text-[#4B5563] dark:text-[#E5E7EB]">
           Loading chart...
         </span>
-      </Box>
+      </div>
     );
   }
 
   if (error || !data) {
     return (
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "900px",
-          margin: "0 auto",
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-          height: "100%",
-          minHeight: "500px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        }}
-      >
-        <Typography color="error">Error: {error || "No data"}</Typography>
-      </Box>
+      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
+        <p className="text-[#D00000] dark:text-red-400">Error: {error || "No data"}</p>
+      </div>
     );
   }
 
@@ -112,56 +78,19 @@ export default function OrderStatusPieChart() {
   const hasData = chartData.length > 0;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: "900px",
-        margin: "0 auto",
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
-        padding: "24px",
-        boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      <div style={{ marginBottom: "20px" }}>
-        <Typography
-          variant="body2"
-          sx={{
-            fontSize: "1rem",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: "secondary.main",
-          }}
-        >
+    <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans">
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold uppercase tracking-wider text-[#D00000] dark:text-[#FF6B6B]">
           Overall Order Status Count
-        </Typography>
+        </h2>
 
-        <p
-          style={{
-            margin: "4px 0 0",
-            fontSize: "14px",
-            color: "#6b7280",
-          }}
-        >
+        <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
           Real-time breakdown of order lifecycle (Total:{" "}
           {total.toLocaleString()})
         </p>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          position: "relative",
-          minHeight: "320px",
-          width: "100%",
-        }}
-      >
+      <div className="flex-1 relative min-h-[320px] w-full text-gray-700 dark:text-gray-200">
         {hasData ? (
           <PieChart
             series={[
@@ -178,7 +107,6 @@ export default function OrderStatusPieChart() {
                   const percentage = total > 0 ? (value / total) * 100 : 0;
                   return `${value.toLocaleString()} orders (${percentage.toFixed(1)}%)`;
                 },
-
                 innerRadius: 0,
                 paddingAngle: 0,
                 cornerRadius: 0,
@@ -186,22 +114,25 @@ export default function OrderStatusPieChart() {
             ]}
             height={400}
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            slotProps={{
+              legend: {
+                position: { vertical: "middle", horizontal: "end" },
+                sx: {
+                  "& .MuiChartsLegend-label": {
+                    fill: "currentColor",
+                  },
+                },
+              },
+            }}
+            // MUI Charts dark mode support typically requires the ThemeProvider to be set up correctly with 'dark' mode
+            // Since we fixed ThemeRegistry, this should auto-adapt if it consumes the MUI theme context.
           />
         ) : (
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#9ca3af",
-            }}
-          >
+          <div className="h-full flex items-center justify-center text-[#9ca3af] dark:text-[#6b7280]">
             No data available
           </div>
         )}
       </div>
-      {/* Custom legend removed – using built-in MUI legend */}
     </div>
   );
 }
