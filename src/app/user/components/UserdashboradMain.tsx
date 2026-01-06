@@ -7,6 +7,7 @@ import StatsCards from "./UserDashboard/TopSatusCards";
 import UserOrderImports from "./UserDashboard/UserOrderImports";
 import UserDispatch from "./UserDashboard/UserDispatch";
 import UserPieChart from "./UserDashboard/UserPieChart";
+import UserRecentActivity from "./UserDashboard/UserRecentActivity";
 
 
 export default function UserDashboard() {
@@ -19,7 +20,7 @@ export default function UserDashboard() {
           transition={{ duration: 0.5 }}
         >
           <StatsCards />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div className="h-full">
               <UserOrderImports />
@@ -31,9 +32,12 @@ export default function UserDashboard() {
               <UserPieChart />
             </div>
           </div>
-          
+          <div className="mt-8">
+            <UserRecentActivity />
+          </div>
+
         </motion.div>
       </div>
     </div>
-  );  
+  );
 }
