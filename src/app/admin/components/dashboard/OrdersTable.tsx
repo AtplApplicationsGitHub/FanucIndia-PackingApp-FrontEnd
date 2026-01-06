@@ -345,7 +345,7 @@ export default function AdminOrdersTable({
 
                 {/* CUSTOMER */}
                 <TableCell>
-                  {findName(lookup.customers, row.customerId ?? 0, "name")}
+                  {row.customerNameText || findName(lookup.customers, row.customerId ?? 0, "name")}
                 </TableCell>
 
                 <TableCell sx={{ minWidth: 100 }}>

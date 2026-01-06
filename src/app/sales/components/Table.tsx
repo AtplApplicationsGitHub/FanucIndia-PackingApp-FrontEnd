@@ -243,9 +243,10 @@ export default function SalesOrdersTable({
 
                   {/* CUSTOMER */}
                   <TableCell>
-                    {row.customerId != null
-                      ? findName(lookup.customers, row.customerId ?? 0, "name")
-                      : ""}
+                    {row.customerNameText || 
+                      (row.customerId != null
+                        ? findName(lookup.customers, row.customerId ?? 0, "name")
+                        : "-")}
                   </TableCell>
 
                   {/* SPECIAL REMARKS */}

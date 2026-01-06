@@ -12,6 +12,7 @@ type Props = {
   options: Customer[];
   error?: string;
   required?: boolean;
+  disabled?: boolean;
 };
 
 const CustomerSelect: React.FC<Props> = ({
@@ -21,6 +22,7 @@ const CustomerSelect: React.FC<Props> = ({
   options,
   error,
   required = true,
+  disabled,
 }) => {
   const selectedOption = options.find((opt) => String(opt.id) === valueId) || null;
   const value: Customer | string | null = selectedOption ?? (valueName ? valueName : null);
@@ -30,6 +32,7 @@ const CustomerSelect: React.FC<Props> = ({
       disablePortal
       fullWidth
       freeSolo
+      disabled={disabled}
       options={options}
       getOptionLabel={(option) => (typeof option === "string" ? option : option?.name ?? "")}
       value={value}
@@ -62,6 +65,7 @@ const CustomerSelect: React.FC<Props> = ({
           error={!!error}
           helperText={error}
           size="medium"
+          disabled={disabled}
           placeholder="Select customer or type a new name"
           autoComplete="off"
           sx={{

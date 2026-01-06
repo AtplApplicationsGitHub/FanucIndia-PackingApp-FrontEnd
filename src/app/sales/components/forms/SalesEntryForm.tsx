@@ -185,6 +185,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           onChange={onChange}
           options={lookup.customers}
           error={errors.customerId || errors.customerName}
+          disabled={!!initialData?.hasMaterialData}
         />
         <div className="col-span-1 md:col-span-2">
           <RemarksTextarea
