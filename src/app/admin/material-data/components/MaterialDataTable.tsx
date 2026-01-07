@@ -273,10 +273,10 @@ export default function MaterialDataTable({
       const updated = await onUpdatePackingStage(row.materialCode, newValue, row.id);
       if (!updated) throw new Error("Update failed: Server returned no data.");
 
-      if (newValue === row.reqQuantity && row.remarksRequired && !row.remarks) {
+      if (newValue === row.reqQuantity && row.remarksRequired && !updated.remarks) {
           setSnackbarMessage(`Remarks Mandatory for ${row.materialCode}`);
           setSnackbarOpen(true);
-          handleOpenRemarks(row, true); 
+          handleOpenRemarks(updated, true); 
       }
 
     } catch (error) {
