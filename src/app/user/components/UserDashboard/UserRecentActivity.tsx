@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, Typography, Skeleton, Alert, Badge, IconButton, Tooltip } from "@mui/material";
+import { Box, Typography, Skeleton, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -9,24 +9,14 @@ import {
   CheckCircle,
   AlertTriangle,
   Warehouse,
-  Truck,
   HelpCircle,
-  MessageSquare,
-  Bell,
-  MoreHorizontal
 } from "lucide-react";
 
-// Import the new hook
 import { useUserRecentActivity } from "../../hooks/useUserRecentActivity";
 
-/**
- * Custom styling helper for the User Dashboard version of Recent Activity.
- * We ignore the 'config' coming from the hook and use our own mapping.
- */
 function getActivityConfig(status: string) {
   const s = (status || "").toLowerCase().trim();
 
-  // 1. Issue reported (Red)
   if (s.includes("issue reported") || s.includes("error")) {
     return {
       icon: <AlertCircle size={20} className="text-red-600" />,
@@ -34,7 +24,6 @@ function getActivityConfig(status: string) {
     };
   }
 
-  // 2. Packed (Blue/Indigo)
   if (s.includes("packed")) {
     return {
       icon: <Package size={20} className="text-blue-600" />,
@@ -42,7 +31,6 @@ function getActivityConfig(status: string) {
     };
   }
 
-  // 3. Dispatched (Green)
   if (s.includes("dispatched") || s.includes("shipped")) {
     return {
       icon: <CheckCircle size={20} className="text-green-600" />,
@@ -50,7 +38,6 @@ function getActivityConfig(status: string) {
     };
   }
 
-  // 4. Moved to FG location (Purple)
   if (s.includes("fg location") || s.includes("storage")) {
     return {
       icon: <Warehouse size={20} className="text-purple-600" />,
@@ -58,7 +45,6 @@ function getActivityConfig(status: string) {
     };
   }
 
-  // 5. Issue found (Yellow)
   if (s.includes("issue found") || s.includes("warning")) {
     return {
       icon: <AlertTriangle size={20} className="text-amber-600" />, // Amber/Yellow
@@ -66,7 +52,6 @@ function getActivityConfig(status: string) {
     };
   }
 
-  // Fallback
   return {
     icon: <HelpCircle size={20} className="text-gray-500" />,
     bg: "bg-gray-50",
@@ -154,4 +139,3 @@ export default function UserRecentActivity() {
     </Box>
   );
 }
-

@@ -1,12 +1,6 @@
 // app/admin/components/OrdersByCustomer.tsx
 import React from "react";
 import { useOrdersByCustomer } from "../hooks/useOrdersbyCustomer";
-import { useTheme } from "@mui/material";
-
-type Props = {
-  maxHeight?: number | string;
-  className?: string;
-};
 
 type Customer = {
   name: string;
@@ -23,7 +17,6 @@ function formatNumber(n: number): string {
 export default function OrdersByCustomer({
   className = "",
 }: { className?: string }) {
-  const theme = useTheme();
   const { data, loading, error } = useOrdersByCustomer();
 
   const items: Customer[] = (data as Customer[]) ?? [];

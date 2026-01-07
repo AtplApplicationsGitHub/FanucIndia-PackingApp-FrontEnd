@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { ShoppingCart, Truck, AlertTriangle } from "lucide-react";
+import { ShoppingCart, Truck } from "lucide-react";
 import { useStatsCards } from "../../hooks/useStatsCards";
 import { Skeleton, useTheme } from "@mui/material";
 
@@ -54,8 +54,6 @@ export default function StatsCards() {
 
   const totalOrders = data?.totalSoCount ?? 0;
   const dispatched = data?.dispatchedSoCount ?? 0;
-  // pending = awaiting dispatch
-  const pending = Math.max(0, totalOrders - dispatched);
 
   return (
     <div className="w-full">

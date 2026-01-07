@@ -1,10 +1,8 @@
 import React from "react";
 import { useOrderImports } from "../hooks/useOrderImports";
 import { RefreshCw , Calendar, AlertCircle } from "lucide-react";
-import { useTheme } from "@mui/material";
 
 export default function OrderImportsCard() {
-  const theme = useTheme();
   const { data: stats, loading, error, refetch } = useOrderImports();
 
   if (loading) {

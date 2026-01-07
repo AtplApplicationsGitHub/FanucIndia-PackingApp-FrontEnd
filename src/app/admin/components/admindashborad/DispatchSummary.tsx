@@ -2,10 +2,8 @@
 import React from "react";
 import { useDispatchSummary } from "../hooks/useDispatchSummary";
 import { Clock, CheckCircle, ClipboardCheck } from "lucide-react";
-import { useTheme } from "@mui/material";
 
 export default function DispatchSummary() {
-  const theme = useTheme();
   const { data, loading, error } = useDispatchSummary();
 
   const ordersToBeDispatched = data?.ordersToBeDispatched ?? 0;

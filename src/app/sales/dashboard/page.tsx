@@ -55,7 +55,7 @@ export default function SalesDashboard() {
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
 
-  const handleOpenChat = (soNumber: string, orderId: number) => {
+  const handleOpenChat = (soNumber: string, _orderId: number) => {
     setChatSoNumber(soNumber);
     setChatOpen(true);
   };

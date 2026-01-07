@@ -1,17 +1,6 @@
 // components/OrdersByProduct.tsx
 import React from "react";
 import { useOrdersByProduct, OrderByProduct } from "../hooks/useOrdersByProduct";
-import { useTheme } from "@mui/material";
-
-type Props = {
-  /**
-   * Max height of the scrollable list area.
-   * Can be a number (pixels) or any CSS size string.
-   * Default: 360px
-   */
-  maxHeight?: number | string;
-  className?: string;
-};
 
 function formatNumber(n: number): string {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -20,10 +9,8 @@ function formatNumber(n: number): string {
 export default function OrdersByProduct({
   className = "",
 }: { className?: string }) {
-  const theme = useTheme();
   const { data, loading, error } = useOrdersByProduct();
 
-  // Safely handle null/undefined → default to empty array while loading
   const items: OrderByProduct[] = (data ?? []) as OrderByProduct[];
   const hasData = items.length > 0;
 

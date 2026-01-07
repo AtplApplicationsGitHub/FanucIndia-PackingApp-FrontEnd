@@ -38,13 +38,13 @@ export default function AdminDashboard() {
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
 
-  const handleOpenChat = async (soNumber: string, orderId: number) => {
+  const handleOpenChat = async (soNumber: string, _orderId: number) => {
     setChatSoNumber(soNumber);
     setChatOpen(true);
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
         headers: { Authorization: `Bearer ${token}` },
       });
 

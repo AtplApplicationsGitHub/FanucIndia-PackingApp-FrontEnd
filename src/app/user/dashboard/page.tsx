@@ -37,7 +37,7 @@ export default function UserDashboard() {
   
   const router = useRouter(); 
 
-  const handleOpenChat = (soNumber: string, orderId: number) => {
+  const handleOpenChat = (soNumber: string, _orderId: number) => {
     setChatSoNumber(soNumber);
     setChatOpen(true);
   };

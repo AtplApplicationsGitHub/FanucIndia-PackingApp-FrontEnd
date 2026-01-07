@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
-import { useTheme } from "@mui/material";
 import { Table, BarChart3 } from "lucide-react";
 
 type ChartDatum = {
@@ -19,7 +18,6 @@ const formatNumber = (n: number | string) => {
 };
 
 export default function PaymentClearanceByZone() {
-  const theme = useTheme();
   const { data: rawData, loading, error } = usePaymentClearanceBarchart();
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 

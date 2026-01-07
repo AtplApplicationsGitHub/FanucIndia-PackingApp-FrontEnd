@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { UserDashboardView } from "../hooks/useUserDashboard";
 
 import StatsCards from "./UserDashboard/TopSatusCards";
 import UserOrderImports from "./UserDashboard/UserOrderImports";
@@ -11,10 +12,10 @@ import UserRecentActivity from "./UserDashboard/UserRecentActivity";
 
 interface Props {
   userName: string;
-  setView: (view: any) => void;
+  setView: (view: UserDashboardView) => void;
 }
 
-export default function UserDashboard({ userName, setView }: Props) {
+export default function UserDashboard({ userName: _userName, setView: _setView }: Props) {
   return (
     <div className="py-6 md:py-8">
       <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">

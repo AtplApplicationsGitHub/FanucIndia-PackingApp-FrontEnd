@@ -51,7 +51,7 @@ export function useUserRecentActivity() {
         
         setActivities(dummyData);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError("Failed to load activities");
         setLoading(false);
       }
