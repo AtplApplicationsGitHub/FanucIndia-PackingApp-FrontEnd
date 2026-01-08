@@ -4,13 +4,11 @@
 import React from "react";
 import { ShoppingCart, Truck } from "lucide-react";
 import { useStatsCards } from "../../hooks/useStatsCards";
-import { Skeleton, useTheme } from "@mui/material";
 
 interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  iconBgColor?: string;
   loading?: boolean;
 }
 
@@ -18,31 +16,28 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   icon,
-  iconBgColor = "bg-white",
   loading = false,
 }) => {
-  const theme = useTheme();
   return (
-    <div className="relative group rounded-xl bg-white border border-gray-100 px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
+    <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
       <div className="flex items-center justify-between gap-6">
         <div className="flex-1 text-center">
-          <p 
-            className="text-md font-semibold uppercase tracking-wide"
-            style={{ color: theme.palette.secondary.main }}
-          >
+          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             {title}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-gray-900 leading-tight">
+          <div className="mt-2 flex justify-center h-10 items-center">
             {loading ? (
-              <Skeleton width={120} height={48} className="mx-auto" />
+              <div className="h-10 w-32 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse" />
             ) : (
-              new Intl.NumberFormat().format(Number(value ?? 0))
+              <p className="text-4xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
+                {new Intl.NumberFormat().format(Number(value ?? 0))}
+              </p>
             )}
-          </p>
+          </div>
         </div>
 
-        <div className={`flex-shrink-0 grid place-items-center h-14 w-14 rounded-lg ${iconBgColor}`}>
-          <div className="text-xl text-gray-700">{icon}</div>
+        <div className="flex-shrink-0 grid place-items-center h-14 w-14 rounded-xl bg-[#F7F7F7] dark:bg-[#2C3540]">
+          <div className="text-xl">{icon}</div>
         </div>
       </div>
     </div>
@@ -61,16 +56,14 @@ export default function StatsCards() {
         <StatCard
           title="Orders Assigned to Me"
           value={totalOrders}
-          icon={<ShoppingCart className="h-6 w-6 text-blue-600" />}
-          iconBgColor="bg-blue-50"
+          icon={<ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
           loading={loading}
         />
 
         <StatCard
           title="Overdue Orders"
           value={dispatched}
-          icon={<Truck className="h-6 w-6 text-green-600" />}
-          iconBgColor="bg-green-50"
+          icon={<Truck className="h-6 w-6 text-green-600 dark:text-green-400" />}
           loading={loading}
         />
       </div>

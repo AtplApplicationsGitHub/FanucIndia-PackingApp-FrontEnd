@@ -15,139 +15,100 @@ const UserOrderImports = () => {
     switch (type) {
       case "today":
         return {
-          cardBg: isDark ? "rgba(252, 211, 77, 0.05)" : "#fffbeb", // Light yellow / Dark subtle yellow
-          cardBorder: "#fcd34d", // Yellow border
-          iconBg: "#0ea5e9", // Bright Blue
-          iconColor: "#ffffff",
-          countColor: "#0ea5e9",
+          cardBg: isDark ? "rgba(234, 179, 8, 0.1)" : "#fffbeb", // Yellow tint
+          cardBorder: isDark ? "rgba(234, 179, 8, 0.3)" : "#fcd34d",
+          iconBg: isDark ? "rgba(14, 165, 233, 0.2)" : "#0ea5e9", // Blue tint
+          iconColor: isDark ? "#38bdf8" : "#ffffff",
+          countColor: isDark ? "#38bdf8" : "#0ea5e9",
+          labelColor: isDark ? "#38bdf8" : "#0369a1",
         };
       case "yesterday":
         return {
-          cardBg: isDark ? "rgba(255, 255, 255, 0.02)" : "#f8fafc", // Very light gray/white / Dark subtle
+          cardBg: isDark ? "rgba(255, 255, 255, 0.03)" : "#f8fafc",
           cardBorder: "transparent",
-          iconBg: isDark ? "rgba(59, 130, 246, 0.2)" : "#dbeafe", // Light Blue
-          iconColor: "#2563eb", // Blue
-          countColor: theme.palette.text.primary,
+          iconBg: isDark ? "rgba(59, 130, 246, 0.15)" : "#dbeafe", // Blue tint
+          iconColor: isDark ? "#60a5fa" : "#2563eb",
+          countColor: "text.primary",
+          labelColor: "text.primary",
         };
       default: // past
         return {
-          cardBg: isDark ? "rgba(255, 255, 255, 0.02)" : "#f8fafc",
+          cardBg: isDark ? "rgba(255, 255, 255, 0.03)" : "#f8fafc",
           cardBorder: "transparent",
-          iconBg: isDark ? "rgba(148, 163, 184, 0.2)" : "#e2e8f0", // Light Gray
-          iconColor: isDark ? "#94a3b8" : "#475569", // Slate
-          countColor: theme.palette.text.primary,
+          iconBg: isDark ? "rgba(148, 163, 184, 0.15)" : "#e2e8f0", // Gray tint
+          iconColor: isDark ? "#94a3b8" : "#475569",
+          countColor: "text.primary",
+          labelColor: "text.primary",
         };
     }
   };
 
   return (
-    <Paper
-      elevation={0}
-      component={motion.div}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      sx={{
-         p: 3,
-        borderRadius: 3,
-        border: "1px solid",
-        borderColor: "divider",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        minHeight: 520 
-      }}
-    >
-      <Typography
-        variant="h6"
-        sx={{
-          color: "#dc2626", // Red matched from image
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-          mb: 1,
-        }}
-      >
-        ORDERS CREATED
-      </Typography>
+    <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex flex-col justify-between font-sans transition-all">
+      <div>
+        <h2 className="text-lg font-semibold uppercase tracking-wide text-[#D00000] dark:text-[#FF6B6B] mb-2">
+          ORDERS CREATED
+        </h2>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3, color: "text.secondary" }}>
-        <Calendar size={18} />
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          Last 5 Days
-        </Typography>
-      </Box>
+        <div className="flex items-center gap-2 mb-6 text-[#4B5563] dark:text-[#9CA3AF]">
+          <Calendar size={18} />
+          <span className="text-sm font-medium">Last 5 Days</span>
+        </div>
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {ordersData.map((item) => {
-          const styles = getStyles(item.type);
-          return (
-            <Box
-              key={item.id}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                p: 2,
-                borderRadius: 3,
-                backgroundColor: styles.cardBg,
-                border: "1px solid",
-                borderColor: styles.cardBorder,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {/* Avatar/Icon Circle */}
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    backgroundColor: styles.iconBg,
-                    color: styles.iconColor,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {item.abbr}
-                </Box>
-
-                {/* Date Labels */}
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontWeight: 600,
-                      color: item.type === "today" ? "#0ea5e9" : "text.primary",
-                    }}
-                  >
-                    <span style={{ color: item.type === "today" ? (isDark ? "inherit" : "#0369a1") : "inherit" }}>{item.label}</span>
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-                    {item.date}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Count */}
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: styles.countColor,
+        <div className="flex flex-col gap-3">
+          {ordersData.map((item, index) => {
+            const styles = getStyles(item.type);
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{
+                  backgroundColor: styles.cardBg,
+                  borderColor: styles.cardBorder,
                 }}
+                className="flex items-center justify-between p-3 rounded-xl border transition-colors"
               >
-                {item.count}
-              </Typography>
-            </Box>
-          );
-        })}
-      </Box>
-    </Paper>
+                <div className="flex items-center gap-3">
+                  {/* Avatar/Icon Circle */}
+                  <div
+                    style={{
+                      backgroundColor: styles.iconBg,
+                      color: styles.iconColor,
+                    }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                  >
+                    {item.abbr}
+                  </div>
+
+                  {/* Date Labels */}
+                  <div>
+                    <div
+                      style={{ color: styles.labelColor }}
+                      className="text-base font-semibold dark:text-gray-200"
+                    >
+                      {item.label}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.date}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Count */}
+                <div
+                  style={{ color: styles.countColor === "text.primary" ? undefined : styles.countColor }}
+                  className={`text-xl font-bold ${styles.countColor === "text.primary" ? "text-gray-900 dark:text-white" : ""}`}
+                >
+                  {item.count}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 

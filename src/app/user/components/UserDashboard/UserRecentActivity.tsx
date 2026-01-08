@@ -19,42 +19,42 @@ function getActivityConfig(status: string) {
 
   if (s.includes("issue reported") || s.includes("error")) {
     return {
-      icon: <AlertCircle size={20} className="text-red-600" />,
-      bg: "bg-red-50",
+      icon: <AlertCircle size={20} className="text-red-600 dark:text-red-400" />,
+      bg: "bg-red-50 dark:bg-red-900/20",
     };
   }
 
   if (s.includes("packed")) {
     return {
-      icon: <Package size={20} className="text-blue-600" />,
-      bg: "bg-blue-50",
+      icon: <Package size={20} className="text-blue-600 dark:text-blue-400" />,
+      bg: "bg-blue-50 dark:bg-blue-900/20",
     };
   }
 
   if (s.includes("dispatched") || s.includes("shipped")) {
     return {
-      icon: <CheckCircle size={20} className="text-green-600" />,
-      bg: "bg-green-50",
+      icon: <CheckCircle size={20} className="text-green-600 dark:text-green-400" />,
+      bg: "bg-green-50 dark:bg-green-900/20",
     };
   }
 
   if (s.includes("fg location") || s.includes("storage")) {
     return {
-      icon: <Warehouse size={20} className="text-purple-600" />,
-      bg: "bg-purple-50",
+      icon: <Warehouse size={20} className="text-purple-600 dark:text-purple-400" />,
+      bg: "bg-purple-50 dark:bg-purple-900/20",
     };
   }
 
   if (s.includes("issue found") || s.includes("warning")) {
     return {
-      icon: <AlertTriangle size={20} className="text-amber-600" />, // Amber/Yellow
-      bg: "bg-amber-50",
+      icon: <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />, // Amber/Yellow
+      bg: "bg-amber-50 dark:bg-amber-900/20",
     };
   }
 
   return {
-    icon: <HelpCircle size={20} className="text-gray-500" />,
-    bg: "bg-gray-50",
+    icon: <HelpCircle size={20} className="text-gray-500 dark:text-gray-400" />,
+    bg: "bg-gray-50 dark:bg-gray-700/50",
   };
 }
 
@@ -63,16 +63,16 @@ export default function UserRecentActivity() {
 
   if (loading) {
     return (
-      <Box className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-hidden">
-        <Typography variant="h6" className="font-bold mb-4 text-gray-800">
+      <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 overflow-hidden min-h-[400px]">
+        <Typography variant="h6" className="font-bold mb-4 text-[#D00000] dark:text-[#FF6B6B] uppercase text-lg tracking-wide">
           Recent Activities
         </Typography>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <Box key={i} className="flex gap-4 mb-4">
-            <Skeleton variant="circular" width={40} height={40} />
+            <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'text.secondary', opacity: 0.1 }} />
             <Box className="flex-1">
-              <Skeleton width="60%" />
-              <Skeleton width="40%" height={15} />
+              <Skeleton width="60%" sx={{ bgcolor: 'text.secondary', opacity: 0.1 }} />
+              <Skeleton width="40%" height={15} sx={{ bgcolor: 'text.secondary', opacity: 0.1 }} />
             </Box>
           </Box>
         ))}
@@ -82,7 +82,7 @@ export default function UserRecentActivity() {
 
   if (error) {
     return (
-      <Box className="bg-white rounded-xl border border-red-200 shadow-sm p-6">
+      <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm p-6">
         <Alert severity="error">Failed to load activities: {error}</Alert>
       </Box>
     );
@@ -91,14 +91,19 @@ export default function UserRecentActivity() {
   const items = activities || [];
 
   return (
-    <Box className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 h-full flex flex-col">
-      <Typography variant="h6" className="font-bold text-gray-800 mb-6">
-        Recent Activities
-      </Typography>
+    <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 h-full flex flex-col min-h-[520px]">
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold uppercase tracking-wide text-[#D00000] dark:text-[#FF6B6B]">
+          Recent Activities
+        </h2>
+        <p className="mt-1 text-sm text-[#4B5563] dark:text-[#9CA3AF]">
+          Latest updates on your orders
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar flex-1">
         {items.length === 0 ? (
-          <Typography className="text-gray-500 text-center py-4">
+          <Typography className="text-gray-500 dark:text-gray-400 text-center py-4">
             No recent activity found.
           </Typography>
         ) : (
@@ -124,10 +129,10 @@ export default function UserRecentActivity() {
 
                 {/* Text Content */}
                 <div className="flex flex-col pt-0.5">
-                  <span className="text-sm font-bold text-gray-800 leading-none mb-1">
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100 leading-none mb-1">
                     {item.salesOrderNumber}
                   </span>
-                  <span className="text-xs text-gray-500 font-medium">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                     {item.status} • {item.timeAgo}
                   </span>
                 </div>
