@@ -59,7 +59,7 @@ export default function StatsCards() {
     <div className="w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <StatCard
-          title="Total Orders Created"
+          title="Orders Assigned to Me"
           value={totalOrders}
           icon={<ShoppingCart className="h-6 w-6 text-blue-600" />}
           iconBgColor="bg-blue-50"
@@ -67,7 +67,7 @@ export default function StatsCards() {
         />
 
         <StatCard
-          title="Over Due"
+          title="Overdue Orders"
           value={dispatched}
           icon={<Truck className="h-6 w-6 text-green-600" />}
           iconBgColor="bg-green-50"
