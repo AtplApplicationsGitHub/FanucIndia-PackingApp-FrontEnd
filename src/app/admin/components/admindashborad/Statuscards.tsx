@@ -27,7 +27,7 @@ const StatCard = ({
     <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-lg uppercase font-semibold text-[#4B5563] dark:text-[#E5E7EB]">
+          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             {title}
           </p>
           <p className="text-3xl font-bold text-[#1F2933] dark:text-white mt-1">

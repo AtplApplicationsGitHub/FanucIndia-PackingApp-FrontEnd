@@ -4,11 +4,8 @@ import React, { useMemo, useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import {
   Box,
-  Paper,
-  Typography,
   CircularProgress,
   Alert,
-  useTheme,
 } from "@mui/material";
 import { usePaymentClearance } from "../hooks/PaymentMethodsChart";
 import { Table, BarChart3 } from "lucide-react";
@@ -20,7 +17,6 @@ type ChartItem = {
 };
 
 export default function PaymentMethodsChart() {
-  const theme = useTheme();
   const { data, loading, error } = usePaymentClearance();
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
@@ -51,44 +47,27 @@ export default function PaymentMethodsChart() {
   const seriesValueFormatter = (value: number | null) => formatNumber(value ?? 0);
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        padding: "24px",
-        borderRadius: "8px",
-        height: "100%",
-        width: "100%",
-        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.05)",
-        backgroundColor: theme.palette.background.paper,
-      }}
+    <div
+      className="bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] w-full h-full flex flex-col font-sans transition-all"
       aria-label="Payment clearance chart card"
     >
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
         <div>
-          <Typography
-            variant="body2"
-            sx={{
-              fontSize: "1rem",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "secondary.main",
-            }}
-          >
+          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             PAYMENT CLEARANCE BY SALES ZONE
-          </Typography>
+          </p>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <p className="mt-1 text-sm text-[#6B7280] dark:text-[#9CA3AF]">
             Number of cleared vs pending payments across regions
-          </Typography>
+          </p>
         </div>
 
         {/* Toggle Button */}
         <button
           onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 
-            text-gray-700 font-medium rounded-lg transition-all duration-200 focus:outline-none text-sm"
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 dark:bg-[#2C3540] hover:bg-gray-200 dark:hover:bg-[#374151]
+            text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-all duration-200 focus:outline-none text-sm border border-transparent dark:border-[#4B5563]"
         >
           {viewMode === "chart" ? (
             <>
@@ -118,9 +97,9 @@ export default function PaymentMethodsChart() {
         )}
 
         {!loading && !error && (!chartData || chartData.length === 0) && (
-          <Typography color="text.secondary" textAlign="center" mt={4}>
+          <div className="text-center mt-8 text-gray-500 dark:text-gray-400">
             No payment data available.
-          </Typography>
+          </div>
         )}
 
         {!loading && chartData && chartData.length > 0 && (
@@ -132,6 +111,23 @@ export default function PaymentMethodsChart() {
                   dataset={chartData}
                   height={350}
                   margin={{ top: 20, right: 20, bottom: 70, left: 50 }}
+                  className="text-[#1F2933] dark:text-[#F7F7F7]"
+                  sx={{
+                     // Apply currentColor to axis labels and ticks so they adapt to dark mode
+                    "& .MuiChartsAxis-tickLabel": {
+                      fill: "currentColor !important",
+                    },
+                    "& .MuiChartsAxis-label": {
+                      fill: "currentColor !important",
+                    },
+                    "& .MuiChartsLegend-label": {
+                      fill: "currentColor !important",
+                    },
+                     // Make grid lines subtler in dark mode if needed (optional)
+                    "& .MuiChartsGrid-line": {
+                      stroke: "rgba(128, 128, 128, 0.2)",
+                    }
+                  }}
                   xAxis={[
                     {
                       dataKey: "zone",
@@ -177,11 +173,11 @@ export default function PaymentMethodsChart() {
               </Box>
             ) : (
               /* Table View */
-              <div className="overflow-x-auto mt-4 border-t border-gray-200">
+              <div className="overflow-x-auto mt-4 border-t border-gray-200 dark:border-gray-700">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-[#2C3540]">
                     <tr>
-                      <th className="px-6 py-4 text-left font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                         Zone
                       </th>
                       <th
@@ -198,10 +194,10 @@ export default function PaymentMethodsChart() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {chartData.map((row) => (
-                      <tr key={row.zone} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 font-medium text-gray-900">
+                      <tr key={row.zone} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
                           {row.zone}
                         </td>
                         <td
@@ -225,6 +221,6 @@ export default function PaymentMethodsChart() {
           </>
         )}
       </Box>
-    </Paper>
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { Typography, Box, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { useSalesKpis } from "../../components/hooks/OrderStatus";
 
 const COLORS = {
@@ -22,29 +22,12 @@ export default function OrderStatusChart() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "900px",
-          margin: "0 auto",
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-          height: "100%",
-          minHeight: "500px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        }}
-      >
+      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
         <CircularProgress />
-        <span style={{ color: "#9ca3af", marginLeft: "12px" }}>
+        <span className="ml-3 text-gray-400 dark:text-gray-300">
           Loading chart...
         </span>
-      </Box>
+      </div>
     );
   }
 
@@ -85,56 +68,22 @@ export default function OrderStatusChart() {
   const hasData = chartData.length > 0;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: "900px",
-        margin: "0 auto",
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
-        padding: "24px",
-        boxShadow: "0px 4px 12px rgba(0,0,0,0.08)",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      <div style={{ marginBottom: "20px" }}>
-        <Typography
-          variant="body2"
-          sx={{
-            fontSize: "1rem",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: "secondary.main",
-          }}
-        >
+    <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans transition-all">
+      <div className="mb-5">
+        <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
           Order Status Distribution
-        </Typography>
+        </p>
 
-        <p
-          style={{
-            margin: "4px 0 0",
-            fontSize: "14px",
-            color: "#6b7280",
-          }}
-        >
+        <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
           Current status of all your sales orders (Total:{" "}
-          {total.toLocaleString()})
+          <span className="font-semibold text-[#1F2933] dark:text-white">
+            {total.toLocaleString()}
+          </span>
+          )
         </p>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          position: "relative",
-          minHeight: "320px",
-          width: "100%",
-        }}
-      >
+      <div className="flex-1 min-h-[320px] w-full relative">
         {hasData ? (
           <PieChart
             series={[
@@ -159,17 +108,16 @@ export default function OrderStatusChart() {
             ]}
             height={400}
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            className="text-[#1F2933] dark:text-[#F7F7F7]"
+            sx={{
+              // Force legend text color to match the Tailwind text color using currentColor
+              "& .MuiChartsLegend-label": {
+                fill: "currentColor !important",
+              },
+            }}
           />
         ) : (
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#9ca3af",
-            }}
-          >
+          <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
             No data available
           </div>
         )}

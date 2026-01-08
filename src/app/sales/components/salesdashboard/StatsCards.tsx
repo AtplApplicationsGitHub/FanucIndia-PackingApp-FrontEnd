@@ -23,18 +23,17 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const theme = useTheme();
   return (
-    <div className="relative group rounded-xl bg-white border border-gray-100 px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
+    <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
       <div className="flex items-center justify-between gap-6">
         <div className="flex-1">
           <p 
-            className="text-md font-semibold uppercase tracking-wide"
-            style={{ color: theme.palette.secondary.main }} // <-- CHANGED
+            className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]"
           >
             {title}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-gray-900 leading-tight">
+          <p className="mt-2 text-4xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
             {loading ? (
-              <Skeleton width={120} height={48} />
+              <Skeleton width={120} height={48} className="bg-gray-200 dark:bg-gray-700" />
             ) : (
               new Intl.NumberFormat().format(Number(value ?? 0))
             )}
@@ -42,7 +41,7 @@ const StatCard: React.FC<StatCardProps> = ({
         </div>
 
         <div className={`flex-shrink-0 grid place-items-center h-14 w-14 rounded-lg ${iconBgColor}`}>
-          <div className="text-xl text-gray-700">{icon}</div>
+          <div className="text-xl">{icon}</div>
         </div>
       </div>
     </div>
@@ -63,24 +62,24 @@ export default function StatsCards() {
         <StatCard
           title="Total Orders Created"
           value={totalOrders}
-          icon={<ShoppingCart className="h-6 w-6 text-blue-600" />}
-          iconBgColor="bg-blue-50"
+          icon={<ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
+          iconBgColor="bg-blue-50 dark:bg-blue-900/20"
           loading={loading}
         />
 
         <StatCard
           title="Awaiting for Dispatch"
           value={pending}
-          icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
-          iconBgColor="bg-red-50"
+          icon={<AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
+          iconBgColor="bg-red-50 dark:bg-red-900/20"
           loading={loading}
         />
 
         <StatCard
           title="Dispatched Orders"
           value={dispatched}
-          icon={<Truck className="h-6 w-6 text-green-600" />}
-          iconBgColor="bg-green-50"
+          icon={<Truck className="h-6 w-6 text-green-600 dark:text-green-400" />}
+          iconBgColor="bg-green-50 dark:bg-green-900/20"
           loading={loading}
         />
       </div>
