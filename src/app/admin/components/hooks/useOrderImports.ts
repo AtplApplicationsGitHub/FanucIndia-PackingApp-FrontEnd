@@ -53,7 +53,8 @@ export function useOrderImports(): UseOrderImportsReturn {
       setLoading(true);
       setError(null);
 
-      const res = await fetchWithAuth(API.DASHBOARD.ADMIN_NEW_IMPORTS);
+      // Changed to use the specific endpoint requested by user
+      const res = await fetchWithAuth(API.TERMINAL_USER_DASHBOARD.ORDERS_CREATED);
 
       let apiData: AdminNewImportItem[] = [];
 
@@ -68,12 +69,13 @@ export function useOrderImports(): UseOrderImportsReturn {
 
       const mergedData = skeleton.map((skeletonItem) => {
         const realItem = apiData.find((item) => item.date === skeletonItem.date);
-        return realItem ? { ...skeletonItem, count: realItem.count } : skeletonItem;
+        // If realItem exists, use its data (including label if desired, or keep skeleton label for consistency)
+        // The user provided Postman response has labels like "Today (Jan 8)", so we prefer realItem if available.
+        return realItem ? realItem : skeletonItem;
       });
 
       setData(mergedData);
     } catch (err) {
-      // Fixed: removed unused 'message' variable
       setError("Failed to load new imports");
       console.error("useOrderImports error:", err);
 

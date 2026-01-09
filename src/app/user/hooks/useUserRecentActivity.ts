@@ -1,63 +1,39 @@
 import { useState, useEffect } from "react";
+import { API, fetchWithAuth } from "../../../common/lib/endpoints";
 
-export interface ActivityItem {
-  salesOrderNumber: string;
-  activityTimestamp: string;
-  status: string;
-  timeAgo: string;
+export interface RecentActivityItem {
+  id: string;
+  text: string;
+  timestamp: string;
+  type: string;
 }
 
 export function useUserRecentActivity() {
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [activities, setActivities] = useState<RecentActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call with dummy data
-    const timer = setTimeout(() => {
+    const fetchActivities = async () => {
       try {
-        const dummyData: ActivityItem[] = [
-          {
-            salesOrderNumber: "SO-90876",
-            activityTimestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
-            status: "Packed",
-            timeAgo: "30 mins ago",
-          },
-          {
-            salesOrderNumber: "SO-90877",
-            activityTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-            status: "Issue reported",
-            timeAgo: "2 hours ago",
-          },
-          {
-            salesOrderNumber: "SO-90878",
-            activityTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-            status: "Dispatched",
-            timeAgo: "5 hours ago",
-          },
-          {
-            salesOrderNumber: "SO-90879",
-            activityTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-            status: "Moved to FG location",
-            timeAgo: "1 day ago",
-          },
-          {
-            salesOrderNumber: "SO-90880",
-            activityTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-            status: "Issue found",
-            timeAgo: "2 days ago",
-          },
-        ];
+        setLoading(true);
+        const response = await fetchWithAuth(API.TERMINAL_USER_DASHBOARD.RECENT_ACTIVITY);
         
-        setActivities(dummyData);
-        setLoading(false);
-      } catch {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch activities: ${response.statusText}`);
+        }
+
+        const data: RecentActivityItem[] = await response.json();
+        setActivities(data);
+      } catch (err) {
+        console.error("Error fetching recent activities:", err);
         setError("Failed to load activities");
+      } finally {
         setLoading(false);
       }
-    }, 800);
+    };
 
-    return () => clearTimeout(timer);
+    fetchActivities();
   }, []);
 
   return { activities, loading, error };

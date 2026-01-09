@@ -7,47 +7,77 @@ import {
   AlertCircle,
   Package,
   CheckCircle,
-  AlertTriangle,
   Warehouse,
   HelpCircle,
+  MessageSquare,
+  FileText
 } from "lucide-react";
 
 import { useUserRecentActivity } from "../../hooks/useUserRecentActivity";
 
-function getActivityConfig(status: string) {
-  const s = (status || "").toLowerCase().trim();
+function formatTimeAgo(timestamp: string) {
+  try {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (s.includes("issue reported") || s.includes("error")) {
+    if (diffInSeconds < 60) return "Just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return "Yesterday";
+    return `${diffInDays} days ago`;
+  } catch {
+    return "";
+  }
+}
+
+function getActivityConfig(type: string, text: string) {
+  const t = (type || "").toUpperCase();
+  const content = (text || "").toLowerCase();
+
+  // Try to match specific keywords in text first for more granular icons
+  if (content.includes("issue") || content.includes("error") || content.includes("failed")) {
     return {
       icon: <AlertCircle size={20} className="text-red-600 dark:text-red-400" />,
       bg: "bg-red-50 dark:bg-red-900/20",
     };
   }
 
-  if (s.includes("packed")) {
+  if (content.includes("packed")) {
     return {
       icon: <Package size={20} className="text-blue-600 dark:text-blue-400" />,
       bg: "bg-blue-50 dark:bg-blue-900/20",
     };
   }
 
-  if (s.includes("dispatched") || s.includes("shipped")) {
+  if (content.includes("dispatched") || content.includes("shipped")) {
     return {
       icon: <CheckCircle size={20} className="text-green-600 dark:text-green-400" />,
       bg: "bg-green-50 dark:bg-green-900/20",
     };
   }
-
-  if (s.includes("fg location") || s.includes("storage")) {
+  
+  if (content.includes("fg location") || content.includes("storage")) {
     return {
       icon: <Warehouse size={20} className="text-purple-600 dark:text-purple-400" />,
       bg: "bg-purple-50 dark:bg-purple-900/20",
     };
   }
 
-  if (s.includes("issue found") || s.includes("warning")) {
-    return {
-      icon: <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />, // Amber/Yellow
+  // Fallback based on Type
+  if (t === "ASSIGNMENT") {
+     return {
+      icon: <FileText size={20} className="text-indigo-600 dark:text-indigo-400" />,
+      bg: "bg-indigo-50 dark:bg-indigo-900/20",
+    };
+  }
+
+  if (t === "MESSAGE") {
+     return {
+      icon: <MessageSquare size={20} className="text-amber-600 dark:text-amber-400" />,
       bg: "bg-amber-50 dark:bg-amber-900/20",
     };
   }
@@ -108,13 +138,12 @@ export default function UserRecentActivity() {
           </Typography>
         ) : (
           items.map((item, index) => {
-            const { icon, bg } = getActivityConfig(item.status);
-            // Unique key combining SO number + timestamp + index
-            const key = `${item.salesOrderNumber}-${item.activityTimestamp}-${index}`;
-
+            const { icon, bg } = getActivityConfig(item.type, item.text);
+            const timeAgo = formatTimeAgo(item.timestamp);
+            
             return (
               <motion.div
-                key={key}
+                key={item.id || index}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -129,11 +158,11 @@ export default function UserRecentActivity() {
 
                 {/* Text Content */}
                 <div className="flex flex-col pt-0.5">
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100 leading-none mb-1">
-                    {item.salesOrderNumber}
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100 leading-snug mb-1">
+                    {item.text}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    {item.status} • {item.timeAgo}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
+                    {item.type} • {timeAgo}
                   </span>
                 </div>
               </motion.div>

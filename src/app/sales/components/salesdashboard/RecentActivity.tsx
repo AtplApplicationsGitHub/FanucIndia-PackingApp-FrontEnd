@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Box, Skeleton, Alert } from "@mui/material";
+import { Skeleton, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import {
   Truck,

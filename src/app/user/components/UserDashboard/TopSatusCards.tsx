@@ -3,7 +3,7 @@
 
 import React from "react";
 import { ShoppingCart, Truck } from "lucide-react";
-import { useStatsCards } from "../../hooks/useStatsCards";
+import { useTopStatusCards } from "../../hooks/useTopStatusCards";
 
 interface StatCardProps {
   title: string;
@@ -45,24 +45,24 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export default function StatsCards() {
-  const { data, loading } = useStatsCards();
+  const { data, loading } = useTopStatusCards();
 
-  const totalOrders = data?.totalSoCount ?? 0;
-  const dispatched = data?.dispatchedSoCount ?? 0;
+  const assignedOrders = data?.assignedOrdersCount ?? 0;
+  const overdueOrders = data?.overdueOrdersCount ?? 0;
 
   return (
     <div className="w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <StatCard
           title="Orders Assigned to Me"
-          value={totalOrders}
+          value={assignedOrders}
           icon={<ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
           loading={loading}
         />
 
         <StatCard
           title="Overdue Orders"
-          value={dispatched}
+          value={overdueOrders}
           icon={<Truck className="h-6 w-6 text-green-600 dark:text-green-400" />}
           loading={loading}
         />

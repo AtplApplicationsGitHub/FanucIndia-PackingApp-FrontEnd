@@ -4,7 +4,7 @@
 import React from "react";
 import { ShoppingCart, Truck, AlertTriangle } from "lucide-react";
 import { useSalesDashboard } from "../../components/hooks/StatsCards";
-import { Skeleton, useTheme } from "@mui/material";
+import { Skeleton } from "@mui/material";
 
 interface StatCardProps {
   title: string;
@@ -21,7 +21,7 @@ const StatCard: React.FC<StatCardProps> = ({
   iconBgColor = "bg-white",
   loading = false,
 }) => {
-  const theme = useTheme();
+
   return (
     <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
       <div className="flex items-center justify-between gap-6">

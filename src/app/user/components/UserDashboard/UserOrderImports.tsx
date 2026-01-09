@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Paper, Typography, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import { Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUserOrderImports } from "../../hooks/useUserOrderImports";
@@ -8,10 +8,18 @@ const UserOrderImports = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
-  const { data: ordersData } = useUserOrderImports();
+  const { data: ordersData, loading } = useUserOrderImports();
+
+  if (loading && (!ordersData || ordersData.length === 0)) {
+    return (
+       <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex items-center justify-center">
+         <span className="text-gray-500">Loading...</span>
+       </div>
+    );
+  }
 
   // Helper to get styles based on type
-  const getStyles = (type: string) => {
+  const getStyles = (type: "today" | "yesterday" | "past") => {
     switch (type) {
       case "today":
         return {
@@ -57,7 +65,7 @@ const UserOrderImports = () => {
 
         <div className="flex flex-col gap-3">
           {ordersData.map((item, index) => {
-            const styles = getStyles(item.type);
+            const styles = getStyles(item.type as "today" | "yesterday" | "past");
             return (
               <motion.div
                 key={item.id}
@@ -86,11 +94,11 @@ const UserOrderImports = () => {
                   <div>
                     <div
                       style={{ color: styles.labelColor }}
-                      className="text-base font-semibold dark:text-gray-200"
+                      className="text-base dark:text-gray-200"
                     >
                       {item.label}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs dark:text-gray-400">
                       {item.date}
                     </div>
                   </div>

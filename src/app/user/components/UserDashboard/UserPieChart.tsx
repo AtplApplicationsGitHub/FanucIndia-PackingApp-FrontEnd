@@ -58,7 +58,7 @@ export default function OrderStatusChart() {
     },
     {
       id: 4,
-      value: data?.dispatchedSoCount ?? 0,
+      value: data?.dispatchedCount ?? 0,
       label: "Dispatched",
       color: COLORS.dispatched,
     },

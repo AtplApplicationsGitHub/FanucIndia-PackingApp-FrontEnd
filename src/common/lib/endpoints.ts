@@ -69,6 +69,7 @@ export const API = {
     MOBILE_UPLOAD_ATTACHMENTS_BY_SO: (soNumber: string) => `${API_BASE_URL}/user-dashboard/orders/son/${soNumber}/attachments`, 
     // Get Order Details by ID
     GET_ORDER_DETAILS: (id: number) =>                     `${API_BASE_URL}/user-dashboard/orders/${id}`,
+    STATS:                                                 `${API_BASE_URL}/user-dashboard/stats`,
   },
   USER: {
     RESET_PASSWORD:                          `${API_BASE_URL}/users/reset-password`,
@@ -152,6 +153,16 @@ export const API = {
     CLEAR_SO: (soNumber: string) => `${API_BASE_URL}/so-notifications/clear-so/${encodeURIComponent(soNumber)}`,
   },
   SO_SOCKET_BASE: API_BASE_URL,
+  // TERMINAL USER DASHBOARD
+TERMINAL_USER_DASHBOARD: {
+  ORDERS_ASSIGNED_TO_ME:      `${API_BASE_URL}/user-dashboard/stats`,
+  OVERDUE_ORDERS:             `${API_BASE_URL}/dashboard/admin-kpis`,
+  ORDERS_CREATED:             `${API_BASE_URL}/dashboard/admin-new-imports`,
+  TODAYS_DISPATCH:            `${API_BASE_URL}/dashboard/admin-dispatch-summary`,
+  ORDER_STATUS_DISTRIBUTION:  `${API_BASE_URL}/dashboard/admin-overall-status`,
+  RECENT_ACTIVITY:            `${API_BASE_URL}/user-dashboard/recent-activity`,
+},
+
 };
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
