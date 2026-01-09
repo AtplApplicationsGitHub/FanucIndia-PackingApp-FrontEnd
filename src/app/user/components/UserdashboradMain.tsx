@@ -15,7 +15,7 @@ interface Props {
   setView: (view: UserDashboardView) => void;
 }
 
-export default function UserDashboard({ userName: _userName, setView: _setView }: Props) {
+export default function UserDashboard({ }: Props) {
   return (
     <div className="py-6 md:py-8">
       <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">

@@ -325,7 +325,7 @@ export function useAdminDashboard() {
   const startCellEdit = (row: SalesOrder, field: EditableField) => {
     if (!INLINE_EDIT_FIELDS.includes(field)) return;
     setEditingCell({ id: row.id, field });
-    const value = row[field];
+    const value = row[field as keyof SalesOrder];
     setEditValue(value !== undefined && value !== null ? String(value) : "");
   };
 
@@ -382,7 +382,8 @@ export function useAdminDashboard() {
         transferOrder,
         transporterId,
         productId,
-        plantCodeId,
+        // plantCodeId,
+        plantCode,
         salesZoneId,
         packConfigId,
         priority,
@@ -399,8 +400,9 @@ export function useAdminDashboard() {
       if (transferOrder !== undefined) payload.transferOrder = transferOrder;
       if (productId !== undefined && productId !== null)
         payload.productId = Number(productId);
-      if (plantCodeId !== undefined && plantCodeId !== null)
-        payload.plantCodeId = Number(plantCodeId);
+      // if (plantCodeId !== undefined && plantCodeId !== null)
+      //   payload.plantCodeId = Number(plantCodeId);
+      if (plantCode !== undefined) payload.plantCode = plantCode;
       if (transporterId !== undefined && transporterId !== null)
         payload.transporterId = Number(transporterId);
       if (salesZoneId !== undefined && salesZoneId !== null)

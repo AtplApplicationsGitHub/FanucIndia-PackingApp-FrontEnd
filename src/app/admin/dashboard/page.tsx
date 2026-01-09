@@ -38,7 +38,7 @@ export default function AdminDashboard() {
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
 
-  const handleOpenChat = async (soNumber: string, _orderId: number) => {
+  const handleOpenChat = async (soNumber: string) => {
     setChatSoNumber(soNumber);
     setChatOpen(true);
 

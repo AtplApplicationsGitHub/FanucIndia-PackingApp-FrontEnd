@@ -238,7 +238,8 @@ export default function SalesOrdersTable({
 
                   {/* PLANT CODE */}
                   <TableCell>
-                    {findName(lookup.plantCodes, row.plantCodeId, "code")}
+                    {/* {findName(lookup.plantCodes, row.plantCodeId, "code")} */}
+                    {row.plantCode || "-"}
                   </TableCell>
 
                   {/* PAYMENT */}
