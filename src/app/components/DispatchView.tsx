@@ -73,6 +73,7 @@ interface DispatchSO {
   id: number;
   saleOrderNumber: string;
   salesOrder?: {
+    customerNameText?: string | null;
     customer?: {
       name: string;
     };
@@ -760,7 +761,9 @@ export default function DispatchView() {
                           >
                             <TableCell>{index + 1}</TableCell>
                             <TableCell>{so.saleOrderNumber}</TableCell>
-                            <TableCell>{so.salesOrder?.customer?.name || "-"}</TableCell>
+                            <TableCell>
+                              {so.salesOrder?.customerNameText || so.salesOrder?.customer?.name || "-"}
+                            </TableCell>
                             <TableCell align="center">
                               <IconButton size="small" onClick={() => handleDeleteSO(so.id)}>
                                 <Delete fontSize="small" color="error" />
