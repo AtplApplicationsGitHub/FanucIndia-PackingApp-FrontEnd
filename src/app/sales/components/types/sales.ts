@@ -6,7 +6,8 @@ export type SalesOrder = {
   transferOrder: string;
   deliveryDate: string;
   transporterId: number;
-  plantCodeId: number;
+  // plantCodeId: number;
+  plantCode: string;
   paymentClearance: boolean;
   salesZoneId: number;
   packConfigId: number;

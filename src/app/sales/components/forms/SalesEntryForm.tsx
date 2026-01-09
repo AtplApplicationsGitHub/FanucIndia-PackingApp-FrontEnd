@@ -7,7 +7,7 @@ import ProductSelect from "@/app/sales/components/forms/ProductSelect";
 import TextInput from "@/app/sales/components/forms/TextInput";
 import DeliveryDatePicker from "@/app/sales/components/forms/DeliveryDatePicker";
 import TransporterSelect from "@/app/sales/components/forms/TransporterSelect";
-import PlantCodeSelect from "@/app/sales/components/forms/PlantCodeSelect";
+// import PlantCodeSelect from "@/app/sales/components/forms/PlantCodeSelect";
 import SalesZoneSelect from "@/app/sales/components/forms/SalesZoneSelect";
 import PackConfigSelect from "@/app/sales/components/forms/PackConfigSelect";
 import PaymentClearanceToggle from "@/app/sales/components/forms/PaymentClearanceToggle";
@@ -30,7 +30,8 @@ const DEFAULT_FORM = {
   transferOrder: "",
   deliveryDate: "",
   transporterId: "",
-  plantCodeId: "",
+  // plantCodeId: "",
+  plantCode: "",
   paymentClearance: "",
   salesZoneId: "",
   packConfigId: "",
@@ -47,14 +48,15 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   onSuccess,
 }) => {
   const [form, setForm] = useState(DEFAULT_FORM);
-  const { handleSubmit, submitting, errors, alert, clearAlert } = useSalesForm();
+  const { handleSubmit, submitting, errors, alert, clearAlert } =
+    useSalesForm();
 
   useEffect(() => {
     if (
       initialData &&
       lookup.products.length > 0 &&
       lookup.transporters.length > 0 &&
-      lookup.plantCodes.length > 0 &&
+      // lookup.plantCodes.length > 0 &&
       lookup.salesZones.length > 0 &&
       lookup.packConfigs.length > 0 &&
       lookup.customers.length > 0
@@ -66,12 +68,14 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         transferOrder: initialData.transferOrder ?? "",
         deliveryDate: initialData.deliveryDate ?? "",
         transporterId: String(initialData.transporterId ?? ""),
-        plantCodeId: String(initialData.plantCodeId ?? ""),
+        // plantCodeId: String(initialData.plantCodeId ?? ""),
+        plantCode: initialData.plantCode ?? "",
         paymentClearance: String(initialData.paymentClearance),
         salesZoneId: String(initialData.salesZoneId ?? ""),
         packConfigId: String(initialData.packConfigId ?? ""),
         customerId: String(initialData.customerId ?? ""),
-        customerName: initialData.customerNameText ?? initialData.customer?.name ?? "",
+        customerName:
+          initialData.customerNameText ?? initialData.customer?.name ?? "",
         specialRemarks: initialData.specialRemarks ?? "",
         additionalRemarks: initialData.additionalRemarks ?? "",
         labelRemarks: initialData.labelRemarks ?? "",
@@ -81,7 +85,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
     initialData,
     lookup.products,
     lookup.transporters,
-    lookup.plantCodes,
+    // lookup.plantCodes,
     lookup.salesZones,
     lookup.packConfigs,
     lookup.customers,
@@ -156,11 +160,18 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           options={lookup.transporters}
           error={errors.transporterId}
         />
-        <PlantCodeSelect
+        {/* <PlantCodeSelect
           value={form.plantCodeId}
           onChange={onChange}
           options={lookup.plantCodes}
           error={errors.plantCodeId}
+        /> */}
+        <TextInput
+          label="Delivery Plant Code"
+          name="plantCode"
+          value={form.plantCode}
+          onChange={onChange}
+          error={errors.plantCode}
         />
         <PaymentClearanceToggle
           value={form.paymentClearance}
@@ -187,15 +198,15 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           error={errors.customerId || errors.customerName}
           disabled={!!initialData?.hasMaterialData}
         />
-        <div className="col-span-1 md:col-span-2">
+        <div className="col-span-1">
           <RemarksTextarea
             value={form.specialRemarks}
             onChange={onChange}
             error={errors.specialRemarks}
           />
         </div>
-        <div className="col-span-1 md:col-span-2">
-           <TextField
+        <div className="col-span-1">
+          <TextField
             fullWidth
             label="Additional Remarks"
             name="additionalRemarks"
@@ -217,28 +228,28 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
             }}
           />
         </div>
-        <div className="col-span-1 md:col-span-2"> 
-           <TextField 
-            fullWidth 
-            label="Label Remarks" 
-            name="labelRemarks" 
-            value={form.labelRemarks} 
-            onChange={(e) => onChange("labelRemarks", e.target.value)} 
-            placeholder="Enter label remarks" 
-            multiline 
-            minRows={3} 
-            size="small" 
-            variant="outlined" 
-            autoComplete="off" 
-            sx={{ 
-              mb: 1, 
+        <div className="col-span-1">
+          <TextField
+            fullWidth
+            label="Label Remarks"
+            name="labelRemarks"
+            value={form.labelRemarks}
+            onChange={(e) => onChange("labelRemarks", e.target.value)}
+            placeholder="Enter label remarks"
+            multiline
+            minRows={3}
+            size="small"
+            variant="outlined"
+            autoComplete="off"
+            sx={{
+              mb: 1,
               "& .MuiOutlinedInput-root": {
-                borderRadius: "4px", 
-                backgroundColor: (theme) => theme.palette.background.paper, 
-              }, 
-              "& .MuiInputLabel-root": { fontWeight: 500, fontSize: 15 }, 
-            }} 
-          /> 
+                borderRadius: "4px",
+                backgroundColor: (theme) => theme.palette.background.paper,
+              },
+              "& .MuiInputLabel-root": { fontWeight: 500, fontSize: 15 },
+            }}
+          />
         </div>
       </div>
       <div className="pt-6 flex justify-end">

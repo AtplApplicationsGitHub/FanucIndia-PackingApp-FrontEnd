@@ -45,7 +45,6 @@ export default function UserDashboard() {
   const handleChatClose = () => {
     setChatOpen(false);
     setChatSoNumber(null);
-    window.location.reload(); 
   };
 
   const showSnackbar = (

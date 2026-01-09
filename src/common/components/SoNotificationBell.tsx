@@ -13,7 +13,7 @@ import {
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
-import { useRouter, usePathname } from "next/navigation"; 
+import { useRouter, usePathname } from "next/navigation";
 import { API } from "@/common/lib/endpoints";
 
 type NotificationItem = {
@@ -64,13 +64,15 @@ export default function SoNotificationBell() {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
 
-      const mapped: NotificationItem[] = (res.data || []).map((n: BackendNotification) => ({
-        id: n.id,
-        createdAt: n.createdAt,
-        salesOrderNumber: n.salesOrder?.saleOrderNumber || "",
-        fromUsername: n.message?.fromUser?.name || "",
-        messageId: n.messageId,
-      }));
+      const mapped: NotificationItem[] = (res.data || []).map(
+        (n: BackendNotification) => ({
+          id: n.id,
+          createdAt: n.createdAt,
+          salesOrderNumber: n.salesOrder?.saleOrderNumber || "",
+          fromUsername: n.message?.fromUser?.name || "",
+          messageId: n.messageId,
+        })
+      );
 
       setItems(mapped);
     } catch (error) {
@@ -107,13 +109,39 @@ export default function SoNotificationBell() {
       console.log("Socket connected notification service");
     });
 
-    s.on("notification:new", (payload: NotificationItem) => {
-      console.log("Real-time notification received:", payload);
-      setItems((prev) => [payload, ...prev]);
-    });
+    s.on(
+      "notification:new",
+      (
+        payload: BackendNotification & {
+          salesOrderNumber?: string;
+          fromUsername?: string;
+        }
+      ) => {
+        const mappedItem: NotificationItem = {
+          id: payload.id,
+          createdAt: payload.createdAt,
+          salesOrderNumber:
+            payload.salesOrder?.saleOrderNumber ||
+            payload.salesOrderNumber ||
+            "",
+          fromUsername:
+            payload.message?.fromUser?.name || payload.fromUsername || "",
+          messageId: payload.messageId,
+        };
+
+        setItems((prev) => {
+          if (prev.some((x) => x.id === mappedItem.id)) return prev;
+          return [mappedItem, ...prev];
+        });
+      }
+    );
 
     s.on("notification:cleared", (payload: { salesOrderNumber: string }) => {
-      setItems((prev) => prev.filter(item => item.salesOrderNumber !== payload.salesOrderNumber));
+      setItems((prev) =>
+        prev.filter(
+          (item) => item.salesOrderNumber !== payload.salesOrderNumber
+        )
+      );
     });
 
     return () => {

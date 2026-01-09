@@ -67,10 +67,10 @@ const FIELDS: {
     options: "transporters",
   },
   {
-    key: "plantCodeId",
+    key: "plantCode",
     label: "Delivery Plant Code",
-    type: "select",
-    options: "plantCodes",
+    // type: "select",
+    // options: "plantCodes",
   },
   {
     key: "paymentClearance",
@@ -109,9 +109,9 @@ const FIELDS: {
   },
   { key: "status", label: "Status", disabled: true },
   { key: "fgLocation", label: "FG Location" },
-  { key: "specialRemarks", label: "Special Remarks", colSpan: 2 },
-  { key: "additionalRemarks", label: "Additional Remarks", colSpan: 2 },
-  { key: "labelRemarks", label: "Label Remarks", colSpan: 2 },
+  { key: "specialRemarks", label: "Special Remarks" },
+  { key: "additionalRemarks", label: "Additional Remarks" },
+  { key: "labelRemarks", label: "Label Remarks" },
 ];
 
 const PATCHABLE_KEYS = [
@@ -121,7 +121,8 @@ const PATCHABLE_KEYS = [
   "transferOrder",
   "deliveryDate",
   "transporterId",
-  "plantCodeId",
+  // "plantCodeId",
+  "plantCode",
   "paymentClearance",
   "salesZoneId",
   "packConfigId",
@@ -224,7 +225,7 @@ export default function AdminOrderEditModal({
       switch (key) {
         case "productId":
         case "transporterId":
-        case "plantCodeId":
+        // case "plantCodeId":
         case "salesZoneId":
         case "packConfigId":
         case "assignedUserId":
@@ -265,6 +266,7 @@ export default function AdminOrderEditModal({
         case "fgLocation":
         case "additionalRemarks":
         case "labelRemarks":
+        case "plantCode":
           if (typeof v === "string") {
             patch[key] = v as SalesOrderPatch[typeof key];
           } else if (v === null) {

@@ -74,9 +74,13 @@ export default function SoChatDrawer({
     setLoading(true);
     setAccessDenied(false);
     try {
-      axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(err => console.error("Failed to clear notifications", err));
+      try {
+        await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        console.error("Failed to clear notifications", err);
+      }
 
       const [u, m] = await Promise.all([
         axios.get(API.SO_CHAT.MENTION_USERS(soNumber), {
@@ -209,8 +213,16 @@ export default function SoChatDrawer({
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <CircularProgress />
             </Box>
-          ) : accessDenied ? (  
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4, px: 2, textAlign: "center" }}>
+          ) : accessDenied ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 4,
+                px: 2,
+                textAlign: "center",
+              }}
+            >
               <Typography variant="body1" color="text.secondary">
                 You are not authorized to access the chat for this order.
               </Typography>
@@ -255,93 +267,92 @@ export default function SoChatDrawer({
         </Box>
 
         {!accessDenied && (
-        <Box sx={{ p: 2, borderTop: "1px solid #eee", position: "relative" }}>
-          <TextField
-            fullWidth
-            multiline
-            minRows={3}
-            placeholder="Type message... use @ to tag"
-            value={text}
-            inputRef={(el) => {
-              // For multiline TextField, ref is textarea
-              inputRef.current = el;
-            }}
-            onChange={(e) => {
-              const val = e.target.value;
-              setText(val);
-              updateMentionStateFromText(val);
-            }}
-            onKeyDown={(e) => {
-              // Ctrl+Enter send
-              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSend();
-              // Escape closes mention list
-              if (e.key === "Escape") setMentionOpen(false);
-            }}
-          />
+          <Box sx={{ p: 2, borderTop: "1px solid #eee", position: "relative" }}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              placeholder="Type message... use @ to tag"
+              value={text}
+              inputRef={(el) => {
+                // For multiline TextField, ref is textarea
+                inputRef.current = el;
+              }}
+              onChange={(e) => {
+                const val = e.target.value;
+                setText(val);
+                updateMentionStateFromText(val);
+              }}
+              onKeyDown={(e) => {
+                // Ctrl+Enter send
+                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSend();
+                // Escape closes mention list
+                if (e.key === "Escape") setMentionOpen(false);
+              }}
+            />
 
-          {/* Mention dropdown that DOES NOT steal focus */}
-          <Popper
-            open={mentionOpen}
-            anchorEl={inputRef.current}
-            placement="top-start"
-            style={{ zIndex: 1500 }}
-            disablePortal
-          >
-            <ClickAwayListener onClickAway={() => setMentionOpen(false)}>
-              <Paper
-                sx={{ width: 280, maxHeight: 280, overflowY: "auto", mt: 1 }}
-              >
-                {filteredUsers.length === 0 ? (
-                  <Box sx={{ p: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No matches
-                    </Typography>
-                  </Box>
-                ) : (
-                  <List dense sx={{ p: 0 }}>
-                    {filteredUsers.map((u) => (
-                      <ListItemButton
-                        key={u.id}
-                        onClick={() => insertMention(u)}
-                      >
-                        <ListItemText
-                          primary={`@${u.name}`}
-                          secondary={u.role}
-                        />
-                      </ListItemButton>
-                    ))}
-                  </List>
-                )}
-              </Paper>
-            </ClickAwayListener>
-          </Popper>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              mt: 1,
-            }}
-          >
-
-            <Button
-              variant="contained"
-              startIcon={
-                sending ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  <SendIcon />
-                )
-              }
-              onClick={handleSend}
-              disabled={sending || !taggedUser || !text.trim()}
-              sx={buttonSx}
+            {/* Mention dropdown that DOES NOT steal focus */}
+            <Popper
+              open={mentionOpen}
+              anchorEl={inputRef.current}
+              placement="top-start"
+              style={{ zIndex: 1500 }}
+              disablePortal
             >
-              SEND
-            </Button>
+              <ClickAwayListener onClickAway={() => setMentionOpen(false)}>
+                <Paper
+                  sx={{ width: 280, maxHeight: 280, overflowY: "auto", mt: 1 }}
+                >
+                  {filteredUsers.length === 0 ? (
+                    <Box sx={{ p: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        No matches
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List dense sx={{ p: 0 }}>
+                      {filteredUsers.map((u) => (
+                        <ListItemButton
+                          key={u.id}
+                          onClick={() => insertMention(u)}
+                        >
+                          <ListItemText
+                            primary={`@${u.name}`}
+                            secondary={u.role}
+                          />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                  )}
+                </Paper>
+              </ClickAwayListener>
+            </Popper>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                mt: 1,
+              }}
+            >
+              <Button
+                variant="contained"
+                startIcon={
+                  sending ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <SendIcon />
+                  )
+                }
+                onClick={handleSend}
+                disabled={sending || !taggedUser || !text.trim()}
+                sx={buttonSx}
+              >
+                SEND
+              </Button>
+            </Box>
           </Box>
-        </Box>
         )}
       </Box>
     </Drawer>

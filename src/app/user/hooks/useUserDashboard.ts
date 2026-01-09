@@ -1,16 +1,34 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
-import { API } from "@/common/lib/endpoints"; 
+import { io, Socket } from "socket.io-client";
+import { API } from "@/common/lib/endpoints";
 import { SalesOrder } from "@/app/admin/components/types/admin";
 
-export type UserDashboardView = "home" | "pick_pack" | "dispatch" | "fg_dashboard";
+type NotificationClearedPayload = {
+  salesOrderNumber: string;
+};
+
+type NotificationNewPayload = {
+  salesOrderNumber?: string;
+  salesOrder?: {
+    saleOrderNumber: string;
+  };
+};
+
+export type UserDashboardView =
+  | "home"
+  | "pick_pack"
+  | "dispatch"
+  | "fg_dashboard";
 
 export function useUserDashboard() {
   const [userName, setUserName] = useState<string>("");
   const [view, setViewInternal] = useState<UserDashboardView>("home");
   const [orders, setOrders] = useState<SalesOrder[]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{
@@ -19,7 +37,9 @@ export function useUserDashboard() {
   } | null>(null);
 
   useEffect(() => {
-    const savedView = sessionStorage.getItem("userDashboardView") as UserDashboardView;
+    const savedView = sessionStorage.getItem(
+      "userDashboardView"
+    ) as UserDashboardView;
     if (savedView) {
       setViewInternal(savedView);
     }
@@ -34,6 +54,51 @@ export function useUserDashboard() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setToken(localStorage.getItem("token"));
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const s = io(API.SO_SOCKET_BASE, {
+      transports: ["websocket"],
+      auth: { token },
+    });
+    socketRef.current = s;
+
+    s.on("notification:new", (payload: NotificationNewPayload) => {
+      const so =
+        payload.salesOrder?.saleOrderNumber ?? payload.salesOrderNumber ?? "";
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so
+            ? { ...o, notificationCount: (o.notificationCount ?? 0) + 1 }
+            : o
+        )
+      );
+    });
+
+    s.on("notification:cleared", (payload: NotificationClearedPayload) => {
+      const so = payload.salesOrderNumber;
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o
+        )
+      );
+    });
+
+    return () => {
+      s.disconnect();
+      socketRef.current = null;
+    };
+  }, [token]);
 
   const setView = (newView: UserDashboardView) => {
     sessionStorage.setItem("userDashboardView", newView);

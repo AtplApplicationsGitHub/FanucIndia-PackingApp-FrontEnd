@@ -63,7 +63,6 @@ export default function SalesDashboard() {
   const handleChatClose = () => {
     setChatOpen(false);
     setChatSoNumber(null);
-    fetchOrders(currentPage, pageSize); 
   };
 
   if (error && !orders.length) {

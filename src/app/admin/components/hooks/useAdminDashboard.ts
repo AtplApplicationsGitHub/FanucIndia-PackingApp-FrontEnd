@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import axios from "axios";
+import { io, Socket } from "socket.io-client";
 import debounce from "lodash.debounce";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import {
   SalesOrder,
   Lookup,
@@ -11,6 +12,17 @@ import {
 } from "@/app/admin/components/types/admin";
 import { formatDateLocalYYYYMMDD } from "@/app/admin/components/utils/date";
 import type { ViewType } from "@/app/admin/components/dashboard/Header";
+
+type NotificationClearedPayload = {
+  salesOrderNumber: string;
+};
+
+type NotificationNewPayload = {
+  salesOrderNumber?: string;
+  salesOrder?: {
+    saleOrderNumber: string;
+  };
+};
 
 const INLINE_EDIT_FIELDS: EditableField[] = [
   "status",
@@ -51,6 +63,8 @@ export function useAdminDashboard() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [orders, setOrders] = useState<SalesOrder[]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [lookup, setLookup] = useState<Lookup>({
     products: [],
     transporters: [],
@@ -73,12 +87,12 @@ export function useAdminDashboard() {
   const [searchProduct, setSearchProduct] = useState<string>("");
 
   const [paymentFilter, setPaymentFilter] = useState<string>("");
-  const [zoneFilter, setZoneFilter] = useState<string>("");   
+  const [zoneFilter, setZoneFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  
+
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
   const [selectedMasterLookup, setSelectedMasterLookup] =
     useState<string>("products");
@@ -104,6 +118,51 @@ export function useAdminDashboard() {
       } catch {}
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setToken(localStorage.getItem("token"));
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const s = io(API.SO_SOCKET_BASE, {
+      transports: ["websocket"],
+      auth: { token },
+    });
+    socketRef.current = s;
+
+    s.on("notification:new", (payload: NotificationNewPayload) => {
+      const so =
+        payload.salesOrder?.saleOrderNumber ?? payload.salesOrderNumber ?? "";
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so
+            ? { ...o, notificationCount: (o.notificationCount ?? 0) + 1 }
+            : o
+        )
+      );
+    });
+
+    s.on("notification:cleared", (payload: NotificationClearedPayload) => {
+      const so = payload.salesOrderNumber;
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o
+        )
+      );
+    });
+
+    return () => {
+      s.disconnect();
+      socketRef.current = null;
+    };
+  }, [token]);
 
   const debouncedSetSearchProduct = useMemo(
     () => debounce((value: string) => setSearchProduct(value), 400),
@@ -135,7 +194,7 @@ export function useAdminDashboard() {
         axios.get(API.LOOKUP.PACK_CONFIGS, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`${API.ADMIN.USERS}?role=USER`, { 
+        axios.get(`${API.ADMIN.USERS}?role=USER`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(API.LOOKUP.CUSTOMERS, {
@@ -201,7 +260,19 @@ export function useAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchProduct, searchInput, paymentFilter, zoneFilter, statusFilter, startDate, endDate, sortBy, sortOrder]);
+  }, [
+    currentPage,
+    pageSize,
+    searchProduct,
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     if (view === "orders") {

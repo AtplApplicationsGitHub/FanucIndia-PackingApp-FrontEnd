@@ -505,15 +505,17 @@ export default function SoSearchPage() {
               PRINT
             </Button>
 
-            <Button
-              variant="contained"
-              startIcon={<ChatBubbleOutlineIcon />}
-              onClick={() => setChatOpen(true)}
-              sx={buttonSx}
-              disabled={!data?.salesOrder?.saleOrderNumber}
-            >
-              CHAT
-            </Button>
+            {data && !data.isArchived && (
+              <Button
+                variant="contained"
+                startIcon={<ChatBubbleOutlineIcon />}
+                onClick={() => setChatOpen(true)}
+                sx={buttonSx}
+                disabled={!data?.salesOrder?.saleOrderNumber}
+              >
+                CHAT
+              </Button>
+            )}
 
             <SoChatDrawer
               open={chatOpen}

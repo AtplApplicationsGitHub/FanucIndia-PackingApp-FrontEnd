@@ -14,7 +14,8 @@ export type SalesFormValues = {
   transferOrder: string;
   deliveryDate: string;
   transporterId: string;
-  plantCodeId: string;
+  // plantCodeId: string;
+  plantCode: string;
   paymentClearance: string | boolean;
   salesZoneId: string;
   packConfigId: string;
@@ -67,8 +68,11 @@ export const useSalesForm = (onSuccess?: () => void) => {
     if (!form.transporterId) {
       newErrors.transporterId = "Transporter is required";
     }
-    if (!form.plantCodeId) {
-      newErrors.plantCodeId = "Delivery Plant Code is required";
+    // if (!form.plantCodeId) {
+    //   newErrors.plantCodeId = "Delivery Plant Code is required";
+    // }
+    if (!form.plantCode) {
+      newErrors.plantCode = "Delivery Plant Code is required";
     }
     if (!form.salesZoneId) {
       newErrors.salesZoneId = "Sales Zone is required";
@@ -98,7 +102,8 @@ export const useSalesForm = (onSuccess?: () => void) => {
         ...form,
         productId: Number(form.productId),
         transporterId: Number(form.transporterId),
-        plantCodeId: Number(form.plantCodeId),
+        // plantCodeId: Number(form.plantCodeId),
+        plantCode: form.plantCode,
         salesZoneId: Number(form.salesZoneId),
         packConfigId: Number(form.packConfigId),
         ...(hasCustomerId ? { customerId: Number(form.customerId) } : {}),

@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { API } from '@/common/lib/endpoints';
+import { io, Socket } from "socket.io-client";
+import { API } from "@/common/lib/endpoints";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { secureDownload } from "@/common/lib/secure-download";
+
+type NotificationClearedPayload = {
+  salesOrderNumber: string;
+};
+
+type NotificationNewPayload = {
+  salesOrderNumber?: string;
+  salesOrder?: {
+    saleOrderNumber: string;
+  };
+};
 
 export type SalesDashboardView = "home" | "orders";
 
 export function useSalesDashboard() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const [pageSize, setPageSize] = useState(10);
 
@@ -44,7 +58,9 @@ export function useSalesDashboard() {
 
   // On initial load, check session storage for a saved view
   useEffect(() => {
-    const savedView = sessionStorage.getItem("salesDashboardView") as SalesDashboardView;
+    const savedView = sessionStorage.getItem(
+      "salesDashboardView"
+    ) as SalesDashboardView;
     if (savedView) {
       setViewInternal(savedView);
     }
@@ -62,7 +78,6 @@ export function useSalesDashboard() {
     sessionStorage.setItem("salesDashboardView", newView);
     setViewInternal(newView);
   };
-
 
   useEffect(() => {
     if (alert) {
@@ -126,6 +141,51 @@ export function useSalesDashboard() {
       .finally(() => setLookupsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setToken(localStorage.getItem("token"));
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const s = io(API.SO_SOCKET_BASE, {
+      transports: ["websocket"],
+      auth: { token },
+    });
+    socketRef.current = s;
+
+    s.on("notification:new", (payload: NotificationNewPayload) => {
+      const so =
+        payload.salesOrder?.saleOrderNumber ?? payload.salesOrderNumber ?? "";
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so
+            ? { ...o, notificationCount: (o.notificationCount ?? 0) + 1 }
+            : o
+        )
+      );
+    });
+
+    s.on("notification:cleared", (payload: NotificationClearedPayload) => {
+      const so = payload.salesOrderNumber;
+      if (!so) return;
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o
+        )
+      );
+    });
+
+    return () => {
+      s.disconnect();
+      socketRef.current = null;
+    };
+  }, [token]);
+
   const fetchOrders = useCallback(
     (page = currentPage, size = pageSize) => {
       if (typeof window === "undefined") return;
@@ -169,32 +229,30 @@ export function useSalesDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, view]); // Add view dependency
 
-
   const handleDownloadTemplate = useCallback(async () => {
-  if (typeof window === "undefined") return;
-  const token = localStorage.getItem("token");
-  try {
-    const res = await fetch(API.SALES.TEMPLATE, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error();
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(API.SALES.TEMPLATE, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
 
-    const cd = res.headers.get("content-disposition") || "";
+      const cd = res.headers.get("content-disposition") || "";
 
-    const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
-    const filename =
-      (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
-      cd.match(/filename="([^"]+)"/i)?.[1] ||
-      cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
-      "bulk_import_excel.xlsx";
+      const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
+      const filename =
+        (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
+        cd.match(/filename="([^"]+)"/i)?.[1] ||
+        cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
+        "bulk_import_excel.xlsx";
 
-    const blob = await res.blob();
-    secureDownload(blob, filename);
-  } catch {
-    setAlert({ severity: "error", message: "Failed to download template" });
-  }
-}, []);
-
+      const blob = await res.blob();
+      secureDownload(blob, filename);
+    } catch {
+      setAlert({ severity: "error", message: "Failed to download template" });
+    }
+  }, []);
 
   const handleBulkUpload = () => fileInputRef.current?.click();
 
