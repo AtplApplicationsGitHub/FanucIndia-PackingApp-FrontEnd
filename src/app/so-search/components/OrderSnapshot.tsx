@@ -16,7 +16,7 @@ interface SalesOrder {
   customerNameText?: string | null;
   packConfig?: { configName: string };
   transporter?: { name: string };
-  plantCode?: { code: string };
+  plantCode?: string | { code: string };
   salesZone?: { name: string };
   specialRemarks?: string;
   additionalRemarks?: string;
@@ -107,7 +107,10 @@ export default function OrderSnapshot({
           value={salesOrder.packConfig?.configName}
         />
         <KVBox label="Transporter" value={salesOrder.transporter?.name} />
-        <KVBox label="Delivery Plant Code" value={salesOrder.plantCode?.code} />
+        <KVBox 
+          label="Delivery Plant Code" 
+          value={typeof salesOrder.plantCode === 'object' ? salesOrder.plantCode?.code : salesOrder.plantCode} 
+        />
         <KVBox label="Sales Zone" value={salesOrder.salesZone?.name} />
       </Box>
 
