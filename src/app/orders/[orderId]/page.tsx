@@ -28,6 +28,7 @@ import {
   bulkAcceptGroup,
   updateMaterialRemarks,
   acceptAllIssueStage,
+  updateMapping, // <--- 1. IMPORT ADDED HERE
 } from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
@@ -52,6 +53,7 @@ type UpdateResponse = {
   };
 };
 
+// ... extractErrorMessage function (same as before) ...
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     try {
@@ -133,7 +135,6 @@ export default function MaterialDataPage() {
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   const [showAll, setShowAll] = useState(false);
 
-  // Determine global stage (Issue vs Packing)
   const allIssued = useMemo(
     () =>
       localRows.length > 0 &&
@@ -157,6 +158,7 @@ export default function MaterialDataPage() {
     );
   }, [localRows]);
 
+  // ... handleUpdateRemarks ...
   const handleUpdateRemarks = async (id: number, remarks: string) => {
     try {
       const response = await updateMaterialRemarks(orderId, id, remarks) as UpdateResponse;
@@ -204,6 +206,7 @@ export default function MaterialDataPage() {
     }
   };
 
+  // ... handleAcceptAllIssue ...
   const handleAcceptAllIssue = async () => {
     setUploadNotice("Processing Admin Override...");
     try {
@@ -221,6 +224,18 @@ export default function MaterialDataPage() {
       }
     } catch (e) {
       setEditError(extractErrorMessage(e));
+    }
+  };
+
+  // --- 2. ADD THIS NEW HANDLER ---
+  const handleUpdateMapping = async (materialId: number, mappingBarcode: string, group: string) => {
+    setEditError(null);
+    try {
+      await updateMapping(orderId, materialId, mappingBarcode, group);
+      setUploadNotice("Mapping details updated successfully");
+      await refetch(); // Reload data to show updated Mapping/Group
+    } catch (err: unknown) {
+      setEditError(extractErrorMessage(err));
     }
   };
 
@@ -248,26 +263,14 @@ export default function MaterialDataPage() {
     return rows;
   }, [localRows, showAll, allIssued, selectedGroup]);
 
-  // [UPDATED] Logic to show "Accept Group Items" button
-  // 1. Group must be selected.
-  // 2. At least one item in the group must have `acceptBulkData === true`.
-  // 3. At least one of those items must be INCOMPLETE for the current stage.
   const showBulkButton = useMemo(() => {
     if (!selectedGroup) return false;
-
-    // Filter strictly by the selected group first
     const groupRows = localRows.filter((r) => r.group === selectedGroup);
-
     return groupRows.some((r) => {
-      // Must be flagged for bulk accept
       if (!r.acceptBulkData) return false;
-
-      // Must be incomplete
       if (!allIssued) {
-        // Issue Stage
         return r.issueStage < r.reqQuantity;
       } else {
-        // Packing Stage
         return r.packingStage < r.reqQuantity;
       }
     });
@@ -427,6 +430,7 @@ export default function MaterialDataPage() {
   };
 
   const handleProcess = async (code: string) => {
+    // ... existing logic ...
     setEditError(null);
     try {
       let response: UpdateResponse | undefined;
@@ -485,6 +489,7 @@ export default function MaterialDataPage() {
   };
 
   const handleUpdateIssueStage = async (code: string, stage: number, id: number) => {
+    // ... existing logic ...
     setEditError(null);
     try {
       const data = await updateIssueStage(orderId, code, stage, id) as UpdateResponse;
@@ -518,6 +523,7 @@ export default function MaterialDataPage() {
   };
 
   const handleUpdatePackingStage = async (code: string, stage: number, id: number) => {
+    // ... existing logic ...
     setEditError(null);
     try {
       const data = await updatePackingStage(orderId, code, stage, id) as UpdateResponse;
@@ -585,9 +591,7 @@ export default function MaterialDataPage() {
                 selectedGroup={selectedGroup}
                 onGroupChange={setSelectedGroup}
                 onBulkAccept={handleBulkAccept}
-                // [FIX] Pass calculated boolean to hide button if done
                 showBulkButton={showBulkButton} 
-                // [NEW] Pass toggle props to child
                 showAll={showAll}
                 onToggleShowAll={setShowAll}
                 showAcceptAllIssueButton={currentUser.role === 'ADMIN' && !allIssued}
@@ -597,8 +601,6 @@ export default function MaterialDataPage() {
           </Box>
           <Divider />
           
-          {/* [FIX] Removed the old FormControlLabel switch from here */}
-
           {editError && (
             <Alert severity="error" onClose={() => setEditError(null)} sx={{ borderRadius: 0, fontSize: "0.95rem", borderBottom: "1px solid #e0e0e0", px: 2, py: 1 }}>
               {editError}
@@ -611,6 +613,10 @@ export default function MaterialDataPage() {
               onUpdateIssueStage={handleUpdateIssueStage}
               onUpdatePackingStage={handleUpdatePackingStage}
               onUpdateRemarks={handleUpdateRemarks}
+              
+              // --- 3. PASS THE HANDLER HERE ---
+              onUpdateMapping={handleUpdateMapping}
+              
               onProcessRowUpdateError={(err) => setEditError(extractErrorMessage(err))}
               isOrderFullyComplete={isOrderFullyComplete}
             />

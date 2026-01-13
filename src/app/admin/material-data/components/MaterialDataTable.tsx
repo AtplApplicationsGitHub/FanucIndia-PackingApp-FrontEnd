@@ -40,6 +40,11 @@ interface Props {
     value: number,
     materialId: number
   ) => Promise<MaterialRow | null>;
+  onUpdateMapping?: (
+    materialId: number, 
+    mappingBarcode: string, 
+    group: string
+  ) => Promise<void>;
   onProcessRowUpdateError?: (error: Error) => void;
   isOrderFullyComplete?: boolean;
   onUpdateRemarks?: (id: number, remarks: string) => Promise<void>;
@@ -149,6 +154,7 @@ export default function MaterialDataTable({
   loading,
   onUpdateIssueStage,
   onUpdatePackingStage,
+  onUpdateMapping,
   onProcessRowUpdateError,
   isOrderFullyComplete = false,
   onUpdateRemarks,
@@ -166,6 +172,12 @@ export default function MaterialDataTable({
   const [isMandatoryMode, setIsMandatoryMode] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const [mappingDialogOpen, setMappingDialogOpen] = useState(false);
+  const [currentMappingRow, setCurrentMappingRow] = useState<MaterialRow | null>(null);
+  const [mappingBarcodeVal, setMappingBarcodeVal] = useState("");
+  const [groupVal, setGroupVal] = useState("");
+  const [savingMapping, setSavingMapping] = useState(false);
 
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover,
@@ -287,6 +299,35 @@ export default function MaterialDataTable({
     }
   };
 
+  const handleOpenMapping = (row: MaterialRow) => {
+    setCurrentMappingRow(row);
+    setGroupVal(row.group || ""); 
+    setMappingBarcodeVal("");
+    setMappingDialogOpen(true);
+  };
+
+  const handleCloseMapping = () => {
+    setMappingDialogOpen(false);
+    setCurrentMappingRow(null);
+    setMappingBarcodeVal("");
+    setGroupVal("");
+  };
+
+  const handleSaveMapping = async () => {
+    if (!currentMappingRow || !onUpdateMapping) return;
+    setSavingMapping(true);
+    try {
+      await onUpdateMapping(currentMappingRow.id, mappingBarcodeVal, groupVal);
+      handleCloseMapping();
+    } catch (error) {
+        if (onProcessRowUpdateError && error instanceof Error) {
+            onProcessRowUpdateError(error);
+        }
+    } finally {
+      setSavingMapping(false);
+    }
+  };
+
   // Helper to determine cell background colors
   const getCellStyle = (r: MaterialRow, field: 'issueStage' | 'packingStage' | 'other') => {
     const reqEqIssue = r.reqQuantity === r.issueStage;
@@ -374,7 +415,29 @@ export default function MaterialDataTable({
                   transition: 'background-color 0.2s'
                 }}
               >
-                <TableCell sx={getCellStyle(row, 'other')}>{row.siNo}</TableCell>
+                <TableCell sx={getCellStyle(row, 'other')}>
+                    {!row.mappingBarcode ? (
+                        <MuiLink
+                            component="button"
+                            variant="body2"
+                            onClick={() => handleOpenMapping(row)}
+                            sx={{
+                                fontWeight: 'bold',
+                                textDecoration: 'none',
+                                color: '#1976d2',      
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    textDecoration: 'none',
+                                    color: '#1565c0',  
+                                }
+                            }}
+                        >
+                            {row.siNo}
+                        </MuiLink>
+                    ) : (
+                        row.siNo
+                    )}
+                </TableCell>
                 <TableCell sx={getCellStyle(row, 'other')}>
                   <Box display="flex" flexDirection="column">
                     {row.remarksRequired ? (
@@ -496,6 +559,46 @@ export default function MaterialDataTable({
                 disabled={savingRemark || (isMandatoryMode && !remarkText.trim())}
             >
                 {savingRemark ? "SAVING..." : "SAVE"}
+            </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={mappingDialogOpen} onClose={handleCloseMapping} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>
+            Add Mapping Details
+        </DialogTitle>
+        <DialogContent dividers>
+            <Typography variant="caption" gutterBottom display="block">
+                Material: {currentMappingRow?.materialCode}
+            </Typography>
+            <TextField
+                autoFocus
+                margin="dense"
+                label="Mapping Barcode"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={mappingBarcodeVal}
+                onChange={(e) => setMappingBarcodeVal(e.target.value)}
+                placeholder="Enter Mapping Barcode"
+            />
+            <TextField
+                margin="dense"
+                label="Group"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={groupVal}
+                onChange={(e) => setGroupVal(e.target.value)}
+                placeholder="Enter Group (Optional)"
+            />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+            <Button onClick={handleCloseMapping} disabled={savingMapping} sx={buttonSx}>
+                CANCEL
+            </Button>
+            <Button onClick={handleSaveMapping} disabled={savingMapping} sx={buttonSx}>
+                {savingMapping ? "SAVING..." : "SUBMIT"}
             </Button>
         </DialogActions>
       </Dialog>

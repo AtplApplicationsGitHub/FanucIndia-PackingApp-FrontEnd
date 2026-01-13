@@ -140,3 +140,23 @@ export async function acceptAllIssueStage(orderId: number) {
   }
   return res.json();
 }
+
+export async function updateMapping(
+    orderId: number,
+    materialId: number,
+    mappingBarcode: string,
+    group: string
+) {
+    const url = API.ADMIN.UPDATE_MAPPING(orderId);
+    
+    const res = await fetchWithAuth(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ materialId, mappingBarcode, group }),
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to update mapping");
+    }
+    return res.json();
+}

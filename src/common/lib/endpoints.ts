@@ -18,6 +18,7 @@ export const API = {
     PRINTER_BY_ID: (id: string | number) =>     `${API_BASE_URL}/lookup/printers/${id}`,
     MATERIAL_BARCODES:                          `${API_BASE_URL}/lookup/material-barcodes`,
     MATERIAL_BARCODE_BY_ID: (id: string | number) => `${API_BASE_URL}/lookup/material-barcodes/${id}`,
+    MOBILE_SYNC_BARCODES:                            `${API_BASE_URL}/lookup/mobile-sync/material-barcodes`,
     BULK_TEMPLATE:                                   `${API_BASE_URL}/lookup/bulk-template`,
     BULK_IMPORT:                                     `${API_BASE_URL}/lookup/bulk-import`,
   },
@@ -29,6 +30,9 @@ export const API = {
     UPDATE_ISSUE_STAGE: (orderId: number) =>      `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/update-issue-stage`,
     INCREMENT_PACKING_STAGE: (orderId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/increment-packing-stage`,
     UPDATE_PACKING_STAGE: (orderId: number) =>    `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/update-packing-stage`,
+
+    UPDATE_MAPPING: (orderId: number) =>          `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/update-mapping`,
+
     USERS:                                        `${API_BASE_URL}/users`,
     USER_BY_ID:          (id: number) =>          `${API_BASE_URL}/users/${id}`,
   },
