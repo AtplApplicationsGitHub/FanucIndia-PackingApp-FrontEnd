@@ -1,25 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
-import { Check, CloudDownload, CloudUpload } from "lucide-react";
+import { CloudDownload, CloudUpload, PlusCircle, RefreshCcw } from "lucide-react";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, { LookupRow } from "@/app/admin/components/dashboard/LookupCrudTable";
+import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog";
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
-import { Button, Theme } from "@mui/material";
+import { Button, Paper, useTheme } from "@mui/material";
 
+// UPDATED: Products removed "code"
 const SCHEMA_KEYS: Record<string, string[]> = {
-  products: ["id", "name", "code"],
+  products: ["id", "name"],
   transporters: ["id", "name"],
   plantCodes: ["id", "code", "description"],
   salesZones: ["id", "name"],
@@ -35,31 +35,6 @@ const SCHEMA_KEYS: Record<string, string[]> = {
     "remarksRequired", 
     "classification"
   ],
-};
-
-const REQUIRED_KEYS: Record<string, string[]> = {
-  products: ["name"], 
-  transporters: ["name"],
-  plantCodes: ["code"], 
-  salesZones: ["name"],
-  packConfigs: ["configName"],
-  customers: ["name", "address"],
-  printers: ["name"],
-  materialBarcodes: ["erpCode"],
-};
-
-const sanitizePayload = (obj: Partial<LookupRow>) => {
-  const boolKeys = ["acceptBulkData", "remarksRequired"];
-  const newObj: Partial<LookupRow> = { ...obj };
-  
-  boolKeys.forEach((k) => {
-    if (k in newObj && typeof newObj[k] === "string") {
-      const val = (newObj[k] as string).toLowerCase().trim();
-      if (val === "true") newObj[k] = true;
-      if (val === "false") newObj[k] = false;
-    }
-  });
-  return newObj;
 };
 
 const TYPE_TO_API_PATH: Record<string, string> = {
@@ -86,47 +61,36 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Material Barcode", key: "materialBarcodes" },
 ];
 
-type DeleteTarget = {
-  type: MasterLookupKey;
-  id: number;
-} | null;
-
-type SnackbarState = {
-  open: boolean;
-  message: string;
-  severity: AlertColor;
-};
-
 export default function AdminMasterLookupPanel() {
-  const [selectedType, setSelectedType] = useState<MasterLookupKey | "">("");
+  const theme = useTheme();
+  const [selectedType, setSelectedType] = useState<MasterLookupKey>("products");
   const [data, setData] = useState<LookupRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  const [adding, setAdding] = useState<boolean>(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  const [addObj, setAddObj] = useState<Partial<LookupRow>>({});
-  const [editObj, setEditObj] = useState<Partial<LookupRow>>({});
-
+  // Dialog State
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [selectedRow, setSelectedRow] = useState<Partial<LookupRow>>({});
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
-  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: MasterLookupKey; id: number } | null>(null);
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
 
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: AlertColor }>({
     open: false,
     message: "",
     severity: "error",
   });
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const showSnackbar = (message: string, severity: AlertColor = "error") => {
     setSnackbar({ open: true, message, severity });
   };
-  const handleSnackbarClose = () =>
-    setSnackbar((prev) => ({ ...prev, open: false }));
+  const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
-  const getApiPath = () =>
-    selectedType ? TYPE_TO_API_PATH[selectedType] || selectedType : "";
+  const getApiPath = () => TYPE_TO_API_PATH[selectedType] || selectedType;
 
   const fetchData = async () => {
     if (!selectedType) return;
@@ -146,172 +110,92 @@ export default function AdminMasterLookupPanel() {
   };
 
   useEffect(() => {
-    setAdding(false);
-    setEditingId(null);
-    setAddObj({});
-    setEditObj({});
-    if (selectedType) {
-      fetchData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData();
   }, [selectedType]);
 
-  const handleAdd = () => {
-    setAdding(true);
-    setEditingId(null);
-    setAddObj({});
+  const handleTabChange = (event: React.SyntheticEvent, newValue: MasterLookupKey) => {
+    setSelectedType(newValue);
   };
 
-  const handleAddChange = (
-    key: keyof LookupRow,
-    value: string | number | boolean | null | undefined
-  ) => setAddObj((prev) => ({ ...prev, [key]: value }));
+  // --- Actions ---
 
-  const handleEdit = (id: number, row: LookupRow) => {
-    setEditingId(id);
-    setEditObj(row);
+  const openAddDialog = () => {
+    setDialogMode("add");
+    setSelectedRow({});
+    setDialogOpen(true);
   };
 
-  const handleEditChange = (
-    key: keyof LookupRow,
-    value: string | number | boolean | null | undefined
-  ) => setEditObj((prev) => ({ ...prev, [key]: value }));
-
-  const handleCancel = () => {
-    setAdding(false);
-    setEditingId(null);
-    setAddObj({});
-    setEditObj({});
+  const openEditDialog = (row: LookupRow) => {
+    setDialogMode("edit");
+    setSelectedRow(row);
+    setDialogOpen(true);
   };
 
-  const handleSave = async (type: MasterLookupKey, id: number) => {
-    setLoading(true);
-    setError("");
+  const handleDialogSave = async (formData: Record<string, any>) => {
+    setActionLoading(true);
     try {
       const apiPath = getApiPath();
-      if (id === -1) {
-        const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}`, {
+      let res;
+      
+      if (dialogMode === "add") {
+        res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}`, {
           method: "POST",
-          body: JSON.stringify(sanitizePayload(addObj)),
+          body: JSON.stringify(formData),
         });
-        if (!res.ok) throw await res.json();
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id: _id, ...patchObj } = editObj;
-        const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${id}`, {
+        const { id, ...rest } = formData; 
+        // Ensure we use the ID from selectedRow if not in formData
+        const updateId = selectedRow.id;
+        res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${updateId}`, {
           method: "PATCH",
-          body: JSON.stringify(sanitizePayload(patchObj)),
+          body: JSON.stringify(rest),
         });
-        if (!res.ok) throw await res.json();
       }
-      handleCancel();
-      await fetchData();
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Operation failed");
+      }
+
       showSnackbar("Saved successfully!", "success");
-    } catch (err: unknown) {
-      let errorMsg =
-        "Failed to save. Ensure all required fields are filled as strings.";
-      if (
-        err &&
-        typeof err === "object" &&
-        "message" in err
-      ) {
-        const msg = (err as { message?: unknown }).message;
-        if (typeof msg === "string") {
-          errorMsg = msg;
-        } else if (Array.isArray(msg)) {
-           errorMsg = msg.join(", ");
-        }
-      }
-      showSnackbar(errorMsg, "error");
+      setDialogOpen(false);
+      fetchData();
+    } catch (err: any) {
+      showSnackbar(err.message || "Failed to save", "error");
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
-  const handleRequestDelete = (type: MasterLookupKey, id: number) => {
-    setDeleteTarget({ type, id });
+  const handleRequestDelete = (id: number) => {
+    setDeleteTarget({ type: selectedType, id });
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-    setDeleteLoading(true);
+    setActionLoading(true);
     try {
-      const apiPath = TYPE_TO_API_PATH[deleteTarget.type] || deleteTarget.type;
-      const res = await authFetch(
-        `${API_BASE_URL}/lookup/${apiPath}/${deleteTarget.id}`,
-        { method: "DELETE" }
-      );
+      const apiPath = TYPE_TO_API_PATH[deleteTarget.type];
+      const res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${deleteTarget.id}`, { 
+        method: "DELETE" 
+      });
+      
       if (!res.ok) {
-        let errMessage = "Failed to delete.";
-        try {
-          const errBody = await res.json();
-          if (typeof errBody?.message === "string") {
-            errMessage = errBody.message;
-          } else if (
-            errBody?.message &&
-            typeof errBody.message === "object" &&
-            typeof errBody.message.message === "string"
-          ) {
-            errMessage = errBody.message.message;
-          }
-        } catch {}
-        showSnackbar(String(errMessage), "error");
-        setDeleteDialogOpen(false);
-        setDeleteTarget(null);
-        setDeleteLoading(false);
-        return;
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete");
       }
-      setDeleteDialogOpen(false);
-      setDeleteTarget(null);
-      await fetchData();
-    } catch (err: unknown) {
-      let msg = "Failed to delete.";
-      if (
-        err &&
-        typeof err === "object" &&
-        "message" in err &&
-        typeof (err as { message?: unknown }).message === "string"
-      ) {
-        msg = (err as { message: string }).message;
-      }
-      showSnackbar(msg, "error");
-      setDeleteDialogOpen(false);
-      setDeleteTarget(null);
+      
+      showSnackbar("Deleted successfully", "success");
+      fetchData();
+    } catch (err: any) {
+      showSnackbar(err.message, "error");
     } finally {
-      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+      setActionLoading(false);
     }
   };
-
-  const handleDeleteDialogClose = () => {
-    setDeleteDialogOpen(false);
-    setDeleteTarget(null);
-  };
-
-  const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover,
-    color: (theme: Theme) => theme.palette.text.primary,
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 120,
-    height: 40,
-    px: 3,
-    textTransform: "none" as const,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main,
-      color: (theme: Theme) => theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-      "& .MuiSvgIcon-root, & svg": {
-        color: "#000",
-      },
-    },
-  };
-
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const handleDownloadBulk = async () => {
     try {
@@ -345,164 +229,138 @@ export default function AdminMasterLookupPanel() {
       if (!res.ok) throw new Error("Upload failed");
       
       showSnackbar("Bulk import successful!", "success");
-      // Refresh current view if selected
-      if (selectedType) fetchData();
+      fetchData();
     } catch {
       showSnackbar("Failed to import data", "error");
     } finally {
       setLoading(false);
-      e.target.value = ""; // Reset input
+      e.target.value = "";
     }
   };
 
+  const buttonSx = {
+    borderRadius: 0,
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+    fontWeight: 600,
+    fontSize: 15,
+    minWidth: 120,
+    height: 40,
+    px: 3,
+    textTransform: "none" as const,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    transition: "all 0.2s ease-in-out",
+    bgcolor: theme.palette.action.hover, 
+    color: theme.palette.text.primary,
+    "&:hover": {
+      bgcolor: theme.palette.primary.main, 
+      color: theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+    },
+    "&:disabled": {
+      opacity: 0.6,
+      cursor: "not-allowed",
+    },
+  };
+
   return (
-    <Box
-      sx={{
-        width: "100%",
-        mt: 6,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 3,
-          width: "100%",
-          maxWidth: 800,
-          mb: 1,
+    <Box sx={{ width: "100%", mt: 2 }}>
+      
+      {/* 1. Tabs (Moved to Top, Yellow BG, Centered) */}
+      <Paper 
+        elevation={2}
+        sx={{ 
+          mb: 4, 
+          borderRadius: 1, 
+          bgcolor: theme.palette.primary.main, // FANUC Yellow
+          overflow: "hidden"
         }}
       >
-        <FormControl sx={{ width: 320 }} size="medium" variant="outlined">
-          <InputLabel id="master-lookup-type-label">Select Lookup</InputLabel>
-          <Select
-            labelId="master-lookup-type-label"
-            id="master-lookup-type"
+        <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+          <Tabs
             value={selectedType}
-            label="Select Lookup"
-            onChange={(e: SelectChangeEvent<MasterLookupKey | "">) =>
-              setSelectedType(e.target.value as MasterLookupKey | "")
-            }
-            sx={{
-              borderRadius: 2,
-              fontSize: 16,
-              textAlign: "center",
-              "& .MuiSelect-select": {
-                textAlign: "center",
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: (theme) => theme.palette.background.paper,
-                },
-              },
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            textColor="inherit" // Uses text color suitable for yellow (likely black/contrast)
+            indicatorColor="secondary" // Or white/black depending on preference
+            sx={{ 
+              "& .MuiTab-root": { 
+                fontWeight: 700, 
+                fontSize: 15, 
+                color: theme.palette.primary.contrastText,
+                opacity: 0.7,
+                "&.Mui-selected": {
+                  opacity: 1,
+                  color: theme.palette.primary.contrastText,
+                }
+              }
             }}
           >
             {MASTER_LOOKUP_OPTIONS.map((option) => (
-              <MenuItem
-                key={option.key}
-                value={option.key}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "left",
-                  fontSize: 16,
-                }}
-              >
-                {selectedType === option.key && (
-                  <Check
-                    size={18}
-                    style={{
-                      color: "#1976d2",
-                      display: "inline-block",
-                      marginRight: 8,
-                      verticalAlign: "middle",
-                    }}
-                  />
-                )}
-                <span
-                  style={{
-                    fontWeight: selectedType === option.key ? 600 : 400,
-                  }}
-                >
-                  {option.label}
-                </span>
-              </MenuItem>
+              <Tab 
+                key={option.key} 
+                label={option.label} 
+                value={option.key} 
+              />
             ))}
-          </Select>
-        </FormControl>
-
-        <Box display="flex" gap={1}>
-          <Button
-            startIcon={<CloudDownload size={18} />}
-            onClick={handleDownloadBulk}
-            sx={buttonSx} 
-          >
-            DOWNLOAD
-          </Button>
-          <Button
-            component="label"
-            startIcon={<CloudUpload size={18} />}
-            sx={buttonSx} 
-          >
-            UPLOAD
-            <input
-              type="file"
-              hidden
-              accept=".xlsx"
-              ref={fileInputRef}
-              onChange={handleUploadBulk}
-            />
-          </Button>
+          </Tabs>
         </Box>
+      </Paper>
+
+      {/* 2. Action Buttons (Moved Below Tabs) */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 3 }}>
+        <Button startIcon={<CloudDownload />} onClick={handleDownloadBulk} sx={buttonSx}>
+          DOWNLOAD TEMPLATE
+        </Button>
+        <Button component="label" startIcon={<CloudUpload />} sx={buttonSx}>
+          UPLOAD BULK
+          <input type="file" hidden accept=".xlsx" ref={fileInputRef} onChange={handleUploadBulk} />
+        </Button>
+        <Button startIcon={<PlusCircle />} onClick={openAddDialog} sx={buttonSx}>
+          ADD NEW
+        </Button>
+        <Button startIcon={<RefreshCcw />} onClick={fetchData} sx={buttonSx}>
+          REFRESH
+        </Button>
       </Box>
 
-      <Box sx={{ width: "100%", mt: 6, maxWidth: "90%" }}>
-        {!selectedType ? (
-          <Box sx={{ textAlign: "center", color: "#888", mt: 8, fontSize: 18 }}>
-            Please select a lookup type to manage.
-          </Box>
-        ) : loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress size={38} />
+      {/* 3. Table */}
+      <Box sx={{ width: "100%" }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" py={8}>
+            <CircularProgress />
           </Box>
         ) : error ? (
-          <Alert severity="error" sx={{ py: 4, fontSize: 18, textAlign: "center" }}>
-            {error}
-          </Alert>
+          <Alert severity="error">{error}</Alert>
         ) : (
           <LookupCrudTable
-            type={selectedType}
             data={data}
             explicitKeys={SCHEMA_KEYS[selectedType]}
-            requiredKeys={REQUIRED_KEYS[selectedType]}
-            editingId={editingId}
-            editObj={editObj}
-            onEdit={handleEdit}
-            onEditChange={handleEditChange}
-            onSave={handleSave}
-            onRequestDelete={handleRequestDelete}
-            onCancel={handleCancel}
-            addObj={addObj}
-            onAdd={handleAdd}
-            onAddChange={handleAddChange}
-            adding={adding}
-            refresh={fetchData}
+            onEdit={openEditDialog}
+            onRequestDelete={(id) => handleRequestDelete(id)}
           />
         )}
       </Box>
 
+      {/* Dialogs */}
+      <LookupFormDialog
+        open={dialogOpen}
+        title={dialogMode === "add" ? `Add New ${selectedType}` : `Edit ${selectedType}`}
+        fields={SCHEMA_KEYS[selectedType].filter(k => k !== 'id')}
+        initialValues={selectedRow}
+        onClose={() => setDialogOpen(false)}
+        onSave={handleDialogSave}
+        loading={actionLoading}
+      />
+
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onConfirm={handleConfirmDelete}
-        onCancel={handleDeleteDialogClose}
-        loading={deleteLoading}
+        onCancel={() => setDeleteDialogOpen(false)}
+        loading={actionLoading}
         title="Delete Confirmation"
-        description="Are you sure you want to delete this lookup value? This action cannot be undone."
+        description="Are you sure you want to delete this item?"
       />
 
       <Snackbar
@@ -511,11 +369,7 @@ export default function AdminMasterLookupPanel() {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MuiAlert
-          onClose={handleSnackbarClose}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
+        <MuiAlert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
         </MuiAlert>
       </Snackbar>
