@@ -524,7 +524,7 @@ export default function AdminOrdersTable({
           <ListItemIcon>
             <OpenInNewIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Detailed View</ListItemText>
+          <ListItemText>Pick & Pack</ListItemText>
         </MenuItem>
 
         {menuRow?.status === "Dispatched" && (
