@@ -15,7 +15,9 @@ import LookupCrudTable, { LookupRow } from "@/app/admin/components/dashboard/Loo
 import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog";
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
-import { Button, Paper, useTheme } from "@mui/material";
+import { Button, Paper, useTheme, InputBase, IconButton } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search"; 
+import ClearIcon from "@mui/icons-material/Clear";   
 
 // UPDATED: Products removed "code"
 const SCHEMA_KEYS: Record<string, string[]> = {
@@ -67,6 +69,7 @@ export default function AdminMasterLookupPanel() {
   const [data, setData] = useState<LookupRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Dialog State
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -90,9 +93,9 @@ export default function AdminMasterLookupPanel() {
   };
   const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
-  const getApiPath = () => TYPE_TO_API_PATH[selectedType] || selectedType;
+  const getApiPath = React.useCallback(() => TYPE_TO_API_PATH[selectedType] || selectedType, [selectedType]);
 
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     if (!selectedType) return;
     setLoading(true);
     setError("");
@@ -107,17 +110,41 @@ export default function AdminMasterLookupPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedType, getApiPath]);
 
   useEffect(() => {
     fetchData();
-  }, [selectedType]);
+  }, [fetchData]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: MasterLookupKey) => {
     setSelectedType(newValue);
+    setSearchQuery(""); 
   };
 
-  // --- Actions ---
+  const getSearchKey = React.useCallback((): string => {
+    switch (selectedType) {
+      case "products": return "name";
+      case "transporters": return "name";
+      case "plantCodes": return "code";
+      case "salesZones": return "name";
+      case "packConfigs": return "configName";
+      case "customers": return "name";
+      case "printers": return "name";
+      case "materialBarcodes": return "erpCode";
+      default: return "name";
+    }
+  }, [selectedType]);
+
+  const filteredData = React.useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    const key = getSearchKey();
+    return data.filter((row) => {
+      const val = row[key];
+      return val
+        ? String(val).toLowerCase().includes(searchQuery.toLowerCase())
+        : false;
+    });
+  }, [data, searchQuery, getSearchKey]);
 
   const openAddDialog = () => {
     setDialogMode("add");
@@ -131,7 +158,7 @@ export default function AdminMasterLookupPanel() {
     setDialogOpen(true);
   };
 
-  const handleDialogSave = async (formData: Record<string, any>) => {
+  const handleDialogSave = async (formData: Record<string, unknown>) => {
     setActionLoading(true);
     try {
       const apiPath = getApiPath();
@@ -143,12 +170,12 @@ export default function AdminMasterLookupPanel() {
           body: JSON.stringify(formData),
         });
       } else {
-        const { id, ...rest } = formData; 
-        // Ensure we use the ID from selectedRow if not in formData
+        const bodyData = { ...formData };
+        delete bodyData.id;
         const updateId = selectedRow.id;
         res = await authFetch(`${API_BASE_URL}/lookup/${apiPath}/${updateId}`, {
           method: "PATCH",
-          body: JSON.stringify(rest),
+          body: JSON.stringify(bodyData),
         });
       }
 
@@ -160,8 +187,9 @@ export default function AdminMasterLookupPanel() {
       showSnackbar("Saved successfully!", "success");
       setDialogOpen(false);
       fetchData();
-    } catch (err: any) {
-      showSnackbar(err.message || "Failed to save", "error");
+    } catch (err: unknown) { 
+      const message = err instanceof Error ? err.message : "Failed to save";
+      showSnackbar(message, "error");
     } finally {
       setActionLoading(false);
     }
@@ -188,8 +216,9 @@ export default function AdminMasterLookupPanel() {
       
       showSnackbar("Deleted successfully", "success");
       fetchData();
-    } catch (err: any) {
-      showSnackbar(err.message, "error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete";
+      showSnackbar(message, "error");
     } finally {
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
@@ -263,7 +292,7 @@ export default function AdminMasterLookupPanel() {
   };
 
   return (
-    <Box sx={{ width: "100%", mt: 2 }}>
+    <Box sx={{ width: "100%", mt: 1, px: 1, pb: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
       
       {/* 1. Tabs (Moved to Top, Yellow BG, Centered) */}
       <Paper 
@@ -310,6 +339,34 @@ export default function AdminMasterLookupPanel() {
 
       {/* 2. Action Buttons (Moved Below Tabs) */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 3 }}>
+        <Paper
+          component="form"
+          onSubmit={(e) => e.preventDefault()}
+          sx={{ 
+            p: '2px 4px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            width: { xs: "100%", sm: 250 },
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: "none"
+          }}
+        >
+          <InputBase
+            sx={{ ml: 1, flex: 1 }}
+            placeholder={`Search ${getSearchKey() === 'erpCode' ? 'ERP Code' : getSearchKey().replace(/([A-Z])/g, " $1").toLowerCase()}...`}
+            inputProps={{ 'aria-label': 'search' }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => setSearchQuery("")}>
+              <ClearIcon />
+            </IconButton>
+          )}
+          <IconButton type="button" sx={{ p: '10px' }} aria-label="search" disabled>
+            <SearchIcon />
+          </IconButton>
+        </Paper>
         <Button startIcon={<CloudDownload />} onClick={handleDownloadBulk} sx={buttonSx}>
           DOWNLOAD TEMPLATE
         </Button>
@@ -324,6 +381,7 @@ export default function AdminMasterLookupPanel() {
           REFRESH
         </Button>
       </Box>
+      
 
       {/* 3. Table */}
       <Box sx={{ width: "100%" }}>
@@ -335,7 +393,7 @@ export default function AdminMasterLookupPanel() {
           <Alert severity="error">{error}</Alert>
         ) : (
           <LookupCrudTable
-            data={data}
+            data={filteredData}
             explicitKeys={SCHEMA_KEYS[selectedType]}
             onEdit={openEditDialog}
             onRequestDelete={(id) => handleRequestDelete(id)}

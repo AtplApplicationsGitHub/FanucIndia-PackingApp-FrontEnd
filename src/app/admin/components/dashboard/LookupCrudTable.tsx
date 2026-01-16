@@ -56,7 +56,7 @@ const LookupCrudTable: React.FC<Props> = ({
 
   const visibleRows = data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  const formatValue = (key: string, value: any) => {
+  const formatValue = (key: string, value: string | number | boolean | null | undefined) => {
     if (typeof value === "boolean") return value ? "Yes" : "No";
     return value;
   };
@@ -120,7 +120,7 @@ const LookupCrudTable: React.FC<Props> = ({
                     <Tooltip title="Edit">
                       <IconButton
                         size="small"
-                        color="primary"
+                        color="warning"
                         onClick={() => onEdit(row)}
                       >
                         <Pencil size={18} />

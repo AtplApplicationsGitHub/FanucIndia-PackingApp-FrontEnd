@@ -19,9 +19,9 @@ type Props = {
   open: boolean;
   title: string;
   fields: string[];
-  initialValues: Record<string, any>;
+  initialValues: Record<string, string | number | boolean | null | undefined>;
   onClose: () => void;
-  onSave: (data: Record<string, any>) => void;
+  onSave: (data: Record<string, string | number | boolean | null | undefined>) => void;
   loading: boolean;
 };
 
@@ -35,7 +35,7 @@ export default function LookupFormDialog({
   loading,
 }: Props) {
   const theme = useTheme();
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, string | number | boolean | null | undefined>>({});
 
   const buttonSx = {
     borderRadius: 0,
@@ -67,7 +67,7 @@ export default function LookupFormDialog({
     }
   }, [open, initialValues]);
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: string | number | boolean | null | undefined) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -117,10 +117,10 @@ export default function LookupFormDialog({
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button onClick={onClose} sx={buttonSx}>
-          Cancel
+          CANCEL
         </Button>
         <Button onClick={handleSave} sx={buttonSx} disabled={loading}>
-          {loading ? "Saving..." : "Save"}
+          {loading ? "SAVING..." : "SAVE"}
         </Button>
       </DialogActions>
     </Dialog>
