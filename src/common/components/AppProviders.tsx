@@ -17,7 +17,7 @@ export default function AppProviders({
 
   const isProtectedRoute = !publicRoutes.includes(pathname);
 
-  useInactivityLogout(10, isProtectedRoute);
+  useInactivityLogout(120, isProtectedRoute);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
