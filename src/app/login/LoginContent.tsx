@@ -72,6 +72,11 @@ export default function LoginContent() {
     setErrorMsg("");
     setSuccessMsg("");
 
+    const payload = {
+      email: data.email.replace(/\s+/g, ''),
+      password: data.password.replace(/\s+/g, ''),
+    };
+
     // [Step 1] Capture previous user from LocalStorage before overwriting
     const prevUserStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
     let prevEmail = "";
@@ -87,7 +92,7 @@ export default function LoginContent() {
     try {
       const res = await apiClient.post<LoginSuccessPayload>(
         API.AUTH.LOGIN,
-        data
+        payload
       );
       const { accessToken, user } = res.data;
 
