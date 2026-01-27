@@ -101,8 +101,19 @@ export default function SalesOrdersTable({
     });
   };
 
-  // Logic to check if actions are disabled (from original ActionsCell)
+  // --- ACTIONS LOGIC ---
   const isAssigned = !!menuRow?.assignedUserId;
+
+  // Defines the stages where editing is strictly FORBIDDEN
+  // UPDATED: Added "Dispatched" to the list of restricted statuses.
+  const isRestricted = ["Under Issue", "Under Packing", "Dispatched"].includes(
+    menuRow?.status || ""
+  );
+
+  // You can edit if:
+  // 1. You are not assigned
+  // 2. The order is NOT in a restricted state ("Under Issue", "Under Packing", "Dispatched")
+  const isEditable = !isAssigned && !isRestricted;
 
   return (
     <Box
@@ -193,14 +204,20 @@ export default function SalesOrdersTable({
 
                   {/* NOTIFICATIONS */}
                   <TableCell>
-                     <IconButton 
-                       onClick={() => row.saleOrderNumber && onOpenChat(row.saleOrderNumber, row.id)}
-                       size="small"
-                     >
-                       <Badge badgeContent={row.notificationCount || 0} color="error">
-                         <ChatBubbleOutlineIcon fontSize="small" />
-                       </Badge>
-                     </IconButton>
+                    <IconButton
+                      onClick={() =>
+                        row.saleOrderNumber &&
+                        onOpenChat(row.saleOrderNumber, row.id)
+                      }
+                      size="small"
+                    >
+                      <Badge
+                        badgeContent={row.notificationCount || 0}
+                        color="error"
+                      >
+                        <ChatBubbleOutlineIcon fontSize="small" />
+                      </Badge>
+                    </IconButton>
                   </TableCell>
 
                   {/* PRODUCT */}
@@ -238,7 +255,6 @@ export default function SalesOrdersTable({
 
                   {/* PLANT CODE */}
                   <TableCell>
-                    {/* {findName(lookup.plantCodes, row.plantCodeId, "code")} */}
                     {row.plantCode || "-"}
                   </TableCell>
 
@@ -261,9 +277,13 @@ export default function SalesOrdersTable({
 
                   {/* CUSTOMER */}
                   <TableCell>
-                    {row.customerNameText || 
+                    {row.customerNameText ||
                       (row.customerId != null
-                        ? findName(lookup.customers, row.customerId ?? 0, "name")
+                        ? findName(
+                            lookup.customers,
+                            row.customerId ?? 0,
+                            "name"
+                          )
                         : "-")}
                   </TableCell>
 
@@ -305,13 +325,17 @@ export default function SalesOrdersTable({
       >
         <Tooltip
           title={
-            isAssigned ? "This order is assigned and cannot be edited." : ""
+            isAssigned
+              ? "This Order is assigned and cannot be edited."
+              : isRestricted
+              ? `Cannot edit, Order is ${menuRow?.status}.`
+              : ""
           }
         >
           <Box>
             <MenuItem
               onClick={handleEdit}
-              disabled={isAssigned || menuRow?.hasMaterialData}
+              disabled={!isEditable}
             >
               Edit
             </MenuItem>

@@ -14,7 +14,6 @@ export type SalesFormValues = {
   transferOrder: string;
   deliveryDate: string;
   transporterId: string;
-  // plantCodeId: string;
   plantCode: string;
   paymentClearance: string | boolean;
   salesZoneId: string;
@@ -51,9 +50,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
     if (!form.outboundDelivery) {
       newErrors.outboundDelivery = "Out Bound Delivery is required";
     }
-    if (!form.transferOrder) {
-      newErrors.transferOrder = "Transfer Order is required";
-    }
+    
     if (!form.deliveryDate) {
       newErrors.deliveryDate = "Delivery Date is required";
     }
@@ -68,18 +65,11 @@ export const useSalesForm = (onSuccess?: () => void) => {
     if (!form.transporterId) {
       newErrors.transporterId = "Transporter is required";
     }
-    // if (!form.plantCodeId) {
-    //   newErrors.plantCodeId = "Delivery Plant Code is required";
-    // }
-    if (!form.plantCode) {
-      newErrors.plantCode = "Delivery Plant Code is required";
-    }
+    
     if (!form.salesZoneId) {
       newErrors.salesZoneId = "Sales Zone is required";
     }
-    if (!form.packConfigId) {
-      newErrors.packConfigId = "Packing Configuration is required";
-    }
+
     const hasCustomerId =
       !!form.customerId && String(form.customerId).trim() !== "";
     const hasCustomerNameText =
@@ -102,24 +92,23 @@ export const useSalesForm = (onSuccess?: () => void) => {
         ...form,
         productId: Number(form.productId),
         transporterId: Number(form.transporterId),
-        // plantCodeId: Number(form.plantCodeId),
-        plantCode: form.plantCode,
+        plantCode: form.plantCode || null,
+        transferOrder: form.transferOrder || null,
         salesZoneId: Number(form.salesZoneId),
-        packConfigId: Number(form.packConfigId),
+        packConfigId: form.packConfigId ? Number(form.packConfigId) : null,
+        
         ...(hasCustomerId ? { customerId: Number(form.customerId) } : {}),
-        ...(hasCustomerId
-          ? { customerNameText: undefined }
-          : { customerNameText: String(form.customerName || "").trim() }),
+        
         paymentClearance:
           form.paymentClearance === "true" || form.paymentClearance === true,
       };
 
-      if (!hasCustomerId) {
+      if (hasCustomerId) {
         delete payload.customerId;
-      }
-
-      if (!payload.customerNameText) {
-        delete payload.customerNameText;
+        delete payload.customerName; 
+      } else {
+        payload.customerName = String(form.customerName || "").trim();
+        delete payload.customerId;
       }
 
       const token = localStorage.getItem("token");

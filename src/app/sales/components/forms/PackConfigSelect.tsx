@@ -11,6 +11,7 @@ type Props = {
   options: PackConfig[];
   error?: string;
   required?: boolean;
+  disabled?: boolean;
 };
 
 const PackConfigSelect: React.FC<Props> = ({
@@ -19,6 +20,7 @@ const PackConfigSelect: React.FC<Props> = ({
   options,
   error,
   required = true,
+  disabled,
 }) => {
   const selected = options.find((opt) => String(opt.id) === value) || null;
 
@@ -27,6 +29,7 @@ const PackConfigSelect: React.FC<Props> = ({
       disablePortal
       fullWidth
       options={options}
+      disabled={disabled}
       getOptionLabel={(option) => option?.configName ?? ""}
       value={selected}
       isOptionEqualToValue={(option, v) =>

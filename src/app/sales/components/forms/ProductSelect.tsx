@@ -10,9 +10,10 @@ type Props = {
   onChange: (field: string, value: string) => void;
   options: Product[];
   error?: string;
+  disabled?: boolean; 
 };
 
-const ProductSelect: React.FC<Props> = ({ value, onChange, options, error }) => {
+const ProductSelect: React.FC<Props> = ({ value, onChange, options, error, disabled }) => {
   const selected = options.find((opt) => String(opt.id) === value) || null;
 
   return (
@@ -20,6 +21,7 @@ const ProductSelect: React.FC<Props> = ({ value, onChange, options, error }) => 
       disablePortal
       fullWidth
       options={options}
+      disabled={disabled}
       getOptionLabel={(option) => option?.name ?? ""}
       value={selected}
       isOptionEqualToValue={(option, v) => String(option.id) === String(v?.id)}

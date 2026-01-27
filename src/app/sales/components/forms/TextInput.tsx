@@ -9,6 +9,7 @@ type Props = {
   error?: string;
   required?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 };
 
 const TextInput: React.FC<Props> = ({
@@ -19,6 +20,7 @@ const TextInput: React.FC<Props> = ({
   error,
   required = true,
   placeholder,
+  disabled,
 }) => (
   <TextField
     fullWidth
@@ -26,11 +28,12 @@ const TextInput: React.FC<Props> = ({
     name={name}
     value={value}
     required={required}
+    disabled={disabled}
     onChange={(e) => onChange(name, e.target.value ?? "")}
     placeholder={placeholder || `Enter ${label}`}
     error={!!error}
     helperText={error}
-    size="medium" // Changed from "small" to "medium"
+    size="medium" 
     variant="outlined"
     autoComplete="off"
     sx={{
@@ -40,7 +43,7 @@ const TextInput: React.FC<Props> = ({
       },
       "& .MuiInputLabel-root": {
         fontWeight: 500,
-        fontSize: 16, // Adjusted for medium size
+        fontSize: 16, 
       },
       "& .MuiFormLabel-asterisk": {
         color: "#dc2626",

@@ -7,6 +7,7 @@ type Props = {
   error?: string;
   required?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 };
 
 const RemarksTextarea: React.FC<Props> = ({
@@ -15,6 +16,7 @@ const RemarksTextarea: React.FC<Props> = ({
   error,
   required = false,
   placeholder,
+  disabled,
 }) => (
   <TextField
     fullWidth
@@ -26,6 +28,7 @@ const RemarksTextarea: React.FC<Props> = ({
     multiline
     minRows={3}
     required={required}
+    disabled={disabled}
     error={!!error}
     helperText={error}
     size="small"

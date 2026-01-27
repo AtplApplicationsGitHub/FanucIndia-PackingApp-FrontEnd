@@ -7,7 +7,6 @@ import ProductSelect from "@/app/sales/components/forms/ProductSelect";
 import TextInput from "@/app/sales/components/forms/TextInput";
 import DeliveryDatePicker from "@/app/sales/components/forms/DeliveryDatePicker";
 import TransporterSelect from "@/app/sales/components/forms/TransporterSelect";
-// import PlantCodeSelect from "@/app/sales/components/forms/PlantCodeSelect";
 import SalesZoneSelect from "@/app/sales/components/forms/SalesZoneSelect";
 import PackConfigSelect from "@/app/sales/components/forms/PackConfigSelect";
 import PaymentClearanceToggle from "@/app/sales/components/forms/PaymentClearanceToggle";
@@ -30,7 +29,6 @@ const DEFAULT_FORM = {
   transferOrder: "",
   deliveryDate: "",
   transporterId: "",
-  // plantCodeId: "",
   plantCode: "",
   paymentClearance: "",
   salesZoneId: "",
@@ -51,41 +49,51 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   const { handleSubmit, submitting, errors, alert, clearAlert } =
     useSalesForm();
 
+  const isRestrictedMode =
+    !!initialData &&
+    initialData.status !== "To be Issued" &&
+    initialData.status !== null;
+
   useEffect(() => {
     if (
-      initialData &&
       lookup.products.length > 0 &&
       lookup.transporters.length > 0 &&
-      // lookup.plantCodes.length > 0 &&
       lookup.salesZones.length > 0 &&
       lookup.packConfigs.length > 0 &&
       lookup.customers.length > 0
     ) {
-      setForm({
-        productId: String(initialData.productId ?? ""),
-        saleOrderNumber: initialData.saleOrderNumber ?? "",
-        outboundDelivery: initialData.outboundDelivery ?? "",
-        transferOrder: initialData.transferOrder ?? "",
-        deliveryDate: initialData.deliveryDate ?? "",
-        transporterId: String(initialData.transporterId ?? ""),
-        // plantCodeId: String(initialData.plantCodeId ?? ""),
-        plantCode: initialData.plantCode ?? "",
-        paymentClearance: String(initialData.paymentClearance),
-        salesZoneId: String(initialData.salesZoneId ?? ""),
-        packConfigId: String(initialData.packConfigId ?? ""),
-        customerId: String(initialData.customerId ?? ""),
-        customerName:
-          initialData.customerNameText ?? initialData.customer?.name ?? "",
-        specialRemarks: initialData.specialRemarks ?? "",
-        additionalRemarks: initialData.additionalRemarks ?? "",
-        labelRemarks: initialData.labelRemarks ?? "",
-      });
+      if (initialData) {
+        setForm({
+          productId: String(initialData.productId ?? ""),
+          saleOrderNumber: initialData.saleOrderNumber ?? "",
+          outboundDelivery: initialData.outboundDelivery ?? "",
+          transferOrder: initialData.transferOrder ?? "",
+          deliveryDate: initialData.deliveryDate ?? "",
+          transporterId: String(initialData.transporterId ?? ""),
+          plantCode: initialData.plantCode ?? "",
+          paymentClearance: String(initialData.paymentClearance),
+          salesZoneId: String(initialData.salesZoneId ?? ""),
+          packConfigId: String(initialData.packConfigId ?? ""),
+          customerId: String(initialData.customerId ?? ""),
+          customerName:
+            initialData.customerNameText ?? initialData.customer?.name ?? "",
+          specialRemarks: initialData.specialRemarks ?? "",
+          additionalRemarks: initialData.additionalRemarks ?? "",
+          labelRemarks: initialData.labelRemarks ?? "",
+        });
+      } else {
+        const faProduct = lookup.products.find(
+          (p) => p.name.toUpperCase() === "FA"
+        );
+        if (faProduct) {
+          setForm((prev) => ({ ...prev, productId: String(faProduct.id) }));
+        }
+      }
     }
   }, [
     initialData,
     lookup.products,
     lookup.transporters,
-    // lookup.plantCodes,
     lookup.salesZones,
     lookup.packConfigs,
     lookup.customers,
@@ -127,6 +135,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           onChange={onChange}
           options={lookup.products}
           error={errors.productId}
+          disabled={isRestrictedMode}
         />
         <TextInput
           label="Sale Order Number"
@@ -134,6 +143,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           value={form.saleOrderNumber}
           onChange={onChange}
           error={errors.saleOrderNumber}
+          disabled={isRestrictedMode}
         />
         <TextInput
           label="Out Bound Delivery"
@@ -141,6 +151,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           value={form.outboundDelivery}
           onChange={onChange}
           error={errors.outboundDelivery}
+          disabled={isRestrictedMode}
         />
         <TextInput
           label="Transfer Order"
@@ -148,47 +159,53 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           value={form.transferOrder}
           onChange={onChange}
           error={errors.transferOrder}
+          disabled={isRestrictedMode}
+          required={false}
         />
         <DeliveryDatePicker
           value={form.deliveryDate}
           onChange={onChange}
           error={errors.deliveryDate}
+          disabled={isRestrictedMode}
         />
         <TransporterSelect
           value={form.transporterId}
           onChange={onChange}
           options={lookup.transporters}
           error={errors.transporterId}
+          disabled={isRestrictedMode}
         />
-        {/* <PlantCodeSelect
-          value={form.plantCodeId}
-          onChange={onChange}
-          options={lookup.plantCodes}
-          error={errors.plantCodeId}
-        /> */}
+
         <TextInput
           label="Delivery Plant Code"
           name="plantCode"
           value={form.plantCode}
           onChange={onChange}
           error={errors.plantCode}
+          disabled={isRestrictedMode}
+          required={false}
         />
+        
         <PaymentClearanceToggle
           value={form.paymentClearance}
           onChange={onChange}
           error={errors.paymentClearance}
         />
+        
         <SalesZoneSelect
           value={form.salesZoneId}
           onChange={onChange}
           options={lookup.salesZones}
           error={errors.salesZoneId}
+          disabled={isRestrictedMode}
         />
         <PackConfigSelect
           value={form.packConfigId}
           onChange={onChange}
           options={lookup.packConfigs}
           error={errors.packConfigId}
+          disabled={isRestrictedMode}
+          required={false}
         />
         <CustomerSelect
           valueId={form.customerId}
@@ -196,13 +213,14 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           onChange={onChange}
           options={lookup.customers}
           error={errors.customerId || errors.customerName}
-          disabled={!!initialData?.hasMaterialData}
+          disabled={!!initialData?.hasMaterialData || isRestrictedMode}
         />
         <div className="col-span-1">
           <RemarksTextarea
             value={form.specialRemarks}
             onChange={onChange}
             error={errors.specialRemarks}
+            disabled={isRestrictedMode}
           />
         </div>
         <div className="col-span-1">
@@ -218,6 +236,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
             size="small"
             variant="outlined"
             autoComplete="off"
+            disabled={isRestrictedMode}
             sx={{
               mb: 1,
               "& .MuiOutlinedInput-root": {
@@ -241,6 +260,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
             size="small"
             variant="outlined"
             autoComplete="off"
+            disabled={isRestrictedMode}
             sx={{
               mb: 1,
               "& .MuiOutlinedInput-root": {

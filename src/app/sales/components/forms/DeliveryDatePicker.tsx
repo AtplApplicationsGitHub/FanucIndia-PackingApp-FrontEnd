@@ -10,6 +10,7 @@ type Props = {
   onChange: (field: string, value: string) => void;
   error?: string;
   required?: boolean;
+  disabled?: boolean;
 };
 
 const DeliveryDatePicker: React.FC<Props> = ({
@@ -17,6 +18,7 @@ const DeliveryDatePicker: React.FC<Props> = ({
   onChange,
   error,
   required = true,
+  disabled,
 }) => {
   const today  = React.useMemo(() => dayjs().startOf('day'), []);
   const maxDate = React.useMemo(() => dayjs().add(50, 'year').endOf('day'), []);
@@ -38,6 +40,7 @@ const DeliveryDatePicker: React.FC<Props> = ({
           minDate={today}
           maxDate={maxDate}
           disablePast
+          disabled={disabled}
           slotProps={{
             field: {
               clearable: true,
