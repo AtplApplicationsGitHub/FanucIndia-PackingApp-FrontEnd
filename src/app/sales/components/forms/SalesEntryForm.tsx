@@ -81,13 +81,6 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           additionalRemarks: initialData.additionalRemarks ?? "",
           labelRemarks: initialData.labelRemarks ?? "",
         });
-      } else {
-        const faProduct = lookup.products.find(
-          (p) => p.name.toUpperCase() === "FA"
-        );
-        if (faProduct) {
-          setForm((prev) => ({ ...prev, productId: String(faProduct.id) }));
-        }
       }
     }
   }, [
@@ -114,11 +107,23 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSubmit(form, !!initialData, initialData?.id);
+
+    let nextForm = form;
+
+    if (!form.productId) {
+      const faProduct = lookup.products.find(
+        (p) => p.name.toUpperCase() === "FA",
+      );
+      if (faProduct) {
+        nextForm = { ...form, productId: String(faProduct.id) };
+      }
+    }
+
+    handleSubmit(nextForm, !!initialData, initialData?.id);
   };
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate>
       {alert && (
         <Alert
           severity={alert.severity}
@@ -185,13 +190,13 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           disabled={isRestrictedMode}
           required={false}
         />
-        
+
         <PaymentClearanceToggle
           value={form.paymentClearance}
           onChange={onChange}
           error={errors.paymentClearance}
         />
-        
+
         <SalesZoneSelect
           value={form.salesZoneId}
           onChange={onChange}
