@@ -1,50 +1,14 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
+import React from "react";
+import { Fade, Box } from "@mui/material";
 
-const easeCurve = [0.2, 0.8, 0.2, 1] as [number, number, number, number];
-
-const pageTransition = {
-  initial: {
-    opacity: 0,
-    y: 15,
-  },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: easeCurve,
-      delay: 0.1,
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -15,
-    transition: {
-      duration: 0.3,
-      ease: easeCurve,
-    },
-  },
-};
-
-export default function PageAnimationWrapper({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
+export default function PageAnimationWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname} // The key is essential for AnimatePresence to detect page changes
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={pageTransition}
-        className="w-full h-full"
-      >
+    <Fade in={true} timeout={800} style={{ transformOrigin: '0 0 0' }}>
+      <Box sx={{ width: "100%", height: "100%" }}>
         {children}
-      </motion.div>
-    </AnimatePresence>
+      </Box>
+    </Fade>
   );
 }
