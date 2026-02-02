@@ -90,7 +90,11 @@ export interface User {
   accessLabelPrint?: boolean;
   accessMaterialFgTransfer?: boolean;
   accessMaterialDispatch?: boolean;
-  accessVehicleEntry?: boolean; 
+  accessVehicleEntry?: boolean;
+  accessLocationAccuracy?: boolean;
+  accessContentAccuracy?: boolean;
+  accessPutAway?: boolean;
+  accessErpBarcode?: boolean;
 }
 
 export interface AdminKpisResponse {

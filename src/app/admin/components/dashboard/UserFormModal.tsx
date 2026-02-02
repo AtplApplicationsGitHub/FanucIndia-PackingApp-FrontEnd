@@ -39,6 +39,10 @@ export interface UserSubmitData {
   accessMaterialFgTransfer?: boolean;
   accessMaterialDispatch?: boolean;
   accessVehicleEntry?: boolean;
+  accessLocationAccuracy?: boolean;
+  accessContentAccuracy?: boolean;
+  accessPutAway?: boolean;
+  accessErpBarcode?: boolean;
 }
 
 interface Props {
@@ -54,6 +58,10 @@ const MOBILE_MODULES = [
   { label: "Material FG/Transfer", key: "accessMaterialFgTransfer" },
   { label: "Material Dispatch", key: "accessMaterialDispatch" },
   { label: "Vehicle Entry", key: "accessVehicleEntry" },
+  { label: "Location Accuracy", key: "accessLocationAccuracy" },
+  { label: "Content Accuracy", key: "accessContentAccuracy" },
+  { label: "Put Away", key: "accessPutAway" },
+  { label: "ERP Barcode", key: "accessErpBarcode" },
 ];
 
 const ITEM_HEIGHT = 48;
@@ -205,6 +213,10 @@ const AdminUserFormModal: React.FC<Props> = ({
     if (editingUser.accessMaterialFgTransfer) currentAccess.push("accessMaterialFgTransfer");
     if (editingUser.accessMaterialDispatch) currentAccess.push("accessMaterialDispatch");
     if (editingUser.accessVehicleEntry) currentAccess.push("accessVehicleEntry");
+    if (editingUser.accessLocationAccuracy) currentAccess.push("accessLocationAccuracy");
+    if (editingUser.accessContentAccuracy) currentAccess.push("accessContentAccuracy");
+    if (editingUser.accessPutAway) currentAccess.push("accessPutAway");
+    if (editingUser.accessErpBarcode) currentAccess.push("accessErpBarcode");
     setSelectedModules(currentAccess);
   } else {
     reset();
@@ -236,6 +248,10 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
       accessMaterialFgTransfer: false,
       accessMaterialDispatch: false,
       accessVehicleEntry: false,
+      accessLocationAccuracy: false,
+      accessContentAccuracy: false,
+      accessPutAway: false,
+      accessErpBarcode: false,
     };
 
     if (password) {
@@ -248,6 +264,10 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
       payload.accessMaterialFgTransfer = selectedModules.includes("accessMaterialFgTransfer");
       payload.accessMaterialDispatch = selectedModules.includes("accessMaterialDispatch");
       payload.accessVehicleEntry = selectedModules.includes("accessVehicleEntry");
+      payload.accessLocationAccuracy = selectedModules.includes("accessLocationAccuracy");
+      payload.accessContentAccuracy = selectedModules.includes("accessContentAccuracy");
+      payload.accessPutAway = selectedModules.includes("accessPutAway");
+      payload.accessErpBarcode = selectedModules.includes("accessErpBarcode");
     }
 
     if (editingUser) {
