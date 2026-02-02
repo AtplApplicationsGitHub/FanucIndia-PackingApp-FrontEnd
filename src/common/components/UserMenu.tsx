@@ -10,6 +10,7 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
+  useTheme,
 } from "@mui/material";
 import {
   Settings,
@@ -40,6 +41,7 @@ export default function UserMenu({
   variant = "full",
 }: UserMenuProps) {
   const router = useRouter();
+  const Theme = useTheme();
   const { mode, setMode } = useContext(ColorModeContext);
 
   const [mainAnchor, setMainAnchor] = useState<null | HTMLElement>(null);
@@ -102,7 +104,7 @@ export default function UserMenu({
         startIcon={variant === "minimal" ? <Settings size={22} /> : undefined}
         endIcon={variant === "full" ? <ChevronDown size={18} /> : undefined}
         sx={{
-          color: "inherit",
+          color: Theme.palette.mode === 'dark' ? '#000000' : 'inherit',
           textTransform: "none",
           fontWeight: 600,
           minWidth: variant === "minimal" ? "auto" : "64px",
