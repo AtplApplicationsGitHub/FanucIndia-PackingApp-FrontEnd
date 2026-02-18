@@ -4,6 +4,7 @@ import * as React from "react";
 import { Box, Typography, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
+import AssignSO from "@/app/admin/components/dashboard/AssignSO";
 import AdminOrdersTable from "@/app/admin/components/dashboard/OrdersTable";
 import AdminMasterLookupPanel from "@/app/admin/components/dashboard/LookupPanel";
 import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
@@ -179,6 +180,16 @@ export default function AdminDashboard() {
             style={{ padding: "2rem" }}
           >
             <Admindashboard />
+          </motion.div>
+        )}
+        {admin.view === "assignso" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "2rem" }}
+          >
+            <AssignSO />
           </motion.div>
         )}
 

@@ -35,6 +35,11 @@ export const API = {
 
     USERS:                                        `${API_BASE_URL}/users`,
     USER_BY_ID:          (id: number) =>          `${API_BASE_URL}/users/${id}`,
+// ASSIGN SO 
+    ACTIVE_EXPORT_LIST:                               `${API_BASE_URL}/admin/sales-orders/active-export-list`,
+    BULK_ASSIGN:                                      `${API_BASE_URL}/admin/sales-orders/bulk-assign`,
+    ERP_MATERIAL_DATA:                            `${API_BASE_URL}/admin/sales-orders`,
+    SKIP_ISSUE_STAGE: (orderId: number, materialId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/${materialId}/skip-issue`,
   },
   SALES: {
     CREATE_ORDER:                                         `${API_BASE_URL}/sales-crud`,
@@ -128,6 +133,7 @@ export const API = {
   ERP_IMPORTER: {
     UPLOAD:                  `${API_BASE_URL}/erp-material-importer/upload`,
     IMPORT_FROM_DRIVE:       `${API_BASE_URL}/erp-material-importer/import-from-drive`,
+    BULK_IMPORT_FROM_DRIVE:  `${API_BASE_URL}/erp-material-importer/bulk-import-from-drive`,
   },
   FG_DASHBOARD:              `${API_BASE_URL}/fg-dashboard`,
   FG_STORAGE: {

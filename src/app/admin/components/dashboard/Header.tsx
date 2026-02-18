@@ -25,7 +25,8 @@ export type ViewType =
   | "master"
   | "manage"
   | "dispatch"
-  | "fg_dashboard";
+  | "fg_dashboard"
+  | "assignso";
 
 type Props = {
   userName: string; 
@@ -35,6 +36,7 @@ type Props = {
 
 const allMenuItems = [
   { label: "DASHBOARD", icon: <BarChart3 className="mr-2 h-4 w-4" />, value: "home" },
+  { label: "ASSIGN SO", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "assignso" },
   {
     label: "ORDER LIST",
     icon: <ClipboardList className="mr-2 h-4 w-4" />,
@@ -67,7 +69,7 @@ const allMenuItems = [
   },
 ];
 
-const MAX_VISIBLE_ITEMS = 5;
+const MAX_VISIBLE_ITEMS = 6;
 
 export default function AdminDashboardHeader({
   userName,

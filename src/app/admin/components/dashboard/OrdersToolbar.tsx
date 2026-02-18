@@ -45,6 +45,10 @@ type Props = {
   endDate: Date | null;
   onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
+
+  selectedIds?: number[];
+  onBulkUpdate?: (userId: string | number) => Promise<void>;
+  assignableUsers?: { id: number; name: string }[];
 };
 
 export default function AdminOrdersToolbar({
@@ -62,6 +66,9 @@ export default function AdminOrdersToolbar({
   endDate,
   onEndDateChange,
   onClear,
+  selectedIds = [],
+  onBulkUpdate,
+  assignableUsers = [],
 }: Props) {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -69,62 +76,80 @@ export default function AdminOrdersToolbar({
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          gap: { xs: 2, md: 2 },
-          width: { xs: "100%", md: "auto" },
-          mx: { xs: 0, md: "auto" },
-          px: { xs: 1, md: 2 },
-          alignItems: { md: "center" },
-          flexWrap: "wrap", 
+          gap: { xs: 1.5, md: 1.5 },
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          flexWrap: "wrap",
+          py: 1,
         }}
       >
         <Paper
+          elevation={0}
           component="form"
           onSubmit={(e) => e.preventDefault()}
-          sx={{ 
-            p: '2px 4px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            width: { xs: "100%", sm: 220 } 
+          sx={{
+            p: "2px 4px",
+            display: "flex",
+            alignItems: "center",
+            width: { xs: "100%", sm: 220 },
+            border: "1px solid #e0e0e0",
+            borderRadius: "4px",
+            height: 40,
           }}
         >
           <InputBase
-            sx={{ ml: 1, flex: 1 }}
+            sx={{ ml: 1, flex: 1, fontSize: "14px" }}
             placeholder="Search"
-            inputProps={{ 'aria-label': 'search' }}
+            inputProps={{ "aria-label": "search" }}
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
           />
           {searchInput && (
-            <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => onSearchInputChange("")}>
-              <ClearIcon />
+            <IconButton
+              sx={{ p: "5px" }}
+              aria-label="clear"
+              onClick={() => onSearchInputChange("")}
+            >
+              <ClearIcon sx={{ fontSize: 20 }} />
             </IconButton>
           )}
-          <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
-            <SearchIcon />
+          <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
+            <SearchIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Paper>
 
-        <FormControl size="small" sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}>
-          <InputLabel>Payment</InputLabel>
+        <FormControl
+          size="small"
+          sx={{ minWidth: 120, bgcolor: "background.paper" }}
+        >
           <Select
             value={paymentFilter}
-            label="Payment"
+            displayEmpty
             onChange={(e) => onPaymentFilterChange(e.target.value)}
+            sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>All</em></MenuItem>
+            <MenuItem value="">
+              <em>Payment</em>
+            </MenuItem>
             <MenuItem value="true">Yes</MenuItem>
             <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
-          <InputLabel>Sales Zone</InputLabel>
+        <FormControl
+          size="small"
+          sx={{ minWidth: 140, bgcolor: "background.paper" }}
+        >
           <Select
             value={zoneFilter}
-            label="Sales Zone"
+            displayEmpty
             onChange={(e) => onZoneFilterChange(e.target.value)}
+            sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>All Zones</em></MenuItem>
+            <MenuItem value="">
+              <em>Sales Zone</em>
+            </MenuItem>
             {salesZones.map((zone) => (
               <MenuItem key={zone.id} value={String(zone.id)}>
                 {String(zone.name || zone.code || zone.id)}
@@ -133,14 +158,19 @@ export default function AdminOrdersToolbar({
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
-          <InputLabel>Status</InputLabel>
+        <FormControl
+          size="small"
+          sx={{ minWidth: 140, bgcolor: "background.paper" }}
+        >
           <Select
             value={statusFilter}
-            label="Status"
+            displayEmpty
             onChange={(e) => onStatusFilterChange(e.target.value)}
+            sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>All Statuses</em></MenuItem>
+            <MenuItem value="">
+              <em>Status</em>
+            </MenuItem>
             {STATUS_OPTIONS.map((status) => (
               <MenuItem key={status} value={status}>
                 {status}
@@ -160,12 +190,12 @@ export default function AdminOrdersToolbar({
               onClear: () => onStartDateChange(null),
             },
             textField: {
-              size: "small", 
+              size: "small",
               variant: "outlined",
               sx: {
-                minWidth: 150, 
+                minWidth: 140,
                 bgcolor: "background.paper",
-                "& .MuiOutlinedInput-root": { borderRadius: 1 },
+                "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
               },
             },
           }}
@@ -176,19 +206,19 @@ export default function AdminOrdersToolbar({
           value={endDate ? dayjs(endDate) : null}
           onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"
-          minDate={startDate ? dayjs(startDate) : undefined} 
+          minDate={startDate ? dayjs(startDate) : undefined}
           slotProps={{
             field: {
               clearable: true,
               onClear: () => onEndDateChange(null),
             },
             textField: {
-              size: "small", 
+              size: "small",
               variant: "outlined",
               sx: {
-                minWidth: 150, 
+                minWidth: 140,
                 bgcolor: "background.paper",
-                "& .MuiOutlinedInput-root": { borderRadius: 1 },
+                "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
               },
             },
           }}
@@ -196,32 +226,69 @@ export default function AdminOrdersToolbar({
 
         <Button
           onClick={onClear}
-          startIcon={<X size={18} />}
+          startIcon={<X size={16} />}
           sx={{
-            bgcolor: (theme) => theme.palette.action.hover,
-            color: (theme) => theme.palette.text.primary,
-            borderRadius: 0,
-            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-            fontWeight: 600,
-            fontSize: 15,
-            minWidth: 100, 
+            bgcolor: "#eeeeee",
+            color: "#333",
+            borderRadius: "4px",
+            fontWeight: 700,
+            fontSize: "13px",
             height: 40,
             px: 2,
             textTransform: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            transition: "all 0.2s ease-in-out",
+            border: "1px solid #e0e0e0",
             "&:hover": {
               bgcolor: (theme) => theme.palette.primary.main,
-              color: (theme) => theme.palette.primary.contrastText,
-              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-              "& .MuiSvgIcon-root, & svg": {
-                color: "#000",
-              },
+              color: "#000",
             },
           }}
         >
           CLEAR
         </Button>
+
+        {selectedIds.length > 0 && (
+          <FormControl size="small" sx={{ minWidth: 200, ml: "auto" }}>
+            <Select
+              value="placeholder"
+              displayEmpty
+              onChange={async (e) => {
+                const userId = e.target.value;
+                if (
+                  userId &&
+                  userId !== "placeholder" &&
+                  onBulkUpdate
+                ) {
+                  await onBulkUpdate(userId);
+                }
+              }}
+              sx={{
+                height: 40,
+                borderRadius: "50px",
+                bgcolor: "#fdf7e7",
+                border: "1px solid #ffd600",
+                fontSize: "13px",
+                fontWeight: 600,
+                "& .MuiSelect-select": {
+                  py: 0,
+                  px: 2,
+                },
+                "& fieldset": { border: "none" },
+              }}
+            >
+              <MenuItem value="placeholder" disabled>
+                Assign {selectedIds.length} orders to...
+              </MenuItem>
+              <MenuItem value="unassign">
+                <em>Unassigned</em>
+              </MenuItem>
+              {assignableUsers.map((u: { id: number; name: string }) => (
+                <MenuItem key={u.id} value={u.id}>
+                  {u.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
       </Box>
     </LocalizationProvider>
   );
