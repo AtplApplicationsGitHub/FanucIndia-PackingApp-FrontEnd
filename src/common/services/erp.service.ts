@@ -160,3 +160,16 @@ export async function updateMapping(
     }
     return res.json();
 }
+
+export async function resetErpData(orderId: number) {
+    const url = API.ADMIN.RESET_ERP_DATA(orderId);
+    const res = await fetchWithAuth(url, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to reset ERP data");
+    }
+    return res.json();
+}

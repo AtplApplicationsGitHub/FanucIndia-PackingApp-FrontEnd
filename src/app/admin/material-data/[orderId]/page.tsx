@@ -16,6 +16,7 @@ import {
   useErpMaterials,
   useIncrementIssueStage,
   useIncrementPackingStage,
+  useResetErpData,
 } from "@/app/admin/material-data/hooks/useErpMaterials";
 import { useOrderHeader } from "@/app/admin/material-data/hooks/useOrderHeader";
 import {
@@ -100,6 +101,12 @@ export default function MaterialDataPage2() {
     loading: mutatingPacking,
     error: mutErrPacking,
   } = useIncrementPackingStage(orderId);
+
+  const {
+    mutate: resetErpData,
+    loading: resetting,
+    error: resetError,
+  } = useResetErpData(orderId);
   
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   const [showAll, setShowAll] = useState(false); // [FIX] Ensure showAll is defined
@@ -184,6 +191,24 @@ export default function MaterialDataPage2() {
     }
   };
 
+  const handleDeleteErpData = async () => {
+    setEditError(null);
+    try {
+      await resetErpData();
+      setUploadNotice("ERP Data Reset Successfully. Redirecting...");
+      setIsRedirecting(true);
+      setTimeout(() => {
+        if (currentUser.role === 'ADMIN') router.push("/admin/dashboard");
+        else {
+           sessionStorage.setItem("userDashboardView", "pick_pack");
+           router.push("/user/dashboard");
+        }
+      }, 2000);
+    } catch (e) {
+      setEditError(extractErrorMessage(e));
+    }
+  };
+
   if (!idStr) {
     return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID in URL.</Alert>;
   }
@@ -205,7 +230,7 @@ export default function MaterialDataPage2() {
     );
   }
 
-  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting;
+  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting || resetting;
 
   const { so, customerName, transferOrder, fgObd } = header;
   const machineModel = localRows[0]?.machineModel ?? "";
@@ -364,6 +389,7 @@ export default function MaterialDataPage2() {
           onBulkAccept={handleBulkAccept}
           showAll={showAll}
           onToggleShowAll={setShowAll}
+          onDeleteErpData={handleDeleteErpData}
         />
       )}
 

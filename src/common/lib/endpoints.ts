@@ -40,6 +40,7 @@ export const API = {
     BULK_ASSIGN:                                      `${API_BASE_URL}/admin/sales-orders/bulk-assign`,
     ERP_MATERIAL_DATA:                            `${API_BASE_URL}/admin/sales-orders`,
     SKIP_ISSUE_STAGE: (orderId: number, materialId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/${materialId}/skip-issue`,
+    RESET_ERP_DATA: (id: string | number) => `${API_BASE_URL}/sales-orders/${id}/reset`,
   },
   SALES: {
     CREATE_ORDER:                                         `${API_BASE_URL}/sales-crud`,

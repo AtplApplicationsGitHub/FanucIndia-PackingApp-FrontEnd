@@ -19,6 +19,7 @@ import {
   useErpMaterials,
   useIncrementIssueStage,
   useIncrementPackingStage,
+  useResetErpData,
 } from "@/app/admin/material-data/hooks/useErpMaterials";
 import { useOrderHeader } from "@/app/admin/material-data/hooks/useOrderHeader";
 import {
@@ -128,6 +129,12 @@ export default function MaterialDataPage() {
 
   const { mutate: incPacking, loading: mutatingPacking } =
     useIncrementPackingStage(orderId);
+
+  const {
+    mutate: resetErpData,
+    loading: resetting,
+    error: resetError,
+  } = useResetErpData(orderId);
 
   // Group Filter State
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
@@ -356,6 +363,24 @@ export default function MaterialDataPage() {
     }
   };
 
+  const handleDeleteErpData = async () => {
+    setEditError(null);
+    try {
+      await resetErpData();
+      setUploadNotice("ERP Data Reset Successfully. Redirecting...");
+      setIsRedirecting(true);
+      setTimeout(() => {
+        if (currentUser.role === 'ADMIN') router.push("/admin/dashboard");
+        else {
+           sessionStorage.setItem("userDashboardView", "pick_pack");
+           router.push("/user/dashboard");
+        }
+      }, 2000);
+    } catch (e) {
+      setEditError(extractErrorMessage(e));
+    }
+  };
+
   if (!idStr || isNaN(orderId)) {
     return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID.</Alert>;
   }
@@ -374,7 +399,7 @@ export default function MaterialDataPage() {
     );
   }
 
-  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting;
+  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting || resetting;
   const { so, customerName, transferOrder, fgObd } = header;
   const machineModel = localRows[0]?.machineModel ?? "";
   const cncSerialNo = localRows[0]?.cncSerialNo ?? "";
@@ -596,6 +621,7 @@ export default function MaterialDataPage() {
                 onToggleShowAll={setShowAll}
                 showAcceptAllIssueButton={currentUser.role === 'ADMIN' && !allIssued}
                 onAcceptAllIssue={handleAcceptAllIssue}
+                onDeleteErpData={handleDeleteErpData}
               />
             )}
           </Box>

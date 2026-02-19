@@ -18,8 +18,12 @@ import {
   FormControlLabel,
   Switch,
   Theme,
-  useTheme
+  useTheme,
+  IconButton,
+  CircularProgress,
+  Tooltip,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import UploadErpMaterialFileButton from "@/app/admin/material-data/components/UploadErpMaterialFileButton";
 import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadAttachmentDialog";
 import { MaterialRow } from "../types/material-row";
@@ -35,11 +39,12 @@ interface Props {
   selectedGroup?: string | null;
   onGroupChange?: (group: string | null) => void;
   onBulkAccept?: () => void;
-  showBulkButton?: boolean; // [UPDATED] Boolean passed from parent
-  showAll: boolean; // [NEW]
-  onToggleShowAll: (val: boolean) => void; // [NEW]
+  showBulkButton?: boolean; 
+  showAll: boolean; 
+  onToggleShowAll: (val: boolean) => void; 
   showAcceptAllIssueButton?: boolean; 
   onAcceptAllIssue?: () => void;
+  onDeleteErpData?: () => Promise<void> | void;
 }
 
 const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
@@ -88,6 +93,7 @@ const InputBoxSection: FC<Props> = ({
   onToggleShowAll,
   showAcceptAllIssueButton = false,
   onAcceptAllIssue,
+  onDeleteErpData,
 }) => {
   const theme = useTheme();
   const [value, setValue] = useState("");
@@ -95,6 +101,8 @@ const InputBoxSection: FC<Props> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileCount, setFileCount] = useState<number>(0);
   const [confirmAllOpen, setConfirmAllOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +138,24 @@ const InputBoxSection: FC<Props> = ({
     if (!v) return;
     onSubmit(v);
     setValue("");
+  };
+
+  const handleDelete = async () => {
+    if (!onDeleteErpData) {
+      console.error("No delete handler provided");
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      await onDeleteErpData();
+      setConfirmDeleteOpen(false);
+    } catch (error) {
+      console.error("Delete failed", error);
+      // Optional: Add UI feedback here if needed, but parent usually handles it.
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const buttonSx = {
@@ -252,6 +278,19 @@ const InputBoxSection: FC<Props> = ({
             buttonProps={{ type: "button", disabled: disabled }}
           />
 
+          <Tooltip title="Delete ERP Data / Reset Order">
+            <IconButton 
+              onClick={() => setConfirmDeleteOpen(true)}
+              disabled={disabled}
+              sx={{ 
+                color: theme.palette.error.main,
+                "&:hover": { bgcolor: "rgba(211, 47, 47, 0.04)" }
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+
           <Box display="flex" alignItems="center" gap={1}>
             <Typography
               variant="body2"
@@ -361,6 +400,46 @@ const InputBoxSection: FC<Props> = ({
         saleOrderNumber={saleOrderNumber}
         onUploaded={handleFileChange}
       />
+
+      <Dialog open={confirmDeleteOpen} onClose={() => { if(!isDeleting) setConfirmDeleteOpen(false); }}>
+        <DialogTitle sx={{ color: theme.palette.error.main, fontWeight: 700, textTransform: 'uppercase' }}>
+          Delete ERP Data?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to <strong>DELETE</strong> the imported ERP data for this order?
+            <br /><br />
+            This will reset the status, priority, and assigned user, and allow you to re-import the data.
+            <br /><br />
+            <strong>THIS ACTION CANNOT BE UNDONE.</strong>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setConfirmDeleteOpen(false)} sx={buttonSx} disabled={isDeleting}>
+            CANCEL
+          </Button>
+          <Button
+            onClick={handleDelete}
+            type="button"
+            sx={{
+              ...buttonSx,
+              bgcolor: theme.palette.error.main,
+              "&:hover": {
+                bgcolor: theme.palette.error.dark,
+                boxShadow: "0 4px 8px rgba(211,0,0,0.3)",
+              },
+              "&:disabled": {
+                bgcolor: "rgba(211, 47, 47, 0.5)",
+                color: "#fff",
+              }
+            }}
+            disabled={isDeleting}
+            autoFocus
+          >
+            {isDeleting ? <CircularProgress size={24} color="inherit" /> : "YES, DELETE DATA"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

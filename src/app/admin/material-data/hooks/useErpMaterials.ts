@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage } from '@/common/services/erp.service';
+import { getErpMaterials, incrementIssueStage, updateIssueStage, incrementPackingStage, updatePackingStage, resetErpData } from '@/common/services/erp.service';
 import type { MaterialRow } from '@/app/admin/material-data/types/material-row';
 
 type ApiMaterial = {
@@ -163,6 +163,27 @@ export function useUpdatePackingStage(orderId: number) {
     try {
       const res = await updatePackingStage(orderId, materialCode, value);
       return res;
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId]);
+
+  return { mutate, loading, error, setError };
+}
+
+/** Reset ERP Data */
+export function useResetErpData(orderId: number) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mutate = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await resetErpData(orderId);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
       throw err;
