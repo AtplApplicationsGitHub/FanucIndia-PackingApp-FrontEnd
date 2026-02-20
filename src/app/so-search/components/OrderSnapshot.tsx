@@ -7,7 +7,7 @@ interface SalesOrder {
   priority?: string;
   saleOrderNumber: string;
   deliveryDate: string;
-  fgLocation?: string;
+  fgLocation?: string | string[] | null;
   transferOrder?: string;
   outboundDelivery?: string;
   paymentClearance?: boolean;
@@ -65,7 +65,14 @@ export default function OrderSnapshot({
           label="Delivery Date"
           value={new Date(salesOrder.deliveryDate).toLocaleDateString()}
         />
-        <KVBox label="FG Location" value={salesOrder.fgLocation} />
+        <KVBox
+          label="FG Location"
+          value={
+            Array.isArray(salesOrder.fgLocation)
+              ? salesOrder.fgLocation.join(", ")
+              : salesOrder.fgLocation
+          }
+        />
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Transfer Order" value={salesOrder.transferOrder} />
