@@ -7,7 +7,6 @@ import {
   Paper,
   InputBase,
   FormControl, 
-  InputLabel,  
   Select,      
   MenuItem,    
 } from "@mui/material";
@@ -48,6 +47,7 @@ type Props = {
 
   selectedIds?: number[];
   onBulkUpdate?: (userId: string | number) => Promise<void>;
+  onBulkSkipIssue?: (status: boolean) => Promise<void>;
   assignableUsers?: { id: number; name: string }[];
 };
 
@@ -68,6 +68,7 @@ export default function AdminOrdersToolbar({
   onClear,
   selectedIds = [],
   onBulkUpdate,
+  onBulkSkipIssue,
   assignableUsers = [],
 }: Props) {
   return (
@@ -119,37 +120,27 @@ export default function AdminOrdersToolbar({
           </IconButton>
         </Paper>
 
-        <FormControl
-          size="small"
-          sx={{ minWidth: 120, bgcolor: "background.paper" }}
-        >
+        <FormControl size="small" sx={{ minWidth: 120, bgcolor: "background.paper" }}>
           <Select
             value={paymentFilter}
             displayEmpty
             onChange={(e) => onPaymentFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value="">
-              <em>Payment</em>
-            </MenuItem>
+            <MenuItem value=""><em>Payment</em></MenuItem>
             <MenuItem value="true">Yes</MenuItem>
             <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl
-          size="small"
-          sx={{ minWidth: 140, bgcolor: "background.paper" }}
-        >
+        <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
           <Select
             value={zoneFilter}
             displayEmpty
             onChange={(e) => onZoneFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value="">
-              <em>Sales Zone</em>
-            </MenuItem>
+            <MenuItem value=""><em>Sales Zone</em></MenuItem>
             {salesZones.map((zone) => (
               <MenuItem key={zone.id} value={String(zone.id)}>
                 {String(zone.name || zone.code || zone.id)}
@@ -158,19 +149,14 @@ export default function AdminOrdersToolbar({
           </Select>
         </FormControl>
 
-        <FormControl
-          size="small"
-          sx={{ minWidth: 140, bgcolor: "background.paper" }}
-        >
+        <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
           <Select
             value={statusFilter}
             displayEmpty
             onChange={(e) => onStatusFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value="">
-              <em>Status</em>
-            </MenuItem>
+            <MenuItem value=""><em>Status</em></MenuItem>
             {STATUS_OPTIONS.map((status) => (
               <MenuItem key={status} value={status}>
                 {status}
@@ -185,10 +171,7 @@ export default function AdminOrdersToolbar({
           onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
           format="DD-MM-YYYY"
           slotProps={{
-            field: {
-              clearable: true,
-              onClear: () => onStartDateChange(null),
-            },
+            field: { clearable: true, onClear: () => onStartDateChange(null) },
             textField: {
               size: "small",
               variant: "outlined",
@@ -208,10 +191,7 @@ export default function AdminOrdersToolbar({
           format="DD-MM-YYYY"
           minDate={startDate ? dayjs(startDate) : undefined}
           slotProps={{
-            field: {
-              clearable: true,
-              onClear: () => onEndDateChange(null),
-            },
+            field: { clearable: true, onClear: () => onEndDateChange(null) },
             textField: {
               size: "small",
               variant: "outlined",
@@ -247,47 +227,67 @@ export default function AdminOrdersToolbar({
         </Button>
 
         {selectedIds.length > 0 && (
-          <FormControl size="small" sx={{ minWidth: 200, ml: "auto" }}>
-            <Select
-              value="placeholder"
-              displayEmpty
-              onChange={async (e) => {
-                const userId = e.target.value;
-                if (
-                  userId &&
-                  userId !== "placeholder" &&
-                  onBulkUpdate
-                ) {
-                  await onBulkUpdate(userId);
-                }
-              }}
-              sx={{
-                height: 40,
-                borderRadius: "50px",
-                bgcolor: "#fdf7e7",
-                border: "1px solid #ffd600",
-                fontSize: "13px",
-                fontWeight: 600,
-                "& .MuiSelect-select": {
-                  py: 0,
-                  px: 2,
-                },
-                "& fieldset": { border: "none" },
-              }}
-            >
-              <MenuItem value="placeholder" disabled>
-                Assign {selectedIds.length} orders to...
-              </MenuItem>
-              <MenuItem value="unassign">
-                <em>Unassigned</em>
-              </MenuItem>
-              {assignableUsers.map((u: { id: number; name: string }) => (
-                <MenuItem key={u.id} value={u.id}>
-                  {u.name}
+          <Box sx={{ display: 'flex', gap: 2, ml: "auto" }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <Select
+                value="placeholder"
+                displayEmpty
+                onChange={async (e) => {
+                  const userId = e.target.value;
+                  if (userId && userId !== "placeholder" && onBulkUpdate) {
+                    await onBulkUpdate(userId);
+                  }
+                }}
+                sx={{
+                  height: 40,
+                  borderRadius: "50px",
+                  bgcolor: "#fdf7e7",
+                  border: "1px solid #ffd600",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  "& .MuiSelect-select": { py: 0, px: 2 },
+                  "& fieldset": { border: "none" },
+                }}
+              >
+                <MenuItem value="placeholder" disabled>
+                  Assign {selectedIds.length} orders to...
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                <MenuItem value="unassign"><em>Unassigned</em></MenuItem>
+                {assignableUsers.map((u: { id: number; name: string }) => (
+                  <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <Select
+                value="placeholder"
+                displayEmpty
+                onChange={async (e) => {
+                  const val = e.target.value as string;
+                  if (val === "true" || val === "false") {
+                    if (onBulkSkipIssue) await onBulkSkipIssue(val === "true");
+                  }
+                }}
+                sx={{
+                  height: 40,
+                  borderRadius: "50px",
+                  bgcolor: "#e3f2fd",
+                  border: "1px solid #90caf9",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  "& .MuiSelect-select": { py: 0, px: 2 },
+                  "& fieldset": { border: "none" },
+                }}
+              >
+                <MenuItem value="placeholder" disabled>
+                  Set Skip Issue Stage...
+                </MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         )}
       </Box>
     </LocalizationProvider>

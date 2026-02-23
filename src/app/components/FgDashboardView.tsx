@@ -20,9 +20,9 @@ import {
   InputBase,
   LinearProgress,
   Typography,
-  FormControl, 
-  InputLabel,  
-  Select,      
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem,
   Button,
 } from "@mui/material";
@@ -40,14 +40,14 @@ import { X } from "lucide-react";
 
 // Defined Color Codes per requirements
 const STATUS_COLORS = {
-  toBeIssued: "#FF6B6B",       // Vibrant coral red
-  underIssue: "#3B82F6",       // Professional blue
-  issued: "#FFD93D",           // Golden yellow
-  underPacking: "#3B82F6",     // Professional blue (Same as Under Issue)
-  packed: "#6C5CE7",           // Purple
-  wipStorage: "#CA7373",       // Fuzzy Wuzzy
+  toBeIssued: "#FF6B6B", // Vibrant coral red
+  underIssue: "#3B82F6", // Professional blue
+  issued: "#FFD93D", // Golden yellow
+  underPacking: "#3B82F6", // Professional blue (Same as Under Issue)
+  packed: "#6C5CE7", // Purple
+  wipStorage: "#CA7373", // Fuzzy Wuzzy
   readyForDispatch: "#F08B51", // Big Foot Feet
-  dispatched: "#00B894",       // Emerald green
+  dispatched: "#00B894", // Emerald green
 };
 
 interface FgDashboardRow {
@@ -60,7 +60,7 @@ interface FgDashboardRow {
   salesZone: string;
   payment: boolean;
   status: string;
-  fgLocation: string;
+  fgLocation: any;
   specialRemarks: string;
   updatedBy?: string;
   updatedDate?: string;
@@ -105,7 +105,7 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
     next: "Issued",
     color: STATUS_COLORS.underIssue,
   },
-  "Issued": {
+  Issued: {
     percent: 25,
     next: "Under Packing",
     color: STATUS_COLORS.issued,
@@ -115,7 +115,7 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
     next: "Packed",
     color: STATUS_COLORS.underPacking,
   },
-  "Packed": {
+  Packed: {
     percent: 50,
     next: "WIP Storage",
     color: STATUS_COLORS.packed,
@@ -130,20 +130,14 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
     next: "Dispatched",
     color: STATUS_COLORS.readyForDispatch,
   },
-  "Dispatched": {
+  Dispatched: {
     percent: 100,
     next: "",
     color: STATUS_COLORS.dispatched,
   },
 };
 
-const STATUS_OPTIONS = [
-  "None",
-  "R105",
-  "W105",
-  "F105",
-  "Dispatched"
-];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
 export default function FgDashboardView() {
   const theme = useTheme();
@@ -152,11 +146,13 @@ export default function FgDashboardView() {
 
   const [search, setSearch] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
-  const [paymentFilter, setPaymentFilter] = useState(""); 
-  const [zoneFilter, setZoneFilter] = useState("");       
-  const [statusFilter, setStatusFilter] = useState("");   
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const [zoneFilter, setZoneFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const [salesZones, setSalesZones] = useState<{id: number, name: string}[]>([]); 
+  const [salesZones, setSalesZones] = useState<{ id: number; name: string }[]>(
+    [],
+  );
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -224,60 +220,71 @@ export default function FgDashboardView() {
     } finally {
       setLoading(false);
     }
-  }, [search, date, paymentFilter, zoneFilter, statusFilter, page, rowsPerPage]);
+  }, [
+    search,
+    date,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    page,
+    rowsPerPage,
+  ]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const getStatusInfo = (row: FgDashboardRow) => {
-  const s = (row.status || "").toUpperCase();
-  const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } = row;
+    const s = (row.status || "").toUpperCase();
+    const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } =
+      row;
 
-  let step: StepLabel;
+    let step: StepLabel;
 
-  if (s === "DISPATCHED") {
-    step = "Dispatched";
-  }
-  else if (isReadyForDispatch || s.includes("READY FOR DISPATCH")) {
-    step = "Ready for Dispatch";
-  }
-  else if ((fgLocation && fgLocation.trim() !== "") || isWipStorage) {
-    step = "WIP Storage";
-  }
-  else if (s.includes("F105")) {
-    step = "Packed";
-  }
-  else if (s.includes("W105")) {
-    if (assignedUserId) {
-      step = "Under Packing";
+    const hasFgLocation =
+      fgLocation &&
+      ((typeof fgLocation === "string" && fgLocation.trim() !== "") ||
+        (Array.isArray(fgLocation) && fgLocation.length > 0) ||
+        (typeof fgLocation === "object" &&
+          !Array.isArray(fgLocation) &&
+          Object.keys(fgLocation).length > 0));
+
+    if (s === "DISPATCHED") {
+      step = "Dispatched";
+    } else if (isReadyForDispatch || s.includes("READY FOR DISPATCH")) {
+      step = "Ready for Dispatch";
+    } else if (hasFgLocation || isWipStorage) {
+      step = "WIP Storage";
+    } else if (s.includes("F105")) {
+      step = "Packed";
+    } else if (s.includes("W105")) {
+      if (assignedUserId) {
+        step = "Under Packing";
+      } else {
+        step = "Issued";
+      }
+    } else if (s.includes("R105")) {
+      step = "Under Issue";
     } else {
-      step = "Issued";
+      step = "To be Issued";
     }
-  }
-  else if (s.includes("R105")) {
-    step = "Under Issue";
-  }
-  else {
-    step = "To be Issued";
-  }
 
-  const cfg = PROGRESS_CONFIG[step];
+    const cfg = PROGRESS_CONFIG[step];
 
-  return {
-    percent: cfg.percent,
-    current: step,
-    next: cfg.next,
-    color: cfg.color,
+    return {
+      percent: cfg.percent,
+      current: step,
+      next: cfg.next,
+      color: cfg.color,
+    };
   };
-};
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -296,27 +303,27 @@ export default function FgDashboardView() {
     { id: "updatedBy", label: "Updated By", width: 130 },
     { id: "updatedDate", label: "Updated Date", width: 180 },
     { id: "status", label: "Status", width: 100 },
-    { id: 'progress', label: 'Progress', width: 180 },
+    { id: "progress", label: "Progress", width: 180 },
   ];
 
-  const lightYellow = alpha(theme.palette.primary.main, 0.25); 
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={3}>
-        <Box 
-          sx={{ 
-            display: "flex", 
+        <Box
+          sx={{
+            display: "flex",
             flexDirection: { xs: "column", md: "row" },
             gap: { xs: 2, md: 2 },
             width: { xs: "100%", md: "auto" },
-            mx: { xs: 0, md: "auto" }, 
+            mx: { xs: 0, md: "auto" },
             alignItems: { md: "center" },
-            justifyContent: "center",  
+            justifyContent: "center",
             flexWrap: "wrap",
-            mb: 3
+            mb: 3,
           }}
         >
           <Paper
@@ -326,7 +333,7 @@ export default function FgDashboardView() {
               p: "2px 4px",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 220 }, 
+              width: { xs: "100%", sm: 220 },
               border: "1px solid #e0e0e0",
             }}
           >
@@ -335,7 +342,10 @@ export default function FgDashboardView() {
               placeholder="Search"
               inputProps={{ "aria-label": "search" }}
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
             />
             {search && (
               <IconButton
@@ -343,7 +353,7 @@ export default function FgDashboardView() {
                 aria-label="clear"
                 onClick={() => {
                   setSearch("");
-                  setPage(0); 
+                  setPage(0);
                 }}
               >
                 <ClearIcon />
@@ -354,23 +364,31 @@ export default function FgDashboardView() {
             </IconButton>
           </Paper>
 
-          <FormControl size="small" sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}>
+          <FormControl
+            size="small"
+            sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}
+          >
             <InputLabel>Payment</InputLabel>
             <Select
               value={paymentFilter}
               label="Payment"
               onChange={(e) => {
                 setPaymentFilter(e.target.value);
-                setPage(0); 
+                setPage(0);
               }}
             >
-              <MenuItem value=""><em>All</em></MenuItem>
+              <MenuItem value="">
+                <em>All</em>
+              </MenuItem>
               <MenuItem value="true">Yes</MenuItem>
               <MenuItem value="false">No</MenuItem>
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+          <FormControl
+            size="small"
+            sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}
+          >
             <InputLabel>Sales Zone</InputLabel>
             <Select
               value={zoneFilter}
@@ -380,7 +398,9 @@ export default function FgDashboardView() {
                 setPage(0);
               }}
             >
-              <MenuItem value=""><em>All Zones</em></MenuItem>
+              <MenuItem value="">
+                <em>All Zones</em>
+              </MenuItem>
               {salesZones.map((zone) => (
                 <MenuItem key={zone.id} value={String(zone.id)}>
                   {zone.name}
@@ -389,7 +409,10 @@ export default function FgDashboardView() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}>
+          <FormControl
+            size="small"
+            sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}
+          >
             <InputLabel>Status</InputLabel>
             <Select
               value={statusFilter}
@@ -399,7 +422,9 @@ export default function FgDashboardView() {
                 setPage(0);
               }}
             >
-              <MenuItem value=""><em>All Statuses</em></MenuItem>
+              <MenuItem value="">
+                <em>All Statuses</em>
+              </MenuItem>
               {STATUS_OPTIONS.map((status) => (
                 <MenuItem key={status} value={status}>
                   {status}
@@ -421,7 +446,7 @@ export default function FgDashboardView() {
                 onClear: () => setDate(null),
               },
               textField: {
-                size: "small", 
+                size: "small",
                 variant: "outlined",
                 sx: {
                   minWidth: 150,
@@ -438,10 +463,11 @@ export default function FgDashboardView() {
               bgcolor: (theme) => theme.palette.action.hover,
               color: (theme) => theme.palette.text.primary,
               borderRadius: 0,
-              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+              clipPath:
+                "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
               fontWeight: 600,
               fontSize: 15,
-              minWidth: 100, 
+              minWidth: 100,
               height: 40,
               px: 2,
               textTransform: "none",
@@ -524,14 +550,20 @@ export default function FgDashboardView() {
                         <TableCell>{row.customerName}</TableCell>
                         <TableCell>{row.salesZone}</TableCell>
                         <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
-                        
+
                         <TableCell>
-                          {row.fgLocation || "-"}
+                          {row.fgLocation
+                            ? typeof row.fgLocation === "string"
+                              ? row.fgLocation
+                              : Array.isArray(row.fgLocation)
+                                ? row.fgLocation.join(", ")
+                                : JSON.stringify(row.fgLocation)
+                            : "-"}
                         </TableCell>
 
                         <TableCell>{row.specialRemarks}</TableCell>
                         <TableCell>{row.updatedBy || "-"}</TableCell>
-                        
+
                         <TableCell>
                           {row.updatedDate
                             ? new Date(row.updatedDate).toLocaleString(
@@ -543,46 +575,69 @@ export default function FgDashboardView() {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                   hour12: true,
-                                }
+                                },
                               )
                             : "-"}
                         </TableCell>
                         <TableCell>{row.status}</TableCell>
                         <TableCell>
-                        {(() => {
-                          const { percent, current, next, color } = getStatusInfo(row);
-                          return (
-                            <Box sx={{ width: '100%', minWidth: 120, py: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                <Typography variant="caption" fontWeight={600} color="text.primary">
-                                  {current}
-                                </Typography>
-                                <Typography variant="caption" fontWeight={600} color="text.primary">
-                                  {percent}%
+                          {(() => {
+                            const { percent, current, next, color } =
+                              getStatusInfo(row);
+                            return (
+                              <Box sx={{ width: "100%", minWidth: 120, py: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    mb: 0.5,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.primary"
+                                  >
+                                    {current}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.primary"
+                                  >
+                                    {percent}%
+                                  </Typography>
+                                </Box>
+
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={percent}
+                                  sx={{
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: alpha(color, 0.2),
+                                    "& .MuiLinearProgress-bar": {
+                                      backgroundColor: color,
+                                      borderRadius: 3,
+                                    },
+                                  }}
+                                />
+
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    display: "block",
+                                    mt: 0.5,
+                                    fontSize: "0.7rem",
+                                  }}
+                                >
+                                  {next}
                                 </Typography>
                               </Box>
-
-                              <LinearProgress 
-                                variant="determinate" 
-                                value={percent} 
-                                sx={{
-                                  height: 6, 
-                                  borderRadius: 3,
-                                  backgroundColor: alpha(color, 0.2),
-                                  '& .MuiLinearProgress-bar': {
-                                    backgroundColor: color,
-                                    borderRadius: 3,
-                                  }
-                                }}
-                              />
-
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: '0.7rem' }}>
-                                {next}
-                              </Typography>
-                            </Box>
-                          );
-                        })()}
-                      </TableCell>
+                            );
+                          })()}
+                        </TableCell>
                       </TableRow>
                     );
                   })

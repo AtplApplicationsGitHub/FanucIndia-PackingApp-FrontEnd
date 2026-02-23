@@ -384,34 +384,58 @@ export default function AssignSO() {
                 Skip Issue Stage
               </Box>
               <Select
-                value={skipIssueStage || "placeholder"} // use placeholder value to allow resetting
+                value={skipIssueStage || "placeholder"}
                 displayEmpty
                 onChange={async (e) => {
                    const val = e.target.value;
                    if (val === "placeholder") return;
                    
-                   // "yes" -> true, "no" -> false
                    const shouldSkip = val === "yes";
                    setSkipIssueStage(val); 
 
-                   try {
-                     await updateSkipStage(selectedIds, shouldSkip);
+                   const ordersWithoutData: string[] = [];
+                   const ordersToUpdate: number[] = [];
+
+                   selectedIds.forEach((id) => {
+                     const order = orders.find((o) => o.id === id);
+                     if (order) {
+                       if (!order.hasMaterialData) {
+                         ordersWithoutData.push(order.saleOrderNumber || String(id));
+                       } else {
+                         ordersToUpdate.push(id);
+                       }
+                     }
+                   });
+
+                   if (ordersWithoutData.length > 0) {
                      setSnackbar({
-                        open: true,
-                        message: shouldSkip
-                          ? `Updated skip issue stage for ${selectedIds.length} orders`
-                          : `Canceled skip issue stage for ${selectedIds.length} orders`,
-                        severity: "success",
+                       open: true,
+                       message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
+                       severity: "info",
                      });
-                     // Reset selection and dropdown
-                     setSelectedIds([]);
+                   }
+
+                   if (ordersToUpdate.length > 0) {
+                     try {
+                       await updateSkipStage(ordersToUpdate, shouldSkip);
+                       setSnackbar({
+                          open: true,
+                          message: shouldSkip
+                            ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
+                            : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
+                          severity: "success",
+                       });
+                       setSelectedIds([]);
+                       setSkipIssueStage("");
+                     } catch (err: any) {
+                        setSnackbar({
+                          open: true,
+                          message: err.message || "Failed to update",
+                          severity: "error",
+                        });
+                     }
+                   } else {
                      setSkipIssueStage("");
-                   } catch (err: any) {
-                      setSnackbar({
-                        open: true,
-                        message: err.message || "Failed to update",
-                        severity: "error",
-                      });
                    }
                 }}
                 sx={{
