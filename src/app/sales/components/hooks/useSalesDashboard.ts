@@ -56,6 +56,22 @@ export function useSalesDashboard() {
 
   const [view, setViewInternal] = useState<SalesDashboardView>("home");
 
+  // Filter states
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const [zoneFilter, setZoneFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setPaymentFilter("");
+    setZoneFilter("");
+    setStatusFilter("");
+    setStartDate(null);
+    setEndDate(null);
+  };
+
   // On initial load, check session storage for a saved view
   useEffect(() => {
     const savedView = sessionStorage.getItem(
@@ -196,6 +212,11 @@ export function useSalesDashboard() {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             search: searchTerm || undefined,
+            paymentClearance: paymentFilter || undefined,
+            salesZoneId: zoneFilter || undefined,
+            status: statusFilter || undefined,
+            startDate: startDate ? startDate.toISOString() : undefined,
+            endDate: endDate ? endDate.toISOString() : undefined,
             page,
             limit: size,
           },
@@ -227,7 +248,7 @@ export function useSalesDashboard() {
       fetchOrders(1, pageSize);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, view]); // Add view dependency
+  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]); // Add filter dependencies
 
   const handleDownloadTemplate = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -383,8 +404,8 @@ export function useSalesDashboard() {
     lookupsLoading,
     error,
     userName,
-    view, // Export view
-    setView, // Export setView
+    view,
+    setView,
     searchTerm,
     setSearchTerm,
     currentPage,
@@ -409,5 +430,16 @@ export function useSalesDashboard() {
     fetchOrders,
     alert,
     setAlert,
+    paymentFilter,
+    setPaymentFilter,
+    zoneFilter,
+    setZoneFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    handleClearFilters,
   };
 }

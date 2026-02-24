@@ -24,14 +24,38 @@ interface SalesOrder {
   address?: string | null;
 }
 
+interface DispatchInfoData {
+  id: number;
+  transporter?: { name: string } | null;
+  transporterName?: string;
+  vehicleNumber: string;
+  UpdatedBy?: string;
+  UpdatedDate?: string;
+  vehicleEntry?: {
+    id: number;
+    attachments: { fileName: string }[];
+  } | null;
+}
+
+interface VehicleEntrySummary {
+  id: number;
+  attachments: { fileName: string }[];
+}
+
 interface Props {
   salesOrder: SalesOrder;
+  dispatchInfo?: DispatchInfoData[];
   onViewPackingAttachments: () => void;
+  onViewDispatchAttachments?: () => void;
+  onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void;
 }
 
 export default function OrderSnapshot({
   salesOrder,
+  dispatchInfo = [],
   onViewPackingAttachments,
+  onViewDispatchAttachments,
+  onViewVehicleAttachments,
 }: Props) {
   const customerName =
     salesOrder.customerNameText?.trim() || salesOrder.customer?.name || "—";
@@ -126,19 +150,66 @@ export default function OrderSnapshot({
         <KVBox
           label="Special Remarks"
           value={salesOrder.specialRemarks}
-          fullWidth
         />
         <KVBox
           label="Additional Remarks"
           value={salesOrder.additionalRemarks}
-          fullWidth
         />
         <KVBox
           label="Label Remarks"
           value={salesOrder.labelRemarks} 
-          fullWidth 
         />
       </Box>
+
+      {/* Dispatch Info Section */}
+      {dispatchInfo.length > 0 && (
+        <Box mt={3}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h5" sx={{ color: "secondary.main", fontWeight: 600 }}>
+              DISPATCH
+            </Typography>
+            {onViewDispatchAttachments && (
+              <Link
+                component="button"
+                variant="body2"
+                onClick={onViewDispatchAttachments}
+                underline="none"
+                sx={{ fontWeight: 600 }}
+              >
+                ATTACHMENTS
+              </Link>
+            )}
+          </Box>
+          {dispatchInfo.map((dispatch) => (
+            <Box key={dispatch.id} display="flex" flexWrap="wrap" gap={2} mb={2}>
+              <KVBox label="Vehicle Number">
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => dispatch.vehicleEntry && onViewVehicleAttachments?.(dispatch.vehicleEntry)}
+                  sx={{ 
+                    fontWeight: 600, 
+                    textDecoration: 'none',
+                    color: dispatch.vehicleEntry ? 'primary.main' : 'text.primary',
+                    cursor: dispatch.vehicleEntry ? 'pointer' : 'default'
+                  }}
+                >
+                  {dispatch.vehicleNumber}
+                </Link>
+              </KVBox>
+              <KVBox 
+                label="Transporter" 
+                value={dispatch.transporterName || dispatch.transporter?.name || "-"} 
+              />
+              <KVBox label="Updated By" value={dispatch.UpdatedBy || "-"} />
+              <KVBox 
+                label="Updated Datetime" 
+                value={dispatch.UpdatedDate ? new Date(dispatch.UpdatedDate).toLocaleString() : "-"} 
+              />
+            </Box>
+          ))}
+        </Box>
+      )}
     </Paper>
   );
 }

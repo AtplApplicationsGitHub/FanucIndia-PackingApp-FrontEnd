@@ -116,11 +116,10 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUploadSuccess = () => {
+  const handleUploadSuccess = async () => {
     setIsErpUploadOpen(false);
-    if (erpUploadOrder) {
-      router.push(`/orders/${erpUploadOrder.id}`);
-    }
+    showSnackbar("ERP Data uploaded successfully!", "success");
+    await admin.fetchOrders();
   };
 
   const displayedOrders = admin.orders;
@@ -187,7 +186,7 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            style={{ padding: "2rem" }}
+            style={{ padding: "0.5% 2rem 2rem 2rem" }}
           >
             <AssignSO />
           </motion.div>
