@@ -28,6 +28,7 @@ export default function UserDashboard() {
     alert,
     setAlert,
     userName,
+    fetchOrders,
   } = useUserDashboard();
 
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
@@ -73,11 +74,10 @@ export default function UserDashboard() {
     }
   };
 
-  const handleUploadSuccess = () => {
+  const handleUploadSuccess = async () => {
     setIsErpUploadOpen(false);
-    if (erpUploadOrder) {
-      router.push(`/orders/${erpUploadOrder.id}`);
-    }
+    showSnackbar("ERP Data uploaded successfully!", "success");
+    await fetchOrders();
   };
 
   const handleSnackbarClose = (

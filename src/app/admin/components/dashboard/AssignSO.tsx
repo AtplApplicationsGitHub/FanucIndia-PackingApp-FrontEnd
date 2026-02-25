@@ -28,11 +28,10 @@ import {
   Warning as WarningIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
-import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 
 import { useAssign } from "@/app/admin/components/hooks/UseAssign";
-import AdminOrdersToolbar from "./OrdersToolbar";
+import AssignOrdersToolbar from "./AssignOrdersToolbar";
 
 type InlineEditField = "status" | "priority" | "assignedUserId";
 
@@ -127,24 +126,18 @@ export default function AssignSO() {
             ? failures[0].reason
             : `${failures.length} orders failed to import`;
         setSnackbar({ open: true, message: msg, severity: "error" });
-      } else if (successes.length > 0) {
-        if (skipped.length > 0) {
-          setSnackbar({
-            open: true,
-            message: `Imported ${successes.length} successfully, ${skipped.length} skipped`,
-            severity: "warning",
-          });
-        } else {
-          setSnackbar({ open: true, message: "Imported successfully", severity: "success" });
-        }
-        setSelectedIds([]);
-      } else if (skipped.length > 0) {
-        const msg =
-          skipped.length === 1 ? skipped[0].reason : `${skipped.length} orders skipped`;
-        setSnackbar({ open: true, message: msg, severity: "warning" });
-        setSelectedIds([]);
       } else {
-        setSnackbar({ open: true, message: "Process completed", severity: "success" });
+        // If no failures, show a clean success message without mentioning skips or "not found"
+        const msg = successes.length > 0 
+          ? `Imported ${successes.length} order(s) successfully` 
+          : "ERP data import process completed";
+        
+        setSnackbar({ 
+          open: true, 
+          message: msg, 
+          severity: "success" 
+        });
+        setSelectedIds([]);
       }
     } catch (err: any) {
       setSnackbar({
@@ -286,9 +279,9 @@ export default function AssignSO() {
   }
 
   return (
-    <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden" }}>
-      <Box sx={{ mb: 3 }}>
-        <AdminOrdersToolbar
+    <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden", mt: 0 }}>
+      <Box sx={{ mb: 1.5 }}>
+        <AssignOrdersToolbar
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
           paymentFilter={paymentFilter}
@@ -305,6 +298,7 @@ export default function AssignSO() {
           onClear={onClear}
         />
 
+
         {selectedIds.length > 0 && (
           <Box
             sx={{
@@ -315,6 +309,11 @@ export default function AssignSO() {
               flexWrap: "wrap",
               width: "100%",
               mt: 2,
+              animation: "fadeIn 0.2s ease-in-out",
+              "@keyframes fadeIn": {
+                from: { opacity: 0, transform: "translateY(-10px)" },
+                to: { opacity: 1, transform: "translateY(0)" },
+              },
             }}
           >
             <FormControl size="small" sx={{ minWidth: 300 }}>
@@ -365,8 +364,8 @@ export default function AssignSO() {
                 ))}
               </Select>
             </FormControl>
-
-            {/* Skip Issue Stage - kept but unused in logic for now */}
+  
+            {/* Skip Issue Stage */}
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <Box
                 sx={{
@@ -387,56 +386,57 @@ export default function AssignSO() {
                 value={skipIssueStage || "placeholder"}
                 displayEmpty
                 onChange={async (e) => {
-                   const val = e.target.value;
-                   if (val === "placeholder") return;
-                   
-                   const shouldSkip = val === "yes";
-                   setSkipIssueStage(val); 
-
-                   const ordersWithoutData: string[] = [];
-                   const ordersToUpdate: number[] = [];
-
-                   selectedIds.forEach((id) => {
-                     const order = orders.find((o) => o.id === id);
-                     if (order) {
-                       if (!order.hasMaterialData) {
-                         ordersWithoutData.push(order.saleOrderNumber || String(id));
-                       } else {
-                         ordersToUpdate.push(id);
-                       }
-                     }
-                   });
-
-                   if (ordersWithoutData.length > 0) {
-                     setSnackbar({
-                       open: true,
-                       message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
-                       severity: "info",
-                     });
-                   }
-
-                   if (ordersToUpdate.length > 0) {
-                     try {
-                       await updateSkipStage(ordersToUpdate, shouldSkip);
-                       setSnackbar({
-                          open: true,
-                          message: shouldSkip
-                            ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
-                            : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
-                          severity: "success",
-                       });
-                       setSelectedIds([]);
-                       setSkipIssueStage("");
-                     } catch (err: any) {
+                    const val = e.target.value;
+                    if (val === "placeholder") return;
+                    
+                    const shouldSkip = val === "yes";
+                    setSkipIssueStage(val); 
+  
+                    const ordersWithoutData: string[] = [];
+                    const ordersToUpdate: number[] = [];
+  
+                    selectedIds.forEach((id) => {
+                      const order = orders.find((o) => o.id === id);
+                      if (order) {
+                        if (!order.hasMaterialData) {
+                          ordersWithoutData.push(order.saleOrderNumber || String(id));
+                        } else {
+                          ordersToUpdate.push(id);
+                        }
+                      }
+                    });
+  
+                    if (ordersWithoutData.length > 0) {
+                      setSnackbar({
+                        open: true,
+                        message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
+                        severity: "info",
+                      });
+                    }
+  
+                    if (ordersToUpdate.length > 0) {
+                      try {
+                        await updateSkipStage(ordersToUpdate, shouldSkip);
                         setSnackbar({
-                          open: true,
-                          message: err.message || "Failed to update",
-                          severity: "error",
+                           open: true,
+                           message: shouldSkip
+                             ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
+                             : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
+                           severity: "success",
                         });
-                     }
-                   } else {
-                     setSkipIssueStage("");
-                   }
+                        setSelectedIds([]);
+                        setSkipIssueStage("");
+                      } catch (err: any) {
+                         setSnackbar({
+                           open: true,
+                           message: err.message || "Failed to update",
+                           severity: "error",
+                         });
+                         setSkipIssueStage("");
+                      }
+                    } else {
+                      setSkipIssueStage("");
+                    }
                 }}
                 sx={{
                   height: 44,
@@ -452,21 +452,25 @@ export default function AssignSO() {
                 <MenuItem value="no">No</MenuItem>
               </Select>
             </FormControl>
-
+  
             <Button
               variant="contained"
+              disableElevation
               onClick={handleImportERPData}
               sx={{
                 height: 44,
-                borderRadius: "8px",
-                bgcolor: "#ffcc00",
+                bgcolor: "#facd02",
                 color: "#000",
                 fontWeight: 700,
                 fontSize: "14px",
-                textTransform: "none",
+                textTransform: "uppercase",
                 px: 3,
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                "&:hover": { bgcolor: "#eab308" },
+                borderRadius: 0,
+                clipPath:
+                  "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+                "&:hover": {
+                  bgcolor: "#e5bb01",
+                },
               }}
             >
               Import ERP Data
@@ -474,6 +478,7 @@ export default function AssignSO() {
           </Box>
         )}
       </Box>
+
 
       <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
         <Table
@@ -540,96 +545,112 @@ export default function AssignSO() {
           </TableHead>
 
           <TableBody>
-            {paginatedOrders.map((row) => {
-              const isDispatched = row.status === "Dispatched";
-              // const isAssignedUserLocked = isDispatched || row.status === "F105"; // unused for now
+            {paginatedOrders.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={13}
+                  align="center"
+                  sx={{
+                    bgcolor: lightYellow,
+                    py: 1,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  No orders found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedOrders.map((row) => {
+                const isDispatched = row.status === "Dispatched";
+                // const isAssignedUserLocked = isDispatched || row.status === "F105"; // unused for now
 
-              return (
-                <TableRow key={row.id} selected={selectedIds.includes(row.id)}>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                      <Checkbox
-                        checked={selectedIds.includes(row.id)}
-                        onChange={() => handleSelectOne(row.id)}
-                        sx={{ p: 0.5 }}
-                      />
-                      {row.hasMaterialData ? (
-                        <CheckCircleIcon color="success" sx={{ fontSize: "1.1rem" }} />
-                      ) : (
-                        <WarningIcon color="warning" sx={{ fontSize: "1.1rem" }} />
-                      )}
-                    </Box>
-                  </TableCell>
-
-                  <TableCell>{row.user?.name || "-"}</TableCell>
-
-                  <TableCell>{row.product?.name || findName(lookup.products, row.productId ?? 0) || "-"}</TableCell>
-
-                  <TableCell>
-                    <MuiLink
-                      component={Link}
-                      href={`/so-search/${row.saleOrderNumber}`}
-                      underline="hover"
-                      sx={{ fontWeight: 500 }}
-                    >
-                      {row.saleOrderNumber || "-"}
-                    </MuiLink>
-                  </TableCell>
-
-                  <TableCell>{row.outboundDelivery || "-"}</TableCell>
-
-                  <TableCell>{row.transferOrder || "-"}</TableCell>
-
-                  <TableCell>{row.deliveryDate ? formatDate(row.deliveryDate) : "-"}</TableCell>
-
-                  <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
-
-                  <TableCell>
-                    {row.salesZone?.name || findName(lookup.salesZones, row.salesZoneId ?? 0) || "-"}
-                  </TableCell>
-
-                  <TableCell>{row.customerNameText || "-"}</TableCell>
-
-                  <TableCell sx={{ minWidth: 100 }}>
-                    <Box>{row.status || "-"}</Box>
-                  </TableCell>
-
-                  <TableCell sx={{ minWidth: 80 }}>
-                    {inlineEdit?.id === row.id && inlineEdit.field === "priority" ? (
-                      <CustomEditTextField
-                        initialValue={inlineEdit.value}
-                        onCommit={(val) => handleInlineSave(val)}
-                        onCancel={() => setInlineEdit(null)}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          cursor: isDispatched ? "default" : "pointer",
-                          textDecoration: isDispatched ? "none" : "underline dotted",
-                        }}
-                        onClick={() =>
-                          !isDispatched &&
-                          setInlineEdit({
-                            id: row.id,
-                            field: "priority",
-                            value: row.priority ?? "",
-                            original: row.priority ?? "",
-                          })
-                        }
-                      >
-                        {row.priority ?? "-"}
+                return (
+                  <TableRow key={row.id} selected={selectedIds.includes(row.id)}>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        <Checkbox
+                          checked={selectedIds.includes(row.id)}
+                          onChange={() => handleSelectOne(row.id)}
+                          sx={{ p: 0.5 }}
+                        />
+                        {row.hasMaterialData ? (
+                          <CheckCircleIcon color="success" sx={{ fontSize: "1.1rem" }} />
+                        ) : (
+                          <WarningIcon color="warning" sx={{ fontSize: "1.1rem" }} />
+                        )}
                       </Box>
-                    )}
-                  </TableCell>
+                    </TableCell>
 
-                  <TableCell sx={{ minWidth: 150 }}>
-                    {row.assignedUser?.name ||
-                      findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
-                      "-"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    <TableCell>{row.user?.name || "-"}</TableCell>
+
+                    <TableCell>{row.product?.name || findName(lookup.products, row.productId ?? 0) || "-"}</TableCell>
+
+                    <TableCell>
+                      <MuiLink
+                        component={Link}
+                        href={`/so-search/${row.saleOrderNumber}`}
+                        underline="hover"
+                        sx={{ fontWeight: 500 }}
+                      >
+                        {row.saleOrderNumber || "-"}
+                      </MuiLink>
+                    </TableCell>
+
+                    <TableCell>{row.outboundDelivery || "-"}</TableCell>
+
+                    <TableCell>{row.transferOrder || "-"}</TableCell>
+
+                    <TableCell>{row.deliveryDate ? formatDate(row.deliveryDate) : "-"}</TableCell>
+
+                    <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
+
+                    <TableCell>
+                      {row.salesZone?.name || findName(lookup.salesZones, row.salesZoneId ?? 0) || "-"}
+                    </TableCell>
+
+                    <TableCell>{row.customerNameText || "-"}</TableCell>
+
+                    <TableCell sx={{ minWidth: 100 }}>
+                      <Box>{row.status || "-"}</Box>
+                    </TableCell>
+
+                    <TableCell sx={{ minWidth: 80 }}>
+                      {inlineEdit?.id === row.id && inlineEdit.field === "priority" ? (
+                        <CustomEditTextField
+                          initialValue={inlineEdit.value}
+                          onCommit={(val) => handleInlineSave(val)}
+                          onCancel={() => setInlineEdit(null)}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            cursor: isDispatched ? "default" : "pointer",
+                            textDecoration: isDispatched ? "none" : "underline dotted",
+                          }}
+                          onClick={() =>
+                            !isDispatched &&
+                            setInlineEdit({
+                              id: row.id,
+                              field: "priority",
+                              value: row.priority ?? "",
+                              original: row.priority ?? "",
+                            })
+                          }
+                        >
+                          {row.priority ?? "-"}
+                        </Box>
+                      )}
+                    </TableCell>
+
+                    <TableCell sx={{ minWidth: 150 }}>
+                      {row.assignedUser?.name ||
+                        findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
+                        "-"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>

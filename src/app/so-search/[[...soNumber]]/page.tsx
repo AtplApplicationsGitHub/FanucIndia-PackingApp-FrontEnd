@@ -20,7 +20,6 @@ import { useRouter, useParams } from "next/navigation";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import UserDashboardHeader from "@/app/user/components/Header";
 import OrderSnapshot from "../components/OrderSnapshot";
-import DispatchInfo from "../components/DispatchInfo";
 import MaterialDetails from "../components/MaterialDetails";
 import OrderStatusStepper from "../components/OrderStatusStepper";
 import AttachmentDialogs from "../components/AttachmentDialogs";
@@ -596,11 +595,9 @@ export default function SoSearchPage() {
             />
             <OrderSnapshot
               salesOrder={data.salesOrder}
-              onViewPackingAttachments={handleOpenMaterialAttachments}
-            />
-            <DispatchInfo
               dispatchInfo={data.dispatchInfo}
-              onViewAttachments={handleOpenDispatchAttachments}
+              onViewPackingAttachments={handleOpenMaterialAttachments}
+              onViewDispatchAttachments={handleOpenDispatchAttachments}
               onViewVehicleAttachments={handleOpenVehicleAttachments}
             />
             <MaterialDetails

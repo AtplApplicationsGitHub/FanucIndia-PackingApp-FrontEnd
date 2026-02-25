@@ -448,7 +448,7 @@ export default function AdminOrdersTable({
 
             {orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={18} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={18} align="center" sx={{ py: 4 , bgcolor: lightYellow,}}>
                   No orders found.
                 </TableCell>
               </TableRow>

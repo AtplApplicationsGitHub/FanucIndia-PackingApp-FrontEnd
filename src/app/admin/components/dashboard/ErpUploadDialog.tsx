@@ -232,7 +232,7 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
           disabled={!file || loading || importLoading} 
           sx={buttonSx}
         >
-          {loading ? <CircularProgress size={22} color="inherit" /> : 'UPLOAD & VIEW'}
+          {loading ? <CircularProgress size={22} color="inherit" /> : 'UPLOAD'}
         </Button>
       </DialogActions>
     </Dialog>

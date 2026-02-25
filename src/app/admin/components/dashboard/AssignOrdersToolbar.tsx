@@ -1,36 +1,37 @@
 "use client";
 
+import React, { useState } from "react";
 import {
   Box,
   Button,
   IconButton,
   Paper,
   InputBase,
-  FormControl, 
-  Select,      
-  MenuItem,    
+  FormControl,
+  Select,
+  MenuItem,
+  Menu,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
-import { X } from "lucide-react"; 
-import { LookupRow } from "@/app/admin/components/types/admin"; 
+import { X } from "lucide-react";
+import { LookupRow } from "@/app/admin/components/types/admin";
+import { UploadCloud, FileSpreadsheet } from "lucide-react";
 
-const STATUS_OPTIONS = [
-  "None",
-  "R105",
-  "W105",
-  "F105",
-  "Dispatched"
-];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
 type Props = {
   searchInput: string;
   onSearchInputChange: (val: string) => void;
-  
+
   paymentFilter: string;
   onPaymentFilterChange: (val: string) => void;
   zoneFilter: string;
@@ -51,7 +52,7 @@ type Props = {
   assignableUsers?: { id: number; name: string }[];
 };
 
-export default function AdminOrdersToolbar({
+export default function AssignOrdersToolbar({
   searchInput,
   onSearchInputChange,
   paymentFilter,
@@ -71,6 +72,17 @@ export default function AdminOrdersToolbar({
   onBulkSkipIssue,
   assignableUsers = [],
 }: Props) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleActionsClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleActionsClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box
@@ -79,12 +91,14 @@ export default function AdminOrdersToolbar({
           flexDirection: { xs: "column", md: "row" },
           gap: { xs: 1.5, md: 1.5 },
           width: "100%",
-          justifyContent: "center",
+          justifyContent: "flex-start", // Moved to left side
           alignItems: "center",
           flexWrap: "wrap",
-          py: 1,
+          pt: "0.5%",
+          pb: 1,
         }}
       >
+        {/* Search Field */}
         <Paper
           elevation={0}
           component="form"
@@ -120,27 +134,39 @@ export default function AdminOrdersToolbar({
           </IconButton>
         </Paper>
 
-        <FormControl size="small" sx={{ minWidth: 120, bgcolor: "background.paper" }}>
+        {/* Payment Filter */}
+        <FormControl
+          size="small"
+          sx={{ minWidth: 120, bgcolor: "background.paper" }}
+        >
           <Select
             value={paymentFilter}
             displayEmpty
             onChange={(e) => onPaymentFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>Payment</em></MenuItem>
+            <MenuItem value="">
+              <em>Payment</em>
+            </MenuItem>
             <MenuItem value="true">Yes</MenuItem>
             <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+        {/* Zone Filter */}
+        <FormControl
+          size="small"
+          sx={{ minWidth: 140, bgcolor: "background.paper" }}
+        >
           <Select
             value={zoneFilter}
             displayEmpty
             onChange={(e) => onZoneFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>Sales Zone</em></MenuItem>
+            <MenuItem value="">
+              <em>Sales Zone</em>
+            </MenuItem>
             {salesZones.map((zone) => (
               <MenuItem key={zone.id} value={String(zone.id)}>
                 {String(zone.name || zone.code || zone.id)}
@@ -149,14 +175,20 @@ export default function AdminOrdersToolbar({
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+        {/* Status Filter */}
+        <FormControl
+          size="small"
+          sx={{ minWidth: 140, bgcolor: "background.paper" }}
+        >
           <Select
             value={statusFilter}
             displayEmpty
             onChange={(e) => onStatusFilterChange(e.target.value)}
             sx={{ height: 40, fontSize: "14px" }}
           >
-            <MenuItem value=""><em>Status</em></MenuItem>
+            <MenuItem value="">
+              <em>Status</em>
+            </MenuItem>
             {STATUS_OPTIONS.map((status) => (
               <MenuItem key={status} value={status}>
                 {status}
@@ -165,6 +197,7 @@ export default function AdminOrdersToolbar({
           </Select>
         </FormControl>
 
+        {/* Date Pickers */}
         <DatePicker
           label="From"
           value={startDate ? dayjs(startDate) : null}
@@ -204,6 +237,7 @@ export default function AdminOrdersToolbar({
           }}
         />
 
+        {/* Clear Button */}
         <Button
           onClick={onClear}
           startIcon={<X size={16} />}
@@ -225,6 +259,59 @@ export default function AdminOrdersToolbar({
         >
           CLEAR
         </Button>
+
+        {/* Actions Dropdown */}
+        <Button
+          id="actions-button"
+          aria-controls={open ? "actions-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          variant="contained"
+          disableElevation
+          onClick={handleActionsClick}
+          endIcon={<KeyboardArrowDownIcon />}
+          sx={{
+            bgcolor: "#facd02",
+            color: "#000",
+            fontWeight: 700,
+            fontSize: "14px",
+            height: 40,
+            px: 3,
+            borderRadius: 0,
+            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+            "&:hover": {
+              bgcolor: "#e5bb01",
+            },
+            textTransform: "uppercase",
+            ml: { md: "auto" },
+          }}
+        >
+          ACTIONS
+        </Button>
+        <Menu
+          id="actions-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleActionsClose}
+          MenuListProps={{
+            "aria-labelledby": "actions-button",
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 180,
+              boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
+              borderRadius: "4px",
+            },
+          }}
+        >
+          <MenuItem onClick={handleActionsClose} sx={{ py: 1.5, gap: 1.5 }}>
+            <FileSpreadsheet size={18} color="#2e7d32" /> Export
+          </MenuItem>
+          <MenuItem onClick={handleActionsClose} sx={{ py: 1.5, gap: 1.5 }}>
+            <UploadCloud size={18} color="#0288d1" /> Upload
+          </MenuItem>
+        </Menu>
       </Box>
     </LocalizationProvider>
   );

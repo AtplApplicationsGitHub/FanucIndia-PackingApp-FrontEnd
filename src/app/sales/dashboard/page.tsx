@@ -50,6 +50,17 @@ export default function SalesDashboard() {
     fetchOrders,
     alert,
     setAlert,
+    paymentFilter,
+    setPaymentFilter,
+    zoneFilter,
+    setZoneFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    handleClearFilters,
   } = useSalesDashboard();
 
   const [chatOpen, setChatOpen] = React.useState(false);
@@ -96,7 +107,7 @@ export default function SalesDashboard() {
 
         {/* ORDERS VIEW */}
         {view === "orders" && (
-          <Box p={{ xs: 2, md: 4 }}>
+          <Box px={{ xs: 1.5, md: 2 }} py={1}>
             <SalesDashboardToolbar
               searchValue={searchTerm}
               onSearchChange={setSearchTerm}
@@ -105,10 +116,22 @@ export default function SalesDashboard() {
               onBulkUpload={handleBulkUpload}
               fileInputRef={fileInputRef}
               onFileChange={handleFileChange}
+              paymentFilter={paymentFilter}
+              onPaymentFilterChange={setPaymentFilter}
+              zoneFilter={zoneFilter}
+              onZoneFilterChange={setZoneFilter}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              salesZones={lookup.salesZones}
+              startDate={startDate}
+              onStartDateChange={setStartDate}
+              endDate={endDate}
+              onEndDateChange={setEndDate}
+              onClear={handleClearFilters}
             />
 
             {orders.length === 0 ? (
-              <Box display="flex" justifyContent="center" mt={8}>
+              <Box display="flex" justifyContent="center" mt={4}>
                 <Alert severity="info">No orders found. Create your first order!</Alert>
               </Box>
             ) : (

@@ -7,6 +7,7 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 export function useAssign() {
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [lookup, setLookup] = useState<Lookup>({
@@ -19,8 +20,10 @@ export function useAssign() {
     customers: [],
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    else setRefreshing(true);
+    
     try {
       // 1. Get the simplified list for UI (Active Export List)
       const listRes = await fetchWithAuth(API.ADMIN.ACTIVE_EXPORT_LIST);
@@ -92,6 +95,7 @@ export function useAssign() {
       setError(err.message || "Failed to load sales orders");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -150,7 +154,7 @@ export function useAssign() {
     } catch (err) {
       console.error("Update failed:", err);
       // Revert or refresh on error
-      fetchData();
+      fetchData(true);
     }
   };
 
@@ -188,12 +192,12 @@ export function useAssign() {
       }
       
       // Refresh to get full objects from server
-      await fetchData();
+      await fetchData(true);
       return true;
     } catch (err: any) {
       const errorMsg = err.message || "Bulk update failed";
       console.error("Bulk update failed:", errorMsg);
-      await fetchData();
+      await fetchData(true);
       throw new Error(errorMsg);
     }
   }, [lookup.assignableUsers, fetchData]);
@@ -213,7 +217,7 @@ export function useAssign() {
       }
 
       const data = await response.json();
-      await fetchData(); // Refresh data to show updated status
+      await fetchData(true); // Refresh data to show updated status
       return data;
     } catch (err: any) {
       console.error("Bulk import error:", err);
@@ -244,7 +248,7 @@ export function useAssign() {
            ));
         }));
 
-        await fetchData();
+        await fetchData(true);
         return true;
       } catch (err: any) {
          console.error("Failed to update skip stage", err);
