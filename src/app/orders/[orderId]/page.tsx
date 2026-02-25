@@ -11,6 +11,16 @@ import {
   Container,
   Paper,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  TextField,
 } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
@@ -29,7 +39,8 @@ import {
   bulkAcceptGroup,
   updateMaterialRemarks,
   acceptAllIssueStage,
-  updateMapping, // <--- 1. IMPORT ADDED HERE
+  updateMapping,
+  printOrderLabel,
 } from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
@@ -41,6 +52,7 @@ import UserDashboardHeader from "@/app/user/components/Header";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
+import { API } from "@/common/lib/endpoints";
 
 type UpdateResponse = {
   issueStageCompleted?: boolean;
@@ -54,7 +66,6 @@ type UpdateResponse = {
   };
 };
 
-// ... extractErrorMessage function (same as before) ...
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     try {
@@ -105,7 +116,7 @@ export default function MaterialDataPage() {
 
   const idStr = useMemo(
     () => (typeof params.orderId === "string" ? params.orderId : ""),
-    [params.orderId]
+    [params.orderId],
   );
   const orderId = Number(idStr);
 
@@ -113,9 +124,45 @@ export default function MaterialDataPage() {
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [selectedPrinter, setSelectedPrinter] = useState<number | "">("");
+  const [printQuantity, setPrintQuantity] = useState<number>(1);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [printers, setPrinters] = useState<{ id: number; name: string }[]>([]);
+
+  // Fetch Printers on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios
+        .get(API.LOOKUP.PRINTERS, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => setPrinters(res.data))
+        .catch((err) => console.error("Failed to fetch printers", err));
+    }
+  }, []);
+
+  const handlePrintSubmit = async () => {
+    setIsPrinting(true);
+    try {
+      await printOrderLabel(
+        orderId,
+        selectedPrinter ? Number(selectedPrinter) : undefined,
+        printQuantity,
+      );
+      setUploadNotice("Print job submitted successfully!");
+      setPrintDialogOpen(false);
+    } catch (err) {
+      setEditError(extractErrorMessage(err));
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const { data: header, error: hdrError } = useOrderHeader(
     orderId,
-    currentUser.id
+    currentUser.id,
   );
   const {
     rows: fetchedRows = [],
@@ -123,9 +170,8 @@ export default function MaterialDataPage() {
     loading: matLoading,
   } = useErpMaterials(orderId, currentUser.id);
 
-  const { mutate: incIssue, loading: mutatingIssue } = useIncrementIssueStage(
-    orderId
-  );
+  const { mutate: incIssue, loading: mutatingIssue } =
+    useIncrementIssueStage(orderId);
 
   const { mutate: incPacking, loading: mutatingPacking } =
     useIncrementPackingStage(orderId);
@@ -146,7 +192,7 @@ export default function MaterialDataPage() {
     () =>
       localRows.length > 0 &&
       localRows.every((r) => r.issueStage >= r.reqQuantity),
-    [localRows]
+    [localRows],
   );
 
   useEffect(() => {
@@ -161,53 +207,30 @@ export default function MaterialDataPage() {
       (row) =>
         row.reqQuantity > 0 &&
         row.reqQuantity === row.issueStage &&
-        row.issueStage === row.packingStage
+        row.issueStage === row.packingStage,
     );
   }, [localRows]);
 
-  // ... handleUpdateRemarks ...
   const handleUpdateRemarks = async (id: number, remarks: string) => {
     try {
-      const response = await updateMaterialRemarks(orderId, id, remarks) as UpdateResponse;
+      const response = (await updateMaterialRemarks(
+        orderId,
+        id,
+        remarks,
+      )) as UpdateResponse;
       setUploadNotice("Remarks updated successfully");
-
       const updatedMaterial = response.updatedMaterial;
-      
-      let shouldRedirect = false;
-      
-      setLocalRows((prev) => {
-        const nextRows = prev.map((row) =>
-          row.id === id 
-            ? { ...row, remarks: updatedMaterial ? updatedMaterial.Remarks : remarks } 
-            : row
-        );
 
-        const allPacked = nextRows.every(
-            (r) => r.reqQuantity > 0 && r.reqQuantity === r.issueStage && r.issueStage === r.packingStage
-        );
-        const allRemarksFilled = nextRows.every(
-            (r) => !r.remarksRequired || (r.remarks && r.remarks.trim() !== "")
-        );
-
-        if (allPacked && allRemarksFilled) {
-             shouldRedirect = true;
-        }
-
-        return nextRows;
-      });
-
-      if (shouldRedirect) {
-        setIsRedirecting(true);
-        setUploadNotice("Order Complete! Redirecting...");
-        setTimeout(() => {
-          if (currentUser.role === "ADMIN") router.push("/admin/dashboard");
-          else {
-            sessionStorage.setItem("userDashboardView", "pick_pack");
-            router.push("/user/dashboard");
-          }
-        }, 2000);
-      }
-
+      setLocalRows((prev) =>
+        prev.map((row) =>
+          row.id === id
+            ? {
+                ...row,
+                remarks: updatedMaterial ? updatedMaterial.Remarks : remarks,
+              }
+            : row,
+        ),
+      );
     } catch (e) {
       setEditError(extractErrorMessage(e));
     }
@@ -223,7 +246,7 @@ export default function MaterialDataPage() {
         setUploadNotice("Issue stage completed by Admin! Redirecting...");
         setIsRedirecting(true);
         setTimeout(() => {
-           router.push("/admin/dashboard");
+          router.push("/admin/dashboard");
         }, 2000);
       } else {
         setUploadNotice("All items accepted successfully.");
@@ -235,7 +258,11 @@ export default function MaterialDataPage() {
   };
 
   // --- 2. ADD THIS NEW HANDLER ---
-  const handleUpdateMapping = async (materialId: number, mappingBarcode: string, group: string) => {
+  const handleUpdateMapping = async (
+    materialId: number,
+    mappingBarcode: string,
+    group: string,
+  ) => {
     setEditError(null);
     try {
       await updateMapping(orderId, materialId, mappingBarcode, group);
@@ -249,7 +276,7 @@ export default function MaterialDataPage() {
   const uniqueGroups = useMemo(() => {
     const groups = localRows
       .map((r) => r.group)
-      .filter((g): g is string => !!g); 
+      .filter((g): g is string => !!g);
     return Array.from(new Set(groups)).sort();
   }, [localRows]);
 
@@ -260,7 +287,7 @@ export default function MaterialDataPage() {
       rows = rows.filter((r) => r.group === selectedGroup);
     }
 
-    if (!showAll) {
+    if (!showAll && !isOrderFullyComplete) {
       if (!allIssued) {
         rows = rows.filter((r) => r.issueStage < r.reqQuantity);
       } else {
@@ -268,7 +295,7 @@ export default function MaterialDataPage() {
       }
     }
     return rows;
-  }, [localRows, showAll, allIssued, selectedGroup]);
+  }, [localRows, showAll, allIssued, selectedGroup, isOrderFullyComplete]);
 
   const showBulkButton = useMemo(() => {
     if (!selectedGroup) return false;
@@ -316,18 +343,18 @@ export default function MaterialDataPage() {
         );
       case "USER":
         return (
-          <UserDashboardHeader 
-            userName={currentUser.name} 
-            view={"pick_pack"} 
-            setView={handleUserNav} 
+          <UserDashboardHeader
+            userName={currentUser.name}
+            view={"pick_pack"}
+            setView={handleUserNav}
           />
         );
       case "SALES":
         return (
           <SalesDashboardHeader
-            userName={currentUser.name} 
-            view={"orders"} 
-            setView={handleSalesNav} 
+            userName={currentUser.name}
+            view={"orders"}
+            setView={handleSalesNav}
           />
         );
       default:
@@ -370,10 +397,10 @@ export default function MaterialDataPage() {
       setUploadNotice("ERP Data Reset Successfully. Redirecting...");
       setIsRedirecting(true);
       setTimeout(() => {
-        if (currentUser.role === 'ADMIN') router.push("/admin/dashboard");
+        if (currentUser.role === "ADMIN") router.push("/admin/dashboard");
         else {
-           sessionStorage.setItem("userDashboardView", "pick_pack");
-           router.push("/user/dashboard");
+          sessionStorage.setItem("userDashboardView", "pick_pack");
+          router.push("/user/dashboard");
         }
       }, 2000);
     } catch (e) {
@@ -382,7 +409,11 @@ export default function MaterialDataPage() {
   };
 
   if (!idStr || isNaN(orderId)) {
-    return <Alert severity="error" sx={{ m: 6 }}>Invalid Order ID.</Alert>;
+    return (
+      <Alert severity="error" sx={{ m: 6 }}>
+        Invalid Order ID.
+      </Alert>
+    );
   }
   if (hdrError || matError) {
     return (
@@ -393,13 +424,21 @@ export default function MaterialDataPage() {
   }
   if (!header) {
     return (
-      <Backdrop open sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <Backdrop
+        open
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      >
         <CircularProgress color="inherit" />
       </Backdrop>
     );
   }
 
-  const busy = matLoading || mutatingIssue || mutatingPacking || isRedirecting || resetting;
+  const busy =
+    matLoading ||
+    mutatingIssue ||
+    mutatingPacking ||
+    isRedirecting ||
+    resetting;
   const { so, customerName, transferOrder, fgObd } = header;
   const machineModel = localRows[0]?.machineModel ?? "";
   const cncSerialNo = localRows[0]?.cncSerialNo ?? "";
@@ -427,7 +466,9 @@ export default function MaterialDataPage() {
   const refetch = async () => {
     try {
       const data = await fetchErpMaterials(orderId);
-      const apiRows = (Array.isArray(data?.items) ? data.items : data) as ApiMaterial[];
+      const apiRows = (
+        Array.isArray(data?.items) ? data.items : data
+      ) as ApiMaterial[];
       const mapped: MaterialRow[] = apiRows.map((m, idx) => ({
         id: Number(m.ID),
         siNo: idx + 1,
@@ -460,13 +501,16 @@ export default function MaterialDataPage() {
     try {
       let response: UpdateResponse | undefined;
       if (!allIssued) {
-        response = await incIssue(code) as UpdateResponse;
+        response = (await incIssue(code)) as UpdateResponse;
       } else {
-        response = await incPacking(code) as UpdateResponse;
+        response = (await incPacking(code)) as UpdateResponse;
       }
 
-      const targetRow = localRows.find(r => r.materialCode === code || r.mappingBarcode === code);
-      const isMandatoryMissing = targetRow?.remarksRequired && !targetRow?.remarks;
+      const targetRow = localRows.find(
+        (r) => r.materialCode === code || r.mappingBarcode === code,
+      );
+      const isMandatoryMissing =
+        targetRow?.remarksRequired && !targetRow?.remarks;
 
       if (response && response.issueStageCompleted) {
         setIsRedirecting(true);
@@ -480,19 +524,7 @@ export default function MaterialDataPage() {
           }
         }, 2500);
       } else if (response && response.packingStageCompleted) {
-        if (!isMandatoryMissing) {
-            setIsRedirecting(true);
-            setUploadNotice("Packing stage complete! Returning to your dashboard...");
-            setTimeout(() => {
-            if (currentUser.role === "ADMIN") router.push("/admin/dashboard");
-            else {
-                sessionStorage.setItem("userDashboardView", "pick_pack");
-                router.push("/user/dashboard");
-            }
-            }, 2500);
-        } else {
-            await refetch();
-        }
+        await refetch();
       } else {
         await refetch();
       }
@@ -502,29 +534,50 @@ export default function MaterialDataPage() {
   };
 
   const mapApiToMaterialRow = (
-    apiMaterial: { ID: number | string; Issue_stage?: number; Packing_stage?: number }, 
-    oldRow: MaterialRow
+    apiMaterial: {
+      ID: number | string;
+      Issue_stage?: number;
+      Packing_stage?: number;
+    },
+    oldRow: MaterialRow,
   ): MaterialRow => {
     return {
       ...oldRow,
       id: Number(apiMaterial.ID),
-      issueStage: apiMaterial.Issue_stage != null ? Number(apiMaterial.Issue_stage) : oldRow.issueStage,
-      packingStage: apiMaterial.Packing_stage != null ? Number(apiMaterial.Packing_stage) : oldRow.packingStage,
+      issueStage:
+        apiMaterial.Issue_stage != null
+          ? Number(apiMaterial.Issue_stage)
+          : oldRow.issueStage,
+      packingStage:
+        apiMaterial.Packing_stage != null
+          ? Number(apiMaterial.Packing_stage)
+          : oldRow.packingStage,
     };
   };
 
-  const handleUpdateIssueStage = async (code: string, stage: number, id: number) => {
+  const handleUpdateIssueStage = async (
+    code: string,
+    stage: number,
+    id: number,
+  ) => {
     // ... existing logic ...
     setEditError(null);
     try {
-      const data = await updateIssueStage(orderId, code, stage, id) as UpdateResponse;
+      const data = (await updateIssueStage(
+        orderId,
+        code,
+        stage,
+        id,
+      )) as UpdateResponse;
       const updatedMaterial = data?.updatedMaterial;
       if (!updatedMaterial) throw new Error("Invalid response.");
 
       const oldRow = localRows.find((r) => r.id === id);
       if (oldRow) {
         const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
-        setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+        setLocalRows((prev) =>
+          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
+        );
       }
 
       if (data?.issueStageCompleted) {
@@ -547,36 +600,35 @@ export default function MaterialDataPage() {
     }
   };
 
-  const handleUpdatePackingStage = async (code: string, stage: number, id: number) => {
+  const handleUpdatePackingStage = async (
+    code: string,
+    stage: number,
+    id: number,
+  ) => {
     // ... existing logic ...
     setEditError(null);
     try {
-      const data = await updatePackingStage(orderId, code, stage, id) as UpdateResponse;
+      const data = (await updatePackingStage(
+        orderId,
+        code,
+        stage,
+        id,
+      )) as UpdateResponse;
       const updatedMaterial = data?.updatedMaterial;
       if (!updatedMaterial) throw new Error("Invalid response.");
 
       const oldRow = localRows.find((r) => r.id === id);
-      
+
       const isMandatory = oldRow?.remarksRequired;
       const hasRemarks = updatedMaterial.Remarks || oldRow?.remarks;
-      
+
       if (oldRow) {
         const updatedRow = mapApiToMaterialRow(updatedMaterial, oldRow);
-        setLocalRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
+        setLocalRows((prev) =>
+          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
+        );
       }
 
-      if (data?.packingStageCompleted && (!isMandatory || hasRemarks)) {
-        setIsRedirecting(true);
-        setUploadNotice("Packing stage complete! Returning to your dashboard...");
-        setTimeout(() => {
-          if (currentUser.role === "ADMIN") {
-            router.push("/admin/dashboard");
-          } else {
-            sessionStorage.setItem("userDashboardView", "pick_pack");
-            router.push("/user/dashboard");
-          }
-        }, 2500);
-      }
       return oldRow!;
     } catch (err: unknown) {
       setEditError(extractErrorMessage(err));
@@ -586,10 +638,29 @@ export default function MaterialDataPage() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        bgcolor: "#f5f5f5",
+      }}
+    >
       {renderHeader()}
-      <Container maxWidth={false} disableGutters sx={{ flexGrow: 1, py: 0, px: 0 }}>
-        <Paper elevation={3} sx={{ borderRadius: 0, overflow: "hidden", borderTop: "1px solid #e0e0e0", borderBottom: "1px solid #e0e0e0" }}>
+      <Container
+        maxWidth={false}
+        disableGutters
+        sx={{ flexGrow: 1, py: 0, px: 0 }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            borderRadius: 0,
+            overflow: "hidden",
+            borderTop: "1px solid #e0e0e0",
+            borderBottom: "1px solid #e0e0e0",
+          }}
+        >
           <HeaderSection
             so={so}
             customerName={customerName}
@@ -601,37 +672,32 @@ export default function MaterialDataPage() {
           />
           <Divider />
           <Box sx={{ py: 3, px: 2, bgcolor: "background.paper" }}>
-            {isOrderFullyComplete ? (
-              <Alert severity="success" sx={{ borderRadius: 1, fontSize: "1rem", fontWeight: 500, boxShadow: 1, mx: 2 }}>
-                This order is fully packed and complete. No further actions can be taken.
-              </Alert>
-            ) : (
-              <InputBoxSection
-                onSubmit={handleProcess}
-                saleOrderNumber={so}
-                onFileCreated={() => { setUploadNotice("File metadata saved"); refetch(); }}
-                disabled={isOrderFullyComplete}
-                items={localRows}
-                uniqueGroups={uniqueGroups}
-                selectedGroup={selectedGroup}
-                onGroupChange={setSelectedGroup}
-                onBulkAccept={handleBulkAccept}
-                showBulkButton={showBulkButton} 
-                showAll={showAll}
-                onToggleShowAll={setShowAll}
-                showAcceptAllIssueButton={currentUser.role === 'ADMIN' && !allIssued}
-                onAcceptAllIssue={handleAcceptAllIssue}
-                onDeleteErpData={handleDeleteErpData}
-              />
-            )}
+            <InputBoxSection
+              onSubmit={handleProcess}
+              saleOrderNumber={so}
+              onFileCreated={() => {
+                setUploadNotice("File metadata saved");
+                refetch();
+              }}
+              disabled={isOrderFullyComplete}
+              items={localRows}
+              uniqueGroups={uniqueGroups}
+              selectedGroup={selectedGroup}
+              onGroupChange={setSelectedGroup}
+              onBulkAccept={handleBulkAccept}
+              showBulkButton={showBulkButton}
+              showAll={showAll}
+              onToggleShowAll={setShowAll}
+              showAcceptAllIssueButton={
+                currentUser.role === "ADMIN" && !allIssued
+              }
+              onAcceptAllIssue={handleAcceptAllIssue}
+              onDeleteErpData={handleDeleteErpData}
+              showPrintButton={isOrderFullyComplete}
+              onPrintClick={() => setPrintDialogOpen(true)}
+            />
           </Box>
           <Divider />
-          
-          {editError && (
-            <Alert severity="error" onClose={() => setEditError(null)} sx={{ borderRadius: 0, fontSize: "0.95rem", borderBottom: "1px solid #e0e0e0", px: 2, py: 1 }}>
-              {editError}
-            </Alert>
-          )}
           <Box>
             <MaterialDataTable
               rows={displayedRows}
@@ -639,20 +705,120 @@ export default function MaterialDataPage() {
               onUpdateIssueStage={handleUpdateIssueStage}
               onUpdatePackingStage={handleUpdatePackingStage}
               onUpdateRemarks={handleUpdateRemarks}
-              
               // --- 3. PASS THE HANDLER HERE ---
               onUpdateMapping={handleUpdateMapping}
-              
-              onProcessRowUpdateError={(err) => setEditError(extractErrorMessage(err))}
+              onProcessRowUpdateError={(err) =>
+                setEditError(extractErrorMessage(err))
+              }
               isOrderFullyComplete={isOrderFullyComplete}
             />
           </Box>
         </Paper>
-        <Snackbar open={!!uploadNotice} autoHideDuration={3000} onClose={() => setUploadNotice(null)} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-          <Alert severity="success" onClose={() => setUploadNotice(null)} sx={{ minWidth: 300, fontSize: "1rem", fontWeight: 500, boxShadow: 4 }}>
+        <Snackbar
+          open={!!uploadNotice}
+          autoHideDuration={3000}
+          onClose={() => setUploadNotice(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            severity="success"
+            onClose={() => setUploadNotice(null)}
+            sx={{
+              minWidth: 300,
+              fontSize: "1rem",
+              fontWeight: 500,
+              boxShadow: 4,
+            }}
+          >
             {uploadNotice}
           </Alert>
         </Snackbar>
+        <Snackbar
+          open={!!editError}
+          autoHideDuration={5000}
+          onClose={() => setEditError(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            severity="error"
+            onClose={() => setEditError(null)}
+            sx={{
+              minWidth: 300,
+              fontSize: "1rem",
+              fontWeight: 500,
+              boxShadow: 4,
+            }}
+          >
+            {editError}
+          </Alert>
+        </Snackbar>
+        {/* PRINT DIALOG */}
+        <Dialog
+          open={printDialogOpen}
+          onClose={() => setPrintDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: "bold" }}>
+            Print Order Labels
+          </DialogTitle>
+          <DialogContent
+            dividers
+            sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}
+          >
+            <FormControl fullWidth size="small">
+              <InputLabel>Printer</InputLabel>
+              <Select
+                value={selectedPrinter}
+                label="Printer"
+                onChange={(e) =>
+                  setSelectedPrinter(e.target.value as number | "")
+                }
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {printers.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Quantity"
+              type="number"
+              size="small"
+              value={printQuantity}
+              onChange={(e) => {
+                let val = parseInt(e.target.value, 10);
+                if (isNaN(val)) val = 1;
+                if (val > 10) val = 10;
+                if (val < 1) val = 1;
+                setPrintQuantity(val);
+              }}
+              inputProps={{ min: 1, max: 10 }}
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button
+              onClick={() => setPrintDialogOpen(false)}
+              disabled={isPrinting}
+              color="inherit"
+            >
+              CANCEL
+            </Button>
+            <Button
+              onClick={handlePrintSubmit}
+              variant="contained"
+              disabled={isPrinting}
+            >
+              {isPrinting ? "PRINTING..." : "PRINT"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

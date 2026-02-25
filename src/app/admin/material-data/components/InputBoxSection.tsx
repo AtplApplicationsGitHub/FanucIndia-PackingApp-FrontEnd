@@ -45,6 +45,8 @@ interface Props {
   showAcceptAllIssueButton?: boolean; 
   onAcceptAllIssue?: () => void;
   onDeleteErpData?: () => Promise<void> | void;
+  showPrintButton?: boolean;
+  onPrintClick?: () => void;
 }
 
 const LastUpdatedInfo: FC<{ items: MaterialRow[] }> = ({ items }) => {
@@ -94,6 +96,8 @@ const InputBoxSection: FC<Props> = ({
   showAcceptAllIssueButton = false,
   onAcceptAllIssue,
   onDeleteErpData,
+  showPrintButton,
+  onPrintClick,
 }) => {
   const theme = useTheme();
   const [value, setValue] = useState("");
@@ -325,6 +329,19 @@ const InputBoxSection: FC<Props> = ({
               }
               sx={{ ml: 1, mr: 0 }}
             />
+            {showPrintButton && (
+              <Button
+                variant="contained"
+                onClick={onPrintClick}
+                sx={{
+                   ...buttonSx, 
+                   bgcolor: theme.palette.primary.main, 
+                   color: theme.palette.primary.contrastText 
+                }}
+              >
+                PRINT
+              </Button>
+            )}
           </Box>
         </Box>
 

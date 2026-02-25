@@ -173,3 +173,28 @@ export async function resetErpData(orderId: number) {
     }
     return res.json();
 }
+
+export async function printOrderLabel(
+  orderId: number,
+  printerId?: number,
+  quantity?: number
+) {
+  const url = `${API.SALES.LIST_ORDERS}/${orderId}/print`;
+  
+  const payload: any = {};
+  if (printerId) payload.printerId = printerId;
+  if (quantity) payload.quantity = quantity;
+
+  const res = await fetchWithAuth(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to trigger print job");
+  }
+
+  return res.json();
+}
