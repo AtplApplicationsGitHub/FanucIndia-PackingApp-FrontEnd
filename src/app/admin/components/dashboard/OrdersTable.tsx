@@ -22,7 +22,7 @@ import {
   ListItemText,
   alpha,
   useTheme,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -36,6 +36,8 @@ import { useSoArchive } from "@/app/so-search/hooks/useSoArchive";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import Badge from "@mui/material/Badge";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 
@@ -58,7 +60,7 @@ type Props = {
   onUpdateInline: (
     id: number,
     field: InlineEditField,
-    value: string | number | null
+    value: string | number | null,
   ) => Promise<void>;
   loading: boolean;
   onEdit?: (order: SalesOrder) => void;
@@ -81,7 +83,7 @@ export default function AdminOrdersTable({
   onOpenChat,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.25); 
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   // --- INLINE EDIT STATE & LOGIC ---
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
@@ -91,7 +93,7 @@ export default function AdminOrdersTable({
 
     const normalize = (
       field: InlineEditField,
-      val: string | number | null | undefined
+      val: string | number | null | undefined,
     ) => {
       if (field === "priority" || field === "assignedUserId") {
         if (val === "" || val === null || typeof val === "undefined")
@@ -130,18 +132,18 @@ export default function AdminOrdersTable({
 
   // --- MENU LOGIC ---
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(
-    null
+    null,
   );
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
   // We need to find the full row object for the currently open menu to pass to handlers
   const menuRow = React.useMemo(
     () => orders.find((o) => o.id === menuRowId),
-    [orders, menuRowId]
+    [orders, menuRowId],
   );
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    rowId: number
+    rowId: number,
   ) => {
     setMenuAnchorEl(event.currentTarget);
     setMenuRowId(rowId);
@@ -158,7 +160,7 @@ export default function AdminOrdersTable({
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setPageSize(parseInt(event.target.value, 10));
     setCurrentPage(1);
@@ -221,21 +223,23 @@ export default function AdminOrdersTable({
             // Remove all borders
             "& .MuiTableCell-root": {
               borderBottom: "none",
-              py: 1, 
+              py: 1,
               px: 2,
               fontSize: "0.875rem",
             },
           }}
         >
-          <TableHead 
-            sx={{ 
-              bgcolor: (theme) => theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+          <TableHead
+            sx={{
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark" ? "#000000" : "#ffffff",
             }}
           >
             <TableRow sx={{ height: 60 }}>
               {[
                 "ACTIONS",
                 "NOTIFICATIONS",
+                "ERP DATA",
                 "USER NAME",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
@@ -254,7 +258,8 @@ export default function AdminOrdersTable({
                 <TableCell
                   key={head}
                   sx={{
-                    color: (theme) => theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                    color: (theme) =>
+                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                   }}
@@ -268,74 +273,101 @@ export default function AdminOrdersTable({
           <TableBody>
             {orders.map((row) => {
               const isDispatched = row.status === "Dispatched";
-              const isAssignedUserLocked = isDispatched || row.status === "F105";
+              const isAssignedUserLocked =
+                isDispatched || row.status === "F105";
 
-              return(
-              <TableRow key={row.id}>
-                {/* ACTIONS */}
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => handleMenuOpen(e, row.id)}
-                    size="small"
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </TableCell>
-
-                <TableCell>
-                     <IconButton 
-                       onClick={() => row.saleOrderNumber && onOpenChat(row.saleOrderNumber, row.id)}
-                       size="small"
-                     >
-                       <Badge badgeContent={row.notificationCount || 0} color="error">
-                         <ChatBubbleOutlineIcon fontSize="small" />
-                       </Badge>
-                     </IconButton>
+              return (
+                <TableRow key={row.id}>
+                  {/* ACTIONS */}
+                  <TableCell>
+                    <IconButton
+                      onClick={(e) => handleMenuOpen(e, row.id)}
+                      size="small"
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
                   </TableCell>
 
-                {/* USER NAME */}
-                <TableCell>{row.user?.name || "-"}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() =>
+                        row.saleOrderNumber &&
+                        onOpenChat(row.saleOrderNumber, row.id)
+                      }
+                      size="small"
+                    >
+                      <Badge
+                        badgeContent={row.notificationCount || 0}
+                        color="error"
+                      >
+                        <ChatBubbleOutlineIcon fontSize="small" />
+                      </Badge>
+                    </IconButton>
+                  </TableCell>
 
-                {/* PRODUCT */}
-                <TableCell>
-                  {findName(lookup.products, row.productId ?? 0)}
-                </TableCell>
+                  <TableCell>
+                    <Tooltip
+                      title={
+                        row.hasMaterialData
+                          ? "ERP Data Imported"
+                          : "Material Data Pending"
+                      }
+                    >
+                      {row.hasMaterialData ? (
+                        <CheckCircleIcon
+                          sx={{ color: theme.palette.success.main }}
+                          fontSize="small"
+                        />
+                      ) : (
+                        <WarningAmberIcon
+                          sx={{ color: theme.palette.warning.main }}
+                          fontSize="small"
+                        />
+                      )}
+                    </Tooltip>
+                  </TableCell>
 
-                {/* SO NUMBER (LINK) */}
-                <TableCell>
-                  <MuiLink
-                    component={Link}
-                    href={`/so-search/${row.saleOrderNumber}`}
-                    underline="hover"
-                    sx={{ fontWeight: 500 }}
-                  >
-                    {row.saleOrderNumber}
-                  </MuiLink>
-                </TableCell>
+                  {/* USER NAME */}
+                  <TableCell>{row.user?.name || "-"}</TableCell>
 
-                {/* OUTBOUND DELIVERY */}
-                <TableCell>{row.outboundDelivery}</TableCell>
+                  {/* PRODUCT */}
+                  <TableCell>
+                    {findName(lookup.products, row.productId ?? 0)}
+                  </TableCell>
 
-                {/* TRANSFER ORDER */}
-                <TableCell>{row.transferOrder}</TableCell>
+                  {/* SO NUMBER (LINK) */}
+                  <TableCell>
+                    <MuiLink
+                      component={Link}
+                      href={`/so-search/${row.saleOrderNumber}`}
+                      underline="hover"
+                      sx={{ fontWeight: 500 }}
+                    >
+                      {row.saleOrderNumber}
+                    </MuiLink>
+                  </TableCell>
 
-                {/* DELIVERY DATE */}
-                <TableCell>
-                  {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
-                </TableCell>
+                  {/* OUTBOUND DELIVERY */}
+                  <TableCell>{row.outboundDelivery}</TableCell>
 
-                {/* PAYMENT */}
-                <TableCell>
-                  {row.paymentClearance ? "Yes" : "No"}
-                </TableCell>
+                  {/* TRANSFER ORDER */}
+                  <TableCell>{row.transferOrder}</TableCell>
 
-                {/* SALES ZONE */}
-                <TableCell>
-                  {findName(lookup.salesZones, row.salesZoneId ?? 0)}
-                </TableCell>
+                  {/* DELIVERY DATE */}
+                  <TableCell>
+                    {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
+                  </TableCell>
 
-                {/* PACK CONFIG */}
-                {/* <TableCell>
+                  {/* PAYMENT */}
+                  <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
+
+                  {/* SALES ZONE */}
+                  <TableCell>
+                    {findName(lookup.salesZones, row.salesZoneId ?? 0)}
+                  </TableCell>
+
+                  {/* PACK CONFIG */}
+                  {/* <TableCell>
                   {findName(
                     lookup.packConfigs,
                     row.packConfigId ?? 0,
@@ -343,52 +375,59 @@ export default function AdminOrdersTable({
                   )}
                 </TableCell> */}
 
-                {/* CUSTOMER */}
-                <TableCell>
-                  {row.customerNameText || findName(lookup.customers, row.customerId ?? 0, "name")}
-                </TableCell>
+                  {/* CUSTOMER */}
+                  <TableCell>
+                    {row.customerNameText ||
+                      findName(lookup.customers, row.customerId ?? 0, "name")}
+                  </TableCell>
 
-                <TableCell sx={{ minWidth: 100 }}>
-                  <Box>
-                    {row.status || "-"}
-                  </Box>
-                </TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>
+                    <Box>{row.status || "-"}</Box>
+                  </TableCell>
 
-                {/* PRIORITY (INLINE EDIT) */}
-                <TableCell sx={{ minWidth: 80 }}>
-                  {inlineEdit?.id === row.id && inlineEdit.field === "priority" ? (
-                    <CustomEditTextField
-                      initialValue={inlineEdit.value}
-                      onCommit={(val) => handleInlineSave(val)}
-                      onCancel={() => setInlineEdit(null)}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        cursor: isDispatched ? "default" : "pointer",
-                        textDecoration: isDispatched ? "none" : "underline dotted",
-                      }}
-                      onClick={() =>
-                        !isDispatched &&
-                        setInlineEdit({
-                          id: row.id,
-                          field: "priority",
-                          value:
-                            row.priority !== undefined && row.priority !== null
-                              ? row.priority
-                              : "",
-                          original: row.priority ?? "",
-                        })
-                      }
-                      title={isDispatched ? "Locked (Dispatched)" : "Click to edit priority"}
-                    >
-                      {row.priority ?? "-"}
-                    </Box>
-                  )}
-                </TableCell>
+                  {/* PRIORITY (INLINE EDIT) */}
+                  <TableCell sx={{ minWidth: 80 }}>
+                    {inlineEdit?.id === row.id &&
+                    inlineEdit.field === "priority" ? (
+                      <CustomEditTextField
+                        initialValue={inlineEdit.value}
+                        onCommit={(val) => handleInlineSave(val)}
+                        onCancel={() => setInlineEdit(null)}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          cursor: isDispatched ? "default" : "pointer",
+                          textDecoration: isDispatched
+                            ? "none"
+                            : "underline dotted",
+                        }}
+                        onClick={() =>
+                          !isDispatched &&
+                          setInlineEdit({
+                            id: row.id,
+                            field: "priority",
+                            value:
+                              row.priority !== undefined &&
+                              row.priority !== null
+                                ? row.priority
+                                : "",
+                            original: row.priority ?? "",
+                          })
+                        }
+                        title={
+                          isDispatched
+                            ? "Locked (Dispatched)"
+                            : "Click to edit priority"
+                        }
+                      >
+                        {row.priority ?? "-"}
+                      </Box>
+                    )}
+                  </TableCell>
 
-                {/* ASSIGNED USER (INLINE EDIT - SELECT) */}
-                <TableCell sx={{ minWidth: 150 }}>
+                  {/* ASSIGNED USER (INLINE EDIT - SELECT) */}
+                  <TableCell sx={{ minWidth: 150 }}>
                     {inlineEdit?.id === row.id &&
                     inlineEdit.field === "assignedUserId" ? (
                       <FormControl variant="standard" size="small" fullWidth>
@@ -396,11 +435,16 @@ export default function AdminOrdersTable({
                           value={inlineEdit.value ?? ""}
                           onChange={(e) => {
                             const selected =
-                              e.target.value === "" ? null : Number(e.target.value);
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value);
                             handleInlineSave(selected);
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === " " || (e.ctrlKey && e.key.toLowerCase() === "a")) {
+                            if (
+                              e.key === " " ||
+                              (e.ctrlKey && e.key.toLowerCase() === "a")
+                            ) {
                               e.stopPropagation();
                             }
                           }}
@@ -420,7 +464,9 @@ export default function AdminOrdersTable({
                       <Box
                         sx={{
                           cursor: isAssignedUserLocked ? "default" : "pointer",
-                          textDecoration: isAssignedUserLocked ? "none" : "underline dotted",
+                          textDecoration: isAssignedUserLocked
+                            ? "none"
+                            : "underline dotted",
                         }}
                         onClick={() =>
                           !isAssignedUserLocked &&
@@ -431,24 +477,35 @@ export default function AdminOrdersTable({
                             original: row.assignedUserId ?? "",
                           })
                         }
-                        title={isAssignedUserLocked ? "Locked (Packed/Dispatched)" : "Click to assign user"}
+                        title={
+                          isAssignedUserLocked
+                            ? "Locked (Packed/Dispatched)"
+                            : "Click to assign user"
+                        }
                       >
                         {row.assignedUser?.name ||
-                          findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
+                          findName(
+                            lookup.assignableUsers,
+                            row.assignedUserId ?? 0,
+                          ) ||
                           "-"}
                       </Box>
                     )}
                   </TableCell>
 
-                {/* SPECIAL REMARKS */}
-                {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}
-              </TableRow>
+                  {/* SPECIAL REMARKS */}
+                  {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}
+                </TableRow>
               );
             })}
 
             {orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={18} align="center" sx={{ py: 4 , bgcolor: lightYellow,}}>
+                <TableCell
+                  colSpan={18}
+                  align="center"
+                  sx={{ py: 4, bgcolor: lightYellow }}
+                >
                   No orders found.
                 </TableCell>
               </TableRow>
@@ -483,7 +540,7 @@ export default function AdminOrdersTable({
       >
         <Tooltip title={isAssigned ? "Order assigned" : ""}>
           <Box>
-            <MenuItem 
+            <MenuItem
               onClick={() => {
                 if (menuRow) onEdit?.(menuRow);
                 handleMenuClose();
@@ -506,7 +563,11 @@ export default function AdminOrdersTable({
           sx={{
             color: menuRow?.hasMaterialData ? "text.disabled" : "error.main",
           }}
-          disabled={menuRow?.hasMaterialData || isAssigned || menuRow?.status === "Dispatched"}
+          disabled={
+            menuRow?.hasMaterialData ||
+            isAssigned ||
+            menuRow?.status === "Dispatched"
+          }
         >
           <ListItemIcon sx={{ color: "inherit" }}>
             <DeleteIcon fontSize="small" />

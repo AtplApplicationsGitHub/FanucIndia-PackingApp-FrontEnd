@@ -11,22 +11,22 @@ import {
   TableRow,
   TablePagination,
   Paper,
-  MenuItem,
-  Select,
   TextField,
-  FormControl,
   Link as MuiLink,
   alpha,
   useTheme,
   Checkbox,
   Snackbar,
-  Button,
   Alert,
+  Tooltip,
 } from "@mui/material";
-import { CircleCheck, AlertCircle } from "lucide-react";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Link from "next/link";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
-
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import dayjs from "dayjs";
 import { useAssign } from "@/app/admin/components/hooks/UseAssign";
 import AssignOrdersToolbar from "./AssignOrdersToolbar";
 
@@ -43,7 +43,16 @@ export default function AssignSO() {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
-  const { orders, lookup, loading, error, updateInline, bulkUpdate, bulkImportErpData, updateSkipStage } = useAssign();
+  const {
+    orders,
+    lookup,
+    loading,
+    error,
+    updateInline,
+    bulkUpdate,
+    bulkImportErpData,
+    updateSkipStage,
+  } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -128,26 +137,30 @@ export default function AssignSO() {
       try {
         await updateSkipStage(ordersToUpdate, shouldSkip);
         setSnackbar({
-           open: true,
-           message: shouldSkip
-             ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
-             : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
-           severity: "success",
+          open: true,
+          message: shouldSkip
+            ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
+            : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
+          severity: "success",
         });
         setSelectedIds([]);
       } catch (err: any) {
-         setSnackbar({
-           open: true,
-           message: err.message || "Failed to update",
-           severity: "error",
-         });
+        setSnackbar({
+          open: true,
+          message: err.message || "Failed to update",
+          severity: "error",
+        });
       }
     }
   };
 
   const handleImportERPData = async () => {
     if (selectedIds.length === 0) {
-      setSnackbar({ open: true, message: "Please select at least one order", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Please select at least one order",
+        severity: "warning",
+      });
       return;
     }
 
@@ -187,14 +200,15 @@ export default function AssignSO() {
         setSnackbar({ open: true, message: msg, severity: "error" });
       } else {
         // If no failures, show a clean success message without mentioning skips or "not found"
-        const msg = successes.length > 0 
-          ? `Imported ${successes.length} order(s) successfully` 
-          : "ERP data import process completed";
-        
-        setSnackbar({ 
-          open: true, 
-          message: msg, 
-          severity: "success" 
+        const msg =
+          successes.length > 0
+            ? `Imported ${successes.length} order(s) successfully`
+            : "ERP data import process completed";
+
+        setSnackbar({
+          open: true,
+          message: msg,
+          severity: "success",
         });
         setSelectedIds([]);
       }
@@ -218,15 +232,24 @@ export default function AssignSO() {
 
       const matchesPayment =
         !paymentFilter ||
-        (paymentFilter === "true" ? order.paymentClearance : !order.paymentClearance);
+        (paymentFilter === "true"
+          ? order.paymentClearance
+          : !order.paymentClearance);
 
-      const matchesZone = !zoneFilter || String(order.salesZoneId) === zoneFilter;
+      const matchesZone =
+        !zoneFilter || String(order.salesZoneId) === zoneFilter;
 
-      const matchesStatus = !statusFilter || order.status === statusFilter;
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "None"
+          ? !order.status
+          : order.status === statusFilter);
 
       let matchesDate = true;
       if (startDate || endDate) {
-        const orderDate = order.deliveryDate ? new Date(order.deliveryDate) : null;
+        const orderDate = order.deliveryDate
+          ? new Date(order.deliveryDate)
+          : null;
         if (!orderDate) {
           matchesDate = false;
         } else {
@@ -246,9 +269,94 @@ export default function AssignSO() {
         }
       }
 
-      return matchesSearch && matchesPayment && matchesZone && matchesStatus && matchesDate;
+      return (
+        matchesSearch &&
+        matchesPayment &&
+        matchesZone &&
+        matchesStatus &&
+        matchesDate
+      );
     });
-  }, [orders, searchInput, paymentFilter, zoneFilter, statusFilter, startDate, endDate]);
+  }, [
+    orders,
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    startDate,
+    endDate,
+  ]);
+
+  const handleExcelExport = React.useCallback(async () => {
+  const visibleRows = filteredOrders;
+
+  const exportRows =
+    selectedIds.length > 0
+      ? visibleRows.filter((row) => selectedIds.includes(row.id))
+      : visibleRows;
+
+  if (!exportRows.length) return;
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("ASSIGN_SO");
+
+  worksheet.columns = [
+    { header: "ERP DATA", key: "erpData", width: 15 },
+    { header: "PRODUCT", key: "product", width: 20 },
+    { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 },
+    { header: "OUT BOUND DELIVERY", key: "outboundDelivery", width: 20 },
+    { header: "TRANSFER ORDER", key: "transferOrder", width: 20 },
+    { header: "REQUIRED DATE", key: "requiredDate", width: 18 },
+    { header: "PAYMENT", key: "payment", width: 12 },
+    { header: "SALES ZONE", key: "salesZone", width: 18 },
+    { header: "CUSTOMER", key: "customer", width: 25 },
+    { header: "STATUS", key: "status", width: 12 },
+    { header: "PRIORITY", key: "priority", width: 12 },
+    { header: "ASSIGNED USER", key: "assignedUser", width: 20 },
+  ];
+
+  worksheet.getRow(1).font = { bold: true };
+
+  exportRows.forEach((row) => {
+    worksheet.addRow({
+      erpData: row.hasMaterialData ? "Imported" : "Pending",
+      product:
+        row.product?.name ||
+        findName(lookup.products, row.productId ?? 0) ||
+        "-",
+      saleOrderNumber: row.saleOrderNumber || "-",
+      outboundDelivery: row.outboundDelivery || "-",
+      transferOrder: row.transferOrder || "-",
+      requiredDate: row.deliveryDate
+        ? formatDate(row.deliveryDate)
+        : "-",
+      payment: row.paymentClearance ? "Yes" : "No",
+      salesZone:
+        row.salesZone?.name ||
+        findName(lookup.salesZones, row.salesZoneId ?? 0) ||
+        "-",
+      customer:
+        row.customer?.name ||
+        row.customerNameText ||
+        row.customerName ||
+        "-",
+      status: row.status ?? "",
+      priority: row.priority ?? "",
+      assignedUser: row.assignedUser?.name || "-",
+    });
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const fileName = `ASSIGN_SO_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`;
+
+  saveAs(blob, fileName);
+}, [filteredOrders, selectedIds, lookup]);
 
   const paginatedOrders = React.useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -267,13 +375,17 @@ export default function AssignSO() {
 
   const handleSelectOne = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
     );
   };
 
-  const numSelectedOnPage = paginatedOrders.filter((row) => selectedIds.includes(row.id)).length;
-  const isAllSelectedOnPage = paginatedOrders.length > 0 && numSelectedOnPage === paginatedOrders.length;
-  const isIndeterminate = numSelectedOnPage > 0 && numSelectedOnPage < paginatedOrders.length;
+  const numSelectedOnPage = paginatedOrders.filter((row) =>
+    selectedIds.includes(row.id),
+  ).length;
+  const isAllSelectedOnPage =
+    paginatedOrders.length > 0 && numSelectedOnPage === paginatedOrders.length;
+  const isIndeterminate =
+    numSelectedOnPage > 0 && numSelectedOnPage < paginatedOrders.length;
 
   const handleInlineSave = (overrideValue?: string | number | null) => {
     if (!inlineEdit) return;
@@ -284,10 +396,13 @@ export default function AssignSO() {
         const n = Number(val);
         return Number.isNaN(n) ? null : n;
       }
-      return typeof val === "string" ? val.trim() : val ?? "";
+      return typeof val === "string" ? val.trim() : (val ?? "");
     };
 
-    const nextValue = normalize(inlineEdit.field, overrideValue ?? inlineEdit.value);
+    const nextValue = normalize(
+      inlineEdit.field,
+      overrideValue ?? inlineEdit.value,
+    );
 
     updateInline(inlineEdit.id, inlineEdit.field, nextValue);
     setInlineEdit(null);
@@ -323,21 +438,17 @@ export default function AssignSO() {
 
   React.useEffect(() => {
     if (error) {
-      setSnackbar({ open: true, message: typeof error === "string" ? error : "An error occurred", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: typeof error === "string" ? error : "An error occurred",
+        severity: "error",
+      });
     }
   }, [error]);
 
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "400px" }}>
-        <Box sx={{ p: 3, textAlign: "center" }}>Loading orders...</Box>
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden", mt: 0 }}>
-      <Box sx={{ mb: 1.5 }}>
+    <Box sx={{ width: "100%", borderRadius: 0, overflow: "visible", mt: 0 }}>
+      <Box sx={{ mb: 1 }}>
         <AssignOrdersToolbar
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
@@ -358,14 +469,19 @@ export default function AssignSO() {
           onAssignUser={handleAssignUser}
           onSkipIssueStage={handleSkipIssueStage}
           onImportERPData={handleImportERPData}
+          onExcelExport={handleExcelExport}
         />
       </Box>
 
-
-      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ borderRadius: 0, width: "100%", overflowX: "auto" }}
+      >
         <Table
           sx={{
             minWidth: 650,
+            width: "100%",
             "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
               backgroundColor: lightYellow,
             },
@@ -393,12 +509,14 @@ export default function AssignSO() {
                   onChange={handleSelectAll}
                   sx={{
                     p: 0.5,
-                    color: theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                    color:
+                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
                     "&.Mui-checked": { color: theme.palette.primary.main },
                   }}
                 />
               </TableCell>
               {[
+                "ERP DATA",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
                 "OUT BOUND DELIVERY",
@@ -414,7 +532,8 @@ export default function AssignSO() {
                 <TableCell
                   key={head}
                   sx={{
-                    color: theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                    color:
+                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                   }}
@@ -446,23 +565,45 @@ export default function AssignSO() {
                 // const isAssignedUserLocked = isDispatched || row.status === "F105"; // unused for now
 
                 return (
-                  <TableRow key={row.id} selected={selectedIds.includes(row.id)}>
+                  <TableRow
+                    key={row.id}
+                    selected={selectedIds.includes(row.id)}
+                  >
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <Checkbox
-                          checked={selectedIds.includes(row.id)}
-                          onChange={() => handleSelectOne(row.id)}
-                          sx={{ p: 0.5 }}
-                        />
-                        {row.hasMaterialData ? (
-                          <CircleCheck size={18} color={theme.palette.success.main} />
-                        ) : (
-                          <AlertCircle size={18} color={theme.palette.warning.main} />
-                        )}
-                      </Box>
+                      <Checkbox
+                        checked={selectedIds.includes(row.id)}
+                        onChange={() => handleSelectOne(row.id)}
+                        sx={{ p: 0.5 }}
+                      />
                     </TableCell>
 
-                    <TableCell>{row.product?.name || findName(lookup.products, row.productId ?? 0) || "-"}</TableCell>
+                    <TableCell>
+                      <Tooltip
+                        title={
+                          row.hasMaterialData
+                            ? "ERP Data Imported"
+                            : "Material Data Pending"
+                        }
+                      >
+                        {row.hasMaterialData ? (
+                          <CheckCircleIcon
+                            sx={{ color: theme.palette.success.main }}
+                            fontSize="small"
+                          />
+                        ) : (
+                          <WarningAmberIcon
+                            sx={{ color: theme.palette.warning.main }}
+                            fontSize="small"
+                          />
+                        )}
+                      </Tooltip>
+                    </TableCell>
+
+                    <TableCell>
+                      {row.product?.name ||
+                        findName(lookup.products, row.productId ?? 0) ||
+                        "-"}
+                    </TableCell>
 
                     <TableCell>
                       <MuiLink
@@ -479,12 +620,16 @@ export default function AssignSO() {
 
                     <TableCell>{row.transferOrder || "-"}</TableCell>
 
-                    <TableCell>{row.deliveryDate ? formatDate(row.deliveryDate) : "-"}</TableCell>
+                    <TableCell>
+                      {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
+                    </TableCell>
 
                     <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
 
                     <TableCell>
-                      {row.salesZone?.name || findName(lookup.salesZones, row.salesZoneId ?? 0) || "-"}
+                      {row.salesZone?.name ||
+                        findName(lookup.salesZones, row.salesZoneId ?? 0) ||
+                        "-"}
                     </TableCell>
 
                     <TableCell>{row.customerNameText || "-"}</TableCell>
@@ -494,7 +639,8 @@ export default function AssignSO() {
                     </TableCell>
 
                     <TableCell sx={{ minWidth: 80 }}>
-                      {inlineEdit?.id === row.id && inlineEdit.field === "priority" ? (
+                      {inlineEdit?.id === row.id &&
+                      inlineEdit.field === "priority" ? (
                         <CustomEditTextField
                           initialValue={inlineEdit.value}
                           onCommit={(val) => handleInlineSave(val)}
@@ -504,7 +650,9 @@ export default function AssignSO() {
                         <Box
                           sx={{
                             cursor: isDispatched ? "default" : "pointer",
-                            textDecoration: isDispatched ? "none" : "underline dotted",
+                            textDecoration: isDispatched
+                              ? "none"
+                              : "underline dotted",
                           }}
                           onClick={() =>
                             !isDispatched &&
@@ -523,7 +671,10 @@ export default function AssignSO() {
 
                     <TableCell sx={{ minWidth: 150 }}>
                       {row.assignedUser?.name ||
-                        findName(lookup.assignableUsers, row.assignedUserId ?? 0) ||
+                        findName(
+                          lookup.assignableUsers,
+                          row.assignedUserId ?? 0,
+                        ) ||
                         "-"}
                     </TableCell>
                   </TableRow>

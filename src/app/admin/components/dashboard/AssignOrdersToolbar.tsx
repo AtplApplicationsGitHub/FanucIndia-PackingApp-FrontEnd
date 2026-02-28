@@ -12,20 +12,33 @@ import {
   MenuItem,
   Menu,
   Typography,
-  Divider,
+  ListItemIcon,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import ListIcon from "@mui/icons-material/List";
 
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
-import { X, UploadCloud, FileSpreadsheet, CheckSquare } from "lucide-react";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import FastForwardOutlinedIcon from "@mui/icons-material/FastForwardOutlined";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
+import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import { LookupRow } from "@/app/admin/components/types/admin";
 
-const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
+const STATUS_OPTIONS = ["None", "R105", "W105"];
 
 type Props = {
   searchInput: string;
@@ -50,6 +63,8 @@ type Props = {
   onAssignUser?: (userId: string) => Promise<void>;
   onSkipIssueStage?: (val: string) => Promise<void>;
   onImportERPData?: () => void;
+  onExcelExport?: () => void;
+  onExcelImport?: () => void;
 };
 
 export default function AssignOrdersToolbar({
@@ -72,59 +87,88 @@ export default function AssignOrdersToolbar({
   onAssignUser,
   onSkipIssueStage,
   onImportERPData,
+  onExcelExport,
+  onExcelImport,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  const [assignUser, setAssignUser] = useState<string>("placeholder");
-  const [skipIssue, setSkipIssue] = useState<string>("placeholder");
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
-  const handleActionsClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const [skipIssueDialogOpen, setSkipIssueDialogOpen] = useState(false);
+  const [tempSkipIssue, setTempSkipIssue] = useState<string>("placeholder");
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const handleSnackbarClose = () => setSnackbarOpen(false);
+
+  const handleActionClick = (action: () => void) => {
+    if (selectedIds.length === 0) {
+      setSnackbarOpen(true);
+      handleMenuClose();
+      return;
+    }
+    action();
+    handleMenuClose();
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleActionsClose = () => {
+  const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
   const handleAssignChange = async (e: any) => {
     const val = e.target.value;
     if (val !== "placeholder" && onAssignUser) {
-      setAssignUser(val);
       await onAssignUser(val);
-      setAssignUser("placeholder");
     }
   };
 
   const handleSkipChange = async (e: any) => {
     const val = e.target.value;
     if (val !== "placeholder" && onSkipIssueStage) {
-      setSkipIssue(val);
       await onSkipIssueStage(val);
-      setSkipIssue("placeholder");
     }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 1.5, pb: 1 }}>
-        <Box
+      <Box
+        sx={{
+          width: "100%",
+          mt: 1,
+          px: 1,
+          pb: 0,
+          mb: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {/* Main Floating Toolbar */}
+        <Paper
+          elevation={2}
           sx={{
+            mb: 0,
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            width: "fit-content",
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 1.5, md: 1.5 },
-            width: "100%",
-            justifyContent: "flex-start",
             alignItems: "center",
             flexWrap: "wrap",
-            pt: "0.1%",
+            gap: 2,
+            px: 2,
+            py: 1.5,
+            mx: "auto",
           }}
         >
           {/* Search Field */}
-          <Paper
-            elevation={0}
+          <Box
             component="form"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={(e: React.FormEvent) => e.preventDefault()}
             sx={{
               p: "2px 4px",
               display: "flex",
@@ -133,6 +177,7 @@ export default function AssignOrdersToolbar({
               border: "1px solid #e0e0e0",
               borderRadius: "4px",
               height: 40,
+              bgcolor: "#fff",
             }}
           >
             <InputBase
@@ -154,7 +199,7 @@ export default function AssignOrdersToolbar({
             <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
               <SearchIcon sx={{ fontSize: 20 }} />
             </IconButton>
-          </Paper>
+          </Box>
 
           {/* Payment Filter */}
           <FormControl
@@ -167,9 +212,7 @@ export default function AssignOrdersToolbar({
               onChange={(e) => onPaymentFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "14px" }}
             >
-              <MenuItem value="">
-                <em>Payment</em>
-              </MenuItem>
+              <MenuItem value="">PAYMENT</MenuItem>
               <MenuItem value="true">Yes</MenuItem>
               <MenuItem value="false">No</MenuItem>
             </Select>
@@ -186,9 +229,7 @@ export default function AssignOrdersToolbar({
               onChange={(e) => onZoneFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "14px" }}
             >
-              <MenuItem value="">
-                <em>Sales Zone</em>
-              </MenuItem>
+              <MenuItem value="">SALES ZONE</MenuItem>
               {salesZones.map((zone) => (
                 <MenuItem key={zone.id} value={String(zone.id)}>
                   {String(zone.name || zone.code || zone.id)}
@@ -208,9 +249,7 @@ export default function AssignOrdersToolbar({
               onChange={(e) => onStatusFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "14px" }}
             >
-              <MenuItem value="">
-                <em>Status</em>
-              </MenuItem>
+              <MenuItem value="">STATUS</MenuItem>
               {STATUS_OPTIONS.map((status) => (
                 <MenuItem key={status} value={status}>
                   {status}
@@ -221,12 +260,15 @@ export default function AssignOrdersToolbar({
 
           {/* Date Pickers */}
           <DatePicker
-            label="From"
+            label="FROM"
             value={startDate ? dayjs(startDate) : null}
             onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
             slotProps={{
-              field: { clearable: true, onClear: () => onStartDateChange(null) },
+              field: {
+                clearable: true,
+                onClear: () => onStartDateChange(null),
+              },
               textField: {
                 size: "small",
                 variant: "outlined",
@@ -240,7 +282,7 @@ export default function AssignOrdersToolbar({
           />
 
           <DatePicker
-            label="To"
+            label="TO"
             value={endDate ? dayjs(endDate) : null}
             onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
@@ -259,193 +301,300 @@ export default function AssignOrdersToolbar({
             }}
           />
 
-          {/* Clear Button */}
-          <Button
+          {/* Clear Button (Icon Only) */}
+          <IconButton
             onClick={onClear}
-            startIcon={<X size={16} />}
+            title="Clear Filters"
             sx={{
-              bgcolor: "#eeeeee",
-              color: "#333",
-              borderRadius: "4px",
-              fontWeight: 700,
-              fontSize: "13px",
-              height: 40,
-              px: 2,
-              textTransform: "none",
-              border: "1px solid #e0e0e0",
+              color: "text.secondary",
               "&:hover": {
-                bgcolor: (theme) => theme.palette.primary.main,
-                color: "#000",
+                color: "error.main",
+                opacity: 0.8,
               },
             }}
           >
-            CLEAR
-          </Button>
+            <CloseIcon fontSize="small" />
+          </IconButton>
 
-          {/* Actions Dropdown */}
-          <Button
-            id="actions-button"
+          {/* Hamburger Menu Actions Dropdown */}
+          <IconButton
+            onClick={handleMenuOpen}
+            sx={{ ml: { xs: 0, md: "auto" } }}
             aria-controls={open ? "actions-menu" : undefined}
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
-            variant="contained"
-            disableElevation
-            onClick={handleActionsClick}
-            endIcon={<KeyboardArrowDownIcon />}
-            sx={{
-              bgcolor: "#facd02",
-              color: "#000",
-              fontWeight: 700,
-              fontSize: "14px",
-              height: 40,
-              px: 3,
-              borderRadius: 0,
-              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-              "&:hover": {
-                bgcolor: "#e5bb01",
+          >
+            <ListIcon />
+          </IconButton>
+        </Paper>
+
+        <Menu
+          id="actions-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          PaperProps={{
+            elevation: 3,
+            sx: {
+              mt: 1.5,
+              minWidth: 240,
+              borderRadius: "8px",
+              overflow: "hidden",
+              "& .MuiMenuItem-root": {
+                px: 2.5,
+                py: 1.5,
+                gap: 1.5,
+                transition: "background-color 0.2s ease",
               },
-              textTransform: "uppercase",
-              ml: { md: "auto" },
+              "& .MuiListItemIcon-root": {
+                minWidth: "auto",
+              },
+            },
+          }}
+        >
+          {/* General Actions */}
+          <MenuItem
+            onClick={() => {
+              onExcelExport?.();
+              handleMenuClose();
             }}
           >
-            ACTIONS
-          </Button>
-          <Menu
-            id="actions-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleActionsClose}
-            MenuListProps={{
-              "aria-labelledby": "actions-button",
-            }}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                minWidth: 260,
-                boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
-                borderRadius: "4px",
-              },
+            <ListItemIcon>
+              <FileDownloadOutlinedIcon fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText
+              primary="EXCEL EXPORT"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              onExcelImport?.();
+              handleMenuClose();
             }}
           >
-            <MenuItem onClick={handleActionsClose} sx={{ py: 1.5, gap: 1.5 }}>
-              <FileSpreadsheet size={18} color="#2e7d32" /> Export
-            </MenuItem>
-            <MenuItem onClick={handleActionsClose} sx={{ py: 1.5, gap: 1.5 }}>
-              <UploadCloud size={18} color="#0288d1" /> Upload
-            </MenuItem>
+            <ListItemIcon>
+              <FileUploadOutlinedIcon fontSize="small" color="info" />
+            </ListItemIcon>
+            <ListItemText
+              primary="EXCEL IMPORT"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
 
-            {selectedIds.length > 0 && (
-              <Box>
-                <Divider sx={{ my: 1, borderColor: "#eeeeee" }} />
-                <Box sx={{ px: 2.5, py: 1.5 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#ed6c02", mb: 2.5 }}>
-                    <CheckSquare size={18} />
-                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "14px" }}>
-                      {selectedIds.length} Selected Action{selectedIds.length > 1 ? "s" : ""}
-                    </Typography>
-                  </Box>
+          {/* Highlighted Banner for Selected Count (Only renders when items are actually selected) */}
+          {selectedIds.length > 0 && (
+            <Box
+              sx={{
+                px: 2.5,
+                py: 1.2,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                bgcolor: "#fff8e1",
+                color: "#ed6c02",
+                borderTop: "1px solid #eeeeee",
+                borderBottom: "1px solid #eeeeee",
+              }}
+            >
+              <CheckBoxOutlinedIcon fontSize="small" />
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                {selectedIds.length} Order{selectedIds.length > 1 ? "s" : ""}{" "}
+                Selected
+              </Typography>
+            </Box>
+          )}
 
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-                    <FormControl size="small" fullWidth>
-                      <Select
-                        value={assignUser}
-                        displayEmpty
-                        onChange={(e) => {
-                          handleAssignChange(e);
-                          handleActionsClose();
-                        }}
-                        sx={{
-                          height: 40,
-                          borderRadius: "4px",
-                          bgcolor: "#fff",
-                          fontSize: "14px",
-                          border: "1px solid #facd02",
-                          "& fieldset": { border: "none" },
-                          "& .MuiSelect-select": { py: 0, px: 2, display: "flex", alignItems: "center" },
-                        }}
-                      >
-                        <MenuItem value="placeholder" disabled>
-                          Assign to...
-                        </MenuItem>
-                        <MenuItem value="unassign">
-                          <em>Unassigned</em>
-                        </MenuItem>
-                        {assignableUsers.map((u: any) => (
-                          <MenuItem key={u.id} value={u.id}>
-                            {u.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+          {/* Actions requiring selection - Now always visible */}
+          <MenuItem
+            onClick={() =>
+              handleActionClick(() => {
+                onImportERPData?.();
+              })
+            }
+          >
+            <ListItemIcon>
+              <StorageOutlinedIcon fontSize="small" sx={{ color: "#ed6c02" }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="IMPORT ERP DATA"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
 
-                    <FormControl size="small" fullWidth>
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: -9,
-                          left: 10,
-                          bgcolor: "#fff",
-                          px: 0.5,
-                          color: "#ed6c02",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          zIndex: 1,
-                        }}
-                      >
-                        Skip Issue Stage
-                      </Box>
-                      <Select
-                        value={skipIssue}
-                        displayEmpty
-                        onChange={(e) => {
-                          handleSkipChange(e);
-                          handleActionsClose();
-                        }}
-                        sx={{
-                          height: 40,
-                          borderRadius: "4px",
-                          bgcolor: "#fff",
-                          fontSize: "14px",
-                          border: "1px solid #e0e0e0",
-                          "& fieldset": { border: "none" },
-                        }}
-                      >
-                        <MenuItem value="placeholder" disabled>
-                          <em>None</em>
-                        </MenuItem>
-                        <MenuItem value="yes">Yes</MenuItem>
-                        <MenuItem value="no">No</MenuItem>
-                      </Select>
-                    </FormControl>
+          <MenuItem
+            onClick={() => handleActionClick(() => setAssignDialogOpen(true))}
+          >
+            <ListItemIcon>
+              <PersonAddOutlinedIcon fontSize="small" color="secondary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="ASSIGN USER"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
 
-                    <Button
-                      variant="contained"
-                      disableElevation
-                      onClick={() => {
-                        handleActionsClose();
-                        onImportERPData?.();
-                      }}
-                      sx={{
-                        height: 40,
-                        bgcolor: "#facd02",
-                        color: "#000",
-                        fontWeight: 700,
-                        fontSize: "13px",
-                        textTransform: "uppercase",
-                        borderRadius: "4px",
-                        "&:hover": {
-                          bgcolor: "#e5bb01",
-                        },
-                      }}
-                    >
-                      Import ERP Data
-                    </Button>
-                  </Box>
-                </Box>
-              </Box>
-            )}
-          </Menu>
-        </Box>
+          <MenuItem
+            onClick={() =>
+              handleActionClick(() => setSkipIssueDialogOpen(true))
+            }
+          >
+            <ListItemIcon>
+              <FastForwardOutlinedIcon fontSize="small" color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="SKIP ISSUE STAGE"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
+        </Menu>
+        <Dialog
+          open={assignDialogOpen}
+          onClose={() => {
+            setAssignDialogOpen(false);
+            setTempAssignUser("placeholder");
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
+            ASSIGN USER
+          </DialogTitle>
+          <DialogContent>
+            <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+              <Select
+                value={tempAssignUser}
+                displayEmpty
+                onChange={(e) => setTempAssignUser(e.target.value)}
+                sx={{ fontSize: "14px" }}
+              >
+                <MenuItem value="placeholder" disabled>
+                  SELECT USER
+                </MenuItem>
+                <MenuItem value="unassign">UNASSIGNED</MenuItem>
+                {assignableUsers.map((u: any) => (
+                  <MenuItem key={u.id} value={u.id}>
+                    {u.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => {
+                setAssignDialogOpen(false);
+                setTempAssignUser("placeholder");
+              }}
+              color="inherit"
+            >
+              CANCEL
+            </Button>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={async () => {
+                if (tempAssignUser !== "placeholder" && onAssignUser) {
+                  await onAssignUser(tempAssignUser);
+                }
+                setAssignDialogOpen(false);
+                setTempAssignUser("placeholder");
+              }}
+              sx={{
+                bgcolor: "#facd02",
+                color: "#000",
+                "&:hover": { bgcolor: "#e5bb01" },
+              }}
+            >
+              SUBMIT
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Skip Issue Stage Dialog */}
+        <Dialog
+          open={skipIssueDialogOpen}
+          onClose={() => {
+            setSkipIssueDialogOpen(false);
+            setTempSkipIssue("placeholder");
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
+            SKIP ISSUE STAGE
+          </DialogTitle>
+          <DialogContent>
+            <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+              <Select
+                value={tempSkipIssue}
+                displayEmpty
+                onChange={(e) => setTempSkipIssue(e.target.value)}
+                sx={{ fontSize: "14px" }}
+              >
+                <MenuItem value="placeholder" disabled>
+                  SELECT OPTION
+                </MenuItem>
+                <MenuItem value="yes">YES</MenuItem>
+                <MenuItem value="no">NO</MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => {
+                setSkipIssueDialogOpen(false);
+                setTempSkipIssue("placeholder");
+              }}
+              color="inherit"
+            >
+              CANCEL
+            </Button>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={async () => {
+                if (tempSkipIssue !== "placeholder" && onSkipIssueStage) {
+                  await onSkipIssueStage(tempSkipIssue);
+                }
+                setSkipIssueDialogOpen(false);
+                setTempSkipIssue("placeholder");
+              }}
+              sx={{
+                bgcolor: "#facd02",
+                color: "#000",
+                "&:hover": { bgcolor: "#e5bb01" },
+              }}
+            >
+              SUBMIT
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="info"
+            sx={{ width: "100%" }}
+          >
+            Please select Order(s)
+          </Alert>
+        </Snackbar>
       </Box>
     </LocalizationProvider>
   );
