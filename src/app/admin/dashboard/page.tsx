@@ -194,7 +194,7 @@ export default function AdminDashboard() {
 
         {/* ORDERS VIEW */}
         {admin.view === "orders" && (
-          <Box sx={{ py: 4, width: "100%" }}>
+          <Box sx={{ pt: 1, pb: 4, width: "100%" }}>
             <motion.div
               initial={{ opacity: 0, y: -30, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}

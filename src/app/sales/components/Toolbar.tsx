@@ -18,12 +18,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import { 
   Plus, 
-  Download, 
   UploadCloud, 
   ChevronDown, 
   FileSpreadsheet, 
-  PackagePlus,
-  Filter,
   X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -100,179 +97,170 @@ export default function SalesDashboardToolbar({
         <Box
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", lg: "row" },
+            flexDirection: { xs: "column", xl: "row" },
             justifyContent: "space-between",
-            alignItems: { xs: "stretch", lg: "center" },
-            mb: 1,
-            p: 1,
-            gap: 1,
+            alignItems: { xs: "flex-start", xl: "center" },
+            width: "100%",
+            gap: 2,
+            pt: 0,
+            pb: 1,
           }}
         >
           {/* SEARCH & FILTERS (Left Side) */}
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={1}
-            alignItems="center"
-            flexGrow={1}
-            flexWrap="wrap"
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 1.5,
+              alignItems: "center",
+              flexWrap: "wrap",
+              justifyContent: "flex-start",
+              flexGrow: 1,
+            }}
           >
             <Paper
-              elevation={0}
-              component="form"
-              onSubmit={(e) => e.preventDefault()}
-              sx={{
-                p: "2px 4px",
-                display: "flex",
-                alignItems: "center",
-                width: { xs: "100%", md: 240 },
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                height: 40,
-                transition: "all 0.2s",
-                "&:focus-within": {
-                  borderColor: "primary.main",
-                  boxShadow: "0 0 0 2px rgba(255, 215, 0, 0.1)",
-                },
-              }}
-            >
-              <InputBase
-                sx={{ ml: 1, flex: 1, fontSize: "14px" }}
-                placeholder="Search orders..."
-                inputProps={{ "aria-label": "search" }}
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-              {searchValue && (
-                <IconButton
-                  size="small"
-                  onClick={() => onSearchChange("")}
-                  sx={{ p: "5px" }}
-                >
-                  <ClearIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              )}
-              <IconButton type="button" sx={{ p: "8px" }} size="small">
-                <SearchIcon sx={{ fontSize: 20, color: "text.secondary" }} />
+            elevation={0}
+            component="form"
+            onSubmit={(e) => e.preventDefault()}
+            sx={{
+              p: "2px 4px",
+              display: "flex",
+              alignItems: "center",
+              width: { xs: "100%", sm: 220 },
+              border: "1px solid #e0e0e0",
+              borderRadius: "4px",
+              height: 40,
+            }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1, fontSize: "14px" }}
+              placeholder="Search orders..."
+              inputProps={{ "aria-label": "search" }}
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+            {searchValue && (
+              <IconButton
+                sx={{ p: "5px" }}
+                aria-label="clear"
+                onClick={() => onSearchChange("")}
+              >
+                <ClearIcon sx={{ fontSize: 20 }} />
               </IconButton>
-            </Paper>
+            )}
+            <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
+              <SearchIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Paper>
 
-            <FormControl size="small" sx={{ minWidth: 110 }}>
-              <Select
-                value={paymentFilter}
-                displayEmpty
-                onChange={(e) => onPaymentFilterChange(e.target.value)}
-                sx={{ 
-                  height: 40, 
-                  fontSize: "13px", 
-                  borderRadius: "8px",
-                  "& .MuiSelect-select": { py: 1 }
-                }}
-              >
-                <MenuItem value="">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Filter size={14} /> <em>Payment</em>
-                  </Box>
+          <FormControl size="small" sx={{ minWidth: 120, bgcolor: "background.paper" }}>
+            <Select
+              value={paymentFilter}
+              displayEmpty
+              onChange={(e) => onPaymentFilterChange(e.target.value)}
+              sx={{ height: 40, fontSize: "14px" }}
+            >
+              <MenuItem value=""><em>Payment</em></MenuItem>
+              <MenuItem value="true">Paid</MenuItem>
+              <MenuItem value="false">Unpaid</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+            <Select
+              value={zoneFilter}
+              displayEmpty
+              onChange={(e) => onZoneFilterChange(e.target.value)}
+              sx={{ height: 40, fontSize: "14px" }}
+            >
+              <MenuItem value=""><em>Sales Zone</em></MenuItem>
+              {salesZones.map((zone) => (
+                <MenuItem key={zone.id} value={String(zone.id)}>
+                  {zone.name}
                 </MenuItem>
-                <MenuItem value="true">Paid</MenuItem>
-                <MenuItem value="false">Unpaid</MenuItem>
-              </Select>
-            </FormControl>
+              ))}
+            </Select>
+          </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <Select
-                value={zoneFilter}
-                displayEmpty
-                onChange={(e) => onZoneFilterChange(e.target.value)}
-                sx={{ 
-                  height: 40, 
-                  fontSize: "13px", 
-                  borderRadius: "8px",
-                }}
-              >
-                <MenuItem value=""><em>Sales Zone</em></MenuItem>
-                {salesZones.map((zone) => (
-                  <MenuItem key={zone.id} value={String(zone.id)}>
-                    {zone.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+            <Select
+              value={statusFilter}
+              displayEmpty
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+              sx={{ height: 40, fontSize: "14px" }}
+            >
+              <MenuItem value=""><em>Status</em></MenuItem>
+              {STATUS_OPTIONS.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 130 }}>
-              <Select
-                value={statusFilter}
-                displayEmpty
-                onChange={(e) => onStatusFilterChange(e.target.value)}
-                sx={{ 
-                  height: 40, 
-                  fontSize: "13px", 
-                  borderRadius: "8px",
-                }}
-              >
-                <MenuItem value=""><em>Status</em></MenuItem>
-                {STATUS_OPTIONS.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <DatePicker
-              label="From"
-              value={startDate ? dayjs(startDate) : null}
-              onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: {
-                    minWidth: 140,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "13px", borderRadius: "8px" },
-                  },
+          <DatePicker
+            label="From"
+            value={startDate ? dayjs(startDate) : null}
+            onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
+            format="DD-MM-YYYY"
+            slotProps={{
+              field: { clearable: true, onClear: () => onStartDateChange(null) } as any,
+              textField: {
+                size: "small",
+                variant: "outlined",
+                sx: {
+                  minWidth: 140,
+                  bgcolor: "background.paper",
+                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
                 },
-              }}
-            />
+              },
+            }}
+          />
 
-            <DatePicker
-              label="To"
-              value={endDate ? dayjs(endDate) : null}
-              onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
-              format="DD/MM/YYYY"
-              minDate={startDate ? dayjs(startDate) : undefined}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: {
-                    minWidth: 140,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "13px", borderRadius: "8px" },
-                  },
+          <DatePicker
+            label="To"
+            value={endDate ? dayjs(endDate) : null}
+            onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
+            format="DD-MM-YYYY"
+            minDate={startDate ? dayjs(startDate) : undefined}
+            slotProps={{
+              field: { clearable: true, onClear: () => onEndDateChange(null) } as any,
+              textField: {
+                size: "small",
+                variant: "outlined",
+                sx: {
+                  minWidth: 140,
+                  bgcolor: "background.paper",
+                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
                 },
-              }}
-            />
+              },
+            }}
+          />
 
-            <Tooltip title="Clear all filters">
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={onClear}
-                startIcon={<X size={16} />}
-                sx={{
-                  height: 40,
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  textTransform: "none",
-                  borderColor: "divider",
-                  px: 2,
-                  "&:hover": { bgcolor: "action.hover", borderColor: "text.primary" }
-                }}
-              >
-                CLEAR
-              </Button>
-            </Tooltip>
-          </Stack>
+          <Button
+            onClick={onClear}
+            startIcon={<X size={16} />}
+            sx={{
+              bgcolor: "#eeeeee",
+              color: "#333",
+              borderRadius: "4px",
+              fontWeight: 700,
+              fontSize: "13px",
+              height: 40,
+              px: 2,
+              textTransform: "none",
+              border: "1px solid #e0e0e0",
+              "&:hover": {
+                bgcolor: (theme) => theme.palette.primary.main,
+                color: "#000",
+              },
+            }}
+          >
+            CLEAR
+          </Button>
+          </Box>
 
-          {/* ACTION DROPDOWN (Right Side) */}
+          {/* ACTION DROPDOWN */}
           <Box sx={{ display: "flex", gap: 1.5, justifyContent: "flex-end" }}>
             <Button
               id="action-button"

@@ -26,7 +26,7 @@ const SCHEMA_KEYS: Record<string, string[]> = {
   plantCodes: ["id", "code", "description"],
   salesZones: ["id", "name"],
   packConfigs: ["id", "configName"],
-  customers: ["id", "name", "address"],
+  customers: ["id", "name", "address", "contact"],
   printers: ["id", "name"],
   materialBarcodes: [
     "id", 

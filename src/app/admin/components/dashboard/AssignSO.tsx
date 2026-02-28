@@ -23,10 +23,7 @@ import {
   Button,
   Alert,
 } from "@mui/material";
-import {
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-} from "@mui/icons-material";
+import { CircleCheck, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 
@@ -84,7 +81,69 @@ export default function AssignSO() {
     setEndDate(null);
   };
 
-  const [skipIssueStage, setSkipIssueStage] = React.useState("");
+  const handleAssignUser = async (userId: string) => {
+    try {
+      await bulkUpdate(selectedIds, userId);
+      setSnackbar({
+        open: true,
+        message: `Successfully assigned ${selectedIds.length} orders`,
+        severity: "success",
+      });
+      setSelectedIds([]);
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.message || "Failed to assign orders",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleSkipIssueStage = async (val: string) => {
+    const shouldSkip = val === "yes";
+
+    const ordersWithoutData: string[] = [];
+    const ordersToUpdate: number[] = [];
+
+    selectedIds.forEach((id) => {
+      const order = orders.find((o) => o.id === id);
+      if (order) {
+        if (!order.hasMaterialData) {
+          ordersWithoutData.push(order.saleOrderNumber || String(id));
+        } else {
+          ordersToUpdate.push(id);
+        }
+      }
+    });
+
+    if (ordersWithoutData.length > 0) {
+      setSnackbar({
+        open: true,
+        message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
+        severity: "info",
+      });
+    }
+
+    if (ordersToUpdate.length > 0) {
+      try {
+        await updateSkipStage(ordersToUpdate, shouldSkip);
+        setSnackbar({
+           open: true,
+           message: shouldSkip
+             ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
+             : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
+           severity: "success",
+        });
+        setSelectedIds([]);
+      } catch (err: any) {
+         setSnackbar({
+           open: true,
+           message: err.message || "Failed to update",
+           severity: "error",
+         });
+      }
+    }
+  };
 
   const handleImportERPData = async () => {
     if (selectedIds.length === 0) {
@@ -262,18 +321,16 @@ export default function AssignSO() {
     );
   }
 
+  React.useEffect(() => {
+    if (error) {
+      setSnackbar({ open: true, message: typeof error === "string" ? error : "An error occurred", severity: "error" });
+    }
+  }, [error]);
+
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "400px" }}>
         <Box sx={{ p: 3, textAlign: "center" }}>Loading orders...</Box>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "400px" }}>
-        <Box sx={{ p: 3, textAlign: "center", color: "error.main" }}>Error: {error}</Box>
       </Box>
     );
   }
@@ -296,187 +353,12 @@ export default function AssignSO() {
           endDate={endDate}
           onEndDateChange={setEndDate}
           onClear={onClear}
+          selectedIds={selectedIds}
+          assignableUsers={lookup.assignableUsers}
+          onAssignUser={handleAssignUser}
+          onSkipIssueStage={handleSkipIssueStage}
+          onImportERPData={handleImportERPData}
         />
-
-
-        {selectedIds.length > 0 && (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              alignItems: "center",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              width: "100%",
-              mt: 2,
-              animation: "fadeIn 0.2s ease-in-out",
-              "@keyframes fadeIn": {
-                from: { opacity: 0, transform: "translateY(-10px)" },
-                to: { opacity: 1, transform: "translateY(0)" },
-              },
-            }}
-          >
-            <FormControl size="small" sx={{ minWidth: 300 }}>
-              <Select
-                value="placeholder"
-                displayEmpty
-                onChange={async (e) => {
-                  const userId = e.target.value;
-                  if (userId && userId !== "placeholder") {
-                    try {
-                      await bulkUpdate(selectedIds, userId);
-                      setSnackbar({
-                        open: true,
-                        message: `Successfully assigned ${selectedIds.length} orders`,
-                        severity: "success",
-                      });
-                      setSelectedIds([]);
-                    } catch (err: any) {
-                      setSnackbar({
-                        open: true,
-                        message: err.message || "Failed to assign orders",
-                        severity: "error",
-                      });
-                    }
-                  }
-                }}
-                sx={{
-                  height: 44,
-                  borderRadius: "8px",
-                  bgcolor: "#fdf7e7",
-                  border: "1px solid #dcdcdc",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  "& .MuiSelect-select": { py: 0, px: 2, display: "flex", alignItems: "center" },
-                  "& fieldset": { border: "none" },
-                }}
-              >
-                <MenuItem value="placeholder" disabled>
-                  Assign {selectedIds.length} selected orders to...
-                </MenuItem>
-                <MenuItem value="unassign">
-                  <em>Unassigned</em>
-                </MenuItem>
-                {lookup.assignableUsers.map((u: any) => (
-                  <MenuItem key={u.id} value={u.id}>
-                    {u.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-  
-            {/* Skip Issue Stage */}
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: -10,
-                  left: 10,
-                  bgcolor: "#fff",
-                  px: 0.5,
-                  color: "#eab308",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  zIndex: 1,
-                }}
-              >
-                Skip Issue Stage
-              </Box>
-              <Select
-                value={skipIssueStage || "placeholder"}
-                displayEmpty
-                onChange={async (e) => {
-                    const val = e.target.value;
-                    if (val === "placeholder") return;
-                    
-                    const shouldSkip = val === "yes";
-                    setSkipIssueStage(val); 
-  
-                    const ordersWithoutData: string[] = [];
-                    const ordersToUpdate: number[] = [];
-  
-                    selectedIds.forEach((id) => {
-                      const order = orders.find((o) => o.id === id);
-                      if (order) {
-                        if (!order.hasMaterialData) {
-                          ordersWithoutData.push(order.saleOrderNumber || String(id));
-                        } else {
-                          ordersToUpdate.push(id);
-                        }
-                      }
-                    });
-  
-                    if (ordersWithoutData.length > 0) {
-                      setSnackbar({
-                        open: true,
-                        message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
-                        severity: "info",
-                      });
-                    }
-  
-                    if (ordersToUpdate.length > 0) {
-                      try {
-                        await updateSkipStage(ordersToUpdate, shouldSkip);
-                        setSnackbar({
-                           open: true,
-                           message: shouldSkip
-                             ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
-                             : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
-                           severity: "success",
-                        });
-                        setSelectedIds([]);
-                        setSkipIssueStage("");
-                      } catch (err: any) {
-                         setSnackbar({
-                           open: true,
-                           message: err.message || "Failed to update",
-                           severity: "error",
-                         });
-                         setSkipIssueStage("");
-                      }
-                    } else {
-                      setSkipIssueStage("");
-                    }
-                }}
-                sx={{
-                  height: 44,
-                  borderRadius: "8px",
-                  border: "2px solid #eab308",
-                  "& fieldset": { border: "none" },
-                }}
-              >
-                <MenuItem value="placeholder" disabled>
-                  <em>None</em>
-                </MenuItem>
-                <MenuItem value="yes">Yes</MenuItem>
-                <MenuItem value="no">No</MenuItem>
-              </Select>
-            </FormControl>
-  
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={handleImportERPData}
-              sx={{
-                height: 44,
-                bgcolor: "#facd02",
-                color: "#000",
-                fontWeight: 700,
-                fontSize: "14px",
-                textTransform: "uppercase",
-                px: 3,
-                borderRadius: 0,
-                clipPath:
-                  "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-                "&:hover": {
-                  bgcolor: "#e5bb01",
-                },
-              }}
-            >
-              Import ERP Data
-            </Button>
-          </Box>
-        )}
       </Box>
 
 
@@ -517,7 +399,6 @@ export default function AssignSO() {
                 />
               </TableCell>
               {[
-                "USER NAME",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
                 "OUT BOUND DELIVERY",
@@ -548,7 +429,7 @@ export default function AssignSO() {
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={13}
+                  colSpan={12}
                   align="center"
                   sx={{
                     bgcolor: lightYellow,
@@ -574,14 +455,12 @@ export default function AssignSO() {
                           sx={{ p: 0.5 }}
                         />
                         {row.hasMaterialData ? (
-                          <CheckCircleIcon color="success" sx={{ fontSize: "1.1rem" }} />
+                          <CircleCheck size={18} color={theme.palette.success.main} />
                         ) : (
-                          <WarningIcon color="warning" sx={{ fontSize: "1.1rem" }} />
+                          <AlertCircle size={18} color={theme.palette.warning.main} />
                         )}
                       </Box>
                     </TableCell>
-
-                    <TableCell>{row.user?.name || "-"}</TableCell>
 
                     <TableCell>{row.product?.name || findName(lookup.products, row.productId ?? 0) || "-"}</TableCell>
 

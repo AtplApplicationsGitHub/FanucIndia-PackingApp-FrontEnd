@@ -27,14 +27,26 @@ export function useAssign() {
     try {
       // 1. Get the simplified list for UI (Active Export List)
       const listRes = await fetchWithAuth(API.ADMIN.ACTIVE_EXPORT_LIST);
-      if (!listRes.ok) throw new Error("Failed to fetch active export list");
+      if (listRes.status === 401 || listRes.status === 403) {
+         if (typeof window !== "undefined") window.location.href = "/login";
+         return;
+      }
+      if (!listRes.ok) {
+        throw new Error("Failed to fetch active export list");
+      }
       const listData = await listRes.json();
 
       const simpleOrders = Array.isArray(listData) ? listData : (listData.data || []);
 
       // 2. Get detailed records (for id, hasMaterialData, etc.)
       const detailsRes = await fetchWithAuth(API.ADMIN.SALES_ORDERS);
-      if (!detailsRes.ok) throw new Error("Failed to fetch detailed sales orders");
+      if (detailsRes.status === 401 || detailsRes.status === 403) {
+         if (typeof window !== "undefined") window.location.href = "/login";
+         return;
+      }
+      if (!detailsRes.ok) {
+        throw new Error("Failed to fetch detailed sales orders");
+      }
       const detailedData = await detailsRes.json();
       const detailedOrders = Array.isArray(detailedData) ? detailedData : (detailedData.data || []);
 
@@ -112,6 +124,11 @@ export function useAssign() {
         productsRes.json(),
         zonesRes.json(),
       ]);
+
+      if (usersRes.status === 401 || productsRes.status === 401 || zonesRes.status === 401) {
+         if (typeof window !== "undefined") window.location.href = "/login";
+         return;
+      }
 
       setLookup({
         assignableUsers: Array.isArray(users)

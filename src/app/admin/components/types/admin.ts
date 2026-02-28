@@ -42,7 +42,7 @@ export type Lookup = {
   salesZones: { id: number; name: string }[];
   packConfigs: { id: number; configName: string }[];
   assignableUsers: { id: number; name: string }[]; 
-  customers: { id: number; name: string; address: string }[];
+  customers: { id: number; name: string; address: string; contact?: string }[];
   [key: string]: LookupRow[];
 };
 

@@ -41,8 +41,6 @@ export default function AdminDashboard() {
           <div className="w-full mt-6">
             <PaymentClearanceChart />
           </div>
-
-
           {/* 2 same column Responsiv  */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="h-full w-full ">

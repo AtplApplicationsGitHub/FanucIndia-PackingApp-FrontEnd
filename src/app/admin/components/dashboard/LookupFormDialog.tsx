@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -36,6 +36,7 @@ export default function LookupFormDialog({
 }: Props) {
   const theme = useTheme();
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null | undefined>>({});
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const buttonSx = {
     borderRadius: 0,
@@ -64,6 +65,12 @@ export default function LookupFormDialog({
   useEffect(() => {
     if (open) {
       setFormData(initialValues || {});
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [open, initialValues]);
 
@@ -80,7 +87,7 @@ export default function LookupFormDialog({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
         <Box display="flex" flexDirection="column" gap={2} pt={1}>
-          {fields.map((key) => {
+          {fields.map((key, index) => {
             const isBoolean = key === "acceptBulkData" || key === "remarksRequired";
             
             if (isBoolean) {
@@ -104,6 +111,8 @@ export default function LookupFormDialog({
             return (
               <TextField
                 key={key}
+                inputRef={index === 0 ? inputRef : undefined}
+                margin="dense"
                 label={key.replace(/([A-Z])/g, " $1")}
                 value={formData[key] ?? ""}
                 onChange={(e) => handleChange(key, e.target.value)}

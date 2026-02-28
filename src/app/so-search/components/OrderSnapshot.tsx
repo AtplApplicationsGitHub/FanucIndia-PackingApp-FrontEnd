@@ -132,7 +132,7 @@ export default function OrderSnapshot({
         <KVBox label="Priority" value={salesOrder.priority} />
         <KVBox label="Terminal" value={"-"} />
       </Box>
-      <Box display="flex" flexWrap="wrap" gap={2}>
+      <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox
           label="Packing Config"
           value={salesOrder.packConfig?.configName}
@@ -146,7 +146,7 @@ export default function OrderSnapshot({
       </Box>
 
       {/* Special & Additional Remarks */}
-      <Box display="flex" flexWrap="wrap" gap={2} mt={2}>
+      <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox
           label="Special Remarks"
           value={salesOrder.specialRemarks}
@@ -159,6 +159,7 @@ export default function OrderSnapshot({
           label="Label Remarks"
           value={salesOrder.labelRemarks} 
         />
+        <Box sx={{ flex: "1 1 23%", minWidth: "200px" }} />
       </Box>
 
       {/* Dispatch Info Section */}
@@ -190,7 +191,7 @@ export default function OrderSnapshot({
                   sx={{ 
                     fontWeight: 600, 
                     textDecoration: 'none',
-                    color: dispatch.vehicleEntry ? 'primary.main' : 'text.primary',
+                    color: dispatch.vehicleEntry ? '' : '',
                     cursor: dispatch.vehicleEntry ? 'pointer' : 'default'
                   }}
                 >

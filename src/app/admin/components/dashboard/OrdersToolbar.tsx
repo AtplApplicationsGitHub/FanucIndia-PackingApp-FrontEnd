@@ -82,7 +82,8 @@ export default function AdminOrdersToolbar({
           justifyContent: "center",
           alignItems: "center",
           flexWrap: "wrap",
-          py: 1,
+          pt: 0,
+          pb: 1,
         }}
       >
         <Paper
