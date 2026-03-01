@@ -96,19 +96,16 @@ export const useSalesForm = (onSuccess?: () => void) => {
         transferOrder: form.transferOrder || null,
         salesZoneId: Number(form.salesZoneId),
         packConfigId: form.packConfigId ? Number(form.packConfigId) : null,
-        
-        ...(hasCustomerId ? { customerId: Number(form.customerId) } : {}),
-        
         paymentClearance:
           form.paymentClearance === "true" || form.paymentClearance === true,
       };
 
       if (hasCustomerId) {
-        delete payload.customerId;
+        payload.customerId = Number(form.customerId);
         delete payload.customerName; 
       } else {
         payload.customerName = String(form.customerName || "").trim();
-        delete payload.customerId;
+        delete payload.customerId; 
       }
 
       const token = localStorage.getItem("token");

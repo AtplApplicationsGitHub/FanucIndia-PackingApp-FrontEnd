@@ -10,8 +10,6 @@ export type SalesOrder = {
   deliveryDate?: string; 
   transporter?: { name?: string } | null;
   transporterId?: number;
-  // plantCode?: { code?: string } | null;
-  // plantCodeId?: number;
   plantCode?: string | null;
   paymentClearance?: boolean;
   salesZone?: { name?: string } | null;

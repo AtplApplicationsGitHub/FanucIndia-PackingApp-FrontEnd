@@ -53,7 +53,9 @@ export const API = {
     IMPORT:                                               `${API_BASE_URL}/sales-orders/import`,
     DELETE_ORDER:                (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
     // GET request to this URL lists orders
-    LIST_ORDERS:                                          `${API_BASE_URL}/sales-crud`, 
+    LIST_ORDERS:                                          `${API_BASE_URL}/sales-crud`,
+    EXCEL_EXPORT:                                         `${API_BASE_URL}/sales-orders/excel-export`,
+    EXCEL_IMPORT:                                         `${API_BASE_URL}/sales-orders/excel-import`,
   },
   AUTH: {
     LOGIN:               `${API_BASE_URL}/auth/login`,

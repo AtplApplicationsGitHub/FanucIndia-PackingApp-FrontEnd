@@ -21,7 +21,7 @@ export default function SalesDashboard() {
     orders,
     lookup,
     error,
-    userName, 
+    userName,
     view,
     setView,
     searchTerm,
@@ -61,6 +61,9 @@ export default function SalesDashboard() {
     endDate,
     setEndDate,
     handleClearFilters,
+    updateFileInputRef,
+    handleExcelExport,
+    handleExcelImportChange,
   } = useSalesDashboard();
 
   const [chatOpen, setChatOpen] = React.useState(false);
@@ -78,7 +81,12 @@ export default function SalesDashboard() {
 
   if (error && !orders.length) {
     return (
-      <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center">
+      <Box
+        minHeight="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -100,7 +108,11 @@ export default function SalesDashboard() {
           ) : undefined}
         </Snackbar>
 
-        <SalesDashboardHeader userName={userName} view={view} setView={setView} />
+        <SalesDashboardHeader
+          userName={userName}
+          view={view}
+          setView={setView}
+        />
 
         {/* HOME VIEW - Beautiful Dashboard */}
         {view === "home" && <HomeDashboard />}
@@ -114,8 +126,13 @@ export default function SalesDashboard() {
               onCreate={handleCreate}
               onDownload={handleDownloadTemplate}
               onBulkUpload={handleBulkUpload}
+              onClear={handleClearFilters}
               fileInputRef={fileInputRef}
               onFileChange={handleFileChange}
+              onExcelExport={handleExcelExport}
+              onExcelImport={() => updateFileInputRef.current?.click()}
+              updateFileInputRef={updateFileInputRef}
+              onExcelImportChange={handleExcelImportChange}
               paymentFilter={paymentFilter}
               onPaymentFilterChange={setPaymentFilter}
               zoneFilter={zoneFilter}
@@ -127,12 +144,13 @@ export default function SalesDashboard() {
               onStartDateChange={setStartDate}
               endDate={endDate}
               onEndDateChange={setEndDate}
-              onClear={handleClearFilters}
             />
 
             {orders.length === 0 ? (
               <Box display="flex" justifyContent="center" mt={4}>
-                <Alert severity="info">No orders found. Create your first order!</Alert>
+                <Alert severity="info">
+                  No orders found. Create your first order!
+                </Alert>
               </Box>
             ) : (
               <SalesOrdersTable
@@ -162,7 +180,8 @@ export default function SalesDashboard() {
           title="Delete Order"
           description={
             <>
-              Are you sure you want to delete this order? This action cannot be undone.
+              Are you sure you want to delete this order? This action cannot be
+              undone.
               {deleteError && (
                 <Alert severity="error" sx={{ mt: 2 }}>
                   {deleteError}

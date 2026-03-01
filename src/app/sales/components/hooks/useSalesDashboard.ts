@@ -22,6 +22,7 @@ export type SalesDashboardView = "home" | "orders";
 export function useSalesDashboard() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const updateFileInputRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -75,7 +76,7 @@ export function useSalesDashboard() {
   // On initial load, check session storage for a saved view
   useEffect(() => {
     const savedView = sessionStorage.getItem(
-      "salesDashboardView"
+      "salesDashboardView",
     ) as SalesDashboardView;
     if (savedView) {
       setViewInternal(savedView);
@@ -113,55 +114,62 @@ export function useSalesDashboard() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (!token) router.replace("/login");
+      const currentToken = localStorage.getItem("token");
+      if (!currentToken) router.replace("/login");
+      setToken(currentToken);
     }
   }, [router]);
 
-  useEffect(() => {
+  // --- FETCH LOOKUPS LOGIC ---
+  const fetchLookups = useCallback(async () => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
+    if (!token) return;
+
     setLookupsLoading(true);
     setError("");
-    Promise.all([
-      axios.get(API.LOOKUP.PRODUCTS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.TRANSPORTERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.PLANT_CODES, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.SALES_ZONES, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.PACK_CONFIGS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      axios.get(API.LOOKUP.CUSTOMERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    ])
-      .then(([p, t, pc, sz, pk, c]) =>
-        setLookup({
-          products: p.data,
-          transporters: t.data,
-          plantCodes: pc.data,
-          salesZones: sz.data,
-          packConfigs: pk.data,
-          customers: c.data,
-        })
-      )
-      .catch(() => setError("Failed to load lookups."))
-      .finally(() => setLookupsLoading(false));
+    try {
+      const [p, t, pc, sz, pk, c] = await Promise.all([
+        axios.get(API.LOOKUP.PRODUCTS, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API.LOOKUP.TRANSPORTERS, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API.LOOKUP.PLANT_CODES, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API.LOOKUP.SALES_ZONES, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API.LOOKUP.PACK_CONFIGS, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API.LOOKUP.CUSTOMERS, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      setLookup({
+        products: p.data,
+        transporters: t.data,
+        plantCodes: pc.data,
+        salesZones: sz.data,
+        packConfigs: pk.data,
+        customers: c.data,
+      });
+    } catch (err) {
+      setError("Failed to load lookups.");
+    } finally {
+      setLookupsLoading(false);
+    }
   }, []);
 
+  // Initial Fetch of Lookups
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    setToken(localStorage.getItem("token"));
-  }, []);
+    fetchLookups();
+  }, [fetchLookups]);
 
+  // Socket Connection
   useEffect(() => {
     if (!token) return;
 
@@ -180,8 +188,8 @@ export function useSalesDashboard() {
         prev.map((o) =>
           o.saleOrderNumber === so
             ? { ...o, notificationCount: (o.notificationCount ?? 0) + 1 }
-            : o
-        )
+            : o,
+        ),
       );
     });
 
@@ -191,8 +199,8 @@ export function useSalesDashboard() {
 
       setOrders((prev) =>
         prev.map((o) =>
-          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o
-        )
+          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o,
+        ),
       );
     });
 
@@ -202,6 +210,7 @@ export function useSalesDashboard() {
     };
   }, [token]);
 
+  // --- FETCH ORDERS LOGIC ---
   const fetchOrders = useCallback(
     (page = currentPage, size = pageSize) => {
       if (typeof window === "undefined") return;
@@ -231,24 +240,108 @@ export function useSalesDashboard() {
         })
         .finally(() => setLoading(false));
     },
-    [searchTerm, currentPage, pageSize]
+    [
+      searchTerm,
+      paymentFilter,
+      zoneFilter,
+      statusFilter,
+      startDate,
+      endDate,
+      currentPage,
+      pageSize,
+    ],
   );
 
   useEffect(() => {
-    // Only fetch orders if the 'orders' view is active
     if (view === "orders") {
       fetchOrders(currentPage, pageSize);
     }
-  }, [currentPage, pageSize, fetchOrders, view]); // Add view dependency
+  }, [currentPage, pageSize, fetchOrders, view]);
 
   useEffect(() => {
-    // Only refetch on search term change if in 'orders' view
     if (view === "orders") {
       setCurrentPage(1);
       fetchOrders(1, pageSize);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]); // Add filter dependencies
+  }, [
+    searchTerm,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    view,
+  ]);
+
+  const handleExcelExport = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("token");
+    try {
+      setAlert({ severity: "info", message: "Exporting Excel..." });
+      
+      // Build query parameters based on current filters
+      const params = new URLSearchParams();
+      if (searchTerm) params.append("search", searchTerm);
+      if (paymentFilter) params.append("paymentClearance", paymentFilter);
+      if (zoneFilter) params.append("salesZoneId", zoneFilter);
+      if (statusFilter) params.append("status", statusFilter);
+      if (startDate) params.append("startDate", startDate.toISOString());
+      if (endDate) params.append("endDate", endDate.toISOString());
+
+      const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Export failed");
+
+      const cd = res.headers.get("content-disposition") || "";
+      const filename =
+        cd.match(/filename="([^"]+)"/i)?.[1] || "sales_orders_export.xlsx";
+
+      const blob = await res.blob();
+      secureDownload(blob, filename);
+      setAlert({
+        severity: "success",
+        message: "Export downloaded successfully!",
+      });
+    } catch (error) {
+      setAlert({ severity: "error", message: "Failed to export Excel data." });
+    }
+  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate]);
+
+  const handleExcelImportChange = useCallback(async () => {
+    const input = updateFileInputRef.current;
+    if (!input?.files?.[0]) return;
+    const file = input.files[0];
+
+    try {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(API.SALES.EXCEL_IMPORT, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAlert({
+        severity: "success",
+        message: response.data.message || "Excel imported successfully!",
+      });
+      await fetchOrders();
+      await fetchLookups();
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Excel import failed.";
+      setAlert({ severity: "error", message });
+    } finally {
+      setLoading(false);
+      if (input) input.value = "";
+    }
+  }, [fetchOrders, fetchLookups]);
 
   const handleDownloadTemplate = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -297,6 +390,7 @@ export function useSalesDashboard() {
 
       setAlert({ severity: "success", message: "Bulk import successful!" });
       await fetchOrders();
+      await fetchLookups();
     } catch (err: unknown) {
       let message = "Bulk import failed. Check your file and try again.";
 
@@ -323,7 +417,7 @@ export function useSalesDashboard() {
     } finally {
       if (input) input.value = "";
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, fetchLookups]);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -341,7 +435,7 @@ export function useSalesDashboard() {
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setDeleteError(
-          err.response?.data?.message || "Delete failed. Try again."
+          err.response?.data?.message || "Delete failed. Try again.",
         );
         setAlert({
           severity: "error",
@@ -441,5 +535,8 @@ export function useSalesDashboard() {
     endDate,
     setEndDate,
     handleClearFilters,
+    updateFileInputRef,
+    handleExcelExport,
+    handleExcelImportChange,
   };
 }

@@ -52,6 +52,7 @@ export default function AssignSO() {
     bulkUpdate,
     bulkImportErpData,
     updateSkipStage,
+    uploadExcelUpdates,
   } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
@@ -88,6 +89,50 @@ export default function AssignSO() {
     setStatusFilter("");
     setStartDate(null);
     setEndDate(null);
+  };
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExcelImportSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setSnackbar({
+      open: true,
+      message: "Uploading Excel updates...",
+      severity: "info",
+    });
+
+    try {
+      const result = await uploadExcelUpdates(formData);
+
+      if (!result.success) {
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to import excel",
+          severity: "error",
+        });
+        return;
+      }
+
+      setSnackbar({
+        open: true,
+        message: result.message || "Orders updated successfully",
+        severity: "success",
+      });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: "An unexpected error occurred",
+        severity: "error",
+      });
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleAssignUser = async (userId: string) => {
@@ -288,75 +333,107 @@ export default function AssignSO() {
   ]);
 
   const handleExcelExport = React.useCallback(async () => {
-  const visibleRows = filteredOrders;
+    const visibleRows = filteredOrders;
 
-  const exportRows =
-    selectedIds.length > 0
-      ? visibleRows.filter((row) => selectedIds.includes(row.id))
-      : visibleRows;
+    const exportRows =
+      selectedIds.length > 0
+        ? visibleRows.filter((row) => selectedIds.includes(row.id))
+        : visibleRows;
 
-  if (!exportRows.length) return;
+    if (!exportRows.length) return;
 
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("ASSIGN_SO");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("ASSIGN_SO");
 
-  worksheet.columns = [
-    { header: "ERP DATA", key: "erpData", width: 15 },
-    { header: "PRODUCT", key: "product", width: 20 },
-    { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 },
-    { header: "OUT BOUND DELIVERY", key: "outboundDelivery", width: 20 },
-    { header: "TRANSFER ORDER", key: "transferOrder", width: 20 },
-    { header: "REQUIRED DATE", key: "requiredDate", width: 18 },
-    { header: "PAYMENT", key: "payment", width: 12 },
-    { header: "SALES ZONE", key: "salesZone", width: 18 },
-    { header: "CUSTOMER", key: "customer", width: 25 },
-    { header: "STATUS", key: "status", width: 12 },
-    { header: "PRIORITY", key: "priority", width: 12 },
-    { header: "ASSIGNED USER", key: "assignedUser", width: 20 },
-  ];
+    worksheet.columns = [
+      { header: "PRODUCT", key: "product", width: 20 },
+      { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 },
+      { header: "OUT BOUND DELIVERY", key: "outboundDelivery", width: 20 },
+      { header: "TRANSFER ORDER", key: "transferOrder", width: 20 },
+      { header: "DELIVERY DATE", key: "deliveryDate", width: 18 },
+      { header: "TRANSPORTER", key: "transporter", width: 20 },
+      { header: "PLANT CODE", key: "plantCode", width: 15 },
+      { header: "PAYMENT CLEARANCE", key: "payment", width: 18 },
+      { header: "SALES ZONE", key: "salesZone", width: 18 },
+      { header: "PACKING CONFIG", key: "packingConfig", width: 20 },
+      { header: "CUSTOMER", key: "customer", width: 25 },
+      { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 },
+      { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 },
+      { header: "LABEL REMARKS", key: "labelRemarks", width: 25 },
+      { header: "PRIORITY", key: "priority", width: 12 },
+      { header: "ASSIGNED USER", key: "assignedUser", width: 20 },
+    ];
 
-  worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).font = { bold: true };
 
-  exportRows.forEach((row) => {
-    worksheet.addRow({
-      erpData: row.hasMaterialData ? "Imported" : "Pending",
-      product:
-        row.product?.name ||
-        findName(lookup.products, row.productId ?? 0) ||
-        "-",
-      saleOrderNumber: row.saleOrderNumber || "-",
-      outboundDelivery: row.outboundDelivery || "-",
-      transferOrder: row.transferOrder || "-",
-      requiredDate: row.deliveryDate
-        ? formatDate(row.deliveryDate)
-        : "-",
-      payment: row.paymentClearance ? "Yes" : "No",
-      salesZone:
-        row.salesZone?.name ||
-        findName(lookup.salesZones, row.salesZoneId ?? 0) ||
-        "-",
-      customer:
-        row.customer?.name ||
-        row.customerNameText ||
-        row.customerName ||
-        "-",
-      status: row.status ?? "",
-      priority: row.priority ?? "",
-      assignedUser: row.assignedUser?.name || "-",
+    exportRows.forEach((row: any) => {
+      const clearHyphen = (val: any) => (val === "-" ? "" : val || "");
+
+      worksheet.addRow({
+        product:
+          row.product?.name ||
+          findName(lookup.products, row.productId ?? 0) ||
+          "",
+        saleOrderNumber: clearHyphen(row.saleOrderNumber),
+        outboundDelivery: clearHyphen(row.outboundDelivery),
+        transferOrder: clearHyphen(row.transferOrder),
+        deliveryDate: row.deliveryDate ? formatDate(row.deliveryDate) : "",
+        transporter: clearHyphen(row.transporter?.name),
+        plantCode: clearHyphen(row.plantCode),
+        payment: row.paymentClearance ? "Yes" : "No",
+        salesZone:
+          row.salesZone?.name ||
+          findName(lookup.salesZones, row.salesZoneId ?? 0) ||
+          "",
+        packingConfig: clearHyphen(row.packConfig?.configName),
+        customer:
+          row.customer?.name || row.customerNameText || row.customerName || "",
+        specialRemarks: clearHyphen(row.specialRemarks),
+        additionalRemarks: clearHyphen(row.additionalRemarks),
+        labelRemarks: clearHyphen(row.labelRemarks),
+        priority: row.priority ?? "",
+        assignedUser: clearHyphen(row.assignedUser?.name),
+      });
     });
-  });
 
-  const buffer = await workbook.xlsx.writeBuffer();
+    const assignableUserNames =
+      lookup.assignableUsers?.map((u: any) => u.name).join(",") || "Unassigned";
+    const packConfigNames =
+      lookup.packConfigs?.map((p: any) => p.configName).join(",") || "Default";
 
-  const blob = new Blob([buffer], {
-    type:
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+    for (let i = 2; i <= exportRows.length + 1; i++) {
+      const paymentCell = worksheet.getCell(`H${i}`);
+      paymentCell.dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: ['"Yes,No"'],
+      };
 
-  const fileName = `ASSIGN_SO_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`;
+      if (assignableUserNames.length < 255) {
+        const userCell = worksheet.getCell(`P${i}`);
+        userCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`"${assignableUserNames}"`],
+        };
+      }
 
-  saveAs(blob, fileName);
-}, [filteredOrders, selectedIds, lookup]);
+      if (packConfigNames.length < 255) {
+        const packCell = worksheet.getCell(`J${i}`);
+        packCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`"${packConfigNames}"`],
+        };
+      }
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, `ASSIGN_SO_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`);
+  }, [filteredOrders, selectedIds, lookup]);
 
   const paginatedOrders = React.useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -448,6 +525,13 @@ export default function AssignSO() {
 
   return (
     <Box sx={{ width: "100%", borderRadius: 0, overflow: "visible", mt: 0 }}>
+      <input
+        type="file"
+        accept=".xlsx, .xls"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleExcelImportSelect}
+      />
       <Box sx={{ mb: 1 }}>
         <AssignOrdersToolbar
           searchInput={searchInput}
@@ -470,6 +554,7 @@ export default function AssignSO() {
           onSkipIssueStage={handleSkipIssueStage}
           onImportERPData={handleImportERPData}
           onExcelExport={handleExcelExport}
+          onExcelImport={() => fileInputRef.current?.click()}
         />
       </Box>
 

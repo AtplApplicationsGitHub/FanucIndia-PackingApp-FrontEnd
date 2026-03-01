@@ -56,6 +56,15 @@ const CustomerSelect: React.FC<Props> = ({
         onChange("customerId", "");
         onChange("customerName", "");
       }}
+      onInputChange={(_, newInputValue, reason) => {
+        if (reason === "input") {
+          onChange("customerName", newInputValue);
+          onChange("customerId", ""); 
+        } else if (reason === "clear") {
+          onChange("customerName", "");
+          onChange("customerId", "");
+        }
+      }}
       noOptionsText="No results found."
       renderInput={(params) => (
         <TextField

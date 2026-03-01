@@ -113,16 +113,18 @@ export function useAssign() {
 
   const fetchLookups = useCallback(async () => {
     try {
-      const [usersRes, productsRes, zonesRes] = await Promise.all([
+      const [usersRes, productsRes, zonesRes, packConfigsRes] = await Promise.all([
         fetchWithAuth(`${API.ADMIN.USERS}?role=USER`),
         fetchWithAuth(API.LOOKUP.PRODUCTS),
         fetchWithAuth(API.LOOKUP.SALES_ZONES),
+        fetchWithAuth(API.LOOKUP.PACK_CONFIGS),
       ]);
 
-      const [users, products, zones] = await Promise.all([
+      const [users, products, zones, packConfigs] = await Promise.all([
         usersRes.json(),
         productsRes.json(),
         zonesRes.json(),
+        packConfigsRes.json(),
       ]);
 
       if (usersRes.status === 401 || productsRes.status === 401 || zonesRes.status === 401) {
@@ -136,9 +138,9 @@ export function useAssign() {
           : [],
         products: Array.isArray(products) ? products : [],
         salesZones: Array.isArray(zones) ? zones : [],
+        packConfigs: Array.isArray(packConfigs) ? packConfigs : [],
         transporters: [],
         plantCodes: [],
-        packConfigs: [],
         customers: [],
       });
     } catch (err) {
@@ -273,6 +275,29 @@ export function useAssign() {
       }
   }, [fetchData]);
 
+  const uploadExcelUpdates = useCallback(async (formData: FormData) => {
+    try {
+      const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/excel-import`, {
+        method: 'POST',
+        body: formData, 
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        return { success: false, message: errData.message || "Failed to import excel" };
+      }
+
+      const data = await response.json();
+      await fetchData(true);
+      
+      return { success: true, message: data.message };
+      
+    } catch (err: any) {
+      console.error("Excel import error:", err);
+      return { success: false, message: err.message || "Failed to upload Excel file" };
+    }
+  }, [fetchData]);
+
   return {
     orders,
     lookup,
@@ -282,6 +307,7 @@ export function useAssign() {
     bulkUpdate,
     bulkImportErpData,
     updateSkipStage,
+    uploadExcelUpdates,
     refresh: fetchData,
   };
 }
