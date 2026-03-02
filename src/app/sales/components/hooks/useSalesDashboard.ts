@@ -210,6 +210,13 @@ export function useSalesDashboard() {
     };
   }, [token]);
 
+  const toLocalYMD = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`; // YYYY-MM-DD in local time
+  };
+
   // --- FETCH ORDERS LOGIC ---
   const fetchOrders = useCallback(
     (page = currentPage, size = pageSize) => {
@@ -224,8 +231,8 @@ export function useSalesDashboard() {
             paymentClearance: paymentFilter || undefined,
             salesZoneId: zoneFilter || undefined,
             status: statusFilter || undefined,
-            startDate: startDate ? startDate.toISOString() : undefined,
-            endDate: endDate ? endDate.toISOString() : undefined,
+            startDate: startDate ? toLocalYMD(startDate) : undefined,
+            endDate: endDate ? toLocalYMD(endDate) : undefined,
             page,
             limit: size,
           },
@@ -286,8 +293,8 @@ export function useSalesDashboard() {
       if (paymentFilter) params.append("paymentClearance", paymentFilter);
       if (zoneFilter) params.append("salesZoneId", zoneFilter);
       if (statusFilter) params.append("status", statusFilter);
-      if (startDate) params.append("startDate", startDate.toISOString());
-      if (endDate) params.append("endDate", endDate.toISOString());
+      if (startDate) params.append("startDate", toLocalYMD(startDate));
+      if (endDate) params.append("endDate", toLocalYMD(endDate));
 
       const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
 
