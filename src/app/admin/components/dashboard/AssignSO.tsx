@@ -436,7 +436,7 @@ export default function AssignSO() {
     const readOnlyColumns = [
       "PRODUCT",
       "SALE ORDER NUMBER",
-      "OUT BOUND DELIVERY",
+      // "OUT BOUND DELIVERY",
       "TRANSFER ORDER",
       "SALES ZONE",
       "CUSTOMER"
