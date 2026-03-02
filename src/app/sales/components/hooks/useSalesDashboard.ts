@@ -279,7 +279,7 @@ export function useSalesDashboard() {
     const token = localStorage.getItem("token");
     try {
       setAlert({ severity: "info", message: "Exporting Excel..." });
-      
+
       // Build query parameters based on current filters
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
@@ -298,8 +298,12 @@ export function useSalesDashboard() {
       if (!res.ok) throw new Error("Export failed");
 
       const cd = res.headers.get("content-disposition") || "";
+      const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
       const filename =
-        cd.match(/filename="([^"]+)"/i)?.[1] || "sales_orders_export.xlsx";
+        (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
+        cd.match(/filename="([^"]+)"/i)?.[1] ||
+        cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
+        "sales_orders_export.xlsx";
 
       const blob = await res.blob();
       secureDownload(blob, filename);
@@ -335,8 +339,20 @@ export function useSalesDashboard() {
       await fetchOrders();
       await fetchLookups();
     } catch (err: any) {
-      const message = err.response?.data?.message || "Excel import failed.";
-      setAlert({ severity: "error", message });
+      const data = err.response?.data;
+
+      const message = data?.message || "Excel import failed.";
+      const rowErrors = Array.isArray(data?.errors) ? data.errors : [];
+
+      const details = rowErrors
+        .slice(0, 8) // don’t make the toast a novel
+        .map((e: any) => `Row ${e.row}: ${(e.errors || []).join(", ")}`)
+        .join(" | ");
+
+      setAlert({
+        severity: "error",
+        message: details ? `${message} ${details}` : message,
+      });
     } finally {
       setLoading(false);
       if (input) input.value = "";
