@@ -97,9 +97,9 @@ export function useAssign() {
 
           hasMaterialData: detail.hasMaterialData ?? false,
           notificationCount: detail.notificationCount ?? 0,
-          transporter: detail.transporter || null,
+          transporter: detail.transporter || item.transporter || null,
           plantCode: detail.plantCode || item.plantCode || "",
-          packConfig: detail.packConfig || null,
+          packConfig: detail.packConfig || item.packConfig || null,
           specialRemarks: detail.specialRemarks || item.specialRemarks || "",
           additionalRemarks: detail.additionalRemarks || item.additionalRemarks || "",
           labelRemarks: detail.labelRemarks || item.labelRemarks || "",

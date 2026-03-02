@@ -75,8 +75,9 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           salesZoneId: String(initialData.salesZoneId ?? ""),
           packConfigId: String(initialData.packConfigId ?? ""),
           customerId: String(initialData.customerId ?? ""),
-          customerName:
-            initialData.customerNameText ?? initialData.customer?.name ?? "",
+          customerName: initialData.customerId 
+            ? "" 
+            : (initialData.customerNameText ?? initialData.customer?.name ?? ""),
           specialRemarks: initialData.specialRemarks ?? "",
           additionalRemarks: initialData.additionalRemarks ?? "",
           labelRemarks: initialData.labelRemarks ?? "",

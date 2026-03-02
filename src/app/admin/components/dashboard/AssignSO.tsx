@@ -323,11 +323,25 @@ export default function AssignSO() {
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
       const searchStr = searchInput.toLowerCase();
+      
+      const productName = (order.product?.name || findName(lookup.products, order.productId ?? 0) || "").toLowerCase();
+      const salesZoneName = (order.salesZone?.name || findName(lookup.salesZones, order.salesZoneId ?? 0) || "").toLowerCase();
+      const assignedUserName = (order.assignedUser?.name || findName(lookup.assignableUsers, order.assignedUserId ?? 0) || "").toLowerCase();
+      
+      const paymentString = order.paymentClearance ? "yes" : "no";
+
       const matchesSearch =
         !searchInput ||
-        order.saleOrderNumber?.toLowerCase().includes(searchStr) ||
-        order.outboundDelivery?.toLowerCase().includes(searchStr) ||
-        order.customerNameText?.toLowerCase().includes(searchStr);
+        (order.saleOrderNumber || "").toLowerCase().includes(searchStr) ||
+        (order.outboundDelivery || "").toLowerCase().includes(searchStr) ||
+        (order.customerNameText || "").toLowerCase().includes(searchStr) ||
+        (order.transferOrder || "").toLowerCase().includes(searchStr) ||
+        (order.status || "").toLowerCase().includes(searchStr) ||
+        (order.priority !== null && order.priority !== undefined ? String(order.priority) : "").includes(searchStr) ||
+        productName.includes(searchStr) ||
+        salesZoneName.includes(searchStr) ||
+        assignedUserName.includes(searchStr) ||
+        paymentString.includes(searchStr);
 
       const matchesPayment =
         !paymentFilter ||
@@ -408,9 +422,7 @@ export default function AssignSO() {
       { header: "TRANSPORTER", key: "transporter", width: 20 },
       { header: "PLANT CODE", key: "plantCode", width: 15 },
       { header: "PAYMENT CLEARANCE", key: "payment", width: 18 },
-      { header: "SALES ZONE", key: "salesZone", width: 18 },
       { header: "PACKING CONFIG", key: "packingConfig", width: 20 },
-      { header: "CUSTOMER", key: "customer", width: 25 },
       { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 },
       { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 },
       { header: "LABEL REMARKS", key: "labelRemarks", width: 25 },
@@ -435,13 +447,7 @@ export default function AssignSO() {
         transporter: clearHyphen(row.transporter?.name),
         plantCode: clearHyphen(row.plantCode),
         payment: row.paymentClearance ? "Yes" : "No",
-        salesZone:
-          row.salesZone?.name ||
-          findName(lookup.salesZones, row.salesZoneId ?? 0) ||
-          "",
         packingConfig: clearHyphen(row.packConfig?.configName),
-        customer:
-          row.customer?.name || row.customerNameText || row.customerName || "",
         specialRemarks: clearHyphen(row.specialRemarks),
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
@@ -464,7 +470,7 @@ export default function AssignSO() {
       };
 
       if (assignableUserNames.length < 255) {
-        const userCell = worksheet.getCell(`P${i}`);
+        const userCell = worksheet.getCell(`N${i}`);
         userCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -473,7 +479,7 @@ export default function AssignSO() {
       }
 
       if (packConfigNames.length < 255) {
-        const packCell = worksheet.getCell(`J${i}`);
+        const packCell = worksheet.getCell(`I${i}`);
         packCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -491,10 +497,7 @@ export default function AssignSO() {
     const readOnlyColumns = [
       "PRODUCT",
       "SALE ORDER NUMBER",
-      // "OUT BOUND DELIVERY",
       "TRANSFER ORDER",
-      "SALES ZONE",
-      "CUSTOMER"
     ];
 
     // 3. Iterate through all columns and unlock the ones that are NOT in the readOnly array

@@ -152,7 +152,7 @@ export default function AdminOrderEditModal({
   const [form, setForm] = useState<Partial<SalesOrder>>(() => ({
     ...order,
     // ✅ If ERP override exists, keep customerId empty so dropdown doesn't visually override it
-    customerId: order.customerNameText?.trim() ? undefined : order.customerId,
+    customerId: order.customerId,
     customerNameText: order.customerNameText ?? order.customer?.name ?? "",
     deliveryDate: order.deliveryDate
       ? dayjs(order.deliveryDate).toISOString()
@@ -170,8 +170,7 @@ export default function AdminOrderEditModal({
     if (!open) return;
     setForm({
       ...order,
-      // ✅ same logic here too
-      customerId: order.customerNameText?.trim() ? undefined : order.customerId,
+      customerId: order.customerId,
       customerNameText: order.customerNameText ?? order.customer?.name ?? "",
       deliveryDate: order.deliveryDate
         ? dayjs(order.deliveryDate).toISOString()
@@ -186,7 +185,7 @@ export default function AdminOrderEditModal({
       if (key === "customerId") {
         updated.customerNameText = "";
         const selectedCustomer = lookup.customers.find(
-          (c) => String(c.id) === String(value)
+          (c) => String(c.id) === String(value),
         );
 
         if (selectedCustomer && typeof selectedCustomer.address === "string") {
@@ -488,15 +487,15 @@ export default function AdminOrderEditModal({
                     lookup.customers.find(
                       (c) =>
                         form.customerId != null &&
-                        String(c.id) === String(form.customerId)
+                        String(c.id) === String(form.customerId),
                     ) || null;
 
                   const value: CustomerValue =
-                    form.customerNameText &&
+                    selected ??
+                    (form.customerNameText &&
                     String(form.customerNameText).trim() !== ""
                       ? String(form.customerNameText)
-                      : selected;
-
+                      : null);
                   return (
                     <Box
                       key={field.key}
@@ -519,7 +518,7 @@ export default function AdminOrderEditModal({
                         value={value}
                         isOptionEqualToValue={(
                           option: CustomerOption | string,
-                          v: CustomerValue
+                          v: CustomerValue,
                         ) => {
                           if (typeof option === "string") {
                             return typeof v === "string"
@@ -605,8 +604,8 @@ export default function AdminOrderEditModal({
                     value={normalizeInputValue(form[field.key])}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     disabled={
-                      loading || 
-                      field.disabled || 
+                      loading ||
+                      field.disabled ||
                       (field.key === "address" && !!order.hasMaterialData)
                     }
                     sx={(theme) => ({
