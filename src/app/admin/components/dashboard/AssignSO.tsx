@@ -183,6 +183,7 @@ export default function AssignSO() {
 
     const skippedSOs: string[] = [];
     const ordersWithoutData: string[] = [];
+    const issueCompletedSOs: string[] = []; // 1. Added new array for W105 status
     const ordersToUpdate: number[] = [];
 
     selectedIds.forEach((id) => {
@@ -190,6 +191,9 @@ export default function AssignSO() {
       if (order) {
         if (order.status === "F105" || order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber || String(id));
+        } else if (shouldSkip && order.status === "W105") {
+          // 2. Prevent skipping issue stage for W105
+          issueCompletedSOs.push(order.saleOrderNumber || String(id));
         } else if (!order.hasMaterialData) {
           ordersWithoutData.push(order.saleOrderNumber || String(id));
         } else {
@@ -216,6 +220,9 @@ export default function AssignSO() {
       }
       if (skippedSOs.length > 0) {
         messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
+      }
+      if (issueCompletedSOs.length > 0) {
+        messageParts.push(`Issue stage completed for ${issueCompletedSOs.join(", ")}`);
       }
 
       setSnackbar({
