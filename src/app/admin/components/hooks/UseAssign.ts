@@ -252,27 +252,30 @@ export function useAssign() {
 
   const updateSkipStage = useCallback(async (orderIds: number[], skip: boolean) => {
       try {
-        // We process orders sequentially or partially parallel
-        // For each order, we must first fetch its materials, then update them.
-        
-        await Promise.all(orderIds.map(async (orderId) => {
-           // 1. Get materials
-           const matRes = await fetchWithAuth(API.ADMIN.ERP_MATERIALS_BY_ORDER(orderId));
-           if (!matRes.ok) return; // Skip this order if fetch fails
-           const matData = await matRes.json();
-           const materials = Array.isArray(matData) ? matData : (matData.data || []);
+        // Call the bulk-skip-issue backend endpoint directly
+        const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/bulk-skip-issue`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            salesOrderIds: orderIds, 
+            skipIssueStage: skip 
+          }),
+        });
 
-           // 2. Update each material
-           // We can do this in parallel for the materials of a single order
-           await Promise.all(materials.map((mat: any) => 
-               fetchWithAuth(API.ADMIN.SKIP_ISSUE_STAGE(orderId, mat.id), {
-                   method: 'PATCH',
-                   headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify({ skipIssueStage: skip }),
-               })
-           ));
-        }));
+        if (!response.ok) {
+          let errorMsg = "Failed to update skip issue stage";
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || errorMsg;
+          } catch (e) {
+            // Fallback if response is not JSON
+          }
+          throw new Error(errorMsg);
+        }
 
+        // Refresh the table to show updated status
         await fetchData(true);
         return true;
       } catch (err: any) {
