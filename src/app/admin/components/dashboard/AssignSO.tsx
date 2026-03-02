@@ -136,12 +136,37 @@ export default function AssignSO() {
   };
 
   const handleAssignUser = async (userId: string) => {
+    const validIds: number[] = [];
+    const skippedSOs: string[] = [];
+
+    selectedIds.forEach((id) => {
+      const order = orders.find((o) => o.id === id);
+      if (order) {
+        if (order.status === "F105" || order.status === "Dispatched") {
+          skippedSOs.push(order.saleOrderNumber || String(id));
+        } else {
+          validIds.push(id);
+        }
+      }
+    });
+
     try {
-      await bulkUpdate(selectedIds, userId);
+      if (validIds.length > 0) {
+        await bulkUpdate(validIds, userId);
+      }
+
+      const messageParts = [];
+      if (validIds.length > 0) {
+        messageParts.push(`Successfully assigned ${validIds.length} order(s)`);
+      }
+      if (skippedSOs.length > 0) {
+        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
+      }
+
       setSnackbar({
         open: true,
-        message: `Successfully assigned ${selectedIds.length} orders`,
-        severity: "success",
+        message: messageParts.join(" | "),
+        severity: skippedSOs.length > 0 && validIds.length === 0 ? "warning" : "info",
       });
       setSelectedIds([]);
     } catch (err: any) {
@@ -156,13 +181,16 @@ export default function AssignSO() {
   const handleSkipIssueStage = async (val: string) => {
     const shouldSkip = val === "yes";
 
+    const skippedSOs: string[] = [];
     const ordersWithoutData: string[] = [];
     const ordersToUpdate: number[] = [];
 
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
       if (order) {
-        if (!order.hasMaterialData) {
+        if (order.status === "F105" || order.status === "Dispatched") {
+          skippedSOs.push(order.saleOrderNumber || String(id));
+        } else if (!order.hasMaterialData) {
           ordersWithoutData.push(order.saleOrderNumber || String(id));
         } else {
           ordersToUpdate.push(id);
@@ -170,32 +198,38 @@ export default function AssignSO() {
       }
     });
 
-    if (ordersWithoutData.length > 0) {
+    try {
+      if (ordersToUpdate.length > 0) {
+        await updateSkipStage(ordersToUpdate, shouldSkip);
+      }
+
+      const messageParts = [];
+      if (ordersToUpdate.length > 0) {
+        messageParts.push(
+          shouldSkip
+            ? `Updated skip stage for ${ordersToUpdate.length} order(s)`
+            : `Canceled skip stage for ${ordersToUpdate.length} order(s)`
+        );
+      }
+      if (ordersWithoutData.length > 0) {
+        messageParts.push(`Material Data Pending: ${ordersWithoutData.join(", ")}`);
+      }
+      if (skippedSOs.length > 0) {
+        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
+      }
+
       setSnackbar({
         open: true,
-        message: `Material Data not yet imported for: ${ordersWithoutData.join(", ")}`,
+        message: messageParts.join(" | "),
         severity: "info",
       });
-    }
-
-    if (ordersToUpdate.length > 0) {
-      try {
-        await updateSkipStage(ordersToUpdate, shouldSkip);
-        setSnackbar({
-          open: true,
-          message: shouldSkip
-            ? `Updated skip issue stage for ${ordersToUpdate.length} orders`
-            : `Canceled skip issue stage for ${ordersToUpdate.length} orders`,
-          severity: "success",
-        });
-        setSelectedIds([]);
-      } catch (err: any) {
-        setSnackbar({
-          open: true,
-          message: err.message || "Failed to update",
-          severity: "error",
-        });
-      }
+      setSelectedIds([]);
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.message || "Failed to update",
+        severity: "error",
+      });
     }
   };
 
@@ -209,52 +243,66 @@ export default function AssignSO() {
       return;
     }
 
-    const selectedOrders = orders.filter((o) => selectedIds.includes(o.id));
-    const saleOrderNumbers = selectedOrders
-      .map((o) => o.saleOrderNumber)
-      .filter((so): so is string => !!so);
+    const validSaleOrderNumbers: string[] = [];
+    const skippedSOs: string[] = [];
 
-    if (saleOrderNumbers.length === 0) {
+    selectedIds.forEach((id) => {
+      const order = orders.find((o) => o.id === id);
+      if (order && order.saleOrderNumber) {
+        if (order.status === "F105" || order.status === "Dispatched") {
+          skippedSOs.push(order.saleOrderNumber);
+        } else {
+          validSaleOrderNumbers.push(order.saleOrderNumber);
+        }
+      }
+    });
+
+    // If ALL selected orders have crossed packing stage
+    if (validSaleOrderNumbers.length === 0 && skippedSOs.length > 0) {
       setSnackbar({
         open: true,
-        message: "No valid Sale Order Numbers found in selection",
-        severity: "error",
+        message: `Skipped (Packing Completed): ${skippedSOs.join(", ")}`,
+        severity: "warning",
       });
+      setSelectedIds([]);
       return;
     }
 
     setSnackbar({
       open: true,
-      message: `Importing data for ${saleOrderNumbers.length} orders...`,
+      message: `Importing data for ${validSaleOrderNumbers.length} orders...`,
       severity: "info",
     });
 
     try {
-      const result = await bulkImportErpData(saleOrderNumbers);
+      const result = await bulkImportErpData(validSaleOrderNumbers);
       const summary = result.summary || [];
 
       const failures = summary.filter((s: any) => s.status === "Failed");
       const successes = summary.filter((s: any) => s.status === "Success");
       const skipped = summary.filter((s: any) => s.status === "Skipped");
 
-      // Construct a combined message for the Snackbar
+      // Construct combined message (incorporating the logic we added in the previous step)
       const messageParts = [];
       if (successes.length > 0) {
-        messageParts.push(`Success: ${successes.map((s: any) => s.soNumber).join(', ')}`);
+        messageParts.push(`Success: ${successes.map((s: any) => s.soNumber).join(", ")}`);
       }
       if (skipped.length > 0) {
-        messageParts.push(`Skipped: ${skipped.map((s: any) => s.soNumber).join(', ')}`);
+        messageParts.push(`Skipped ERP: ${skipped.map((s: any) => s.soNumber).join(", ")}`);
       }
       if (failures.length > 0) {
-        messageParts.push(`Failed: ${failures.map((s: any) => s.soNumber).join(', ')}`);
+        messageParts.push(`Failed: ${failures.map((s: any) => s.soNumber).join(", ")}`);
+      }
+      if (skippedSOs.length > 0) {
+        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
       }
 
       setSnackbar({
         open: true,
-        message: messageParts.join(' | '),
-        severity: "info", // Displays as a single informational snackbar
+        message: messageParts.join(" | "),
+        severity: "info",
       });
-      
+
       setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
