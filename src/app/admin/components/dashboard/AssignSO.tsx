@@ -237,26 +237,25 @@ export default function AssignSO() {
       const successes = summary.filter((s: any) => s.status === "Success");
       const skipped = summary.filter((s: any) => s.status === "Skipped");
 
-      if (failures.length > 0) {
-        const msg =
-          failures.length === 1
-            ? failures[0].reason
-            : `${failures.length} orders failed to import`;
-        setSnackbar({ open: true, message: msg, severity: "error" });
-      } else {
-        // If no failures, show a clean success message without mentioning skips or "not found"
-        const msg =
-          successes.length > 0
-            ? `Imported ${successes.length} order(s) successfully`
-            : "ERP data import process completed";
-
-        setSnackbar({
-          open: true,
-          message: msg,
-          severity: "success",
-        });
-        setSelectedIds([]);
+      // Construct a combined message for the Snackbar
+      const messageParts = [];
+      if (successes.length > 0) {
+        messageParts.push(`Success: ${successes.map((s: any) => s.soNumber).join(', ')}`);
       }
+      if (skipped.length > 0) {
+        messageParts.push(`Skipped: ${skipped.map((s: any) => s.soNumber).join(', ')}`);
+      }
+      if (failures.length > 0) {
+        messageParts.push(`Failed: ${failures.map((s: any) => s.soNumber).join(', ')}`);
+      }
+
+      setSnackbar({
+        open: true,
+        message: messageParts.join(' | '),
+        severity: "info", // Displays as a single informational snackbar
+      });
+      
+      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -427,6 +426,37 @@ export default function AssignSO() {
         };
       }
     }
+
+    await worksheet.protect('admin_dims_2026', {
+      selectLockedCells: true,
+      selectUnlockedCells: true,
+    });
+
+    // 2. Define which columns should be strictly Read-Only
+    const readOnlyColumns = [
+      "PRODUCT",
+      "SALE ORDER NUMBER",
+      "OUT BOUND DELIVERY",
+      "TRANSFER ORDER",
+      "SALES ZONE",
+      "CUSTOMER"
+    ];
+
+    // 3. Iterate through all columns and unlock the ones that are NOT in the readOnly array
+    worksheet.columns.forEach((column) => {
+      const headerName = column.header ? column.header.toString() : "";
+      const isReadOnly = readOnlyColumns.includes(headerName);
+
+      column.eachCell!({ includeEmpty: true }, (cell, rowNumber) => {
+        if (rowNumber === 1) {
+          // Always lock the header row so titles can't be changed
+          cell.protection = { locked: true };
+        } else {
+          // Lock or unlock based on the column name
+          cell.protection = { locked: isReadOnly };
+        }
+      });
+    });
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {

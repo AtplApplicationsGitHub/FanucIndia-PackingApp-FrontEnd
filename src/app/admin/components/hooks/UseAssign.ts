@@ -72,8 +72,8 @@ export function useAssign() {
           productId: detail.productId || null,
 
           saleOrderNumber: son,
-          outboundDelivery: detail.outboundDelivery || item.outboundDelivery || item.obd || "-",
-          transferOrder: detail.transferOrder || item.transferOrder || "-",
+          outboundDelivery: detail.outboundDelivery || item.outboundDelivery || item.obd || "",
+          transferOrder: detail.transferOrder || item.transferOrder || "",
 
           deliveryDate: detail.deliveryDate || item.requiredDate || item.deliveryDate || null,
 
@@ -97,6 +97,12 @@ export function useAssign() {
 
           hasMaterialData: detail.hasMaterialData ?? false,
           notificationCount: detail.notificationCount ?? 0,
+          transporter: detail.transporter || null,
+          plantCode: detail.plantCode || item.plantCode || "",
+          packConfig: detail.packConfig || null,
+          specialRemarks: detail.specialRemarks || item.specialRemarks || "",
+          additionalRemarks: detail.additionalRemarks || item.additionalRemarks || "",
+          labelRemarks: detail.labelRemarks || item.labelRemarks || "",
         };
       });
 
