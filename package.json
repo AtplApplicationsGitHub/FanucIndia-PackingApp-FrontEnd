@@ -66,6 +66,10 @@
   "overrides": {
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
-    "minimatch": "^10.2.1"
+    "minimatch": "^10.2.3",
+    "exceljs": {
+      "archiver": "^7.0.0",
+      "glob": "^10.3.10"
+    }
   }
 }
