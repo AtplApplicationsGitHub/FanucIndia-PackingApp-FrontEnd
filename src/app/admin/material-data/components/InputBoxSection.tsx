@@ -24,6 +24,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import PrintIcon from "@mui/icons-material/Print";
 import UploadErpMaterialFileButton from "@/app/admin/material-data/components/UploadErpMaterialFileButton";
 import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadAttachmentDialog";
 import { MaterialRow } from "../types/material-row";
@@ -295,6 +296,21 @@ const InputBoxSection: FC<Props> = ({
             </IconButton>
           </Tooltip>
 
+          {showPrintButton && (
+              <Tooltip title="Print Order Labels">
+                <IconButton
+                  onClick={onPrintClick}
+                  // color="primary"
+                  sx={{
+                    ml: 1,
+                    "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
+                  }}
+                >
+                  <PrintIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+
           <Box display="flex" alignItems="center" gap={1}>
             <Typography
               variant="body2"
@@ -329,19 +345,6 @@ const InputBoxSection: FC<Props> = ({
               }
               sx={{ ml: 1, mr: 0 }}
             />
-            {showPrintButton && (
-              <Button
-                variant="contained"
-                onClick={onPrintClick}
-                sx={{
-                   ...buttonSx, 
-                   bgcolor: theme.palette.primary.main, 
-                   color: theme.palette.primary.contrastText 
-                }}
-              >
-                PRINT
-              </Button>
-            )}
           </Box>
         </Box>
 

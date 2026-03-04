@@ -693,7 +693,8 @@ export default function MaterialDataPage() {
               }
               onAcceptAllIssue={handleAcceptAllIssue}
               onDeleteErpData={handleDeleteErpData}
-              showPrintButton={isOrderFullyComplete}
+              // showPrintButton={isOrderFullyComplete}
+              showPrintButton={true}
               onPrintClick={() => setPrintDialogOpen(true)}
             />
           </Box>
