@@ -54,6 +54,7 @@ const FIELDS: {
   options?: FieldOption;
   disabled?: boolean;
   colSpan?: number;
+  maxLength?: number;
 }[] = [
   { key: "productId", label: "Product", type: "select", options: "products" },
   { key: "saleOrderNumber", label: "Sale Order Number" },
@@ -69,8 +70,6 @@ const FIELDS: {
   {
     key: "plantCode",
     label: "Delivery Plant Code",
-    // type: "select",
-    // options: "plantCodes",
   },
   {
     key: "paymentClearance",
@@ -111,7 +110,7 @@ const FIELDS: {
   { key: "fgLocation", label: "FG Location" },
   { key: "specialRemarks", label: "Special Remarks" },
   { key: "additionalRemarks", label: "Additional Remarks" },
-  { key: "labelRemarks", label: "Label Remarks" },
+  { key: "labelRemarks", label: "Label Remarks", maxLength: 15 },
 ];
 
 const PATCHABLE_KEYS = [
@@ -608,6 +607,7 @@ export default function AdminOrderEditModal({
                       field.disabled ||
                       (field.key === "address" && !!order.hasMaterialData)
                     }
+                    inputProps={{ maxLength: field.maxLength }}
                     sx={(theme) => ({
                       bgcolor: theme.palette.background.default,
                       borderRadius: 2,

@@ -267,6 +267,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
             variant="outlined"
             autoComplete="off"
             disabled={isRestrictedMode}
+            inputProps={{ maxLength: 15 }}
             sx={{
               mb: 1,
               "& .MuiOutlinedInput-root": {
