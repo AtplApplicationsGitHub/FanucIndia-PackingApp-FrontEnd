@@ -253,15 +253,15 @@ export function useAssign() {
 
   const updateSkipStage = useCallback(async (orderIds: number[], skip: boolean) => {
       try {
-        // Call the bulk-skip-issue backend endpoint directly
-        const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/bulk-skip-issue`, {
+        // Call the bulk-skip-stage backend endpoint directly
+        const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/bulk-skip-stage`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
             salesOrderIds: orderIds, 
-            skipIssueStage: skip 
+            skipStage: skip 
           }),
         });
 
@@ -281,7 +281,7 @@ export function useAssign() {
         return true;
       } catch (err: any) {
          console.error("Failed to update skip stage", err);
-         throw new Error(err.message || "Failed to update skip issue stage");
+         throw new Error(err.message || "Failed to update skip stage");
       }
   }, [fetchData]);
 

@@ -61,7 +61,7 @@ type Props = {
   selectedIds?: number[];
   assignableUsers?: { id: number; name: string }[];
   onAssignUser?: (userId: string) => Promise<void>;
-  onSkipIssueStage?: (val: string) => Promise<void>;
+  onSkipStage?: (val: string) => Promise<void>;
   onImportERPData?: () => void;
   onExcelExport?: () => void;
   onExcelImport?: () => void;
@@ -85,7 +85,7 @@ export default function AssignOrdersToolbar({
   selectedIds = [],
   assignableUsers = [],
   onAssignUser,
-  onSkipIssueStage,
+  onSkipStage,
   onImportERPData,
   onExcelExport,
   onExcelImport,
@@ -96,8 +96,8 @@ export default function AssignOrdersToolbar({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
-  const [skipIssueDialogOpen, setSkipIssueDialogOpen] = useState(false);
-  const [tempSkipIssue, setTempSkipIssue] = useState<string>("yes");
+  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false);
+  const [tempSkipStage, setTempSkipStage] = useState<string>("placeholder");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -129,8 +129,8 @@ export default function AssignOrdersToolbar({
 
   const handleSkipChange = async (e: any) => {
     const val = e.target.value;
-    if (val !== "placeholder" && onSkipIssueStage) {
-      await onSkipIssueStage(val);
+    if (val !== "placeholder" && onSkipStage) {
+      await onSkipStage(val);
     }
   };
 
@@ -448,7 +448,7 @@ export default function AssignOrdersToolbar({
 
           <MenuItem
             onClick={() =>
-              handleActionClick(() => setSkipIssueDialogOpen(true))
+              handleActionClick(() => setSkipStageDialogOpen(true))
             }
           >
             <ListItemIcon>
@@ -523,25 +523,25 @@ export default function AssignOrdersToolbar({
           </DialogActions>
         </Dialog>
 
-        {/* Skip Issue Stage Dialog */}
+        {/* Skip Stage Dialog */}
         <Dialog
-          open={skipIssueDialogOpen}
+          open={skipStageDialogOpen}
           onClose={() => {
-            setSkipIssueDialogOpen(false);
-            setTempSkipIssue("yes");
+            setSkipStageDialogOpen(false);
+            setTempSkipStage("placeholder");
           }}
           maxWidth="xs"
           fullWidth
         >
           <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
-            SKIP ISSUE STAGE
+            SKIP STAGE
           </DialogTitle>
           <DialogContent>
             <FormControl size="small" fullWidth sx={{ mt: 1 }}>
               <Select
-                value={tempSkipIssue}
+                value={tempSkipStage}
                 displayEmpty
-                onChange={(e) => setTempSkipIssue(e.target.value)}
+                onChange={(e) => setTempSkipStage(e.target.value)}
                 sx={{ fontSize: "14px" }}
               >
                 <MenuItem value="placeholder" disabled>
@@ -555,8 +555,8 @@ export default function AssignOrdersToolbar({
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button
               onClick={() => {
-                setSkipIssueDialogOpen(false);
-                setTempSkipIssue("yes");
+                setSkipStageDialogOpen(false);
+                setTempSkipStage("placeholder");
               }}
               color="inherit"
             >
@@ -566,11 +566,11 @@ export default function AssignOrdersToolbar({
               variant="contained"
               disableElevation
               onClick={async () => {
-                if (tempSkipIssue !== "placeholder" && onSkipIssueStage) {
-                  await onSkipIssueStage(tempSkipIssue);
+                if (tempSkipStage !== "placeholder" && onSkipStage) {
+                  await onSkipStage(tempSkipStage);
                 }
-                setSkipIssueDialogOpen(false);
-                setTempSkipIssue("yes");
+                setSkipStageDialogOpen(false);
+                setTempSkipStage("placeholder");
               }}
               sx={{
                 bgcolor: "#facd02",

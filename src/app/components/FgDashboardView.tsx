@@ -139,7 +139,7 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
   },
 };
 
-const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
 
 export default function FgDashboardView() {
   const theme = useTheme();

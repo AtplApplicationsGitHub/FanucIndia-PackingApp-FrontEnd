@@ -11,7 +11,7 @@ import {
   TableRow,
   TablePagination,
   Paper,
-  TextField,
+  TextField,  
   Link as MuiLink,
   alpha,
   useTheme,
@@ -174,12 +174,10 @@ export default function AssignSO() {
     }
   };
 
-  const handleSkipIssueStage = async (val: string) => {
+  const handleSkipStage = async (val: string) => {
     const shouldSkip = val === "yes";
-
     const skippedSOs: string[] = [];
     const ordersWithoutData: string[] = [];
-    const issueCompletedSOs: string[] = []; // 1. Added new array for W105 status
     const ordersToUpdate: number[] = [];
 
     selectedIds.forEach((id) => {
@@ -187,10 +185,7 @@ export default function AssignSO() {
       if (order) {
         if (order.status === "F105" || order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber || String(id));
-        } else if (shouldSkip && order.status === "W105") {
-          // 2. Prevent skipping issue stage for W105
-          issueCompletedSOs.push(order.saleOrderNumber || String(id));
-        } else if (!order.hasMaterialData) {
+        } else if (shouldSkip && (!order.status || order.status === "R105") && !order.hasMaterialData) {
           ordersWithoutData.push(order.saleOrderNumber || String(id));
         } else {
           ordersToUpdate.push(id);
@@ -215,10 +210,7 @@ export default function AssignSO() {
         messageParts.push(`Material Data Pending: ${ordersWithoutData.join(", ")}`);
       }
       if (skippedSOs.length > 0) {
-        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
-      }
-      if (issueCompletedSOs.length > 0) {
-        messageParts.push(`Issue stage completed for ${issueCompletedSOs.join(", ")}`);
+        messageParts.push(`Skipped (Already Packed): ${skippedSOs.join(", ")}`);
       }
 
       setSnackbar({
@@ -226,6 +218,7 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
+      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -631,7 +624,7 @@ export default function AssignSO() {
           selectedIds={selectedIds}
           assignableUsers={lookup.assignableUsers}
           onAssignUser={handleAssignUser}
-          onSkipIssueStage={handleSkipIssueStage}
+          onSkipStage={handleSkipStage}
           onImportERPData={handleImportERPData}
           onExcelExport={handleExcelExport}
           onExcelImport={() => fileInputRef.current?.click()}
