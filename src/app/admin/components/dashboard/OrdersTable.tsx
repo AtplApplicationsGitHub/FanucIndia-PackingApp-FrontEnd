@@ -36,8 +36,8 @@ import { useSoArchive } from "@/app/so-search/hooks/useSoArchive";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import Badge from "@mui/material/Badge";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 type InlineEditField = "status" | "priority" | "assignedUserId" | "fgLocation";
 
@@ -223,9 +223,10 @@ export default function AdminOrdersTable({
             // Remove all borders
             "& .MuiTableCell-root": {
               borderBottom: "none",
-              py: 1,
-              px: 2,
+              py: 0.5,
+              px: 1,
               fontSize: "0.875rem",
+              whiteSpace: "nowrap",
             },
           }}
         >
@@ -238,9 +239,6 @@ export default function AdminOrdersTable({
             <TableRow sx={{ height: 60 }}>
               {[
                 "ACTIONS",
-                "NOTIFICATIONS",
-                "ERP DATA",
-                "USER NAME",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
                 "OUT BOUND DELIVERY",
@@ -251,8 +249,6 @@ export default function AdminOrdersTable({
                 // "Packing Config",
                 "CUSTOMER",
                 "STATUS",
-                "PRIORITY",
-                "ASSIGNED USER",
                 // "Special Remarks",
               ].map((head) => (
                 <TableCell
@@ -278,57 +274,52 @@ export default function AdminOrdersTable({
 
               return (
                 <TableRow key={row.id}>
-                  {/* ACTIONS */}
-                  <TableCell>
-                    <IconButton
-                      onClick={(e) => handleMenuOpen(e, row.id)}
-                      size="small"
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-
-                  <TableCell>
-                    <IconButton
-                      onClick={() =>
-                        row.saleOrderNumber &&
-                        onOpenChat(row.saleOrderNumber, row.id)
-                      }
-                      size="small"
-                    >
-                      <Badge
-                        badgeContent={row.notificationCount || 0}
-                        color="error"
+                  {/* ACTIONS, NOTIFICATIONS, ERP DATA */}
+                  <TableCell sx={{ whiteSpace: "nowrap", width: "1%" }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <IconButton
+                        onClick={(e) => handleMenuOpen(e, row.id)}
+                        size="small"
+                        sx={{ p: 0.5 }}
                       >
-                        <ChatBubbleOutlineIcon fontSize="small" />
-                      </Badge>
-                    </IconButton>
+                        <MoreVertIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={() =>
+                          row.saleOrderNumber &&
+                          onOpenChat(row.saleOrderNumber, row.id)
+                        }
+                        size="small"
+                        sx={{ p: 0.5 }}
+                      >
+                        <Badge
+                          badgeContent={row.notificationCount || 0}
+                          color="error"
+                        >
+                          <ChatBubbleOutlineIcon fontSize="small" />
+                        </Badge>
+                      </IconButton>
+                      <Tooltip
+                        title={
+                          row.hasMaterialData
+                            ? "ERP Data Imported"
+                            : "Material Data Pending"
+                        }
+                      >
+                        {row.hasMaterialData ? (
+                          <CheckCircleOutlineIcon
+                            sx={{ color: theme.palette.success.main, ml: 0.5 }}
+                            fontSize="small"
+                          />
+                        ) : (
+                          <ErrorOutlineIcon
+                            sx={{ color: theme.palette.warning.main, ml: 0.5 }}
+                            fontSize="small"
+                          />
+                        )}
+                      </Tooltip>
+                    </Box>
                   </TableCell>
-
-                  <TableCell>
-                    <Tooltip
-                      title={
-                        row.hasMaterialData
-                          ? "ERP Data Imported"
-                          : "Material Data Pending"
-                      }
-                    >
-                      {row.hasMaterialData ? (
-                        <CheckCircleIcon
-                          sx={{ color: theme.palette.success.main }}
-                          fontSize="small"
-                        />
-                      ) : (
-                        <WarningAmberIcon
-                          sx={{ color: theme.palette.warning.main }}
-                          fontSize="small"
-                        />
-                      )}
-                    </Tooltip>
-                  </TableCell>
-
-                  {/* USER NAME */}
-                  <TableCell>{row.user?.name || "-"}</TableCell>
 
                   {/* PRODUCT */}
                   <TableCell>
@@ -359,7 +350,47 @@ export default function AdminOrdersTable({
                   </TableCell>
 
                   {/* PAYMENT */}
-                  <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    {row.paymentClearance ? (
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "3px 10px",
+                          borderRadius: "16px",
+                          border: "1px solid",
+                          borderColor: alpha(theme.palette.success.main, 0.5),
+                          backgroundColor: alpha(theme.palette.success.main, 0.1),
+                          color: theme.palette.success.dark,
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          minWidth: "50px",
+                        }}
+                      >
+                        Yes
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "3px 10px",
+                          borderRadius: "16px",
+                          border: "1px solid",
+                          borderColor: alpha(theme.palette.error.main, 0.5),
+                          backgroundColor: alpha(theme.palette.error.main, 0.1),
+                          color: theme.palette.error.main,
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          minWidth: "50px",
+                        }}
+                      >
+                        No
+                      </Box>
+                    )}
+                  </TableCell>
 
                   {/* SALES ZONE */}
                   <TableCell>
@@ -382,116 +413,40 @@ export default function AdminOrdersTable({
                   </TableCell>
 
                   <TableCell sx={{ minWidth: 100 }}>
-                    <Box>{row.status || "-"}</Box>
-                  </TableCell>
-
-                  {/* PRIORITY (INLINE EDIT) */}
-                  <TableCell sx={{ minWidth: 80 }}>
-                    {inlineEdit?.id === row.id &&
-                    inlineEdit.field === "priority" ? (
-                      <CustomEditTextField
-                        initialValue={inlineEdit.value}
-                        onCommit={(val) => handleInlineSave(val)}
-                        onCancel={() => setInlineEdit(null)}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          cursor: isDispatched ? "default" : "pointer",
-                          textDecoration: isDispatched
-                            ? "none"
-                            : "underline dotted",
-                        }}
-                        onClick={() =>
-                          !isDispatched &&
-                          setInlineEdit({
-                            id: row.id,
-                            field: "priority",
-                            value:
-                              row.priority !== undefined &&
-                              row.priority !== null
-                                ? row.priority
-                                : "",
-                            original: row.priority ?? "",
-                          })
-                        }
-                        title={
-                          isDispatched
-                            ? "Locked (Dispatched)"
-                            : "Click to edit priority"
-                        }
-                      >
-                        {row.priority ?? "-"}
-                      </Box>
-                    )}
-                  </TableCell>
-
-                  {/* ASSIGNED USER (INLINE EDIT - SELECT) */}
-                  <TableCell sx={{ minWidth: 150 }}>
-                    {inlineEdit?.id === row.id &&
-                    inlineEdit.field === "assignedUserId" ? (
-                      <FormControl variant="standard" size="small" fullWidth>
-                        <Select
-                          value={inlineEdit.value ?? ""}
-                          onChange={(e) => {
-                            const selected =
-                              e.target.value === ""
-                                ? null
-                                : Number(e.target.value);
-                            handleInlineSave(selected);
+                    {(() => {
+                      if (!row.status) return <Box>-</Box>;
+                      let colorMain = theme.palette.grey[500];
+                      let label = row.status;
+                      if (row.status === "R105") { colorMain = "#3b82f6"; label = "R105"; }
+                      else if (row.status === "W105") { colorMain = "#eab308"; label = "W105"; }
+                      else if (row.status === "F105") { colorMain = "#8b5cf6"; label = "F105"; }
+                      else if (row.status === "Dispatched") { colorMain = "#10b981"; label = "Dispatched"; }
+                      
+                      return (
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "3px 10px",
+                            borderRadius: "16px",
+                            border: "1px solid",
+                            borderColor: alpha(colorMain, 0.5),
+                            backgroundColor: alpha(colorMain, 0.1),
+                            color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            minWidth: "50px",
+                            whiteSpace: "nowrap"
                           }}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === " " ||
-                              (e.ctrlKey && e.key.toLowerCase() === "a")
-                            ) {
-                              e.stopPropagation();
-                            }
-                          }}
-                          autoFocus
                         >
-                          <MenuItem value="">
-                            <em>Unassigned</em>
-                          </MenuItem>
-                          {lookup.assignableUsers.map((u) => (
-                            <MenuItem key={u.id} value={u.id}>
-                              {u.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      <Box
-                        sx={{
-                          cursor: isAssignedUserLocked ? "default" : "pointer",
-                          textDecoration: isAssignedUserLocked
-                            ? "none"
-                            : "underline dotted",
-                        }}
-                        onClick={() =>
-                          !isAssignedUserLocked &&
-                          setInlineEdit({
-                            id: row.id,
-                            field: "assignedUserId",
-                            value: row.assignedUserId ?? "",
-                            original: row.assignedUserId ?? "",
-                          })
-                        }
-                        title={
-                          isAssignedUserLocked
-                            ? "Locked (Packed/Dispatched)"
-                            : "Click to assign user"
-                        }
-                      >
-                        {row.assignedUser?.name ||
-                          findName(
-                            lookup.assignableUsers,
-                            row.assignedUserId ?? 0,
-                          ) ||
-                          "-"}
-                      </Box>
-                    )}
+                          {label}
+                        </Box>
+                      );
+                    })()}
                   </TableCell>
+
+
 
                   {/* SPECIAL REMARKS */}
                   {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}

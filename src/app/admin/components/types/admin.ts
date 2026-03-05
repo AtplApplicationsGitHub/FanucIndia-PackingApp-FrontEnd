@@ -29,6 +29,7 @@ export type SalesOrder = {
   labelRemarks?: string | null;
   fgLocation?: string | null; 
   hasMaterialData?: boolean;
+  skipIssueStage?: boolean;
   address?: string | null;
   notificationCount?: number;
 };

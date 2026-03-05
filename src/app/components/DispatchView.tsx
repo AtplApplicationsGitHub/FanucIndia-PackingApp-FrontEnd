@@ -242,7 +242,7 @@ const AttachmentDialog = ({
 // --- Main Component ---
 export default function DispatchView() {
   const theme = useTheme();
-  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().subtract(5, 'day'));
+  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().subtract(1, 'day'));
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   const [form, setForm] = useState<{
     transporterId: Transporter | null;
@@ -304,9 +304,9 @@ export default function DispatchView() {
     try {
       const params = new URLSearchParams();
 
-      // Commented out date filters for now
-      // if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
-      // if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
+      // Use date filters
+      if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
+      if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
 
       const res = await fetchWithAuth(`${API.DISPATCH.BASE}?${params.toString()}`);
       const data = await res.json();
@@ -316,12 +316,9 @@ export default function DispatchView() {
     } finally {
       setLoading(false);
     }
-  // }, [startDate, endDate]);
-  }, []);
+  }, [startDate, endDate]);
 
-  useEffect(() => {
-    fetchDispatches();
-  }, [fetchDispatches]);
+
 
   const handleClearFilters = () => {
     setStartDate(null);

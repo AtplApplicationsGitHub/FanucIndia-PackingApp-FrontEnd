@@ -31,6 +31,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import CloseIcon from "@mui/icons-material/Close";
 import dayjs from "dayjs";
 import { API, API_BASE_URL } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
@@ -67,6 +68,7 @@ interface FgDashboardRow {
   assignedUserId?: number | null;
   isReadyForDispatch?: boolean;
   isWipStorage?: boolean;
+  transporter?: string;
 }
 
 const formatDate = (dateString?: string) => {
@@ -291,19 +293,17 @@ export default function FgDashboardView() {
   };
 
   const columns = [
-    { id: "deliveryDate", label: "Delivery Date", width: 90 },
-    { id: "saleOrderNumber", label: "Sales Order", width: 120 },
-    { id: "transferOrder", label: "Transfer Order", width: 140 },
-    { id: "product", label: "Product", width: 150 },
-    { id: "customerName", label: "Customer Name", width: 150 },
-    { id: "salesZone", label: "Sales Zone", width: 120 },
-    { id: "payment", label: "Payment", width: 70 },
-    { id: "fgLocation", label: "FG Location", width: 150 },
-    { id: "specialRemarks", label: "Special Remarks", width: "auto" },
-    { id: "updatedBy", label: "Updated By", width: 130 },
-    { id: "updatedDate", label: "Updated Date", width: 180 },
-    { id: "status", label: "Status", width: 100 },
-    { id: "progress", label: "Progress", width: 180 },
+    { id: "saleOrderNumber", label: "SO NUMBER", width: 90 },
+    { id: "customerName", label: "CUSTOMER NAME", width: 180 },
+    { id: "payment", label: "PAYMENT", width: 60 },
+    { id: "progress", label: "PROGRESS", width: 250 },
+    { id: "status", label: "STATUS", width: 100 },
+    { id: "salesZone", label: "SALES ZONE", width: 90 },
+    { id: "transporter", label: "TRANSPORTER", width: 110 },
+    { id: "fgLocation", label: "FG LOCATION", width: 120 },
+    { id: "specialRemarks", label: "SPECIAL REMARKS", width: 150 },
+    { id: "updatedBy", label: "UPDATED BY", width: 110 },
+    { id: "updatedDate", label: "UPDATED DATE", width: 140 },
   ];
 
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -312,179 +312,185 @@ export default function FgDashboardView() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box p={3}>
+      <Box sx={{ width: "100%", p: { xs: 1, sm: 2 }, boxSizing: "border-box" }}>
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 2, md: 2 },
-            width: { xs: "100%", md: "auto" },
-            mx: { xs: 0, md: "auto" },
-            alignItems: { md: "center" },
-            justifyContent: "center",
-            flexWrap: "wrap",
+            width: "100%",
+            mt: 1,
+            px: 1,
+            pb: 0,
             mb: 3,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
           }}
         >
+          {/* Main Floating Toolbar */}
           <Paper
-            component="form"
-            onSubmit={(e) => e.preventDefault()}
+            elevation={2}
             sx={{
-              p: "2px 4px",
+              mb: 0,
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              width: "fit-content",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 220 },
-              border: "1px solid #e0e0e0",
+              flexWrap: "wrap",
+              gap: 2,
+              px: 2,
+              py: 1.5,
+              mx: "auto",
             }}
           >
-            <InputBase
-              sx={{ ml: 1, flex: 1 }}
-              placeholder="Search"
-              inputProps={{ "aria-label": "search" }}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
+            {/* Search Field */}
+            <Box
+              component="form"
+              onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                width: { xs: "100%", sm: 220 },
+                border: 1,
+                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
+                borderRadius: "4px",
+                height: 40,
+                bgcolor: "background.paper",
               }}
-            />
-            {search && (
-              <IconButton
-                sx={{ p: "10px" }}
-                aria-label="clear"
-                onClick={() => {
-                  setSearch("");
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: "14px" }}
+                placeholder="Search"
+                inputProps={{ "aria-label": "search" }}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
                   setPage(0);
                 }}
-              >
-                <ClearIcon />
+              />
+              {search && (
+                <IconButton
+                  sx={{ p: "5px" }}
+                  aria-label="clear"
+                  onClick={() => {
+                    setSearch("");
+                    setPage(0);
+                  }}
+                >
+                  <ClearIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+              <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
+                <SearchIcon sx={{ fontSize: 20 }} />
               </IconButton>
-            )}
-            <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
-              <SearchIcon />
+            </Box>
+
+            {/* Payment Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 120, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={paymentFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setPaymentFilter(e.target.value);
+                  setPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">PAYMENT</MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Zone Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={zoneFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setZoneFilter(e.target.value);
+                  setPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">SALES ZONE</MenuItem>
+                {salesZones.map((zone) => (
+                  <MenuItem key={zone.id} value={String(zone.id)}>
+                    {zone.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Status Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={statusFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">STATUS</MenuItem>
+                {STATUS_OPTIONS.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <DatePicker
+              label="DELIVERY DATE"
+              value={date ? dayjs(date) : null}
+              onChange={(newValue) => {
+                setDate(newValue ? newValue.toDate() : null);
+                setPage(0);
+              }}
+              format="DD-MM-YYYY"
+              slotProps={{
+                field: {
+                  clearable: true,
+                  onClear: () => setDate(null),
+                },
+                textField: {
+                  size: "small",
+                  variant: "outlined",
+                  sx: {
+                    minWidth: 140,
+                    bgcolor: "background.paper",
+                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                  },
+                },
+              }}
+            />
+
+            {/* Clear Button (Icon Only) */}
+            <IconButton
+              onClick={handleClear}
+              title="Clear Filters"
+              sx={{
+                color: "text.secondary",
+                "&:hover": {
+                  color: "error.main",
+                  opacity: 0.8,
+                },
+              }}
+            >
+              <CloseIcon fontSize="small" />
             </IconButton>
           </Paper>
-
-          <FormControl
-            size="small"
-            sx={{ minWidth: 130, bgcolor: "background.paper", borderRadius: 1 }}
-          >
-            <InputLabel>Payment</InputLabel>
-            <Select
-              value={paymentFilter}
-              label="Payment"
-              onChange={(e) => {
-                setPaymentFilter(e.target.value);
-                setPage(0);
-              }}
-            >
-              <MenuItem value="">
-                <em>All</em>
-              </MenuItem>
-              <MenuItem value="true">Yes</MenuItem>
-              <MenuItem value="false">No</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl
-            size="small"
-            sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}
-          >
-            <InputLabel>Sales Zone</InputLabel>
-            <Select
-              value={zoneFilter}
-              label="Sales Zone"
-              onChange={(e) => {
-                setZoneFilter(e.target.value);
-                setPage(0);
-              }}
-            >
-              <MenuItem value="">
-                <em>All Zones</em>
-              </MenuItem>
-              {salesZones.map((zone) => (
-                <MenuItem key={zone.id} value={String(zone.id)}>
-                  {zone.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl
-            size="small"
-            sx={{ minWidth: 150, bgcolor: "background.paper", borderRadius: 1 }}
-          >
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={statusFilter}
-              label="Status"
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(0);
-              }}
-            >
-              <MenuItem value="">
-                <em>All Statuses</em>
-              </MenuItem>
-              {STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <DatePicker
-            label="Delivery Date"
-            value={date ? dayjs(date) : null}
-            onChange={(newValue) => {
-              setDate(newValue ? newValue.toDate() : null);
-              setPage(0);
-            }}
-            slotProps={{
-              field: {
-                clearable: true,
-                onClear: () => setDate(null),
-              },
-              textField: {
-                size: "small",
-                variant: "outlined",
-                sx: {
-                  minWidth: 150,
-                  bgcolor: "background.paper",
-                  "& .MuiOutlinedInput-root": { borderRadius: 1 },
-                },
-              },
-            }}
-          />
-          <Button
-            onClick={handleClear}
-            startIcon={<X size={18} />}
-            sx={{
-              bgcolor: (theme) => theme.palette.action.hover,
-              color: (theme) => theme.palette.text.primary,
-              borderRadius: 0,
-              clipPath:
-                "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-              fontWeight: 600,
-              fontSize: 15,
-              minWidth: 100,
-              height: 40,
-              px: 2,
-              textTransform: "none",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                bgcolor: (theme) => theme.palette.primary.main,
-                color: (theme) => theme.palette.primary.contrastText,
-                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-                "& .MuiSvgIcon-root, & svg": {
-                  color: "#000",
-                },
-              },
-            }}
-          >
-            CLEAR
-          </Button>
         </Box>
 
         <Paper sx={{ width: "100%", overflow: "hidden", borderRadius: 2 }}>
@@ -501,6 +507,7 @@ export default function FgDashboardView() {
                         fontWeight: 700,
                         width: col.width,
                         whiteSpace: "nowrap",
+                        px: 1, // Reduced padding
                       }}
                     >
                       {col.label}
@@ -534,8 +541,7 @@ export default function FgDashboardView() {
                           },
                         }}
                       >
-                        <TableCell>{formatDate(row.deliveryDate)}</TableCell>
-                        <TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           <MuiLink
                             component={Link}
                             href={`/so-search/${row.saleOrderNumber}`}
@@ -545,13 +551,136 @@ export default function FgDashboardView() {
                             {row.saleOrderNumber}
                           </MuiLink>
                         </TableCell>
-                        <TableCell>{row.transferOrder}</TableCell>
-                        <TableCell>{row.product}</TableCell>
-                        <TableCell>{row.customerName}</TableCell>
-                        <TableCell>{row.salesZone}</TableCell>
-                        <TableCell>{row.payment ? "Yes" : "No"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.customerName}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          <Box
+                            sx={{
+                              display: "inline-block",
+                              px: 1.5,
+                              py: 0.25,
+                              borderRadius: "16px",
+                              border: "1px solid",
+                              borderColor: row.payment ? "#4caf50" : "#ef5350",
+                              backgroundColor: row.payment ? "#e8f5e9" : "#ffebee",
+                              color: row.payment ? "#1b5e20" : "#c62828",
+                              fontWeight: 700,
+                              fontSize: "0.85rem",
+                              textAlign: "center",
+                              minWidth: "50px",
+                            }}
+                          >
+                            {row.payment ? "Yes" : "No"}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ px: 1 }}>
+                           {(() => {
+                            const { percent, current, next, color } =
+                              getStatusInfo(row);
+                            return (
+                              <Box sx={{ width: "100%", minWidth: 220, py: 0.5 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    mb: 0,
+                                  }}
+                                >
+                                  <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
+                                    <Typography
+                                      variant="caption"
+                                      fontWeight={700}
+                                      color="text.primary"
+                                      sx={{ fontSize: "0.75rem", whiteSpace: "nowrap", lineHeight: 1 }}
+                                    >
+                                      {current}
+                                    </Typography>
+                                  </Box>
+                                </Box>
 
-                        <TableCell>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                  <Box sx={{ flexGrow: 1 }}>
+                                    <LinearProgress
+                                      variant="determinate"
+                                      value={percent}
+                                      sx={{
+                                        height: 8,
+                                        borderRadius: 4,
+                                        backgroundColor: alpha(color, 0.15),
+                                        "& .MuiLinearProgress-bar": {
+                                          backgroundColor: color,
+                                          borderRadius: 4,
+                                          boxShadow: `0 0 8px ${alpha(color, 0.4)}`,
+                                        },
+                                      }}
+                                    />
+                                  </Box>
+                                  <Box
+                                    sx={{
+                                      backgroundColor: alpha(color, 0.1),
+                                      color: color,
+                                      px: 1,
+                                      py: 0.25,
+                                      borderRadius: "12px",
+                                      fontWeight: 500, // Not bold
+                                      fontSize: "0.75rem",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      border: `1px solid ${alpha(color, 0.2)}`
+                                    }}
+                                  >
+                                    {percent}%
+                                  </Box>
+                                </Box>
+                                {next && (
+                                  <Box sx={{ mt: 0 }}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ color: "#000", fontSize: "0.75rem", whiteSpace: "nowrap", fontWeight: 500, lineHeight: 1 }}
+                                    >
+                                      {next}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            );
+                          })()}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {(() => {
+                            const getStatusStyles = (status: string) => {
+                              const s = status ? status.toUpperCase() : "";
+                              if (s.includes("W105")) return { borderColor: "#ffd54f", backgroundColor: "#fff8e1", color: "#ef6c00" };
+                              if (s.includes("R105")) return { borderColor: "#90caf9", backgroundColor: "#e3f2fd", color: "#1976d2" };
+                              if (s.includes("F105")) return { borderColor: "#ce93d8", backgroundColor: "#f3e5f5", color: "#9c27b0" };
+                              if (s.includes("DISPATCHED")) return { borderColor: "#4db6ac", backgroundColor: "#e0f2f1", color: "#00897b" };
+                              return { borderColor: "#e0e0e0", backgroundColor: "#f5f5f5", color: "#757575" };
+                            };
+                            const styles = getStatusStyles(row.status);
+
+                            if (!row.status) return "-";
+
+                            return (
+                              <Box
+                                sx={{
+                                  display: "inline-block",
+                                  px: 1.5,
+                                  py: 0.25,
+                                  borderRadius: "16px",
+                                  border: "1px solid",
+                                  ...styles,
+                                  fontWeight: 700,
+                                  fontSize: "0.85rem",
+                                  textAlign: "center",
+                                  minWidth: "60px",
+                                }}
+                              >
+                                {row.status}
+                              </Box>
+                            );
+                          })()}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.salesZone}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.transporter || "-"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.fgLocation
                             ? typeof row.fgLocation === "string"
                               ? row.fgLocation
@@ -560,11 +689,9 @@ export default function FgDashboardView() {
                                 : JSON.stringify(row.fgLocation)
                             : "-"}
                         </TableCell>
-
-                        <TableCell>{row.specialRemarks}</TableCell>
-                        <TableCell>{row.updatedBy || "-"}</TableCell>
-
-                        <TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>{row.specialRemarks}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.updatedBy || "-"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.updatedDate
                             ? new Date(row.updatedDate).toLocaleString(
                                 "en-IN",
@@ -578,65 +705,6 @@ export default function FgDashboardView() {
                                 },
                               )
                             : "-"}
-                        </TableCell>
-                        <TableCell>{row.status}</TableCell>
-                        <TableCell>
-                          {(() => {
-                            const { percent, current, next, color } =
-                              getStatusInfo(row);
-                            return (
-                              <Box sx={{ width: "100%", minWidth: 120, py: 1 }}>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  <Typography
-                                    variant="caption"
-                                    fontWeight={600}
-                                    color="text.primary"
-                                  >
-                                    {current}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    fontWeight={600}
-                                    color="text.primary"
-                                  >
-                                    {percent}%
-                                  </Typography>
-                                </Box>
-
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={percent}
-                                  sx={{
-                                    height: 6,
-                                    borderRadius: 3,
-                                    backgroundColor: alpha(color, 0.2),
-                                    "& .MuiLinearProgress-bar": {
-                                      backgroundColor: color,
-                                      borderRadius: 3,
-                                    },
-                                  }}
-                                />
-
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: "block",
-                                    mt: 0.5,
-                                    fontSize: "0.7rem",
-                                  }}
-                                >
-                                  {next}
-                                </Typography>
-                              </Box>
-                            );
-                          })()}
                         </TableCell>
                       </TableRow>
                     );

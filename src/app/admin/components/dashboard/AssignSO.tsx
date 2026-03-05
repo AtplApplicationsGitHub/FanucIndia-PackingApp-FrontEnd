@@ -20,8 +20,9 @@ import {
   Alert,
   Tooltip,
 } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import FlagIcon from "@mui/icons-material/Flag";
 import Link from "next/link";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 import ExcelJS from "exceljs";
@@ -69,10 +70,6 @@ export default function AssignSO() {
     severity: "success",
   });
 
-  // Reset selection when orders change
-  React.useEffect(() => {
-    setSelectedIds([]);
-  }, [orders]);
 
   // Filter states
   const [searchInput, setSearchInput] = React.useState("");
@@ -168,7 +165,6 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: skippedSOs.length > 0 && validIds.length === 0 ? "warning" : "info",
       });
-      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -230,7 +226,6 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
-      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -271,7 +266,6 @@ export default function AssignSO() {
         message: `Skipped (Packing Completed): ${skippedSOs.join(", ")}`,
         severity: "warning",
       });
-      setSelectedIds([]);
       return;
     }
 
@@ -309,8 +303,6 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
-
-      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -663,9 +655,10 @@ export default function AssignSO() {
             },
             "& .MuiTableCell-root": {
               borderBottom: "none",
-              py: 1,
-              px: 2,
+              py: 0.5,
+              px: 1,
               fontSize: "0.875rem",
+              whiteSpace: "nowrap",
             },
           }}
         >
@@ -689,8 +682,6 @@ export default function AssignSO() {
                 />
               </TableCell>
               {[
-                "ERP DATA",
-                "PRODUCT",
                 "SALE ORDER NUMBER",
                 "OUT BOUND DELIVERY",
                 "TRANSFER ORDER",
@@ -721,7 +712,7 @@ export default function AssignSO() {
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={12}
+                  colSpan={10}
                   align="center"
                   sx={{
                     bgcolor: lightYellow,
@@ -743,50 +734,53 @@ export default function AssignSO() {
                     selected={selectedIds.includes(row.id)}
                   >
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Checkbox
-                        checked={selectedIds.includes(row.id)}
-                        onChange={() => handleSelectOne(row.id)}
-                        sx={{ p: 0.5 }}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Checkbox
+                          checked={selectedIds.includes(row.id)}
+                          onChange={() => handleSelectOne(row.id)}
+                          sx={{ p: 0.5 }}
+                        />
+                        <Tooltip
+                          title={
+                            row.hasMaterialData
+                              ? "ERP Data Imported"
+                              : "Material Data Pending"
+                          }
+                        >
+                          {row.hasMaterialData ? (
+                            <CheckCircleOutlineIcon
+                              sx={{ color: theme.palette.success.main, ml: 1 }}
+                              fontSize="small"
+                            />
+                          ) : (
+                            <ErrorOutlineIcon
+                              sx={{ color: theme.palette.warning.main, ml: 1 }}
+                              fontSize="small"
+                            />
+                          )}
+                        </Tooltip>
+                      </Box>
                     </TableCell>
 
                     <TableCell>
-                      <Tooltip
-                        title={
-                          row.hasMaterialData
-                            ? "ERP Data Imported"
-                            : "Material Data Pending"
-                        }
-                      >
-                        {row.hasMaterialData ? (
-                          <CheckCircleIcon
-                            sx={{ color: theme.palette.success.main }}
-                            fontSize="small"
-                          />
-                        ) : (
-                          <WarningAmberIcon
-                            sx={{ color: theme.palette.warning.main }}
-                            fontSize="small"
-                          />
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        {row.skipIssueStage && (
+                          <Tooltip title="Skip Stages">
+                            <FlagIcon
+                              sx={{ color: theme.palette.error.main }}
+                              fontSize="small"
+                            />
+                          </Tooltip>
                         )}
-                      </Tooltip>
-                    </TableCell>
-
-                    <TableCell>
-                      {row.product?.name ||
-                        findName(lookup.products, row.productId ?? 0) ||
-                        "-"}
-                    </TableCell>
-
-                    <TableCell>
-                      <MuiLink
-                        component={Link}
-                        href={`/so-search/${row.saleOrderNumber}`}
-                        underline="hover"
-                        sx={{ fontWeight: 500 }}
-                      >
-                        {row.saleOrderNumber || "-"}
-                      </MuiLink>
+                        <MuiLink
+                          component={Link}
+                          href={`/so-search/${row.saleOrderNumber}`}
+                          underline="hover"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          {row.saleOrderNumber || "-"}
+                        </MuiLink>
+                      </Box>
                     </TableCell>
 
                     <TableCell>{row.outboundDelivery || "-"}</TableCell>
@@ -797,7 +791,47 @@ export default function AssignSO() {
                       {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
                     </TableCell>
 
-                    <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
+                    <TableCell>
+                      {row.paymentClearance ? (
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "3px 10px",
+                            borderRadius: "16px",
+                            border: "1px solid",
+                            borderColor: alpha(theme.palette.success.main, 0.5),
+                            backgroundColor: alpha(theme.palette.success.main, 0.1),
+                            color: theme.palette.success.dark,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            minWidth: "50px",
+                          }}
+                        >
+                          Yes
+                        </Box>
+                      ) : (
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "3px 10px",
+                            borderRadius: "16px",
+                            border: "1px solid",
+                            borderColor: alpha(theme.palette.error.main, 0.5),
+                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                            color: theme.palette.error.main,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            minWidth: "50px",
+                          }}
+                        >
+                          No
+                        </Box>
+                      )}
+                    </TableCell>
 
                     <TableCell>
                       {row.salesZone?.name ||
@@ -808,7 +842,37 @@ export default function AssignSO() {
                     <TableCell>{row.customerNameText || "-"}</TableCell>
 
                     <TableCell sx={{ minWidth: 100 }}>
-                      <Box>{row.status || "-"}</Box>
+                      {(() => {
+                        if (!row.status) return <Box>-</Box>;
+                        let colorMain = theme.palette.grey[500];
+                        let label = row.status;
+                        if (row.status === "R105") { colorMain = "#3b82f6"; label = "R105"; }
+                        else if (row.status === "W105") { colorMain = "#eab308"; label = "W105"; }
+                        else if (row.status === "F105") { colorMain = "#8b5cf6"; label = "F105"; }
+                        else if (row.status === "Dispatched") { colorMain = "#10b981"; label = "Dispatched"; }
+                        
+                        return (
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "3px 10px",
+                              borderRadius: "16px",
+                              border: "1px solid",
+                              borderColor: alpha(colorMain, 0.5),
+                              backgroundColor: alpha(colorMain, 0.1),
+                              color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              minWidth: "50px",
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            {label}
+                          </Box>
+                        );
+                      })()}
                     </TableCell>
 
                     <TableCell sx={{ minWidth: 80 }}>

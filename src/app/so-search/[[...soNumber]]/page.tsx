@@ -463,6 +463,7 @@ export default function SoSearchPage() {
               }}
             >
               <InputBase
+                autoFocus
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Search"
                 inputProps={{ "aria-label": "search" }}
@@ -495,14 +496,14 @@ export default function SoSearchPage() {
             </Button> */}
 
             {/* PRINT BUTTON */}
-            <Button
+            {/* <Button
               variant="contained"
               startIcon={<Print />}
               onClick={handlePrint}
               sx={buttonSx}
             >
               PRINT
-            </Button>
+            </Button> */}
 
             {data && !data.isArchived && (
               <Button

@@ -97,7 +97,7 @@ export default function AssignOrdersToolbar({
   const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
   const [skipIssueDialogOpen, setSkipIssueDialogOpen] = useState(false);
-  const [tempSkipIssue, setTempSkipIssue] = useState<string>("placeholder");
+  const [tempSkipIssue, setTempSkipIssue] = useState<string>("yes");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -174,10 +174,11 @@ export default function AssignOrdersToolbar({
               display: "flex",
               alignItems: "center",
               width: { xs: "100%", sm: 220 },
-              border: "1px solid #e0e0e0",
+              border: 1,
+              borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
               borderRadius: "4px",
               height: 40,
-              bgcolor: "#fff",
+              bgcolor: "background.paper",
             }}
           >
             <InputBase
@@ -454,7 +455,7 @@ export default function AssignOrdersToolbar({
               <FastForwardOutlinedIcon fontSize="small" color="warning" />
             </ListItemIcon>
             <ListItemText
-              primary="SKIP ISSUE STAGE"
+              primary="SKIP STAGE"
               primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
             />
           </MenuItem>
@@ -527,7 +528,7 @@ export default function AssignOrdersToolbar({
           open={skipIssueDialogOpen}
           onClose={() => {
             setSkipIssueDialogOpen(false);
-            setTempSkipIssue("placeholder");
+            setTempSkipIssue("yes");
           }}
           maxWidth="xs"
           fullWidth
@@ -555,7 +556,7 @@ export default function AssignOrdersToolbar({
             <Button
               onClick={() => {
                 setSkipIssueDialogOpen(false);
-                setTempSkipIssue("placeholder");
+                setTempSkipIssue("yes");
               }}
               color="inherit"
             >
@@ -569,7 +570,7 @@ export default function AssignOrdersToolbar({
                   await onSkipIssueStage(tempSkipIssue);
                 }
                 setSkipIssueDialogOpen(false);
-                setTempSkipIssue("placeholder");
+                setTempSkipIssue("yes");
               }}
               sx={{
                 bgcolor: "#facd02",

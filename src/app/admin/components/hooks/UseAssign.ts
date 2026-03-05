@@ -95,7 +95,8 @@ export function useAssign() {
           assignedUser: detail.assignedUser || (item.assignedUser ? { name: item.assignedUser } : null) || null,
           assignedUserId: detail.assignedUserId || item.assignedUserId || null,
 
-          hasMaterialData: detail.hasMaterialData ?? false,
+          hasMaterialData: detail.hasMaterialData ?? item.hasMaterialData ?? false,
+          skipIssueStage: detail.skipIssueStage ?? item.skipIssueStage ?? false,
           notificationCount: detail.notificationCount ?? 0,
           transporter: detail.transporter || item.transporter || null,
           plantCode: detail.plantCode || item.plantCode || "",
