@@ -96,7 +96,7 @@ export function useAssign() {
           assignedUserId: detail.assignedUserId || item.assignedUserId || null,
 
           hasMaterialData: detail.hasMaterialData ?? item.hasMaterialData ?? false,
-          skipIssueStage: detail.skipIssueStage ?? item.skipIssueStage ?? false,
+          skipIssueStage: detail.skipIssueStage ?? item.skipIssueStage ?? detail.skipStage ?? item.skipStage ?? false,
           notificationCount: detail.notificationCount ?? 0,
           transporter: detail.transporter || item.transporter || null,
           plantCode: detail.plantCode || item.plantCode || "",
@@ -252,6 +252,9 @@ export function useAssign() {
   }, [fetchData]);
 
   const updateSkipStage = useCallback(async (orderIds: number[], skip: boolean) => {
+      // Optimistic update
+      setOrders(prev => prev.map(o => orderIds.includes(o.id) ? { ...o, skipIssueStage: skip } : o));
+
       try {
         // Call the bulk-skip-stage backend endpoint directly
         const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/bulk-skip-stage`, {
