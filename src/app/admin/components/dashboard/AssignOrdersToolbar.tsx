@@ -97,7 +97,7 @@ export default function AssignOrdersToolbar({
   const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
   const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false);
-  const [tempSkipStage, setTempSkipStage] = useState<string>("placeholder");
+  const [tempSkipStage, setTempSkipStage] = useState<string>("yes");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -528,7 +528,7 @@ export default function AssignOrdersToolbar({
           open={skipStageDialogOpen}
           onClose={() => {
             setSkipStageDialogOpen(false);
-            setTempSkipStage("placeholder");
+            setTempSkipStage("yes");
           }}
           maxWidth="xs"
           fullWidth
@@ -556,7 +556,7 @@ export default function AssignOrdersToolbar({
             <Button
               onClick={() => {
                 setSkipStageDialogOpen(false);
-                setTempSkipStage("placeholder");
+                setTempSkipStage("yes");
               }}
               color="inherit"
             >
@@ -570,7 +570,7 @@ export default function AssignOrdersToolbar({
                   await onSkipStage(tempSkipStage);
                 }
                 setSkipStageDialogOpen(false);
-                setTempSkipStage("placeholder");
+                setTempSkipStage("yes");
               }}
               sx={{
                 bgcolor: "#facd02",
