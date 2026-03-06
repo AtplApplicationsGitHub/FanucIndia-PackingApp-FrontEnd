@@ -757,13 +757,18 @@ export default function AssignSO() {
 
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        {row.skipIssueStage && (
+                        {row.skipIssueStage ? (
                           <Tooltip title="Skip Stages">
                             <FlagIcon
                               sx={{ color: theme.palette.error.main }}
                               fontSize="small"
                             />
                           </Tooltip>
+                        ) : (
+                          <FlagIcon
+                            sx={{ visibility: "hidden" }}
+                            fontSize="small"
+                          />
                         )}
                         <MuiLink
                           component={Link}

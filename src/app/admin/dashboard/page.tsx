@@ -7,7 +7,6 @@ import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import AssignSO from "@/app/admin/components/dashboard/AssignSO";
 import AdminOrdersTable from "@/app/admin/components/dashboard/OrdersTable";
 import AdminMasterLookupPanel from "@/app/admin/components/dashboard/LookupPanel";
-import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
 import AdminOrdersToolbar from "@/app/admin/components/dashboard/OrdersToolbar";
 import AdminOrderEditModal from "@/app/admin/components/dashboard/EditModal";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
@@ -283,9 +282,6 @@ export default function AdminDashboard() {
         )}
 
         {admin.view === "master" && <AdminMasterLookupPanel />}
-        {admin.view === "manage" && (
-          <AdminManageUsersPanel showSnackbar={showSnackbar} />
-        )}
         {admin.view === "dispatch" && <DispatchView />}
         {admin.view === "fg_dashboard" && <FgDashboardView />}
 

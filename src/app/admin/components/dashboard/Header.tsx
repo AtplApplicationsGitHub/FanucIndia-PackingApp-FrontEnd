@@ -62,14 +62,9 @@ const allMenuItems = [
     icon: <Database className="mr-2 h-4 w-4" />,
     value: "master",
   },
-  {
-    label: "MANAGE",
-    icon: <Users className="mr-2 h-4 w-4" />,
-    value: "manage",
-  },
 ];
 
-const MAX_VISIBLE_ITEMS = 6;
+const MAX_VISIBLE_ITEMS = 7;
 
 export default function AdminDashboardHeader({
   userName,

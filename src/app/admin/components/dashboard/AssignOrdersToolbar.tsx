@@ -96,7 +96,9 @@ export default function AssignOrdersToolbar({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
-  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false);
+  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false
+    
+  );
   const [tempSkipStage, setTempSkipStage] = useState<string>("yes");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);

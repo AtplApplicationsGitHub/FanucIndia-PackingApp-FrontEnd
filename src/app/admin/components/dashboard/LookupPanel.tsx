@@ -18,6 +18,7 @@ import { secureDownload } from "@/common/lib/secure-download";
 import { Button, Paper, useTheme, InputBase, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search"; 
 import ClearIcon from "@mui/icons-material/Clear";   
+import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
 
 // UPDATED: Products removed "code"
 const SCHEMA_KEYS: Record<string, string[]> = {
@@ -50,7 +51,7 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   materialBarcodes: "material-barcodes",
 };
 
-type MasterLookupKey = keyof typeof TYPE_TO_API_PATH;
+type MasterLookupKey = keyof typeof TYPE_TO_API_PATH | "users";
 
 const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Products", key: "products" },
@@ -61,6 +62,7 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Customers", key: "customers" },
   { label: "Printers", key: "printers" },
   { label: "Material Barcode", key: "materialBarcodes" },
+  { label: "Users", key: "users" },
 ];
 
 export default function AdminMasterLookupPanel() {
@@ -96,7 +98,7 @@ export default function AdminMasterLookupPanel() {
   const getApiPath = React.useCallback(() => TYPE_TO_API_PATH[selectedType] || selectedType, [selectedType]);
 
   const fetchData = React.useCallback(async () => {
-    if (!selectedType) return;
+    if (!selectedType || selectedType === "users") return;
     setLoading(true);
     setError("");
     try {
@@ -131,6 +133,7 @@ export default function AdminMasterLookupPanel() {
       case "customers": return "name";
       case "printers": return "name";
       case "materialBarcodes": return "erpCode";
+      case "users": return "name";
       default: return "name";
     }
   }, [selectedType]);
@@ -294,51 +297,54 @@ export default function AdminMasterLookupPanel() {
   return (
     <Box sx={{ width: "100%", mt: 1, px: 1, pb: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
       
-      {/* 1. Tabs (Moved to Top, Yellow BG, Centered) */}
+      {/* 1. Centered Tabs */}
       <Paper 
         elevation={2}
         sx={{ 
-          mb: 4, 
+          mb: 1.5, 
+          width: "80%",
           borderRadius: 1, 
-          bgcolor: theme.palette.primary.main, // FANUC Yellow
-          overflow: "hidden"
+          bgcolor: theme.palette.primary.main, 
+          overflow: "hidden",
+          display: "flex",
+          justifyContent: "center",
+          px: 2
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-          <Tabs
-            value={selectedType}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            textColor="inherit" // Uses text color suitable for yellow (likely black/contrast)
-            indicatorColor="secondary" // Or white/black depending on preference
-            sx={{ 
-              "& .MuiTab-root": { 
-                fontWeight: 700, 
-                fontSize: 15, 
-                color: theme.palette.primary.contrastText,
-                opacity: 0.7,
-                "&.Mui-selected": {
-                  opacity: 1,
-                  color: theme.palette.primary.contrastText,
-                }
+        <Tabs
+          value={selectedType}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          textColor="inherit"
+          sx={{ 
+            minHeight: 48,
+            "& .MuiTab-root": { 
+              fontWeight: 700, 
+              fontSize: 14, 
+              color: "#000",
+              opacity: 0.6,
+              minHeight: 48,
+              "&.Mui-selected": {
+                opacity: 1,
               }
-            }}
-          >
-            {MASTER_LOOKUP_OPTIONS.map((option) => (
-              <Tab 
-                key={option.key} 
-                label={option.label} 
-                value={option.key} 
-              />
-            ))}
-          </Tabs>
-        </Box>
+            },
+            "& .MuiTabs-indicator": {
+               bgcolor: "#000",
+               height: 3
+            }
+          }}
+        >
+          {MASTER_LOOKUP_OPTIONS.map((option) => (
+            <Tab key={option.key} label={option.label} value={option.key} />
+          ))}
+        </Tabs>
       </Paper>
 
-      {/* 2. Action Buttons (Moved Below Tabs) */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 3 }}>
+      {/* 2. Action Buttons (Moved Below Tabs - Hidden for Users as it has its own) */}
+      {selectedType !== "users" && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 1.5 }}>
         <Paper
           component="form"
           onSubmit={(e) => e.preventDefault()}
@@ -381,45 +387,56 @@ export default function AdminMasterLookupPanel() {
           REFRESH
         </Button>
       </Box>
+      )}
       
 
-      {/* 3. Table */}
+      {/* 3. Table or Users Panel */}
       <Box sx={{ width: "100%" }}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" py={8}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
+        {selectedType === "users" ? (
+          <AdminManageUsersPanel showSnackbar={showSnackbar} />
         ) : (
-          <LookupCrudTable
-            data={filteredData}
-            explicitKeys={SCHEMA_KEYS[selectedType]}
-            onEdit={openEditDialog}
-            onRequestDelete={(id) => handleRequestDelete(id)}
-          />
+          <>
+            {loading ? (
+              <Box display="flex" justifyContent="center" py={8}>
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Alert severity="error">{error}</Alert>
+            ) : (
+              <LookupCrudTable
+                data={filteredData}
+                explicitKeys={SCHEMA_KEYS[selectedType]}
+                onEdit={openEditDialog}
+                onRequestDelete={(id) => handleRequestDelete(id)}
+              />
+            )}
+          </>
         )}
       </Box>
 
       {/* Dialogs */}
-      <LookupFormDialog
-        open={dialogOpen}
-        title={dialogMode === "add" ? `Add New ${selectedType}` : `Edit ${selectedType}`}
-        fields={SCHEMA_KEYS[selectedType].filter(k => k !== 'id')}
-        initialValues={selectedRow}
-        onClose={() => setDialogOpen(false)}
-        onSave={handleDialogSave}
-        loading={actionLoading}
-      />
+      {selectedType !== "users" && (
+        <>
+          <LookupFormDialog
+            open={dialogOpen}
+            title={dialogMode === "add" ? `Add New ${selectedType}` : `Edit ${selectedType}`}
+            fields={SCHEMA_KEYS[selectedType]?.filter(k => k !== 'id') || []}
+            initialValues={selectedRow}
+            onClose={() => setDialogOpen(false)}
+            onSave={handleDialogSave}
+            loading={actionLoading}
+          />
 
-      <ConfirmDeleteDialog
-        open={deleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteDialogOpen(false)}
-        loading={actionLoading}
-        title="Delete Confirmation"
-        description="Are you sure you want to delete this item?"
-      />
+          <ConfirmDeleteDialog
+            open={deleteDialogOpen}
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDeleteDialogOpen(false)}
+            loading={actionLoading}
+            title="Delete Confirmation"
+            description="Are you sure you want to delete this item?"
+          />
+        </>
+      )}
 
       <Snackbar
         open={snackbar.open}

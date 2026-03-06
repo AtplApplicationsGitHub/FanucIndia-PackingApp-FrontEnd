@@ -54,12 +54,12 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
   };
 
   return (
-    <Box p={3} sx={{ width: "100%" }}>
+    <Box p={0} sx={{ width: "100%" }}>
       <Stack
         direction="row"
         alignItems="center"
         justifyContent="flex-end"
-        mb={4}
+        mb={1}
       >
         <Button
           onClick={onCreate}
