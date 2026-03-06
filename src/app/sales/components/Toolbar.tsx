@@ -13,6 +13,8 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  Divider,
+  ListSubheader,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -112,9 +114,9 @@ export default function SalesDashboardToolbar({
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: 2,
-            px: 2,
-            py: 1.5,
+            gap: { xs: 1, xl: 2 },
+            px: { xs: 1, md: 2 },
+            py: 1,
             mx: "auto",
           }}
         >
@@ -125,11 +127,12 @@ export default function SalesDashboardToolbar({
               p: "2px 4px",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 220 },
+              width: { xs: "100%", sm: 160, md: 200 },
               border: "1px solid #e0e0e0",
               borderRadius: "4px",
               height: 40,
               bgcolor: "#fff",
+              flexShrink: 1,
             }}
           >
             <InputBase
@@ -150,33 +153,33 @@ export default function SalesDashboardToolbar({
 
           <FormControl
             size="small"
-            sx={{ minWidth: 120, bgcolor: "background.paper" }}
+            sx={{ minWidth: { xs: 100, md: 110 }, bgcolor: "background.paper", flexShrink: 1 }}
           >
             <Select
               value={paymentFilter}
               displayEmpty
               onChange={(e) => onPaymentFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
+              sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="">PAYMENT</MenuItem>
-              <MenuItem value="true">Yes</MenuItem>
-              <MenuItem value="false">No</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>PAYMENT</MenuItem>
+              <MenuItem value="true" sx={{ fontSize: "13px" }}>Yes</MenuItem>
+              <MenuItem value="false" sx={{ fontSize: "13px" }}>No</MenuItem>
             </Select>
           </FormControl>
 
           <FormControl
             size="small"
-            sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            sx={{ minWidth: { xs: 110, md: 120 }, bgcolor: "background.paper", flexShrink: 1 }}
           >
             <Select
               value={zoneFilter}
               displayEmpty
               onChange={(e) => onZoneFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
+              sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="">SALES ZONE</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>SALES ZONE</MenuItem>
               {salesZones.map((zone) => (
-                <MenuItem key={zone.id} value={String(zone.id)}>
+                <MenuItem key={zone.id} value={String(zone.id)} sx={{ fontSize: "13px" }}>
                   {zone.name}
                 </MenuItem>
               ))}
@@ -185,17 +188,17 @@ export default function SalesDashboardToolbar({
 
           <FormControl
             size="small"
-            sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            sx={{ minWidth: { xs: 100, md: 100 }, bgcolor: "background.paper", flexShrink: 1 }}
           >
             <Select
               value={statusFilter}
               displayEmpty
               onChange={(e) => onStatusFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
+              sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="">STATUS</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>STATUS</MenuItem>
               {STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status}>
+                <MenuItem key={status} value={status} sx={{ fontSize: "13px" }}>
                   {status}
                 </MenuItem>
               ))}
@@ -211,9 +214,10 @@ export default function SalesDashboardToolbar({
               textField: {
                 size: "small",
                 sx: {
-                  minWidth: 140,
+                  minWidth: { xs: 120, md: 130 },
                   bgcolor: "background.paper",
-                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                  "& .MuiInputBase-root": { height: 40, fontSize: "13px" },
+                  "& .MuiInputLabel-root": { fontSize: "13px" },
                 },
               },
             }}
@@ -228,9 +232,10 @@ export default function SalesDashboardToolbar({
               textField: {
                 size: "small",
                 sx: {
-                  minWidth: 140,
+                  minWidth: { xs: 120, md: 130 },
                   bgcolor: "background.paper",
-                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                  "& .MuiInputBase-root": { height: 40, fontSize: "13px" },
+                  "& .MuiInputLabel-root": { fontSize: "13px" },
                 },
               },
             }}
@@ -246,26 +251,29 @@ export default function SalesDashboardToolbar({
             <CloseIcon fontSize="small" />
           </IconButton>
 
-          <Button
-            variant="contained"
-            disableElevation
-            onClick={onCreate}
-            startIcon={<Plus size={18} />}
-            sx={{
-              bgcolor: "#facd02",
-              color: "#000",
-              fontWeight: 600,
-              fontSize: "13px",
-              height: 40,
-              ml: { xs: 0, md: "auto" },
-              "&:hover": { bgcolor: "#e5bb01" },
-            }}
-          >
-            CREATE ORDER
-          </Button>
-          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <ListIcon />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={onCreate}
+              startIcon={<Plus size={18} />}
+              sx={{
+                bgcolor: "#facd02",
+                color: "#000",
+                fontWeight: 600,
+                fontSize: "12px",
+                height: 40,
+                whiteSpace: "nowrap",
+                px: { xs: 1.5, md: 2 },
+                "&:hover": { bgcolor: "#e5bb01" },
+              }}
+            >
+              CREATE ORDER
+            </Button>
+            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <ListIcon />
+            </IconButton>
+          </Box>
         </Paper>
 
         <Menu
@@ -277,6 +285,18 @@ export default function SalesDashboardToolbar({
             sx: { mt: 1.5, minWidth: 240, borderRadius: "8px" },
           }}
         >
+          <ListSubheader 
+            sx={{ 
+              lineHeight: '32px', 
+              fontWeight: 700, 
+              fontSize: '0.75rem', 
+              color: 'text.secondary',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
+          >
+            Create New Orders
+          </ListSubheader>
           <MenuItem
             onClick={() => {
               onDownload();
@@ -305,6 +325,19 @@ export default function SalesDashboardToolbar({
             </ListItemIcon>
             <ListItemText primary="BULK UPLOAD" />
           </MenuItem>
+          <Divider sx={{ my: 0.5 }} />
+          <ListSubheader 
+            sx={{ 
+              lineHeight: '32px', 
+              fontWeight: 700, 
+              fontSize: '0.75rem', 
+              color: 'text.secondary',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
+          >
+            Update Existing Data
+          </ListSubheader>
           <MenuItem
             onClick={() => {
               onExcelExport();

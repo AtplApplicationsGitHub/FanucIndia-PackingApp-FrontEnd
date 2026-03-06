@@ -18,6 +18,7 @@ import {
   Tooltip,
   useTheme,
   alpha,
+  Chip,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Link from "next/link";
@@ -137,9 +138,10 @@ export default function SalesOrdersTable({
             },
             "& .MuiTableCell-root": {
               borderBottom: "none",
-              py: 1,
-              px: 2,
+              py: 0.5,
+              px: 1,
               fontSize: "0.875rem",
+              whiteSpace: "nowrap",
             },
           }}
         >
@@ -152,21 +154,21 @@ export default function SalesOrdersTable({
           >
             <TableRow sx={{ height: 60 }}>
               {[
-                "Actions",
-                "Notifications",
-                "Product",
-                "Sale Order Number",
-                "OutBound Delivery",
-                "Transfer Order",
-                "Required Date",
-                "Transporter",
-                "Plant Code",
-                "Payment",
-                "Sales Zone",
-                "Packing Config",
-                "Customer",
-                "Special Remarks",
-                "Status",
+                "ACTIONS",
+                // "Notifications",
+                "PRODUCT",
+                "SALE ORDER NUMBER",
+                // "OutBound Delivery",
+                "TRANSFER ORDER",
+                "REQUIRED DATE",
+                "TRANSPORTER",
+                // "Plant Code",
+                "PAYMENT",
+                "SALES ZONE",
+                "PACKING CONFIG",
+                "CUSTOMER",
+                // "Special Remarks",
+                "STATUS",
               ].map((head) => (
                 <TableCell
                   key={head}
@@ -185,31 +187,28 @@ export default function SalesOrdersTable({
           <TableBody>
             {orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={11} align="center" sx={{ py: 4 }}>
                   No orders found. Create your first order!
                 </TableCell>
               </TableRow>
             ) : (
               orders.map((row) => (
                 <TableRow key={row.id}>
-                  {/* ACTIONS */}
-                  <TableCell>
+                  {/* ACTIONS & NOTIFICATIONS */}
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     <IconButton
                       onClick={(e) => handleMenuOpen(e, row.id)}
                       size="small"
                     >
                       <MoreVertIcon />
                     </IconButton>
-                  </TableCell>
-
-                  {/* NOTIFICATIONS */}
-                  <TableCell>
                     <IconButton
                       onClick={() =>
                         row.saleOrderNumber &&
                         onOpenChat(row.saleOrderNumber, row.id)
                       }
                       size="small"
+                      sx={{ ml: 1 }}
                     >
                       <Badge
                         badgeContent={row.notificationCount || 0}
@@ -238,7 +237,7 @@ export default function SalesOrdersTable({
                   </TableCell>
 
                   {/* OUTBOUND DELIVERY */}
-                  <TableCell>{row.outboundDelivery}</TableCell>
+                  {/* <TableCell>{row.outboundDelivery}</TableCell> */}
 
                   {/* TRANSFER ORDER */}
                   <TableCell>{row.transferOrder}</TableCell>
@@ -254,12 +253,26 @@ export default function SalesOrdersTable({
                   </TableCell>
 
                   {/* PLANT CODE */}
-                  <TableCell>
+                  {/* <TableCell>
                     {row.plantCode || "-"}
-                  </TableCell>
+                  </TableCell> */}
 
                   {/* PAYMENT */}
-                  <TableCell>{row.paymentClearance ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={row.paymentClearance ? "Yes" : "No"}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        color: row.paymentClearance ? "#1b5e20" : "#c62828",
+                        borderColor: row.paymentClearance ? "#4caf50" : "#ef5350",
+                        backgroundColor: row.paymentClearance ? "#e8f5e9" : "#ffebee",
+                        fontWeight: 600,
+                        height: 24,
+                        "& .MuiChip-label": { px: 2 },
+                      }}
+                    />
+                  </TableCell>
 
                   {/* SALES ZONE */}
                   <TableCell>
@@ -288,10 +301,42 @@ export default function SalesOrdersTable({
                   </TableCell>
 
                   {/* SPECIAL REMARKS */}
-                  <TableCell>{row.specialRemarks || "-"}</TableCell>
+                  {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}
 
                   {/* STATUS */}
-                  <TableCell>{row.status || "-"}</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>
+                      {(() => {
+                        if (!row.status) return <Box>-</Box>;
+                        let colorMain = theme.palette.grey[500];
+                        let label = row.status;
+                        if (row.status === "R105") { colorMain = "#3b82f6"; label = "R105"; }
+                        else if (row.status === "W105") { colorMain = "#eab308"; label = "W105"; }
+                        else if (row.status === "F105") { colorMain = "#8b5cf6"; label = "F105"; }
+                        else if (row.status === "Dispatched") { colorMain = "#10b981"; label = "Dispatched"; }
+                        
+                        return (
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "3px 10px",
+                              borderRadius: "16px",
+                              border: "1px solid",
+                              borderColor: alpha(colorMain, 0.5),
+                              backgroundColor: alpha(colorMain, 0.1),
+                              color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              minWidth: "50px",
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            {label}
+                          </Box>
+                        );
+                      })()}
+                  </TableCell>
                 </TableRow>
               ))
             )}
