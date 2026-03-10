@@ -19,6 +19,8 @@ import {
   Snackbar,
   Alert,
   Tooltip,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -76,8 +78,8 @@ export default function AssignSO() {
   const [paymentFilter, setPaymentFilter] = React.useState("");
   const [zoneFilter, setZoneFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
-  const [startDate, setStartDate] = React.useState<Date | null>(null);
-  const [endDate, setEndDate] = React.useState<Date | null>(null);
+  const [startDate, setStartDate] = React.useState<Date | null>(dayjs().toDate());
+  const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
 
   const onClear = () => {
     setSearchInput("");
@@ -304,6 +306,14 @@ export default function AssignSO() {
       });
     }
   };
+
+  const statusCounts = React.useMemo(() => {
+    return {
+      R105: orders.filter((o) => o.status === "R105").length,
+      W105: orders.filter((o) => o.status === "W105").length,
+      F105: orders.filter((o) => o.status === "F105").length,
+    };
+  }, [orders]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -586,6 +596,43 @@ export default function AssignSO() {
     );
   }
 
+  function CustomEditSelect({
+    initialValue,
+    onCommit,
+    onCancel,
+    options,
+  }: {
+    initialValue: string | number | null;
+    onCommit: (val: string | number) => void;
+    onCancel: () => void;
+    options: { id: number; name: string }[];
+  }) {
+    const [localValue, setLocalValue] = React.useState(initialValue ?? "");
+
+    return (
+      <Select
+        value={localValue === null ? "" : localValue}
+        size="small"
+        onChange={(e) => {
+          const val = e.target.value;
+          setLocalValue(val as string);
+          onCommit(val as string);
+        }}
+        onBlur={onCancel}
+        autoFocus
+        variant="standard"
+        sx={{ width: "100%", fontSize: "0.875rem" }}
+      >
+        <MenuItem value="">Unassigned</MenuItem>
+        {options.map((opt) => (
+          <MenuItem key={opt.id} value={opt.id}>
+            {opt.name}
+          </MenuItem>
+        ))}
+      </Select>
+    );
+  }
+
   React.useEffect(() => {
     if (error) {
       setSnackbar({
@@ -628,6 +675,7 @@ export default function AssignSO() {
           onImportERPData={handleImportERPData}
           onExcelExport={handleExcelExport}
           onExcelImport={() => fileInputRef.current?.click()}
+          statusCounts={statusCounts}
         />
       </Box>
 
@@ -705,7 +753,7 @@ export default function AssignSO() {
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={11}
                   align="center"
                   sx={{
                     bgcolor: lightYellow,
@@ -905,12 +953,40 @@ export default function AssignSO() {
                     </TableCell>
 
                     <TableCell sx={{ minWidth: 150 }}>
-                      {row.assignedUser?.name ||
-                        findName(
-                          lookup.assignableUsers,
-                          row.assignedUserId ?? 0,
-                        ) ||
-                        "-"}
+                      {inlineEdit?.id === row.id &&
+                      inlineEdit.field === "assignedUserId" ? (
+                        <CustomEditSelect
+                          initialValue={inlineEdit.value}
+                          onCommit={(val: string | number) => handleInlineSave(val)}
+                          onCancel={() => setInlineEdit(null)}
+                          options={lookup.assignableUsers || []}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            cursor: isDispatched ? "default" : "pointer",
+                            textDecoration: isDispatched
+                              ? "none"
+                              : "underline dotted",
+                          }}
+                          onClick={() =>
+                            !isDispatched &&
+                            setInlineEdit({
+                              id: row.id,
+                              field: "assignedUserId",
+                              value: row.assignedUserId ?? "",
+                              original: row.assignedUserId ?? "",
+                            })
+                          }
+                        >
+                          {row.assignedUser?.name ||
+                            findName(
+                              lookup.assignableUsers,
+                              row.assignedUserId ?? 0,
+                            ) ||
+                            "-"}
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

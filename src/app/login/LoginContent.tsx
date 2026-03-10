@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Card, CardContent, Alert, AppBar, Toolbar } from "@mui/material";
+import { Box, Card, CardContent, Alert, AppBar, Toolbar, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -12,6 +12,7 @@ import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+import { APP_VERSION } from "@/version";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole; email: string } & Record<string, unknown>;
@@ -223,6 +224,13 @@ export default function LoginContent() {
             />
           </CardContent>
         </Card>
+      </Box>
+
+      {/* Footer Version Info */}
+      <Box sx={{ py: 2, textAlign: 'center' }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', opacity: 0.8 }}>
+          Fanuc DIMS Vr :{APP_VERSION}
+        </Typography>
       </Box>
     </Box>
   );

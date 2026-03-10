@@ -21,6 +21,8 @@ import FgDashboardView from "@/app/components/FgDashboardView";
 import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 
+import { APP_VERSION } from "@/version";
+
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
@@ -161,8 +163,11 @@ export default function AdminDashboard() {
           width: "100%",
           bgcolor: "background.default",
           p: 0,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
+        <Box sx={{ flexGrow: 1 }}>
         <AdminDashboardHeader
           userName={admin.userName}
           view={admin.view}
@@ -299,6 +304,27 @@ export default function AdminDashboard() {
             {admin.error}
           </Box>
         )}
+
+        </Box>
+
+         {/* VERSION FOOTER */}
+        <Box
+          sx={{
+            py: 1,
+            px: 3,
+            display: "flex",
+            justifyContent: "center",
+            opacity: 0.5,
+            fontSize: "0.75rem",
+            color: "text.secondary",
+            borderTop: "1px solid rgba(0,0,0,0.05)",
+            mt: 'auto'
+          }}
+        >
+          <Typography variant="caption" sx={{ fontWeight: 500 }}>
+            Fanuc DIMS Vr:{APP_VERSION} 
+          </Typography>
+        </Box>
 
         <ConfirmDeleteDialog
           open={!!admin.confirmDelete}

@@ -36,9 +36,13 @@ import FastForwardOutlinedIcon from "@mui/icons-material/FastForwardOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CloseIcon from "@mui/icons-material/Close";
+import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
+import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 import { LookupRow } from "@/app/admin/components/types/admin";
 
-const STATUS_OPTIONS = ["None", "R105", "W105"];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
 
 type Props = {
   searchInput: string;
@@ -65,6 +69,11 @@ type Props = {
   onImportERPData?: () => void;
   onExcelExport?: () => void;
   onExcelImport?: () => void;
+  statusCounts?: {
+    R105: number;
+    W105: number;
+    F105: number;
+  };
 };
 
 export default function AssignOrdersToolbar({
@@ -89,6 +98,7 @@ export default function AssignOrdersToolbar({
   onImportERPData,
   onExcelExport,
   onExcelImport,
+  statusCounts = { R105: 0, W105: 0, F105: 0 },
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -96,9 +106,7 @@ export default function AssignOrdersToolbar({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
 
-  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false
-    
-  );
+  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false);
   const [tempSkipStage, setTempSkipStage] = useState<string>("yes");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -142,12 +150,14 @@ export default function AssignOrdersToolbar({
         sx={{
           width: "100%",
           mt: 1,
-          px: 1,
+          px: 2,
           pb: 0,
           mb: 0,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: { xs: "column", md: "row" },
           alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
         }}
       >
         {/* Main Floating Toolbar */}
@@ -157,14 +167,14 @@ export default function AssignOrdersToolbar({
             mb: 0,
             borderRadius: 2,
             bgcolor: "background.paper",
-            width: "fit-content",
+            width: { xs: "100%", md: "fit-content" },
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
             gap: 2,
             px: 2,
             py: 1.5,
-            mx: "auto",
+            ml: 0,
           }}
         >
           {/* Search Field */}
@@ -175,7 +185,7 @@ export default function AssignOrdersToolbar({
               p: "2px 4px",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 220 },
+              width: { xs: "100%", sm: 180 },
               border: 1,
               borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
               borderRadius: "4px",
@@ -207,7 +217,7 @@ export default function AssignOrdersToolbar({
           {/* Payment Filter */}
           <FormControl
             size="small"
-            sx={{ minWidth: 120, bgcolor: "background.paper" }}
+            sx={{ minWidth: 100, bgcolor: "background.paper" }}
           >
             <Select
               value={paymentFilter}
@@ -224,7 +234,7 @@ export default function AssignOrdersToolbar({
           {/* Zone Filter */}
           <FormControl
             size="small"
-            sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            sx={{ minWidth: 110, bgcolor: "background.paper" }}
           >
             <Select
               value={zoneFilter}
@@ -244,7 +254,7 @@ export default function AssignOrdersToolbar({
           {/* Status Filter */}
           <FormControl
             size="small"
-            sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            sx={{ minWidth: 100, bgcolor: "background.paper" }}
           >
             <Select
               value={statusFilter}
@@ -276,7 +286,7 @@ export default function AssignOrdersToolbar({
                 size: "small",
                 variant: "outlined",
                 sx: {
-                  minWidth: 140,
+                  minWidth: 120,
                   bgcolor: "background.paper",
                   "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
                 },
@@ -296,7 +306,7 @@ export default function AssignOrdersToolbar({
                 size: "small",
                 variant: "outlined",
                 sx: {
-                  minWidth: 140,
+                  minWidth: 120,
                   bgcolor: "background.paper",
                   "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
                 },
@@ -330,6 +340,121 @@ export default function AssignOrdersToolbar({
             <ListIcon />
           </IconButton>
         </Paper>
+
+        {/* Status Count Cards */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2.5,
+            alignItems: "center",
+            flexWrap: { xs: "wrap", lg: "nowrap" },
+            width: { xs: "100%", md: "auto" },
+            justifyContent: { xs: "center", md: "flex-end" },
+            ml: { md: 2 },
+          }}
+        >
+          {[
+            { 
+              label: "R105", 
+              count: statusCounts.R105, 
+              color: "#60a5fa",
+              lightColor: "rgba(96, 165, 250, 0.08)",
+              icon: <HowToRegIcon />
+            },
+            { 
+              label: "W105", 
+              count: statusCounts.W105, 
+              color: "#fbbf24",
+              lightColor: "rgba(251, 191, 36, 0.08)",
+              icon: <PendingActionsRoundedIcon />
+            },
+            { 
+              label: "F105", 
+              count: statusCounts.F105, 
+              color: "#c084fc",
+              lightColor: "rgba(192, 132, 252, 0.08)",
+              icon: <CheckCircleRoundedIcon />
+            },
+          ].map((card) => (
+            <Paper
+              key={card.label}
+              elevation={0}
+              sx={{
+                px: 2.2,
+                py: 1.5,
+                borderRadius: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                minWidth: 155,
+                border: "1px solid",
+                borderColor: "#f0f0f0",
+                bgcolor: "#ffffff",
+                position: "relative",
+                overflow: "hidden",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 44,
+                  height: 44,
+                  borderRadius: "12px",
+                  bgcolor: card.lightColor,
+                  color: card.color,
+                  flexShrink: 0,
+                }}
+              >
+                {React.cloneElement(card.icon as React.ReactElement<any>, { sx: { fontSize: 24 } })}
+              </Box>
+              
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flex: 1 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#5f6368",
+                    display: "block",
+                    textTransform: "uppercase",
+                    fontSize: "0.72rem",
+                    mb: 0.2,
+                  }}
+                >
+                  {card.label}
+                </Typography>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 900,
+                    color: "#1a1a1b",
+                    lineHeight: 1,
+                    letterSpacing: "-0.5px",
+                  }}
+                >
+                  {card.count}
+                </Typography>
+              </Box>
+
+              {/* Bottom Accent Bar */}
+              <Box 
+                sx={{ 
+                  position: "absolute",
+                  bottom: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "50%",
+                  height: "4px",
+                  bgcolor: card.color,
+                  borderRadius: "4px 4px 0 0",
+                  opacity: 0.9,
+                }} 
+              />
+            </Paper>
+          ))}
+        </Box>
 
         <Menu
           id="actions-menu"
