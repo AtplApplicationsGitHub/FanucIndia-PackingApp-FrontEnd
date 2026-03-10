@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname } from "next/navigation"; 
+import { useRouter, usePathname } from "next/navigation";
 import { AppBar, Toolbar, Box, useTheme, Button } from "@mui/material";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
-import { ClipboardList, BarChart3, Search } from "lucide-react"; 
+import { ClipboardList, BarChart3, Search } from "lucide-react";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 
@@ -15,15 +15,15 @@ type Props = {
 };
 
 const menuItems = [
-  { label: "DASHBOARD", icon: <BarChart3 className="mr-2 h-4 w-4" />, value: "home" },
-  { label: "ORDERS", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "orders" },
-  { label: "SO SEARCH", icon: <Search className="mr-2 h-4 w-4" />, value: "so_search" },
+  { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
+  { label: "ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
+  { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 
-export default function SalesDashboardHeader({ userName,view, setView }: Props) {
+export default function SalesDashboardHeader({ userName, view, setView }: Props) {
   const theme = useTheme();
-  const router = useRouter(); 
-  const pathname = usePathname(); 
+  const router = useRouter();
+  const pathname = usePathname();
 
   const getIsSelected = (itemValue: string) => {
     if (pathname.startsWith("/so-search")) {
@@ -54,9 +54,9 @@ export default function SalesDashboardHeader({ userName,view, setView }: Props) 
         sx={{
           justifyContent: "space-between",
           pl: { xs: 2, md: 4 },
-          pr: { xs: '64px', md: '80px' },
-          py: 1,
-          minHeight: 64,
+          pr: { xs: 1, md: 2 },
+          py: 0.5,
+          minHeight: 20,
         }}
       >
         <Box
@@ -66,8 +66,8 @@ export default function SalesDashboardHeader({ userName,view, setView }: Props) 
           <Image
             src="/Fanuc_India.png"
             alt="Fanuc India Logo"
-            width={120}
-            height={28}
+            width={85}
+            height={21}
             priority
           />
         </Box>
@@ -75,38 +75,41 @@ export default function SalesDashboardHeader({ userName,view, setView }: Props) 
         <Box
           sx={{ display: "flex", justifyContent: "flex-end", gap: 3 }}
         >
-          {menuItems.map((item) => {
-            const isSelected = getIsSelected(item.value); 
-            return (
-              <Button
-                key={item.value}
-                disableRipple
-                variant="text"
-                onClick={() => handleMenuItemClick(item.value)} 
-                sx={{
-                  position: "relative",
-                  px: 3,
-                  py: 1.5,
-                  fontWeight: isSelected ? 700 : 600, 
-                  color: theme.palette.primary.contrastText,
-                  borderBottom: isSelected 
-                    ? `3px solid ${theme.palette.primary.contrastText}`
-                    : "3px solid transparent",
-                  borderRadius: 0,
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    bgcolor: "transparent",
-                    opacity: 0.8,
-                  },
-                  textTransform: "uppercase",
-                }}
-              >
-                {item.label}
-              </Button>
-            );
-          })}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
+            {menuItems.map((item) => {
+              const isSelected = getIsSelected(item.value);
+              return (
+                <Button
+                  key={item.value}
+                  disableRipple
+                  variant="text"
+                  onClick={() => handleMenuItemClick(item.value)}
+                  sx={{
+                    position: "relative",
+                    px: 1.5,
+                    py: 1,
+                    fontWeight: isSelected ? 700 : 600,
+                    color: theme.palette.primary.contrastText,
+                    borderBottom: isSelected
+                      ? `3px solid ${theme.palette.primary.contrastText}`
+                      : "3px solid transparent",
+                    borderRadius: 0,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      bgcolor: "transparent",
+                      opacity: 0.8,
+                    },
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {item.icon}
+                  {item.label}
+                </Button>
+              );
+            })}
+          </Box>
         </Box>
-        <Box sx={{ ml: 3 }}>
+        <Box sx={{ ml: 0 }}>
           <UserMenu username={userName} userRole="SALES" variant="full" />
         </Box>
       </Toolbar>

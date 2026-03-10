@@ -42,14 +42,14 @@ export default function AdminDashboard() {
             <PaymentClearanceChart />
           </div>
           {/* 2 same column Responsiv  */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="h-full w-full ">
               <OrdersByCustomer />
             </div>
             <div className="h-full w-full">
               <OrdersByProduct />
             </div>
-          </div>
+          </div> */}
         </motion.div>
       </div>
     </div>

@@ -29,37 +29,37 @@ export type ViewType =
   | "assignso";
 
 type Props = {
-  userName: string; 
+  userName: string;
   view: ViewType;
   setView: React.Dispatch<React.SetStateAction<ViewType>>;
 };
 
 const allMenuItems = [
-  { label: "DASHBOARD", icon: <BarChart3 className="mr-2 h-4 w-4" />, value: "home" },
-  { label: "ASSIGN SO", icon: <ClipboardList className="mr-2 h-4 w-4" />, value: "assignso" },
+  { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
+  { label: "ASSIGN SO", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "assignso" },
   {
     label: "ORDER LIST",
-    icon: <ClipboardList className="mr-2 h-4 w-4" />,
+    icon: <ClipboardList className="mr-1 h-4 w-4" />,
     value: "orders",
   },
   {
     label: "SO SEARCH",
-    icon: <Search className="mr-2 h-4 w-4" />,
+    icon: <Search className="mr-1 h-4 w-4" />,
     value: "so_search",
   },
   {
     label: "DISPATCH",
-    icon: <Truck className="mr-2 h-4 w-4" />,
+    icon: <Truck className="mr-1 h-4 w-4" />,
     value: "dispatch",
   },
   {
     label: "FG DASHBOARD",
-    icon: <Grid className="mr-2 h-4 w-4" />,
+    icon: <Grid className="mr-1 h-4 w-4" />,
     value: "fg_dashboard",
   },
   {
     label: "MASTER",
-    icon: <Database className="mr-2 h-4 w-4" />,
+    icon: <Database className="mr-1 h-4 w-4" />,
     value: "master",
   },
 ];
@@ -113,11 +113,11 @@ export default function AdminDashboardHeader({
     <AppBar
       position="static"
       elevation={1}
-      color="primary" 
+      color="primary"
       sx={{
         px: 0,
         boxShadow: 2,
-        bgcolor: theme.palette.primary.main, 
+        bgcolor: theme.palette.primary.main,
       }}
     >
       <Toolbar
@@ -126,9 +126,9 @@ export default function AdminDashboardHeader({
           justifyContent: "space-between",
           alignItems: "center",
           pl: { xs: 2, md: 4 },
-          pr: { xs: '64px', md: '80px' },
-          py: 1,
-          minHeight: 64, 
+          pr: { xs: 1, md: 2 },
+          py: 0.5,
+          minHeight: 20,
         }}
       >
         <Box
@@ -136,16 +136,16 @@ export default function AdminDashboardHeader({
           onClick={() => setView("home")}
         >
           <Image
-            src="/Fanuc_India.png" 
+            src="/Fanuc_India.png"
             alt="Fanuc India Logo"
-            width={120} 
-            height={28}
+            width={85}
+            height={21}
             priority
           />
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>  
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
             {visibleItems.map((item) => {
               const isSelected = getIsSelected(item.value);
               return (
@@ -156,25 +156,26 @@ export default function AdminDashboardHeader({
                   onClick={() => handleMenuItemClick(item.value)}
                   sx={{
                     borderRadius: 0,
-                    px: 2,
-                    py: 1.5,
+                    px: 1.5,
+                    py: 1,
                     minWidth: "auto",
-                    fontWeight: isSelected ? 700 : 600, 
-                    color: theme.palette.primary.contrastText, 
+                    fontWeight: isSelected ? 700 : 600,
+                    color: theme.palette.primary.contrastText,
                     bgcolor: "transparent",
                     boxShadow: "none",
                     borderBottom: isSelected
-                      ? `3px solid ${theme.palette.primary.contrastText}` 
+                      ? `3px solid ${theme.palette.primary.contrastText}`
                       : "3px solid transparent",
                     "&:hover": {
                       bgcolor: "transparent",
                       opacity: 0.8,
                     },
-                    textTransform: "uppercase", 
+                    textTransform: "uppercase",
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                   }}
                 >
+                  {item.icon}
                   {item.label}
                 </Button>
               );
@@ -190,10 +191,10 @@ export default function AdminDashboardHeader({
                   sx={{
                     borderRadius: 0,
                     px: 2,
-                    py: 1.5,
+                    py: 1,
                     minWidth: "auto",
                     fontWeight: isActiveItemHidden ? 700 : 600,
-                    color: theme.palette.primary.contrastText, 
+                    color: theme.palette.primary.contrastText,
                     borderBottom: isActiveItemHidden
                       ? `3px solid ${theme.palette.primary.contrastText}`
                       : "3px solid transparent",
@@ -258,7 +259,7 @@ export default function AdminDashboardHeader({
             )}
           </Box>
         </Box>
-        <Box sx={{ ml: 3 }}>
+        <Box sx={{ ml: 0 }}>
           <UserMenu username={userName} userRole="ADMIN" variant="full" />
         </Box>
       </Toolbar>

@@ -11,6 +11,7 @@ import {
   Divider,
   CircularProgress,
   useTheme,
+  Avatar, Tooltip,
 } from "@mui/material";
 import {
   Settings,
@@ -48,7 +49,8 @@ export default function UserMenu({
   const [themeAnchor, setThemeAnchor] = useState<null | HTMLElement>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [detectedRole, setDetectedRole] = useState<UserRole | undefined>(userRole);
+  const [, setDetectedRole] = useState<UserRole | undefined>(userRole);
+
 
   useEffect(() => {
     if (userRole) {
@@ -69,7 +71,7 @@ export default function UserMenu({
 
   const handleMainOpen = (e: React.MouseEvent<HTMLElement>) =>
     setMainAnchor(e.currentTarget);
-  
+
   const handleMainClose = () => {
     setMainAnchor(null);
     setThemeAnchor(null);
@@ -99,22 +101,45 @@ export default function UserMenu({
 
   return (
     <Box>
-      <Button
-        onClick={handleMainOpen}
-        startIcon={variant === "minimal" ? <Settings size={22} /> : undefined}
-        endIcon={variant === "full" ? <ChevronDown size={18} /> : undefined}
-        sx={{
-          color: Theme.palette.mode === 'dark' ? '#000000' : 'inherit',
-          textTransform: "none",
-          fontWeight: 600,
-          minWidth: variant === "minimal" ? "auto" : "64px",
-          p: variant === "minimal" ? 1 : "6px 16px",
-          "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-          "& .MuiButton-startIcon": { margin: 0 },
-        }}
-      >
-        {variant === "full" ? `Hi ${username || "User"}` : ""}
-      </Button>
+      <Tooltip title={username || "User"}>
+        <Box
+          onClick={handleMainOpen}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.2,
+            cursor: "pointer",
+            p: "4px 4px",
+            borderRadius: 1,
+            "&:hover": { bgcolor: "rgba(255,255,255,0.15)" },
+          }}
+        >
+          {username?.trim() ? (
+            <Avatar
+              sx={{
+                width: 34,
+                height: 34,
+                bgcolor: "rgba(0,0,0,0.25)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: 13,
+                border: "2px solid rgba(255,255,255,4.6)",
+              }}
+            >
+              {username
+                .trim()
+                .split(/\s+/)
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+            </Avatar>
+          ) : (
+            <Settings size={22} color="white" />
+          )}
+          <ChevronDown size={16} color="white" />
+        </Box>
+      </Tooltip>
 
       <Menu
         anchorEl={mainAnchor}
@@ -132,8 +157,8 @@ export default function UserMenu({
         </MenuItem>
 
         {variant === "full" && [
-          <MenuItem 
-            key="reset" 
+          <MenuItem
+            key="reset"
             onClick={() => {
               setResetDialogOpen(true);
               handleMainClose();
@@ -185,11 +210,11 @@ export default function UserMenu({
         </MenuItem>
       </Menu>
 
-      <ResetPasswordDialog 
-        open={resetDialogOpen} 
-        onClose={() => setResetDialogOpen(false)} 
-        userRole={detectedRole || "USER"}
+      <ResetPasswordDialog
+        open={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
       />
+
     </Box>
   );
 }

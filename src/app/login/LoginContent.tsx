@@ -152,17 +152,18 @@ export default function LoginContent() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            px: { xs: 2, md: 4 },
-            py: 1.5,
-            minHeight: 70,
+            pl: { xs: 2, md: 4 },
+            pr: { xs: 1, md: 2 },
+            py: 0.5,
+            minHeight: 20,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Image
               src="/Fanuc_India.png"
               alt="Fanuc India Logo"
-              width={140}
-              height={32}
+              width={85}
+              height={21}
               priority
             />
           </Box>

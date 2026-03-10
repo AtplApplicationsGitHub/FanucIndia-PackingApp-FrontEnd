@@ -24,7 +24,7 @@ import { UserRole } from "@/app/admin/components/types/admin";
 interface ResetPasswordDialogProps {
   open: boolean;
   onClose: () => void;
-  userRole: UserRole;
+  userRole?: UserRole;
 }
 
 const passwordChecks = [
@@ -54,7 +54,7 @@ interface ResetPasswordFormData {
 export default function ResetPasswordDialog({
   open,
   onClose,
-  userRole,
+  userRole = "USER",
 }: ResetPasswordDialogProps) {
   const {
     register,
@@ -118,7 +118,7 @@ export default function ResetPasswordDialog({
         message: "Password updated successfully!",
         severity: "success",
       });
-      
+
       setTimeout(() => {
         handleFormClose();
       }, 2000);
@@ -136,30 +136,30 @@ export default function ResetPasswordDialog({
   };
 
   const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover, 
-    color: (theme: Theme) => theme.palette.text.primary,  
+    bgcolor: (theme: Theme) => theme.palette.action.hover,
+    color: (theme: Theme) => theme.palette.text.primary,
     borderRadius: 0,
     clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
     fontWeight: 600,
     fontSize: 15,
-    minWidth: 100, 
+    minWidth: 100,
     height: 40,
     px: 2,
     textTransform: "none",
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main, 
-      color: (theme: Theme) => theme.palette.primary.contrastText, 
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)", 
+      bgcolor: (theme: Theme) => theme.palette.primary.main,
+      color: (theme: Theme) => theme.palette.primary.contrastText,
+      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
       "& .MuiSvgIcon-root, & svg": {
         color: "#000",
       },
     },
     "&:disabled": {
-       opacity: 0.6,
-       bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
-       color: (theme: Theme) => theme.palette.text.disabled
+      opacity: 0.6,
+      bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
+      color: (theme: Theme) => theme.palette.text.disabled
     }
   };
 
@@ -250,9 +250,9 @@ export default function ResetPasswordDialog({
         <Button onClick={handleFormClose} sx={buttonSx}>
           CANCEL
         </Button>
-        <Button 
-          onClick={handleSubmit(onSubmit)} 
-          disabled={submitting || !allSatisfied} 
+        <Button
+          onClick={handleSubmit(onSubmit)}
+          disabled={submitting || !allSatisfied}
           sx={buttonSx}
         >
           {submitting ? "SUBMITTING..." : "SUBMIT"}
@@ -264,9 +264,9 @@ export default function ResetPasswordDialog({
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleSnackbarClose} 
-          severity={snackbar.severity} 
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
           sx={{ width: "100%" }}
         >
           {snackbar.message}

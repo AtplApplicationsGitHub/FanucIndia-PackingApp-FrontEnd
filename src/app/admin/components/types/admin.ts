@@ -110,7 +110,7 @@ export interface StatusCardData {
   value: string | number;
   percentage: string;
   isPositive: boolean;
-  iconType: "cart" | "truck" | "alert";  
+  iconType: string;  
   iconColor: string;
 }
 
