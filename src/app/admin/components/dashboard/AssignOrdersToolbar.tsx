@@ -36,9 +36,9 @@ import FastForwardOutlinedIcon from "@mui/icons-material/FastForwardOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import HowToRegIcon from "@mui/icons-material/HowToReg";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { LookupRow } from "@/app/admin/components/types/admin";
 
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
@@ -188,7 +188,7 @@ export default function AssignOrdersToolbar({
                 p: "2px 4px",
                 display: "flex",
                 alignItems: "center",
-                width: { xs: "100%", md: 180, lg: 200 },
+                width: { xs: "100%", md: 160, lg: 180 },
                 border: 1,
                 borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
                 borderRadius: "4px",
@@ -218,7 +218,7 @@ export default function AssignOrdersToolbar({
             {/* Payment Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 100 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 85 }, flex: { xs: 1, sm: "initial" } }}
             >
               <Select
                 value={paymentFilter}
@@ -235,7 +235,7 @@ export default function AssignOrdersToolbar({
             {/* Zone Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 110 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 90 }, flex: { xs: 1, sm: "initial" } }}
             >
               <Select
                 value={zoneFilter}
@@ -255,7 +255,7 @@ export default function AssignOrdersToolbar({
             {/* Status Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 100 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 85 }, flex: { xs: 1, sm: "initial" } }}
             >
               <Select
                 value={statusFilter}
@@ -283,10 +283,10 @@ export default function AssignOrdersToolbar({
                 textField: {
                   size: "small",
                   sx: {
-                    width: { xs: "calc(50% - 12px)", sm: 125 },
+                    width: { xs: "100%", sm: 210 },
                     flexShrink: 0,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "12px" },
-                    "& .MuiInputLabel-root": { fontSize: "12px" },
+                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
                   },
                 },
               }}
@@ -303,10 +303,10 @@ export default function AssignOrdersToolbar({
                 textField: {
                   size: "small",
                   sx: {
-                    width: { xs: "calc(50% - 12px)", sm: 125 },
+                    width: { xs: "100%", sm: 210 },
                     flexShrink: 0,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "12px" },
-                    "& .MuiInputLabel-root": { fontSize: "12px" },
+                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
                   },
                 },
               }}
@@ -363,23 +363,26 @@ export default function AssignOrdersToolbar({
               { 
                 label: "R105", 
                 count: statusCounts.R105, 
-                color: "#2196f3", // Blue
-                bgcolor: "rgba(33, 150, 243, 0.08)",
-                icon: <HowToRegIcon sx={{ fontSize: 18 }} />
+                color: "#1976d2", // Blue
+                bgcolor: "#f0f7ff",
+                border: "#e1effe",
+                icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />
               },
               { 
                 label: "W105", 
                 count: statusCounts.W105, 
-                color: "#ffa000", // Amber
-                bgcolor: "rgba(255, 160, 0, 0.08)",
-                icon: <PendingActionsRoundedIcon sx={{ fontSize: 18 }} />
+                color: "#ed6c02", // Orange
+                bgcolor: "#fffaf0",
+                border: "#fef3c7",
+                icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />
               },
               { 
                 label: "F105", 
                 count: statusCounts.F105, 
-                color: "#4caf50", // Green
-                bgcolor: "rgba(76, 175, 80, 0.08)",
-                icon: <CheckCircleRoundedIcon sx={{ fontSize: 18 }} />
+                color: "#2e7d32", // Green
+                bgcolor: "#f3faf7",
+                border: "#def7ec",
+                icon: <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />
               },
             ].map((card) => (
               <Box
@@ -387,27 +390,28 @@ export default function AssignOrdersToolbar({
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 0.8,
-                  px: 1.2,
-                  py: 0.6,
-                  borderRadius: "8px",
+                  gap: 1.2,
+                  px: 2,
+                  py: 1,
+                  borderRadius: "32px",
                   bgcolor: card.bgcolor,
                   border: "1px solid",
-                  borderColor: "rgba(0,0,0,0.05)",
+                  borderColor: card.border,
                 }}
               >
                 <Box sx={{ color: card.color, display: "flex" }}>
                   {card.icon}
                 </Box>
                 <Typography
-                  variant="caption"
                   sx={{
                     fontWeight: 700,
-                    color: "#5f6368",
-                    fontSize: "12px",
+                    color: card.color,
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
                   }}
                 >
-                  {card.label}: <span style={{ color: "#1a1a1b", fontWeight: 800 }}>{card.count}</span>
+                  {card.label}: {card.count}
                 </Typography>
               </Box>
             ))}
