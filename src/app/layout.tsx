@@ -39,9 +39,24 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeRegistry>
           <AppProviders>
-          <PageAnimationWrapper>
-              {children}
-          </PageAnimationWrapper>
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+              
+              <div style={{ flexGrow: 1 }}>
+                <PageAnimationWrapper>
+                    {children}
+                </PageAnimationWrapper>
+              </div>
+
+              <footer style={{ 
+                textAlign: "center", 
+                padding: "1rem", 
+                fontSize: "0.875rem", 
+                color: "#888" 
+              }}>
+                Version {process.env.NEXT_PUBLIC_APP_VERSION}
+              </footer>
+
+            </div>
           </AppProviders>
         </ThemeRegistry>
       </body>

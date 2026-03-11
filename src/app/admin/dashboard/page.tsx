@@ -307,25 +307,6 @@ export default function AdminDashboard() {
 
         </Box>
 
-         {/* VERSION FOOTER */}
-        <Box
-          sx={{
-            py: 1,
-            px: 3,
-            display: "flex",
-            justifyContent: "center",
-            opacity: 0.5,
-            fontSize: "0.75rem",
-            color: "text.secondary",
-            borderTop: "1px solid rgba(0,0,0,0.05)",
-            mt: 'auto'
-          }}
-        >
-          <Typography variant="caption" sx={{ fontWeight: 500 }}>
-            Fanuc DIMS Vr:{APP_VERSION} 
-          </Typography>
-        </Box>
-
         <ConfirmDeleteDialog
           open={!!admin.confirmDelete}
           onCancel={() => admin.setConfirmDelete(null)}

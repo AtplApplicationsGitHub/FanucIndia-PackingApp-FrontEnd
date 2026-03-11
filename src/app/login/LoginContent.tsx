@@ -225,13 +225,6 @@ export default function LoginContent() {
           </CardContent>
         </Card>
       </Box>
-
-      {/* Footer Version Info */}
-      <Box sx={{ py: 2, textAlign: 'center' }}>
-        <Typography variant="caption" sx={{ color: 'text.secondary', opacity: 0.8 }}>
-          Fanuc DIMS Vr :{APP_VERSION}
-        </Typography>
-      </Box>
     </Box>
   );
 }
