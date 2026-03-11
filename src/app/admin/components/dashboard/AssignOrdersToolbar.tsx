@@ -36,7 +36,6 @@ import FastForwardOutlinedIcon from "@mui/icons-material/FastForwardOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
@@ -150,13 +149,9 @@ export default function AssignOrdersToolbar({
         sx={{
           width: "100%",
           mt: 1,
-          px: 2,
-          pb: 0,
-          mb: 0,
+          px: { xs: 1, sm: 2 },
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          alignItems: "center",
-          justifyContent: "space-between",
+          flexDirection: "column",
           gap: 2,
         }}
       >
@@ -164,297 +159,263 @@ export default function AssignOrdersToolbar({
         <Paper
           elevation={2}
           sx={{
-            mb: 0,
             borderRadius: 2,
             bgcolor: "background.paper",
-            width: { xs: "100%", md: "fit-content" },
+            width: "100%",
             display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
+            flexDirection: { xs: "column", lg: "row" },
+            alignItems: { xs: "stretch", lg: "center" },
             gap: 2,
-            px: 2,
+            px: { xs: 1.5, sm: 2 },
             py: 1.5,
-            ml: 0,
           }}
         >
-          {/* Search Field */}
+          {/* Filters Group */}
           <Box
-            component="form"
-            onSubmit={(e: React.FormEvent) => e.preventDefault()}
             sx={{
-              p: "2px 4px",
               display: "flex",
+              flexWrap: "wrap",
+              gap: 1.5,
               alignItems: "center",
-              width: { xs: "100%", sm: 180 },
-              border: 1,
-              borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
-              borderRadius: "4px",
-              height: 40,
-              bgcolor: "background.paper",
+              flex: 1,
             }}
           >
-            <InputBase
-              sx={{ ml: 1, flex: 1, fontSize: "14px" }}
-              placeholder="Search"
-              inputProps={{ "aria-label": "search" }}
-              value={searchInput}
-              onChange={(e) => onSearchInputChange(e.target.value)}
-            />
-            {searchInput && (
-              <IconButton
-                sx={{ p: "5px" }}
-                aria-label="clear"
-                onClick={() => onSearchInputChange("")}
+            {/* Search Field */}
+            <Box
+              component="form"
+              onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                width: { xs: "100%", md: 180, lg: 200 },
+                border: 1,
+                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
+                borderRadius: "4px",
+                height: 40,
+                bgcolor: "background.paper",
+              }}
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                placeholder="Search"
+                inputProps={{ "aria-label": "search" }}
+                value={searchInput}
+                onChange={(e) => onSearchInputChange(e.target.value)}
+              />
+              {searchInput && (
+                <IconButton
+                  sx={{ p: "5px" }}
+                  aria-label="clear"
+                  onClick={() => onSearchInputChange("")}
+                >
+                  <ClearIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              )}
+              <SearchIcon sx={{ color: "text.secondary", ml: 1, fontSize: 20 }} />
+            </Box>
+
+            {/* Payment Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 100 }, flex: { xs: 1, sm: "initial" } }}
+            >
+              <Select
+                value={paymentFilter}
+                displayEmpty
+                onChange={(e) => onPaymentFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
               >
-                <ClearIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            )}
-            <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
-              <SearchIcon sx={{ fontSize: 20 }} />
+                <MenuItem value="">PAYMENT</MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Zone Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 110 }, flex: { xs: 1, sm: "initial" } }}
+            >
+              <Select
+                value={zoneFilter}
+                displayEmpty
+                onChange={(e) => onZoneFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
+              >
+                <MenuItem value="">SALES ZONE</MenuItem>
+                {salesZones.map((zone) => (
+                  <MenuItem key={zone.id} value={String(zone.id)}>
+                    {String(zone.name || zone.code || zone.id)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Status Filter */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 100 }, flex: { xs: 1, sm: "initial" } }}
+            >
+              <Select
+                value={statusFilter}
+                displayEmpty
+                onChange={(e) => onStatusFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
+              >
+                <MenuItem value="">STATUS</MenuItem>
+                {STATUS_OPTIONS.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Date Pickers */}
+            <DatePicker
+              label="FROM"
+              value={startDate ? dayjs(startDate) : null}
+              onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
+              format="DD-MM-YYYY"
+              slotProps={{
+                field: { clearable: true, onClear: () => onStartDateChange(null) },
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: { xs: "calc(50% - 12px)", sm: 125 },
+                    flexShrink: 0,
+                    "& .MuiInputBase-root": { height: 40, fontSize: "12px" },
+                    "& .MuiInputLabel-root": { fontSize: "12px" },
+                  },
+                },
+              }}
+            />
+
+            <DatePicker
+              label="TO"
+              value={endDate ? dayjs(endDate) : null}
+              onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
+              format="DD-MM-YYYY"
+              minDate={startDate ? dayjs(startDate) : undefined}
+              slotProps={{
+                field: { clearable: true, onClear: () => onEndDateChange(null) },
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: { xs: "calc(50% - 12px)", sm: 125 },
+                    flexShrink: 0,
+                    "& .MuiInputBase-root": { height: 40, fontSize: "12px" },
+                    "& .MuiInputLabel-root": { fontSize: "12px" },
+                  },
+                },
+              }}
+            />
+
+            {/* Clear Button */}
+            <IconButton
+              onClick={onClear}
+              title="Clear Filters"
+              sx={{
+                color: "text.secondary",
+                "&:hover": { color: "error.main" },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+
+            {/* Hamburger Menu Actions Dropdown */}
+            <IconButton
+              onClick={handleMenuOpen}
+              sx={{ ml: 0.5 }}
+              aria-controls={open ? "actions-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+            >
+              <ListIcon />
             </IconButton>
           </Box>
 
-          {/* Payment Filter */}
-          <FormControl
-            size="small"
-            sx={{ minWidth: 100, bgcolor: "background.paper" }}
-          >
-            <Select
-              value={paymentFilter}
-              displayEmpty
-              onChange={(e) => onPaymentFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
-            >
-              <MenuItem value="">PAYMENT</MenuItem>
-              <MenuItem value="true">Yes</MenuItem>
-              <MenuItem value="false">No</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Zone Filter */}
-          <FormControl
-            size="small"
-            sx={{ minWidth: 110, bgcolor: "background.paper" }}
-          >
-            <Select
-              value={zoneFilter}
-              displayEmpty
-              onChange={(e) => onZoneFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
-            >
-              <MenuItem value="">SALES ZONE</MenuItem>
-              {salesZones.map((zone) => (
-                <MenuItem key={zone.id} value={String(zone.id)}>
-                  {String(zone.name || zone.code || zone.id)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Status Filter */}
-          <FormControl
-            size="small"
-            sx={{ minWidth: 100, bgcolor: "background.paper" }}
-          >
-            <Select
-              value={statusFilter}
-              displayEmpty
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
-            >
-              <MenuItem value="">STATUS</MenuItem>
-              {STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Date Pickers */}
-          <DatePicker
-            label="FROM"
-            value={startDate ? dayjs(startDate) : null}
-            onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
-            format="DD-MM-YYYY"
-            slotProps={{
-              field: {
-                clearable: true,
-                onClear: () => onStartDateChange(null),
-              },
-              textField: {
-                size: "small",
-                variant: "outlined",
-                sx: {
-                  minWidth: 120,
-                  bgcolor: "background.paper",
-                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
-                },
-              },
-            }}
-          />
-
-          <DatePicker
-            label="TO"
-            value={endDate ? dayjs(endDate) : null}
-            onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
-            format="DD-MM-YYYY"
-            minDate={startDate ? dayjs(startDate) : undefined}
-            slotProps={{
-              field: { clearable: true, onClear: () => onEndDateChange(null) },
-              textField: {
-                size: "small",
-                variant: "outlined",
-                sx: {
-                  minWidth: 120,
-                  bgcolor: "background.paper",
-                  "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
-                },
-              },
-            }}
-          />
-
-          {/* Clear Button (Icon Only) */}
-          <IconButton
-            onClick={onClear}
-            title="Clear Filters"
+          {/* Status & Menu Group */}
+          <Box
             sx={{
-              color: "text.secondary",
-              "&:hover": {
-                color: "error.main",
-                opacity: 0.8,
-              },
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", lg: "flex-end" },
+              borderTop: { xs: 1, lg: 0 },
+              borderColor: "divider",
+              pt: { xs: 1.5, lg: 0 },
             }}
           >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-
-          {/* Hamburger Menu Actions Dropdown */}
-          <IconButton
-            onClick={handleMenuOpen}
-            sx={{ ml: { xs: 0, md: "auto" } }}
-            aria-controls={open ? "actions-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-          >
-            <ListIcon />
-          </IconButton>
-        </Paper>
-
-        {/* Status Count Cards */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2.5,
-            alignItems: "center",
-            flexWrap: { xs: "wrap", lg: "nowrap" },
-            width: { xs: "100%", md: "auto" },
-            justifyContent: { xs: "center", md: "flex-end" },
-            ml: { md: 2 },
-          }}
-        >
-          {[
-            { 
-              label: "R105", 
-              count: statusCounts.R105, 
-              color: "#60a5fa",
-              lightColor: "rgba(96, 165, 250, 0.08)",
-              icon: <HowToRegIcon />
-            },
-            { 
-              label: "W105", 
-              count: statusCounts.W105, 
-              color: "#fbbf24",
-              lightColor: "rgba(251, 191, 36, 0.08)",
-              icon: <PendingActionsRoundedIcon />
-            },
-            { 
-              label: "F105", 
-              count: statusCounts.F105, 
-              color: "#c084fc",
-              lightColor: "rgba(192, 132, 252, 0.08)",
-              icon: <CheckCircleRoundedIcon />
-            },
-          ].map((card) => (
-            <Paper
-              key={card.label}
-              elevation={0}
+            {/* Status Count Cards */}
+            <Box
               sx={{
-                px: 2.2,
-                py: 1.5,
-                borderRadius: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: 2,
-                minWidth: 155,
-                border: "1px solid",
-                borderColor: "#f0f0f0",
-                bgcolor: "#ffffff",
-                position: "relative",
-                overflow: "hidden",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
+                gap: 1,
+                flexWrap: "wrap",
+                justifyContent: "center",
               }}
             >
+            {[
+              { 
+                label: "R105", 
+                count: statusCounts.R105, 
+                color: "#2196f3", // Blue
+                bgcolor: "rgba(33, 150, 243, 0.08)",
+                icon: <HowToRegIcon sx={{ fontSize: 18 }} />
+              },
+              { 
+                label: "W105", 
+                count: statusCounts.W105, 
+                color: "#ffa000", // Amber
+                bgcolor: "rgba(255, 160, 0, 0.08)",
+                icon: <PendingActionsRoundedIcon sx={{ fontSize: 18 }} />
+              },
+              { 
+                label: "F105", 
+                count: statusCounts.F105, 
+                color: "#4caf50", // Green
+                bgcolor: "rgba(76, 175, 80, 0.08)",
+                icon: <CheckCircleRoundedIcon sx={{ fontSize: 18 }} />
+              },
+            ].map((card) => (
               <Box
+                key={card.label}
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  width: 44,
-                  height: 44,
-                  borderRadius: "12px",
-                  bgcolor: card.lightColor,
-                  color: card.color,
-                  flexShrink: 0,
+                  gap: 0.8,
+                  px: 1.2,
+                  py: 0.6,
+                  borderRadius: "8px",
+                  bgcolor: card.bgcolor,
+                  border: "1px solid",
+                  borderColor: "rgba(0,0,0,0.05)",
                 }}
               >
-                {React.cloneElement(card.icon as React.ReactElement<any>, { sx: { fontSize: 24 } })}
-              </Box>
-              
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flex: 1 }}>
+                <Box sx={{ color: card.color, display: "flex" }}>
+                  {card.icon}
+                </Box>
                 <Typography
                   variant="caption"
                   sx={{
                     fontWeight: 700,
                     color: "#5f6368",
-                    display: "block",
-                    textTransform: "uppercase",
-                    fontSize: "0.72rem",
-                    mb: 0.2,
+                    fontSize: "12px",
                   }}
                 >
-                  {card.label}
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontWeight: 900,
-                    color: "#1a1a1b",
-                    lineHeight: 1,
-                    letterSpacing: "-0.5px",
-                  }}
-                >
-                  {card.count}
+                  {card.label}: <span style={{ color: "#1a1a1b", fontWeight: 800 }}>{card.count}</span>
                 </Typography>
               </Box>
+            ))}
+          </Box>
 
-              {/* Bottom Accent Bar */}
-              <Box 
-                sx={{ 
-                  position: "absolute",
-                  bottom: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  width: "50%",
-                  height: "4px",
-                  bgcolor: card.color,
-                  borderRadius: "4px 4px 0 0",
-                  opacity: 0.9,
-                }} 
-              />
-            </Paper>
-          ))}
         </Box>
+      </Paper>
+
 
         <Menu
           id="actions-menu"

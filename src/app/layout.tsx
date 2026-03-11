@@ -49,7 +49,7 @@ export default function RootLayout({
 
               <footer style={{ 
                 textAlign: "center", 
-                padding: "1rem", 
+                // padding: "1rem", 
                 fontSize: "0.875rem", 
                 color: "#888" 
               }}>
