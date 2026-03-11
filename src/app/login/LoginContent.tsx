@@ -12,7 +12,6 @@ import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
-import { APP_VERSION } from "@/version";
 
 type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole; email: string } & Record<string, unknown>;

@@ -21,7 +21,6 @@ import FgDashboardView from "@/app/components/FgDashboardView";
 import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 
-import { APP_VERSION } from "@/version";
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
