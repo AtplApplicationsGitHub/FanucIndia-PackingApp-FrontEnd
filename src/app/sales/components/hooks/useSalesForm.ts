@@ -39,9 +39,9 @@ export const useSalesForm = (onSuccess?: () => void) => {
 
     const newErrors: Record<string, string> = {};
 
-    if (!form.productId) {
-      newErrors.productId = "Product is required";
-    }
+    // if (!form.productId) {
+    //   newErrors.productId = "Product is required";
+    // }
     if (!form.saleOrderNumber) {
       newErrors.saleOrderNumber = "Sale Order Number is required";
     } else if (String(form.saleOrderNumber).length < 10) {
@@ -90,7 +90,7 @@ export const useSalesForm = (onSuccess?: () => void) => {
     try {
       const payload: Record<string, unknown> = {
         ...form,
-        productId: Number(form.productId),
+        productId: form.productId ? Number(form.productId) : undefined,
         transporterId: Number(form.transporterId),
         plantCode: form.plantCode || null,
         transferOrder: form.transferOrder || null,

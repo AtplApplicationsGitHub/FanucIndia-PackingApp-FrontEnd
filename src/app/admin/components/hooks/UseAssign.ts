@@ -9,6 +9,28 @@ export function useAssign() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dynamicCounts, setDynamicCounts] = useState({ R105: 0, W105: 0 });
+
+  const fetchDynamicCounts = useCallback(async (filters: any) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.paymentFilter) queryParams.append('paymentFilter', filters.paymentFilter);
+      if (filters.zoneFilter) queryParams.append('zoneFilter', filters.zoneFilter);
+      if (filters.statusFilter) queryParams.append('statusFilter', filters.statusFilter);
+      if (filters.customerFilter) queryParams.append('customerFilter', filters.customerFilter);
+      if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
+      if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
+
+      const res = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/counts/dynamic?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDynamicCounts(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch dynamic counts", err);
+    }
+  }, []);
 
   const [lookup, setLookup] = useState<Lookup>({
     products: [],
@@ -264,18 +286,24 @@ export function useAssign() {
           : undefined;
 
       setOrders((prev) =>
-        prev.map((o) =>
-          ids.includes(o.id)
-            ? {
-                ...o,
-                assignedUserId: normalizedId,
-                assignedUser: selectedUser
-                  ? { id: selectedUser.id, name: selectedUser.name }
-                  : null,
-                ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
-              }
-            : o,
-        ),
+        prev.map((o) => {
+          if (ids.includes(o.id)) {
+            const shouldUpdateToR105 = 
+              (o.status === null || !o.status) && 
+              (normalizedId !== undefined || priorityVal !== undefined);
+
+            return {
+              ...o,
+              assignedUserId: normalizedId,
+              assignedUser: selectedUser
+                ? { id: selectedUser.id, name: selectedUser.name }
+                : null,
+              ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
+              ...(shouldUpdateToR105 ? { status: "R105" } : {}),
+            };
+          }
+          return o;
+        })
       );
 
       try {
@@ -480,5 +508,7 @@ export function useAssign() {
     uploadExcelUpdates,
     bulkUpdatePriority,
     refresh: fetchData,
+    dynamicCounts,
+    fetchDynamicCounts,
   };
 }

@@ -56,6 +56,8 @@ export default function AssignSO() {
     bulkImportErpData,
     updateSkipStage,
     uploadExcelUpdates,
+    dynamicCounts,
+    fetchDynamicCounts,
   } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
@@ -326,12 +328,21 @@ export default function AssignSO() {
     }
   };
 
-  const statusCounts = React.useMemo(() => {
-    return {
-      R105: orders.filter((o) => o.status === "R105").length,
-      W105: orders.filter((o) => o.status === "W105").length,
-    };
-  }, [orders]);
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDynamicCounts({
+        search: searchInput,
+        paymentFilter,
+        zoneFilter,
+        statusFilter,
+        customerFilter,
+        startDate,
+        endDate
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, paymentFilter, zoneFilter, statusFilter, customerFilter, startDate, endDate, fetchDynamicCounts]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -721,7 +732,7 @@ export default function AssignSO() {
           onImportERPData={handleImportERPData}
           onExcelExport={handleExcelExport}
           onExcelImport={() => fileInputRef.current?.click()}
-          statusCounts={statusCounts}
+          statusCounts={dynamicCounts}
         />
       </Box>
 

@@ -108,19 +108,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    let nextForm = form;
-
-    if (!form.productId) {
-      const faProduct = lookup.products.find(
-        (p) => p.name.toUpperCase() === "FA",
-      );
-      if (faProduct) {
-        nextForm = { ...form, productId: String(faProduct.id) };
-      }
-    }
-
-    handleSubmit(nextForm, !!initialData, initialData?.id);
+    handleSubmit(form, !!initialData, initialData?.id);
   };
 
   return (
