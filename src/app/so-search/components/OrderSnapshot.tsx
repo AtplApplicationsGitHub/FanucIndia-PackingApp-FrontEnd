@@ -12,7 +12,7 @@ interface SalesOrder {
   outboundDelivery?: string;
   paymentClearance?: boolean;
   product?: { name: string };
-  customer?: { name: string; address?: string };
+  customer?: { name: string; address?: string; contactNumber?: string | null; };
   customerNameText?: string | null;
   packConfig?: { configName: string };
   transporter?: { name: string };
@@ -63,9 +63,15 @@ export default function OrderSnapshot({
   const customerAddress =
     salesOrder.address?.trim() || salesOrder.customer?.address || "";
 
-  const customerDisplay = customerAddress
-    ? `${customerName}\n${customerAddress}`
-    : customerName;
+  const customerContact = salesOrder.customer?.contactNumber?.trim() || "";
+
+  let customerDisplay = customerName;
+  if (customerAddress) {
+    customerDisplay += `\n${customerAddress}`;
+  }
+  if (customerContact) {
+    customerDisplay += `\n ${customerContact}`;
+  }
 
   return (
     <Paper sx={{ p: 3, mb: 3 }} id="snapshot-section">
@@ -126,6 +132,7 @@ export default function OrderSnapshot({
             fontSize: "0.85rem", 
             lineHeight: 1.25,
             fontWeight: 600,
+            whiteSpace: "pre-wrap"
           }}
         />
 

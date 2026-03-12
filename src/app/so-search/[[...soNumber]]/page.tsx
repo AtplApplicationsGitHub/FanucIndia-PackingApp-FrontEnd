@@ -41,7 +41,7 @@ interface SalesOrder {
   paymentClearance?: boolean;
   priority?: string;
   product?: { name: string };
-  customer?: { name: string; address?: string };
+  customer?: { name: string; address?: string; contactNumber?: string | null; };
   packConfig?: { configName: string };
   transporter?: { name: string };
   plantCode?: { code: string };
