@@ -11,7 +11,7 @@ import {
   TableRow,
   TablePagination,
   Paper,
-  TextField,  
+  TextField,
   Link as MuiLink,
   alpha,
   useTheme,
@@ -72,15 +72,16 @@ export default function AssignSO() {
     severity: "success",
   });
 
-
   // Filter states
   const [searchInput, setSearchInput] = React.useState("");
   const [paymentFilter, setPaymentFilter] = React.useState("");
   const [zoneFilter, setZoneFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
-  const [startDate, setStartDate] = React.useState<Date | null>(dayjs().toDate());
+  const [startDate, setStartDate] = React.useState<Date | null>(
+    dayjs().toDate(),
+  );
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
-
+  const [customerFilter, setCustomerFilter] = React.useState("");
   const onClear = () => {
     setSearchInput("");
     setPaymentFilter("");
@@ -88,6 +89,7 @@ export default function AssignSO() {
     setStatusFilter("");
     setStartDate(null);
     setEndDate(null);
+    setCustomerFilter("");
   };
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -137,7 +139,7 @@ export default function AssignSO() {
   const handleAssignUser = async (val: string, priorityVal?: string) => {
     const ordersToAssign: number[] = [];
     const skippedSOs: string[] = [];
-    
+
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
       if (order) {
@@ -153,13 +155,15 @@ export default function AssignSO() {
       if (ordersToAssign.length > 0) {
         await bulkUpdate(ordersToAssign, val, priorityVal);
       }
-      
+
       const messageParts = [];
       if (ordersToAssign.length > 0) {
         messageParts.push(`Assigned ${ordersToAssign.length} order(s)`);
       }
       if (skippedSOs.length > 0) {
-        messageParts.push(`Skipped (Already Dispatched): ${skippedSOs.join(", ")}`);
+        messageParts.push(
+          `Skipped (Already Dispatched): ${skippedSOs.join(", ")}`,
+        );
       }
 
       setSnackbar({
@@ -188,7 +192,11 @@ export default function AssignSO() {
       if (order) {
         if (order.status === "F105" || order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber || String(id));
-        } else if (shouldSkip && (!order.status || order.status === "R105") && !order.hasMaterialData) {
+        } else if (
+          shouldSkip &&
+          (!order.status || order.status === "R105") &&
+          !order.hasMaterialData
+        ) {
           ordersWithoutData.push(order.saleOrderNumber || String(id));
         } else {
           ordersToUpdate.push(id);
@@ -206,11 +214,13 @@ export default function AssignSO() {
         messageParts.push(
           shouldSkip
             ? `Updated skip stage for ${ordersToUpdate.length} order(s)`
-            : `Canceled skip stage for ${ordersToUpdate.length} order(s)`
+            : `Canceled skip stage for ${ordersToUpdate.length} order(s)`,
         );
       }
       if (ordersWithoutData.length > 0) {
-        messageParts.push(`Material Data Pending: ${ordersWithoutData.join(", ")}`);
+        messageParts.push(
+          `Material Data Pending: ${ordersWithoutData.join(", ")}`,
+        );
       }
       if (skippedSOs.length > 0) {
         messageParts.push(`Skipped (Already Packed): ${skippedSOs.join(", ")}`);
@@ -282,16 +292,24 @@ export default function AssignSO() {
       // Construct combined message (incorporating the logic we added in the previous step)
       const messageParts = [];
       if (successes.length > 0) {
-        messageParts.push(`Success: ${successes.map((s: any) => s.soNumber).join(", ")}`);
+        messageParts.push(
+          `Success: ${successes.map((s: any) => s.soNumber).join(", ")}`,
+        );
       }
       if (skipped.length > 0) {
-        messageParts.push(`Skipped ERP: ${skipped.map((s: any) => s.soNumber).join(", ")}`);
+        messageParts.push(
+          `Skipped ERP: ${skipped.map((s: any) => s.soNumber).join(", ")}`,
+        );
       }
       if (failures.length > 0) {
-        messageParts.push(`Failed: ${failures.map((s: any) => s.soNumber).join(", ")}`);
+        messageParts.push(
+          `Failed: ${failures.map((s: any) => s.soNumber).join(", ")}`,
+        );
       }
       if (skippedSOs.length > 0) {
-        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
+        messageParts.push(
+          `Skipped (Packing Completed): ${skippedSOs.join(", ")}`,
+        );
       }
 
       setSnackbar({
@@ -319,11 +337,23 @@ export default function AssignSO() {
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
       const searchStr = searchInput.toLowerCase();
-      
-      const productName = (order.product?.name || findName(lookup.products, order.productId ?? 0) || "").toLowerCase();
-      const salesZoneName = (order.salesZone?.name || findName(lookup.salesZones, order.salesZoneId ?? 0) || "").toLowerCase();
-      const assignedUserName = (order.assignedUser?.name || findName(lookup.assignableUsers, order.assignedUserId ?? 0) || "").toLowerCase();
-      
+
+      const productName = (
+        order.product?.name ||
+        findName(lookup.products, order.productId ?? 0) ||
+        ""
+      ).toLowerCase();
+      const salesZoneName = (
+        order.salesZone?.name ||
+        findName(lookup.salesZones, order.salesZoneId ?? 0) ||
+        ""
+      ).toLowerCase();
+      const assignedUserName = (
+        order.assignedUser?.name ||
+        findName(lookup.assignableUsers, order.assignedUserId ?? 0) ||
+        ""
+      ).toLowerCase();
+
       const paymentString = order.paymentClearance ? "yes" : "no";
 
       const matchesSearch =
@@ -333,7 +363,10 @@ export default function AssignSO() {
         (order.customerNameText || "").toLowerCase().includes(searchStr) ||
         (order.transferOrder || "").toLowerCase().includes(searchStr) ||
         (order.status || "").toLowerCase().includes(searchStr) ||
-        (order.priority !== null && order.priority !== undefined ? String(order.priority) : "").includes(searchStr) ||
+        (order.priority !== null && order.priority !== undefined
+          ? String(order.priority)
+          : ""
+        ).includes(searchStr) ||
         productName.includes(searchStr) ||
         salesZoneName.includes(searchStr) ||
         assignedUserName.includes(searchStr) ||
@@ -347,6 +380,17 @@ export default function AssignSO() {
 
       const matchesZone =
         !zoneFilter || String(order.salesZoneId) === zoneFilter;
+
+      const selectedCustomerName = customerFilter
+        ? (
+            lookup.customers.find((c) => String(c.id) === customerFilter)
+              ?.name || ""
+          ).toLowerCase()
+        : "";
+
+      const matchesCustomer =
+        !customerFilter ||
+        (order.customerNameText || "").toLowerCase() === selectedCustomerName;
 
       const matchesStatus =
         !statusFilter ||
@@ -383,7 +427,8 @@ export default function AssignSO() {
         matchesPayment &&
         matchesZone &&
         matchesStatus &&
-        matchesDate
+        matchesDate &&
+        matchesCustomer
       );
     });
   }, [
@@ -394,6 +439,8 @@ export default function AssignSO() {
     statusFilter,
     startDate,
     endDate,
+    customerFilter,
+    lookup.customers,
   ]);
 
   const handleExcelExport = React.useCallback(async () => {
@@ -484,17 +531,13 @@ export default function AssignSO() {
       }
     }
 
-    await worksheet.protect('admin_dims_2026', {
+    await worksheet.protect("admin_dims_2026", {
       selectLockedCells: true,
       selectUnlockedCells: true,
     });
 
     // 2. Define which columns should be strictly Read-Only
-    const readOnlyColumns = [
-      "PRODUCT",
-      "SALE ORDER NUMBER",
-      "TRANSFER ORDER",
-    ];
+    const readOnlyColumns = ["PRODUCT", "SALE ORDER NUMBER", "TRANSFER ORDER"];
 
     // 3. Iterate through all columns and unlock the ones that are NOT in the readOnly array
     worksheet.columns.forEach((column) => {
@@ -664,6 +707,9 @@ export default function AssignSO() {
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           salesZones={lookup.salesZones}
+          customerFilter={customerFilter}
+          onCustomerFilterChange={setCustomerFilter}
+          customers={lookup.customers}
           startDate={startDate}
           onStartDateChange={setStartDate}
           endDate={endDate}
@@ -778,7 +824,7 @@ export default function AssignSO() {
                     selected={selectedIds.includes(row.id)}
                   >
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Checkbox
                           checked={selectedIds.includes(row.id)}
                           onChange={() => handleSelectOne(row.id)}
@@ -807,7 +853,9 @@ export default function AssignSO() {
                     </TableCell>
 
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
                         {row.skipIssueStage ? (
                           <Tooltip title="Skip Stages">
                             <FlagIcon
@@ -851,7 +899,10 @@ export default function AssignSO() {
                             borderRadius: "16px",
                             border: "1px solid",
                             borderColor: alpha(theme.palette.success.main, 0.5),
-                            backgroundColor: alpha(theme.palette.success.main, 0.1),
+                            backgroundColor: alpha(
+                              theme.palette.success.main,
+                              0.1,
+                            ),
                             color: theme.palette.success.dark,
                             fontSize: "0.75rem",
                             fontWeight: 600,
@@ -870,7 +921,10 @@ export default function AssignSO() {
                             borderRadius: "16px",
                             border: "1px solid",
                             borderColor: alpha(theme.palette.error.main, 0.5),
-                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                            backgroundColor: alpha(
+                              theme.palette.error.main,
+                              0.1,
+                            ),
                             color: theme.palette.error.main,
                             fontSize: "0.75rem",
                             fontWeight: 600,
@@ -895,11 +949,20 @@ export default function AssignSO() {
                         if (!row.status) return <Box>-</Box>;
                         let colorMain = theme.palette.grey[500];
                         let label = row.status;
-                        if (row.status === "R105") { colorMain = "#3b82f6"; label = "R105"; }
-                        else if (row.status === "W105") { colorMain = "#eab308"; label = "W105"; }
-                        else if (row.status === "F105") { colorMain = "#8b5cf6"; label = "F105"; }
-                        else if (row.status === "Dispatched") { colorMain = "#10b981"; label = "Dispatched"; }
-                        
+                        if (row.status === "R105") {
+                          colorMain = "#3b82f6";
+                          label = "R105";
+                        } else if (row.status === "W105") {
+                          colorMain = "#eab308";
+                          label = "W105";
+                        } else if (row.status === "F105") {
+                          colorMain = "#8b5cf6";
+                          label = "F105";
+                        } else if (row.status === "Dispatched") {
+                          colorMain = "#10b981";
+                          label = "Dispatched";
+                        }
+
                         return (
                           <Box
                             sx={{
@@ -911,11 +974,12 @@ export default function AssignSO() {
                               border: "1px solid",
                               borderColor: alpha(colorMain, 0.5),
                               backgroundColor: alpha(colorMain, 0.1),
-                              color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                              color:
+                                colorMain === "#eab308" ? "#b45309" : colorMain,
                               fontSize: "0.75rem",
                               fontWeight: 600,
                               minWidth: "50px",
-                              whiteSpace: "nowrap"
+                              whiteSpace: "nowrap",
                             }}
                           >
                             {label}
@@ -968,7 +1032,9 @@ export default function AssignSO() {
                       inlineEdit.field === "assignedUserId" ? (
                         <CustomEditSelect
                           initialValue={inlineEdit.value}
-                          onCommit={(val: string | number) => handleInlineSave(val)}
+                          onCommit={(val: string | number) =>
+                            handleInlineSave(val)
+                          }
                           onCancel={() => setInlineEdit(null)}
                           options={lookup.assignableUsers || []}
                         />

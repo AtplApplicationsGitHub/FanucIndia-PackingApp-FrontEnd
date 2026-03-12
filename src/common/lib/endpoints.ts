@@ -37,6 +37,7 @@ export const API = {
     USER_BY_ID:          (id: number) =>          `${API_BASE_URL}/users/${id}`,
 // ASSIGN SO 
     ACTIVE_EXPORT_LIST:                               `${API_BASE_URL}/admin/sales-orders/active-export-list`,
+   USED_CUSTOMERS:                                     `${API_BASE_URL}/admin/sales-orders/used-customers`,
     BULK_ASSIGN:                                      `${API_BASE_URL}/admin/sales-orders/bulk-assign`,
     ERP_MATERIAL_DATA:                            `${API_BASE_URL}/admin/sales-orders`,
     SKIP_ISSUE_STAGE: (orderId: number, materialId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/${materialId}/skip-issue`,

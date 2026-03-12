@@ -76,6 +76,9 @@ type Props = {
     F105: number;
   };
   onUpdatePriority?: (val: string) => Promise<void>;
+  customerFilter: string;
+  onCustomerFilterChange: (val: string) => void;
+  customers?: { id: number; name: string }[];
 };
 
 export default function AssignOrdersToolbar({
@@ -102,6 +105,9 @@ export default function AssignOrdersToolbar({
   onExcelImport,
   statusCounts = { R105: 0, W105: 0, F105: 0 },
   onUpdatePriority,
+  customerFilter,
+  onCustomerFilterChange,
+  customers = [],
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -196,7 +202,10 @@ export default function AssignOrdersToolbar({
                 alignItems: "center",
                 width: { xs: "100%", md: 160, lg: 180 },
                 border: 1,
-                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
+                borderColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.23)"
+                    : "#e0e0e0",
                 borderRadius: "4px",
                 height: 40,
                 bgcolor: "background.paper",
@@ -218,13 +227,18 @@ export default function AssignOrdersToolbar({
                   <ClearIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               )}
-              <SearchIcon sx={{ color: "text.secondary", ml: 1, fontSize: 20 }} />
+              <SearchIcon
+                sx={{ color: "text.secondary", ml: 1, fontSize: 20 }}
+              />
             </Box>
 
             {/* Payment Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 85 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{
+                minWidth: { xs: "calc(50% - 8px)", sm: 85 },
+                flex: { xs: 1, sm: "initial" },
+              }}
             >
               <Select
                 value={paymentFilter}
@@ -241,7 +255,10 @@ export default function AssignOrdersToolbar({
             {/* Zone Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 90 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{
+                minWidth: { xs: "calc(50% - 8px)", sm: 90 },
+                flex: { xs: 1, sm: "initial" },
+              }}
             >
               <Select
                 value={zoneFilter}
@@ -261,7 +278,10 @@ export default function AssignOrdersToolbar({
             {/* Status Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: { xs: "calc(50% - 8px)", sm: 85 }, flex: { xs: 1, sm: "initial" } }}
+              sx={{
+                minWidth: { xs: "calc(50% - 8px)", sm: 85 },
+                flex: { xs: 1, sm: "initial" },
+              }}
             >
               <Select
                 value={statusFilter}
@@ -278,6 +298,29 @@ export default function AssignOrdersToolbar({
               </Select>
             </FormControl>
 
+            {/* Customer Filter */}
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: { xs: "calc(50% - 8px)", sm: 120 },
+                flex: { xs: 1, sm: "initial" },
+              }}
+            >
+              <Select
+                value={customerFilter}
+                displayEmpty
+                onChange={(e) => onCustomerFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
+              >
+                <MenuItem value="">CUSTOMER</MenuItem>
+                {customers.map((c) => (
+                  <MenuItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
             {/* Date Pickers */}
             <DatePicker
               label="FROM"
@@ -285,7 +328,10 @@ export default function AssignOrdersToolbar({
               onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
               format="DD-MM-YYYY"
               slotProps={{
-                field: { clearable: true, onClear: () => onStartDateChange(null) },
+                field: {
+                  clearable: true,
+                  onClear: () => onStartDateChange(null),
+                },
                 textField: {
                   size: "small",
                   sx: {
@@ -305,7 +351,10 @@ export default function AssignOrdersToolbar({
               format="DD-MM-YYYY"
               minDate={startDate ? dayjs(startDate) : undefined}
               slotProps={{
-                field: { clearable: true, onClear: () => onEndDateChange(null) },
+                field: {
+                  clearable: true,
+                  onClear: () => onEndDateChange(null),
+                },
                 textField: {
                   size: "small",
                   sx: {
@@ -365,67 +414,65 @@ export default function AssignOrdersToolbar({
                 justifyContent: "center",
               }}
             >
-            {[
-              { 
-                label: "R105", 
-                count: statusCounts.R105, 
-                color: "#1976d2", // Blue
-                bgcolor: "#f0f7ff",
-                border: "#e1effe",
-                icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />
-              },
-              { 
-                label: "W105", 
-                count: statusCounts.W105, 
-                color: "#ed6c02", // Orange
-                bgcolor: "#fffaf0",
-                border: "#fef3c7",
-                icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />
-              },
-              { 
-                label: "F105", 
-                count: statusCounts.F105, 
-                color: "#2e7d32", // Green
-                bgcolor: "#f3faf7",
-                border: "#def7ec",
-                icon: <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />
-              },
-            ].map((card) => (
-              <Box
-                key={card.label}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.2,
-                  px: 2,
-                  py: 1,
-                  borderRadius: "32px",
-                  bgcolor: card.bgcolor,
-                  border: "1px solid",
-                  borderColor: card.border,
-                }}
-              >
-                <Box sx={{ color: card.color, display: "flex" }}>
-                  {card.icon}
-                </Box>
-                <Typography
+              {[
+                {
+                  label: "R105",
+                  count: statusCounts.R105,
+                  color: "#1976d2", // Blue
+                  bgcolor: "#f0f7ff",
+                  border: "#e1effe",
+                  icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />,
+                },
+                {
+                  label: "W105",
+                  count: statusCounts.W105,
+                  color: "#ed6c02", // Orange
+                  bgcolor: "#fffaf0",
+                  border: "#fef3c7",
+                  icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />,
+                },
+                {
+                  label: "F105",
+                  count: statusCounts.F105,
+                  color: "#2e7d32", // Green
+                  bgcolor: "#f3faf7",
+                  border: "#def7ec",
+                  icon: <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />,
+                },
+              ].map((card) => (
+                <Box
+                  key={card.label}
                   sx={{
-                    fontWeight: 700,
-                    color: card.color,
-                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
+                    gap: 1.2,
+                    px: 2,
+                    py: 1,
+                    borderRadius: "32px",
+                    bgcolor: card.bgcolor,
+                    border: "1px solid",
+                    borderColor: card.border,
                   }}
                 >
-                  {card.label}: {card.count}
-                </Typography>
-              </Box>
-            ))}
+                  <Box sx={{ color: card.color, display: "flex" }}>
+                    {card.icon}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: card.color,
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {card.label}: {card.count}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           </Box>
-
-        </Box>
-      </Paper>
-
+        </Paper>
 
         <Menu
           id="actions-menu"
@@ -563,7 +610,7 @@ export default function AssignOrdersToolbar({
           onClose={() => {
             setAssignDialogOpen(false);
             setTempAssignUser("placeholder");
-            setAssignPriority(""); 
+            setAssignPriority("");
           }}
           maxWidth="xs"
           fullWidth
@@ -603,13 +650,13 @@ export default function AssignOrdersToolbar({
               onChange={(e) => setAssignPriority(e.target.value)}
             />
           </DialogContent>
-          
+
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button
               onClick={() => {
                 setAssignDialogOpen(false);
                 setTempAssignUser("placeholder");
-                setAssignPriority(""); 
+                setAssignPriority("");
               }}
               color="inherit"
             >
@@ -624,7 +671,7 @@ export default function AssignOrdersToolbar({
                 }
                 setAssignDialogOpen(false);
                 setTempAssignUser("placeholder");
-                setAssignPriority(""); 
+                setAssignPriority("");
               }}
               sx={{
                 bgcolor: "#facd02",
