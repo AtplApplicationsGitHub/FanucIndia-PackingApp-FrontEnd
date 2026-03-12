@@ -190,7 +190,7 @@ export default function AssignSO() {
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
       if (order) {
-        if (order.status === "F105" || order.status === "Dispatched") {
+        if (order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber || String(id));
         } else if (
           shouldSkip &&
@@ -257,7 +257,7 @@ export default function AssignSO() {
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
       if (order && order.saleOrderNumber) {
-        if (order.status === "F105" || order.status === "Dispatched") {
+        if (order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber);
         } else {
           validSaleOrderNumbers.push(order.saleOrderNumber);
@@ -330,7 +330,6 @@ export default function AssignSO() {
     return {
       R105: orders.filter((o) => o.status === "R105").length,
       W105: orders.filter((o) => o.status === "W105").length,
-      F105: orders.filter((o) => o.status === "F105").length,
     };
   }, [orders]);
 
@@ -802,7 +801,7 @@ export default function AssignSO() {
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={11}
+                  colSpan={13}
                   align="center"
                   sx={{
                     bgcolor: lightYellow,
@@ -955,9 +954,6 @@ export default function AssignSO() {
                         } else if (row.status === "W105") {
                           colorMain = "#eab308";
                           label = "W105";
-                        } else if (row.status === "F105") {
-                          colorMain = "#8b5cf6";
-                          label = "F105";
                         } else if (row.status === "Dispatched") {
                           colorMain = "#10b981";
                           label = "Dispatched";

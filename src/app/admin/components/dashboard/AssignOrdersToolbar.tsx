@@ -43,7 +43,7 @@ import { LookupRow } from "@/app/admin/components/types/admin";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { TextField } from "@mui/material";
 
-const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
+const STATUS_OPTIONS = ["None", "R105", "W105"];
 
 type Props = {
   searchInput: string;
@@ -73,7 +73,6 @@ type Props = {
   statusCounts?: {
     R105: number;
     W105: number;
-    F105: number;
   };
   onUpdatePriority?: (val: string) => Promise<void>;
   customerFilter: string;
@@ -103,7 +102,7 @@ export default function AssignOrdersToolbar({
   onImportERPData,
   onExcelExport,
   onExcelImport,
-  statusCounts = { R105: 0, W105: 0, F105: 0 },
+  statusCounts = { R105: 0, W105: 0 },
   onUpdatePriority,
   customerFilter,
   onCustomerFilterChange,
@@ -430,14 +429,6 @@ export default function AssignOrdersToolbar({
                   bgcolor: "#fffaf0",
                   border: "#fef3c7",
                   icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />,
-                },
-                {
-                  label: "F105",
-                  count: statusCounts.F105,
-                  color: "#2e7d32", // Green
-                  bgcolor: "#f3faf7",
-                  border: "#def7ec",
-                  icon: <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />,
                 },
               ].map((card) => (
                 <Box

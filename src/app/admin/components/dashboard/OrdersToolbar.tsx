@@ -31,8 +31,7 @@ type Props = {
   searchInput: string;
   onSearchInputChange: (val: string) => void;
   
-  payment
-  : string;
+  paymentFilter: string;
   onPaymentFilterChange: (val: string) => void;
   zoneFilter: string;
   onZoneFilterChange: (val: string) => void;
