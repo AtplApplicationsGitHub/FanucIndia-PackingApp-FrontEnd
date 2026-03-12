@@ -40,6 +40,8 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { LookupRow } from "@/app/admin/components/types/admin";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import { TextField } from "@mui/material";
 
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
 
@@ -63,7 +65,7 @@ type Props = {
 
   selectedIds?: number[];
   assignableUsers?: { id: number; name: string }[];
-  onAssignUser?: (userId: string) => Promise<void>;
+  onAssignUser?: (userId: string, priority?: string) => Promise<void>;
   onSkipStage?: (val: string) => Promise<void>;
   onImportERPData?: () => void;
   onExcelExport?: () => void;
@@ -73,6 +75,7 @@ type Props = {
     W105: number;
     F105: number;
   };
+  onUpdatePriority?: (val: string) => Promise<void>;
 };
 
 export default function AssignOrdersToolbar({
@@ -98,6 +101,7 @@ export default function AssignOrdersToolbar({
   onExcelExport,
   onExcelImport,
   statusCounts = { R105: 0, W105: 0, F105: 0 },
+  onUpdatePriority,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -110,6 +114,8 @@ export default function AssignOrdersToolbar({
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
+
+  const [assignPriority, setAssignPriority] = useState<string>("");
 
   const handleActionClick = (action: () => void) => {
     if (selectedIds.length === 0) {
@@ -557,15 +563,16 @@ export default function AssignOrdersToolbar({
           onClose={() => {
             setAssignDialogOpen(false);
             setTempAssignUser("placeholder");
+            setAssignPriority(""); 
           }}
           maxWidth="xs"
           fullWidth
         >
           <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
-            ASSIGN USER
+            ASSIGN USER & PRIORITY
           </DialogTitle>
           <DialogContent>
-            <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+            <FormControl size="small" fullWidth sx={{ mt: 1, mb: 2 }}>
               <Select
                 value={tempAssignUser}
                 displayEmpty
@@ -583,12 +590,26 @@ export default function AssignOrdersToolbar({
                 ))}
               </Select>
             </FormControl>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Set Bulk Priority (Optional):
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              placeholder="e.g. 1 (Leave blank to keep existing)"
+              value={assignPriority}
+              onChange={(e) => setAssignPriority(e.target.value)}
+            />
           </DialogContent>
+          
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button
               onClick={() => {
                 setAssignDialogOpen(false);
                 setTempAssignUser("placeholder");
+                setAssignPriority(""); 
               }}
               color="inherit"
             >
@@ -599,10 +620,11 @@ export default function AssignOrdersToolbar({
               disableElevation
               onClick={async () => {
                 if (tempAssignUser !== "placeholder" && onAssignUser) {
-                  await onAssignUser(tempAssignUser);
+                  await onAssignUser(tempAssignUser, assignPriority);
                 }
                 setAssignDialogOpen(false);
                 setTempAssignUser("placeholder");
+                setAssignPriority(""); 
               }}
               sx={{
                 bgcolor: "#facd02",
@@ -676,7 +698,6 @@ export default function AssignOrdersToolbar({
         </Dialog>
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={3000}
           onClose={handleSnackbarClose}
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >

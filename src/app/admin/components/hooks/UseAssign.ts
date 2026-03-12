@@ -64,7 +64,7 @@ export function useAssign() {
         const detail = detailsMap.get(son) || {};
 
         return {
-          id: detail.id || item.id || index + 1, // prefer real DB id
+          id: detail.id || item.id || index + 1, 
 
           user: detail.user || (item.userName ? { name: item.userName } : null) || null,
           
@@ -104,6 +104,8 @@ export function useAssign() {
           specialRemarks: detail.specialRemarks || item.specialRemarks || "",
           additionalRemarks: detail.additionalRemarks || item.additionalRemarks || "",
           labelRemarks: detail.labelRemarks || item.labelRemarks || "",
+          materialData: detail.materialData || item.materialData || undefined,
+          binCount: detail.binCount ?? item.binCount ?? 0,
         };
       });
 
@@ -184,17 +186,19 @@ export function useAssign() {
     }
   };
 
-  const bulkUpdate = useCallback(async (ids: number[], assignedUserId: any) => {
+  const bulkUpdate = useCallback(async (ids: number[], assignedUserId: any, priorityStr?: string) => {
     // Optimistic update
     const normalizedId = (assignedUserId === "" || assignedUserId === "null" || assignedUserId === null || assignedUserId === "unassign") ? undefined : Number(assignedUserId);
     
     // Find the user name from lookup for optimistic update of the object
     const selectedUser = lookup.assignableUsers.find(u => u.id === normalizedId);
+    const priorityVal = (priorityStr && priorityStr.trim() !== "") ? Number(priorityStr) : undefined;
     
     setOrders(prev => prev.map(o => ids.includes(o.id) ? { 
       ...o, 
       assignedUserId: normalizedId,
-      assignedUser: selectedUser ? { id: selectedUser.id, name: selectedUser.name } : null
+      assignedUser: selectedUser ? { id: selectedUser.id, name: selectedUser.name } : null,
+      ...(priorityVal !== undefined ? { priority: priorityVal } : {})
     } : o));
     
     try {
@@ -203,7 +207,11 @@ export function useAssign() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ salesOrderIds: ids, assignedUserId: normalizedId ?? null }),
+        body: JSON.stringify({ 
+          salesOrderIds: ids, 
+          assignedUserId: normalizedId ?? null,
+          ...(priorityVal !== undefined ? { priority: priorityVal } : {})
+        }),
       });
       
       if (!response.ok) {
@@ -311,6 +319,35 @@ export function useAssign() {
     }
   }, [fetchData]);
 
+  const bulkUpdatePriority = useCallback(async (orderIds: number[], priority: number | null) => {
+    setOrders(prev => prev.map(o => orderIds.includes(o.id) ? { ...o, priority } : o));
+
+    try {
+      const response = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/bulk-update-priority`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ salesOrderIds: orderIds, priority }),
+      });
+
+      if (!response.ok) {
+        let errorMsg = "Failed to update priority";
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorMsg;
+        } catch (e) {}
+        throw new Error(errorMsg);
+      }
+
+      await fetchData(true);
+      return true;
+    } catch (err: any) {
+       console.error("Failed to update priority", err);
+       throw new Error(err.message || "Failed to update priority");
+    }
+  }, [fetchData]);
+
   return {
     orders,
     lookup,
@@ -321,6 +358,7 @@ export function useAssign() {
     bulkImportErpData,
     updateSkipStage,
     uploadExcelUpdates,
+    bulkUpdatePriority,
     refresh: fetchData,
   };
 }

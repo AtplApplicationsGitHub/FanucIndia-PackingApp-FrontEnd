@@ -32,6 +32,8 @@ export type SalesOrder = {
   skipIssueStage?: boolean;
   address?: string | null;
   notificationCount?: number;
+  materialData?: { A_D_F?: string | null }[];
+  binCount?: number;
 };
 
 export type Lookup = {

@@ -134,39 +134,40 @@ export default function AssignSO() {
     }
   };
 
-  const handleAssignUser = async (userId: string) => {
-    const validIds: number[] = [];
+  const handleAssignUser = async (val: string, priorityVal?: string) => {
+    const ordersToAssign: number[] = [];
     const skippedSOs: string[] = [];
-
+    
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
       if (order) {
-        if (order.status === "F105" || order.status === "Dispatched") {
+        if (order.status === "Dispatched") {
           skippedSOs.push(order.saleOrderNumber || String(id));
         } else {
-          validIds.push(id);
+          ordersToAssign.push(id);
         }
       }
     });
 
     try {
-      if (validIds.length > 0) {
-        await bulkUpdate(validIds, userId);
+      if (ordersToAssign.length > 0) {
+        await bulkUpdate(ordersToAssign, val, priorityVal);
       }
-
+      
       const messageParts = [];
-      if (validIds.length > 0) {
-        messageParts.push(`Successfully assigned ${validIds.length} order(s)`);
+      if (ordersToAssign.length > 0) {
+        messageParts.push(`Assigned ${ordersToAssign.length} order(s)`);
       }
       if (skippedSOs.length > 0) {
-        messageParts.push(`Skipped (Packing Completed): ${skippedSOs.join(", ")}`);
+        messageParts.push(`Skipped (Already Dispatched): ${skippedSOs.join(", ")}`);
       }
 
       setSnackbar({
         open: true,
         message: messageParts.join(" | "),
-        severity: skippedSOs.length > 0 && validIds.length === 0 ? "warning" : "info",
+        severity: "info",
       });
+      setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -731,6 +732,8 @@ export default function AssignSO() {
                 "SALES ZONE",
                 "CUSTOMER",
                 "STATUS",
+                "A/D/F",
+                "BIN",
                 "PRIORITY",
                 "ASSIGNED USER",
               ].map((head) => (
@@ -921,6 +924,14 @@ export default function AssignSO() {
                       })()}
                     </TableCell>
 
+                    <TableCell sx={{ minWidth: 100 }}>
+                      {row.materialData?.[0]?.A_D_F || "-"}
+                    </TableCell>
+
+                    <TableCell sx={{ minWidth: 60 }}>
+                      {row.binCount ?? "-"}
+                    </TableCell>
+
                     <TableCell sx={{ minWidth: 80 }}>
                       {inlineEdit?.id === row.id &&
                       inlineEdit.field === "priority" ? (
@@ -1016,7 +1027,6 @@ export default function AssignSO() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={5000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
