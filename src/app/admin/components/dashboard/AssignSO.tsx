@@ -579,11 +579,11 @@ export default function AssignSO() {
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const pageIds = paginatedOrders.map((n) => n.id);
-      setSelectedIds((prev) => [...new Set([...prev, ...pageIds])]);
+      const allFilteredIds = filteredOrders.map((n) => n.id);
+      setSelectedIds((prev) => [...new Set([...prev, ...allFilteredIds])]);
     } else {
-      const pageIds = paginatedOrders.map((n) => n.id);
-      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+      const allFilteredIds = filteredOrders.map((n) => n.id);
+      setSelectedIds((prev) => prev.filter((id) => !allFilteredIds.includes(id)));
     }
   };
 
@@ -593,13 +593,18 @@ export default function AssignSO() {
     );
   };
 
-  const numSelectedOnPage = paginatedOrders.filter((row) =>
+  // Count how many of the FILTERED items are currently selected
+  const numSelectedTotal = filteredOrders.filter((row) =>
     selectedIds.includes(row.id),
   ).length;
-  const isAllSelectedOnPage =
-    paginatedOrders.length > 0 && numSelectedOnPage === paginatedOrders.length;
+
+  // Checkbox is checked if ALL filtered items are selected
+  const isAllSelected =
+    filteredOrders.length > 0 && numSelectedTotal === filteredOrders.length;
+
+  // Checkbox shows a dash (-) if only SOME filtered items are selected
   const isIndeterminate =
-    numSelectedOnPage > 0 && numSelectedOnPage < paginatedOrders.length;
+    numSelectedTotal > 0 && numSelectedTotal < filteredOrders.length;
 
   const handleInlineSave = (overrideValue?: string | number | null) => {
     if (!inlineEdit) return;
@@ -769,7 +774,7 @@ export default function AssignSO() {
               <TableCell sx={{ width: 48 }}>
                 <Checkbox
                   indeterminate={isIndeterminate}
-                  checked={isAllSelectedOnPage}
+                  checked={isAllSelected}
                   onChange={handleSelectAll}
                   sx={{
                     p: 0.5,
