@@ -56,6 +56,8 @@ export default function AssignSO() {
     bulkImportErpData,
     updateSkipStage,
     uploadExcelUpdates,
+    bulkUpdatePriority,
+    downloadErpData,
     dynamicCounts,
     fetchDynamicCounts,
   } = useAssign();
@@ -481,12 +483,15 @@ export default function AssignSO() {
       { header: "LABEL REMARKS", key: "labelRemarks", width: 25 },
       { header: "PRIORITY", key: "priority", width: 12 },
       { header: "ASSIGNED USER", key: "assignedUser", width: 20 },
+      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 },
+      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 },
     ];
 
     worksheet.getRow(1).font = { bold: true };
 
     exportRows.forEach((row: any) => {
       const clearHyphen = (val: any) => (val === "-" ? "" : val || "");
+      const isSkipped = row.skipIssueStage ? "Yes" : "No";
 
       worksheet.addRow({
         product:
@@ -506,6 +511,8 @@ export default function AssignSO() {
         labelRemarks: clearHyphen(row.labelRemarks),
         priority: row.priority ?? "",
         assignedUser: clearHyphen(row.assignedUser?.name),
+        skipIssueStage: isSkipped,
+        skipPackingStage: isSkipped,
       });
     });
 
@@ -539,6 +546,20 @@ export default function AssignSO() {
           formulae: [`"${packConfigNames}"`],
         };
       }
+
+      const skipIssueCell = worksheet.getCell(`O${i}`);
+      skipIssueCell.dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: ['"Yes,No"'],
+      };
+
+      const skipPackingCell = worksheet.getCell(`P${i}`);
+      skipPackingCell.dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: ['"Yes,No"'],
+      };
     }
 
     await worksheet.protect("admin_dims_2026", {
@@ -702,6 +723,58 @@ export default function AssignSO() {
     }
   }, [error]);
 
+  const handleDownloadErpData = async () => {
+    if (selectedIds.length === 0) {
+      setSnackbar({ open: true, message: "Please select at least one order", severity: "warning" });
+      return;
+    }
+
+    const validSaleOrderNumbers: string[] = [];
+    const skippedSOs: string[] = []; // Orders that already have data imported
+
+    selectedIds.forEach((id) => {
+      const order = orders.find((o) => o.id === id);
+      if (order && order.saleOrderNumber) {
+        if (order.hasMaterialData) {
+          skippedSOs.push(order.saleOrderNumber); // Skip if green tick exists
+        } else {
+          validSaleOrderNumbers.push(order.saleOrderNumber);
+        }
+      }
+    });
+
+    if (validSaleOrderNumbers.length === 0 && skippedSOs.length > 0) {
+      setSnackbar({ open: true, message: "Selected orders already have ERP data imported.", severity: "warning" });
+      return;
+    }
+
+    setSnackbar({ open: true, message: `Downloading ERP data for ${validSaleOrderNumbers.length} orders...`, severity: "info" });
+
+    try {
+      const result = await downloadErpData(validSaleOrderNumbers);
+
+      if (!result.success) {
+        setSnackbar({ open: true, message: result.message || "Download failed", severity: "error" });
+        return;
+      }
+
+      const downloadedCount = validSaleOrderNumbers.length - result.missingSOs.length;
+      let msg = downloadedCount > 0 ? `Successfully downloaded data for ${downloadedCount} orders.` : '';
+      
+      if (result.missingSOs.length > 0) {
+        msg += ` Data not available for the SO(s): ${result.missingSOs.join(", ")}`;
+      }
+
+      setSnackbar({
+        open: true,
+        message: msg.trim(),
+        severity: result.missingSOs.length === validSaleOrderNumbers.length ? "error" : "success"
+      });
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.message || "Failed to download ERP data", severity: "error" });
+    }
+  };
+
   return (
     <Box sx={{ width: "100%", borderRadius: 0, overflow: "visible", mt: 0 }}>
       <input
@@ -735,6 +808,7 @@ export default function AssignSO() {
           onAssignUser={handleAssignUser}
           onSkipStage={handleSkipStage}
           onImportERPData={handleImportERPData}
+          onDownloadErpData={handleDownloadErpData}
           onExcelExport={handleExcelExport}
           onExcelImport={() => fileInputRef.current?.click()}
           statusCounts={dynamicCounts}

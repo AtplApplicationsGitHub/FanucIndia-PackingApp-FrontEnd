@@ -53,7 +53,11 @@ export function useRecentActivity() {
       const res = await fetchWithAuth(API.DASHBOARD.SALES_ACTIVITY);
 
       if (!res.ok) {
-        if (res.status === 401) throw new Error("Session expired. Please log in again.");
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
         if (res.status === 403) throw new Error("You don't have permission to view this data.");
         throw new Error(`Failed to load activity (${res.status})`);
       }

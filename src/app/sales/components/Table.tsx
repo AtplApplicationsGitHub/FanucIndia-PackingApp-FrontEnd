@@ -29,6 +29,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import Badge from "@mui/material/Badge";
 
 type Props = {
+  view?: "home" | "orders" | "dispatched";
   orders: SalesOrder[];
   lookup: LookupData;
   totalOrders: number;
@@ -40,6 +41,7 @@ type Props = {
 };
 
 export default function SalesOrdersTable({
+  view,
   orders,
   lookup,
   totalOrders,
@@ -155,21 +157,18 @@ export default function SalesOrdersTable({
             <TableRow sx={{ height: 60 }}>
               {[
                 "ACTIONS",
-                // "Notifications",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
-                // "OutBound Delivery",
                 "TRANSFER ORDER",
                 "REQUIRED DATE",
                 "TRANSPORTER",
-                // "Plant Code",
                 "PAYMENT",
                 "SALES ZONE",
                 "PACKING CONFIG",
                 "CUSTOMER",
-                // "Special Remarks",
                 "STATUS",
-              ].map((head) => (
+              ].filter((head) => !(view === "dispatched" && head === "ACTIONS"))
+                .map((head) => (
                 <TableCell
                   key={head}
                   sx={{
@@ -188,36 +187,41 @@ export default function SalesOrdersTable({
             {orders.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={11} align="center" sx={{ py: 4 }}>
-                  No orders found. Create your first order!
+                  {view === "dispatched" 
+                    ? "No dispatched orders found." 
+                    : "No orders found. Create your first order!"}
                 </TableCell>
               </TableRow>
             ) : (
               orders.map((row) => (
                 <TableRow key={row.id}>
-                  {/* ACTIONS & NOTIFICATIONS */}
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    <IconButton
-                      onClick={(e) => handleMenuOpen(e, row.id)}
-                      size="small"
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() =>
-                        row.saleOrderNumber &&
-                        onOpenChat(row.saleOrderNumber, row.id)
-                      }
-                      size="small"
-                      sx={{ ml: 1 }}
-                    >
-                      <Badge
-                        badgeContent={row.notificationCount || 0}
-                        color="error"
+                  
+                  {view !== "dispatched" && (
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      <IconButton
+                        onClick={(e) => handleMenuOpen(e, row.id)}
+                        size="small"
                       >
-                        <ChatBubbleOutlineIcon fontSize="small" />
-                      </Badge>
-                    </IconButton>
-                  </TableCell>
+                        <MoreVertIcon />
+                      </IconButton>
+                      
+                      <IconButton
+                        onClick={() =>
+                          row.saleOrderNumber &&
+                          onOpenChat(row.saleOrderNumber, row.id)
+                        }
+                        size="small"
+                        sx={{ ml: 1 }}
+                      >
+                        <Badge
+                          badgeContent={row.notificationCount || 0}
+                          color="error"
+                        >
+                          <ChatBubbleOutlineIcon fontSize="small" />
+                        </Badge>
+                      </IconButton>
+                    </TableCell>
+                  )}
 
                   {/* PRODUCT */}
                   <TableCell>

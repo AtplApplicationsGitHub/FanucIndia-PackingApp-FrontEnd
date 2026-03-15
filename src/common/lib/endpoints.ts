@@ -138,6 +138,7 @@ export const API = {
     UPLOAD:                  `${API_BASE_URL}/erp-material-importer/upload`,
     IMPORT_FROM_DRIVE:       `${API_BASE_URL}/erp-material-importer/import-from-drive`,
     BULK_IMPORT_FROM_DRIVE:  `${API_BASE_URL}/erp-material-importer/bulk-import-from-drive`,
+    BULK_DOWNLOAD_DRIVE:     `${API_BASE_URL}/erp-material-importer/bulk-download-drive`,
   },
   FG_DASHBOARD:              `${API_BASE_URL}/fg-dashboard`,
   FG_STORAGE: {

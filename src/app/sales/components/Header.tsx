@@ -17,6 +17,7 @@ type Props = {
 const menuItems = [
   { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
   { label: "ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
+  { label: "DISPATCHED ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "dispatched" },
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 

@@ -61,9 +61,6 @@ export default function SalesDashboard() {
     endDate,
     setEndDate,
     handleClearFilters,
-    updateFileInputRef,
-    handleExcelExport,
-    handleExcelImportChange,
   } = useSalesDashboard();
 
   const [chatOpen, setChatOpen] = React.useState(false);
@@ -117,10 +114,10 @@ export default function SalesDashboard() {
         {/* HOME VIEW - Beautiful Dashboard */}
         {view === "home" && <HomeDashboard />}
 
-        {/* ORDERS VIEW */}
-        {view === "orders" && (
+        {(view === "orders" || view === "dispatched") && (
           <Box px={{ xs: 1.5, md: 2 }} py={1}>
             <SalesDashboardToolbar
+              view={view}
               searchValue={searchTerm}
               onSearchChange={setSearchTerm}
               onCreate={handleCreate}
@@ -129,10 +126,6 @@ export default function SalesDashboard() {
               onClear={handleClearFilters}
               fileInputRef={fileInputRef}
               onFileChange={handleFileChange}
-              onExcelExport={handleExcelExport}
-              onExcelImport={() => updateFileInputRef.current?.click()}
-              updateFileInputRef={updateFileInputRef}
-              onExcelImportChange={handleExcelImportChange}
               paymentFilter={paymentFilter}
               onPaymentFilterChange={setPaymentFilter}
               zoneFilter={zoneFilter}
@@ -149,11 +142,14 @@ export default function SalesDashboard() {
             {orders.length === 0 ? (
               <Box display="flex" justifyContent="center" mt={4}>
                 <Alert severity="info">
-                  No orders found. Create your first order!
+                  {view === "dispatched" 
+                    ? "No dispatched orders found." 
+                    : "No orders found. Create your first order!"}
                 </Alert>
               </Box>
             ) : (
               <SalesOrdersTable
+                view={view}
                 orders={orders}
                 lookup={lookup}
                 totalOrders={totalOrders}

@@ -37,11 +37,15 @@ interface MaterialDetail {
   Required_Qty: number;
   Issue_stage: number;
   Packing_stage: number;
+  IssueUpdatedBy?: string;
+  IssueUpdatedDate?: string;
+  PackingUpdatedBy?: string;
+  PackingUpdatedDate?: string;
   UpdatedBy?: string;
   UpdatedDate?: string;
   Remarks?: string;
   Remarks_Required?: boolean;
-  Group?: string; // [NEW] Added Group field
+  Group?: string;
 }
 
 interface Props {
@@ -73,6 +77,38 @@ export default function MaterialDetails({
     return list.filter((m) => m.Group === groupFilter);
   }, [materialDetails, groupFilter]);
 
+  // [NEW] Calculate Durations for Issue and Packing Stages
+  const { issueDuration, packingDuration } = useMemo(() => {
+    const calculate = (dates: (string | undefined)[]) => {
+      const validDates = dates
+        .filter((d): d is string => !!d)
+        .map((d) => new Date(d).getTime());
+
+      if (validDates.length === 0) return null;
+      if (validDates.length === 1) return "0 mins";
+
+      const min = Math.min(...validDates);
+      const max = Math.max(...validDates);
+      const diffMins = Math.floor((max - min) / 60000); // Convert ms to minutes
+
+      if (diffMins === 0) return "0 mins";
+      if (diffMins < 60) return `${diffMins} mins`;
+      if (diffMins < 1440) {
+        const hrs = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        return `${hrs} hr${hrs > 1 ? "s" : ""}${mins > 0 ? ` ${mins} min${mins > 1 ? "s" : ""}` : ""}`;
+      }
+      const days = Math.floor(diffMins / 1440);
+      const hrs = Math.floor((diffMins % 1440) / 60);
+      return `${days} day${days > 1 ? "s" : ""}${hrs > 0 ? ` ${hrs} hr${hrs > 1 ? "s" : ""}` : ""}`;
+    };
+
+    return {
+      issueDuration: calculate(materialDetails?.map((m) => m.IssueUpdatedDate)),
+      packingDuration: calculate(materialDetails?.map((m) => m.PackingUpdatedDate)),
+    };
+  }, [materialDetails]);
+
   const handleGroupChange = (event: SelectChangeEvent) => {
     setGroupFilter(event.target.value as string);
   };
@@ -99,12 +135,24 @@ export default function MaterialDetails({
         alignItems="center"
         mb={2}
       >
-        <Typography
-          variant="h5"
-          sx={{ color: "secondary.main", fontWeight: 600 }}
-        >
-          MATERIALS
-        </Typography>
+        <Box display="flex" alignItems="baseline" gap={3}>
+          <Typography
+            variant="h5"
+            sx={{ color: "secondary.main", fontWeight: 600 }}
+          >
+            MATERIALS
+          </Typography>
+          {issueDuration && (
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
+              Issue Duration: <span style={{ color: "#d32f2f" }}>{issueDuration}</span>
+            </Typography>
+          )}
+          {packingDuration && (
+            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
+              Packing Duration: <span style={{ color: "#1976d2" }}>{packingDuration}</span>
+            </Typography>
+          )}
+        </Box>
 
         <Box display="flex" alignItems="center" gap={2}>
           {/* [NEW] Group Filter Dropdown */}
@@ -221,12 +269,22 @@ export default function MaterialDetails({
               <TableCell
                 sx={{ color: "primary.contrastText", fontWeight: "bold" }}
               >
-                Updated By
+                Issue Updated By
               </TableCell>
               <TableCell
                 sx={{ color: "primary.contrastText", fontWeight: "bold" }}
               >
-                Updated Date
+                Issue Updated Date
+              </TableCell>
+              <TableCell
+                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+              >
+                Packing Updated By
+              </TableCell>
+              <TableCell
+                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+              >
+                Packing Updated Date
               </TableCell>
             </TableRow>
           </TableHead>
@@ -262,17 +320,23 @@ export default function MaterialDetails({
                 <TableCell>{m.Required_Qty}</TableCell>
                 <TableCell>{m.Issue_stage}</TableCell>
                 <TableCell>{m.Packing_stage}</TableCell>
-                <TableCell>{m.UpdatedBy || "-"}</TableCell>
+                <TableCell>{m.IssueUpdatedBy || "-"}</TableCell>
                 <TableCell>
-                  {m.UpdatedDate
-                    ? new Date(m.UpdatedDate).toLocaleString()
+                  {m.IssueUpdatedDate
+                    ? new Date(m.IssueUpdatedDate).toLocaleString()
+                    : "-"}
+                </TableCell>
+                <TableCell>{m.PackingUpdatedBy || "-"}</TableCell>
+                <TableCell>
+                  {m.PackingUpdatedDate
+                    ? new Date(m.PackingUpdatedDate).toLocaleString()
                     : "-"}
                 </TableCell>
               </TableRow>
             ))}
             {displayMaterials.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={14} align="center" sx={{ py: 3 }}>
                   <Typography color="text.secondary">
                     No material details found for this group.
                   </Typography>

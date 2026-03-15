@@ -68,6 +68,7 @@ type Props = {
   onAssignUser?: (userId: string, priority?: string) => Promise<void>;
   onSkipStage?: (val: string) => Promise<void>;
   onImportERPData?: () => void;
+  onDownloadErpData?: () => void;
   onExcelExport?: () => void;
   onExcelImport?: () => void;
   statusCounts?: {
@@ -100,10 +101,10 @@ export default function AssignOrdersToolbar({
   onAssignUser,
   onSkipStage,
   onImportERPData,
+  onDownloadErpData,
   onExcelExport,
   onExcelImport,
   statusCounts = { R105: 0, W105: 0 },
-  onUpdatePriority,
   customerFilter,
   onCustomerFilterChange,
   customers = [],
@@ -552,6 +553,22 @@ export default function AssignOrdersToolbar({
               </Typography>
             </Box>
           )}
+
+          <MenuItem
+            onClick={() =>
+              handleActionClick(() => {
+                onDownloadErpData?.();
+              })
+            }
+          >
+            <ListItemIcon>
+              <FileDownloadOutlinedIcon fontSize="small" sx={{ color: "#2e7d32" }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="ERP DATA"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
 
           {/* Actions requiring selection - Now always visible */}
           <MenuItem

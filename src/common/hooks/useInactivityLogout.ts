@@ -1,46 +1,39 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { logoutUser } from "@/common/lib/auth";
 
-export function useInactivityLogout(timeoutMinutes = 10, enabled = true) { 
+const INACTIVITY_TIMEOUT = 7200000; 
+
+export function useInactivityLogout() {
   const router = useRouter();
-  const timeout = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    
+    router.push("/login");
+  }, [router]);
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(logout, INACTIVITY_TIMEOUT);
+  }, [logout]);
 
   useEffect(() => {
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
 
-    if (!enabled) {
-      return;
-    }
-
-    const handleLogout = () => {
-      logoutUser(); 
-      router.push("/login?reason=session-expired");
-    };
-
-    const resetTimer = () => {
-      if (timeout.current) {
-        clearTimeout(timeout.current);
-      }
-      timeout.current = setTimeout(
-        handleLogout,
-        timeoutMinutes * 60 * 1000
-      );
-    };
-
-    const events: (keyof WindowEventMap)[] = [
-      "mousemove", "mousedown", "keydown", "touchstart", "scroll"
-    ];
-
-    events.forEach((event) => window.addEventListener(event, resetTimer));
     resetTimer();
 
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+
     return () => {
-      if (timeout.current) {
-        clearTimeout(timeout.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [router, timeoutMinutes, enabled]); 
+  }, [resetTimer]);
 }

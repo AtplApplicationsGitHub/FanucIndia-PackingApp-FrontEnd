@@ -1,5 +1,5 @@
 "use client";
-
+import dayjs from "dayjs";
 import { useState, useEffect, useCallback } from "react";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
@@ -76,11 +76,12 @@ export function useAssign() {
         ? detailedData
         : detailedData.data || [];
 
-      // Create lookup map by saleOrderNumber for quick merge
+      // Create lookup map by composite key (SaleOrder + OBD) to prevent overlap
       const detailsMap = new Map<string, any>();
       detailedOrders.forEach((detail: any) => {
         if (detail.saleOrderNumber) {
-          detailsMap.set(detail.saleOrderNumber, detail);
+          const obd = detail.outboundDelivery || "";
+          detailsMap.set(`${detail.saleOrderNumber}_${obd}`, detail);
         }
       });
 
@@ -88,10 +89,11 @@ export function useAssign() {
       const mappedOrders: SalesOrder[] = simpleOrders.map(
         (item: any, index: number) => {
           const son = item.saleOrderNumber || item.son;
-          const detail = detailsMap.get(son) || {};
+          const obd = item.outboundDelivery || item.obd || "";
+          const detail = detailsMap.get(`${son}_${obd}`) || {};
 
           return {
-            id: detail.id || item.id || index + 1,
+            id: item.id || detail.id || index + 1, 
 
             user:
               detail.user ||
@@ -496,6 +498,56 @@ export function useAssign() {
     [fetchData],
   );
 
+  const downloadErpData = useCallback(
+    async (saleOrderNumbers: string[]) => {
+      try {
+        const response = await fetchWithAuth(
+          API.ERP_IMPORTER.BULK_DOWNLOAD_DRIVE,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ saleOrderNumbers }),
+          },
+        );
+
+        if (!response.ok) {
+          let errorMsg = "Download failed";
+          let missing: string[] = [];
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || errorMsg;
+            missing = errorData.missing || [];
+          } catch (e) {}
+          // FIX: Return an object instead of throwing an Error
+          return { success: false, message: errorMsg, missingSOs: missing };
+        }
+
+        // Read the custom header to see if any files were missing
+        const missingHeader = response.headers.get("X-Missing-SOs");
+        const missingSOs = missingHeader ? missingHeader.split(',').filter(Boolean) : [];
+
+        // Trigger file download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true, missingSOs };
+      } catch (err: any) {
+        console.error("ERP Data download error:", err);
+        return { success: false, message: err.message || "Failed to download ERP data", missingSOs: [] };
+      }
+    },
+    []
+  );
+
   return {
     orders,
     lookup,
@@ -507,6 +559,7 @@ export function useAssign() {
     updateSkipStage,
     uploadExcelUpdates,
     bulkUpdatePriority,
+    downloadErpData,
     refresh: fetchData,
     dynamicCounts,
     fetchDynamicCounts,

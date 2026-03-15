@@ -13,8 +13,6 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
-  Divider,
-  ListSubheader,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -23,7 +21,6 @@ import ListIcon from "@mui/icons-material/List";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import { Plus } from "lucide-react";
-
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -32,22 +29,14 @@ import dayjs from "dayjs";
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
 type Props = {
+  view?: "home" | "orders" | "dispatched";
   searchValue: string;
   onSearchChange: (value: string) => void;
   onCreate: () => void;
   onDownload: () => void;
   onBulkUpload: () => void;
-  onExcelExport: () => void;
-  onExcelImport: () => void;
-
-  // FIXED: Restored original props
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-
-  // NEW: Added props for updating via Excel
-  updateFileInputRef: React.RefObject<HTMLInputElement | null>;
-  onExcelImportChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-
   paymentFilter: string;
   onPaymentFilterChange: (val: string) => void;
   zoneFilter: string;
@@ -63,17 +52,14 @@ type Props = {
 };
 
 export default function SalesDashboardToolbar({
+  view,
   searchValue,
   onSearchChange,
   onCreate,
   onDownload,
   onBulkUpload,
-  onExcelExport,
-  onExcelImport,
   fileInputRef,
   onFileChange,
-  updateFileInputRef,
-  onExcelImportChange,
   paymentFilter,
   onPaymentFilterChange,
   zoneFilter,
@@ -252,27 +238,31 @@ export default function SalesDashboardToolbar({
           </IconButton>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={onCreate}
-              startIcon={<Plus size={18} />}
-              sx={{
-                bgcolor: "#facd02",
-                color: "#000",
-                fontWeight: 600,
-                fontSize: "12px",
-                height: 40,
-                whiteSpace: "nowrap",
-                px: { xs: 1.5, md: 2 },
-                "&:hover": { bgcolor: "#e5bb01" },
-              }}
-            >
-              CREATE ORDER
-            </Button>
-            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-              <ListIcon />
-            </IconButton>
+            {view !== "dispatched" && (
+              <>
+                <Button
+                  variant="contained"
+                  disableElevation
+                  onClick={onCreate}
+                  startIcon={<Plus size={18} />}
+                  sx={{
+                    bgcolor: "#facd02",
+                    color: "#000",
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    height: 40,
+                    whiteSpace: "nowrap",
+                    px: { xs: 1.5, md: 2 },
+                    "&:hover": { bgcolor: "#e5bb01" },
+                  }}
+                >
+                  CREATE ORDER
+                </Button>
+                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                  <ListIcon />
+                </IconButton>
+              </>
+            )}
           </Box>
         </Paper>
 
@@ -282,21 +272,9 @@ export default function SalesDashboardToolbar({
           onClose={() => setAnchorEl(null)}
           PaperProps={{
             elevation: 3,
-            sx: { mt: 1.5, minWidth: 240, borderRadius: "8px" },
+            sx: { mt: 1.5, minWidth: 200, borderRadius: "8px" },
           }}
         >
-          <ListSubheader 
-            sx={{ 
-              lineHeight: '32px', 
-              fontWeight: 700, 
-              fontSize: '0.75rem', 
-              color: 'text.secondary',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}
-          >
-            Create New Orders
-          </ListSubheader>
           <MenuItem
             onClick={() => {
               onDownload();
@@ -325,56 +303,13 @@ export default function SalesDashboardToolbar({
             </ListItemIcon>
             <ListItemText primary="BULK UPLOAD" />
           </MenuItem>
-          <Divider sx={{ my: 0.5 }} />
-          <ListSubheader 
-            sx={{ 
-              lineHeight: '32px', 
-              fontWeight: 700, 
-              fontSize: '0.75rem', 
-              color: 'text.secondary',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}
-          >
-            Update Existing Data
-          </ListSubheader>
-          <MenuItem
-            onClick={() => {
-              onExcelExport();
-              setAnchorEl(null);
-            }}
-          >
-            <ListItemIcon>
-              <FileDownloadOutlinedIcon fontSize="small" color="success" />
-            </ListItemIcon>
-            <ListItemText primary="EXCEL EXPORT" />
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              onExcelImport();
-              setAnchorEl(null);
-            }}
-          >
-            <ListItemIcon>
-              <FileUploadOutlinedIcon fontSize="small" color="info" />
-            </ListItemIcon>
-            <ListItemText primary="EXCEL IMPORT" />
-          </MenuItem>
         </Menu>
 
-        {/* Both hidden inputs stay isolated here! */}
         <input
           ref={fileInputRef}
           type="file"
           accept=".xlsx"
           onChange={onFileChange}
-          hidden
-        />
-        <input
-          ref={updateFileInputRef}
-          type="file"
-          accept=".xlsx"
-          onChange={onExcelImportChange}
           hidden
         />
       </Box>

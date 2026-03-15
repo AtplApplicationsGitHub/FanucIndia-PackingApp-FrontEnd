@@ -17,7 +17,7 @@ type NotificationNewPayload = {
   };
 };
 
-export type SalesDashboardView = "home" | "orders";
+export type SalesDashboardView = "home" | "orders" | "dispatched";
 
 export function useSalesDashboard() {
   const router = useRouter();
@@ -61,8 +61,8 @@ export function useSalesDashboard() {
   const [paymentFilter, setPaymentFilter] = useState("");
   const [zoneFilter, setZoneFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -217,12 +217,21 @@ export function useSalesDashboard() {
     return `${y}-${m}-${day}`; // YYYY-MM-DD in local time
   };
 
-  // --- FETCH ORDERS LOGIC ---
   const fetchOrders = useCallback(
     (page = currentPage, size = pageSize) => {
       if (typeof window === "undefined") return;
       const token = localStorage.getItem("token");
       setLoading(true);
+
+      let finalStatusFilter = statusFilter || undefined;
+      let finalExcludeStatus = undefined;
+
+      if (view === "dispatched") {
+        finalStatusFilter = "Dispatched";
+      } else if (view === "orders" && !statusFilter) {
+        finalExcludeStatus = "Dispatched";
+      }
+
       axios
         .get(API.SALES.CREATE_ORDER, {
           headers: { Authorization: `Bearer ${token}` },
@@ -230,7 +239,8 @@ export function useSalesDashboard() {
             search: searchTerm || undefined,
             paymentClearance: paymentFilter || undefined,
             salesZoneId: zoneFilter || undefined,
-            status: statusFilter || undefined,
+            status: finalStatusFilter,
+            excludeStatus: finalExcludeStatus,
             startDate: startDate ? toLocalYMD(startDate) : undefined,
             endDate: endDate ? toLocalYMD(endDate) : undefined,
             page,
@@ -256,45 +266,44 @@ export function useSalesDashboard() {
       endDate,
       currentPage,
       pageSize,
+      view,
     ],
   );
 
   useEffect(() => {
-    if (view === "orders") {
+    if (view === "orders" || view === "dispatched") {
       fetchOrders(currentPage, pageSize);
     }
   }, [currentPage, pageSize, fetchOrders, view]);
 
   useEffect(() => {
-    if (view === "orders") {
+    if (view === "orders" || view === "dispatched") {
       setCurrentPage(1);
       fetchOrders(1, pageSize);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    searchTerm,
-    paymentFilter,
-    zoneFilter,
-    statusFilter,
-    startDate,
-    endDate,
-    view,
-  ]);
+  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
 
-  const handleExcelExport = useCallback(async () => {
+  const handleDownloadTemplate = useCallback(async () => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
     try {
-      setAlert({ severity: "info", message: "Exporting Excel..." });
+      setAlert({ severity: "info", message: "Downloading Template..." });
 
-      // Build query parameters based on current filters
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (paymentFilter) params.append("paymentClearance", paymentFilter);
       if (zoneFilter) params.append("salesZoneId", zoneFilter);
-      if (statusFilter) params.append("status", statusFilter);
       if (startDate) params.append("startDate", toLocalYMD(startDate));
       if (endDate) params.append("endDate", toLocalYMD(endDate));
+
+      if (view === "dispatched") {
+        params.append("status", "Dispatched");
+      } else if (statusFilter) {
+        params.append("status", statusFilter);
+      } else if (view === "orders") {
+        params.append("excludeStatus", "Dispatched");
+      }
 
       const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
 
@@ -310,86 +319,18 @@ export function useSalesDashboard() {
         (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
         cd.match(/filename="([^"]+)"/i)?.[1] ||
         cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
-        "sales_orders_export.xlsx";
+        "Sales_Orders_Template.xlsx";
 
       const blob = await res.blob();
       secureDownload(blob, filename);
       setAlert({
         severity: "success",
-        message: "Export downloaded successfully!",
+        message: "Template downloaded successfully!",
       });
     } catch (error) {
-      setAlert({ severity: "error", message: "Failed to export Excel data." });
+      setAlert({ severity: "error", message: "Failed to download template." });
     }
-  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate]);
-
-  const handleExcelImportChange = useCallback(async () => {
-    const input = updateFileInputRef.current;
-    if (!input?.files?.[0]) return;
-    const file = input.files[0];
-
-    try {
-      if (typeof window === "undefined") return;
-      const token = localStorage.getItem("token");
-      setLoading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await axios.post(API.SALES.EXCEL_IMPORT, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setAlert({
-        severity: "success",
-        message: response.data.message || "Excel imported successfully!",
-      });
-      await fetchOrders();
-      await fetchLookups();
-    } catch (err: any) {
-      const data = err.response?.data;
-
-      const message = data?.message || "Excel import failed.";
-      const rowErrors = Array.isArray(data?.errors) ? data.errors : [];
-
-      const details = rowErrors
-        .slice(0, 8) // don’t make the toast a novel
-        .map((e: any) => `Row ${e.row}: ${(e.errors || []).join(", ")}`)
-        .join(" | ");
-
-      setAlert({
-        severity: "error",
-        message: details ? `${message} ${details}` : message,
-      });
-    } finally {
-      setLoading(false);
-      if (input) input.value = "";
-    }
-  }, [fetchOrders, fetchLookups]);
-
-  const handleDownloadTemplate = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(API.SALES.TEMPLATE, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-
-      const cd = res.headers.get("content-disposition") || "";
-
-      const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
-      const filename =
-        (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
-        cd.match(/filename="([^"]+)"/i)?.[1] ||
-        cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
-        "bulk_import_excel.xlsx";
-
-      const blob = await res.blob();
-      secureDownload(blob, filename);
-    } catch {
-      setAlert({ severity: "error", message: "Failed to download template" });
-    }
-  }, []);
+  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
 
   const handleBulkUpload = () => fileInputRef.current?.click();
 
@@ -559,7 +500,5 @@ export function useSalesDashboard() {
     setEndDate,
     handleClearFilters,
     updateFileInputRef,
-    handleExcelExport,
-    handleExcelImportChange,
   };
 }

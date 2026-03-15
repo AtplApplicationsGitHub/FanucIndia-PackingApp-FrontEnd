@@ -24,6 +24,11 @@ export function usePaymentClearance(): UsePaymentClearanceResult {
       const response = await fetchWithAuth(API.DASHBOARD.SALES_PAYMENT_CLEARANCE);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
         const text = await response.text();
         throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
       }

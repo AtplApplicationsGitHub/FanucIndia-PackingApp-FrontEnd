@@ -90,8 +90,8 @@ export function useAdminDashboard() {
   const [zoneFilter, setZoneFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
 
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
 
   const [openCalendar, setOpenCalendar] = useState<boolean>(false);
   const [selectedMasterLookup, setSelectedMasterLookup] =
