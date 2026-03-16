@@ -35,17 +35,29 @@ export default function UserDashboard() {
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
+  const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
   
   const router = useRouter(); 
 
-  const handleOpenChat = (soNumber: string) => {
+  const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
+    setChatOrderId(orderId);
     setChatOpen(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error("Failed to clear notifications", err);
+    }
   };
   
   const handleChatClose = () => {
     setChatOpen(false);
     setChatSoNumber(null);
+    setChatOrderId(null);
   };
 
   const showSnackbar = (
@@ -182,6 +194,7 @@ export default function UserDashboard() {
       <SoChatDrawer
           open={chatOpen}
           onClose={handleChatClose}
+          orderId={chatOrderId}
           soNumber={chatSoNumber}
           buttonSx={{
             bgcolor: theme.palette.primary.main,

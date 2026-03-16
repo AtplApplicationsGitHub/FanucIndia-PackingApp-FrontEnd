@@ -14,6 +14,8 @@ import HomeDashboard from "@/app/sales/components/SalesDashboard";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboard";
 import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
+import axios from "axios";
+import { API } from "@/common/lib/endpoints";
 
 export default function SalesDashboard() {
   const theme = useTheme();
@@ -65,15 +67,27 @@ export default function SalesDashboard() {
 
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
+  const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
 
-  const handleOpenChat = (soNumber: string) => {
+  const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
+    setChatOrderId(orderId);
     setChatOpen(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error("Failed to clear notifications", err);
+    }
   };
 
   const handleChatClose = () => {
     setChatOpen(false);
     setChatSoNumber(null);
+    setChatOrderId(null);
   };
 
   if (error && !orders.length) {
@@ -205,6 +219,7 @@ export default function SalesDashboard() {
         <SoChatDrawer
           open={chatOpen}
           onClose={handleChatClose}
+          orderId={chatOrderId}
           soNumber={chatSoNumber}
           buttonSx={{
             bgcolor: theme.palette.primary.main,

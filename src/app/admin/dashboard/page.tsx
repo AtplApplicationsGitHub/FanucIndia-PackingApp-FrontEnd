@@ -38,14 +38,16 @@ export default function AdminDashboard() {
 
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
+  const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
 
-  const handleOpenChat = async (soNumber: string) => {
+  const handleOpenChat = async (soNumber: string, orderId: number) => { 
     setChatSoNumber(soNumber);
+    setChatOrderId(orderId);
     setChatOpen(true);
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), { 
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -372,6 +374,7 @@ export default function AdminDashboard() {
         <SoChatDrawer
           open={chatOpen}
           onClose={() => setChatOpen(false)}
+          orderId={chatOrderId}
           soNumber={chatSoNumber}
           buttonSx={{ bgcolor: "primary.main" }}
         />
