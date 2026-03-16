@@ -960,7 +960,7 @@ export default function AssignSO() {
                         )}
                         <MuiLink
                           component={Link}
-                          href={`/so-search/${row.saleOrderNumber}`}
+                          href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
                           underline="hover"
                           sx={{ fontWeight: 500 }}
                         >

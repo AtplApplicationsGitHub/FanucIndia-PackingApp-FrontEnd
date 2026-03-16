@@ -55,6 +55,7 @@ interface FgDashboardRow {
   id: number;
   deliveryDate: string;
   saleOrderNumber: string;
+  outboundDelivery?: string;
   transferOrder: string;
   product: string;
   customerName: string;
@@ -544,7 +545,7 @@ export default function FgDashboardView() {
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           <MuiLink
                             component={Link}
-                            href={`/so-search/${row.saleOrderNumber}`}
+                            href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
                             underline="hover"
                             sx={{ fontWeight: 500 }}
                           >

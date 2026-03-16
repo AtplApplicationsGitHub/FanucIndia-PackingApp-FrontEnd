@@ -159,7 +159,7 @@ export default function SalesOrdersTable({
                 "ACTIONS",
                 "PRODUCT",
                 "SALE ORDER NUMBER",
-                "TRANSFER ORDER",
+                "OUTBOUND DELIVERY",
                 "REQUIRED DATE",
                 "TRANSPORTER",
                 "PAYMENT",
@@ -232,7 +232,7 @@ export default function SalesOrdersTable({
                   <TableCell>
                     <MuiLink
                       component={Link}
-                      href={`/so-search/${row.saleOrderNumber}`}
+                      href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
                       underline="hover"
                       sx={{ fontWeight: 500 }}
                     >
@@ -241,10 +241,10 @@ export default function SalesOrdersTable({
                   </TableCell>
 
                   {/* OUTBOUND DELIVERY */}
-                  {/* <TableCell>{row.outboundDelivery}</TableCell> */}
+                  <TableCell>{row.outboundDelivery}</TableCell>
 
                   {/* TRANSFER ORDER */}
-                  <TableCell>{row.transferOrder}</TableCell>
+                  {/* <TableCell>{row.transferOrder}</TableCell> */}
 
                   {/* DELIVERY DATE */}
                   <TableCell>

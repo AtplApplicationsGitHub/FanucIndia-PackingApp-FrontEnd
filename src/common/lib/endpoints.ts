@@ -158,14 +158,14 @@ export const API = {
     ADMIN_ORDERS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-orders-by-customer`,
   },
   SO_CHAT: {
-    MENTION_USERS: (soNumber: string) => `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/mention-users`,
-    MESSAGES: (soNumber: string) =>      `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
-    SEND: (soNumber: string) =>          `${API_BASE_URL}/so-chat/${encodeURIComponent(soNumber)}/messages`,
+    MENTION_USERS: (orderId: number) => `${API_BASE_URL}/so-chat/${orderId}/mention-users`,
+    MESSAGES: (orderId: number) =>      `${API_BASE_URL}/so-chat/${orderId}/messages`,
+    SEND: (orderId: number) =>          `${API_BASE_URL}/so-chat/${orderId}/messages`,
   },
   SO_NOTIFICATIONS: {
     LIST:                     `${API_BASE_URL}/so-notifications`,
     DELETE: (id: number) =>   `${API_BASE_URL}/so-notifications/${id}`,
-    CLEAR_SO: (soNumber: string) => `${API_BASE_URL}/so-notifications/clear-so/${encodeURIComponent(soNumber)}`,
+    CLEAR_SO: (orderId: number) => `${API_BASE_URL}/so-notifications/clear-so/${orderId}`,
   },
   SO_SOCKET_BASE: API_BASE_URL,
   // TERMINAL USER DASHBOARD

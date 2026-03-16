@@ -39,11 +39,13 @@ type ChatMessage = {
 export default function SoChatDrawer({
   open,
   onClose,
+  orderId,
   soNumber,
   buttonSx,
 }: {
   open: boolean;
   onClose: () => void;
+  orderId: number | null;
   soNumber: string | null;
   buttonSx: SxProps<Theme>;
 }) {
@@ -70,12 +72,12 @@ export default function SoChatDrawer({
   );
 
   const refresh = async () => {
-    if (!soNumber || !token) return;
+    if (!orderId || !token) return;
     setLoading(true);
     setAccessDenied(false);
     try {
       try {
-        await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(soNumber), {
+        await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
           headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
@@ -83,10 +85,10 @@ export default function SoChatDrawer({
       }
 
       const [u, m] = await Promise.all([
-        axios.get(API.SO_CHAT.MENTION_USERS(soNumber), {
+        axios.get(API.SO_CHAT.MENTION_USERS(orderId), {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(API.SO_CHAT.MESSAGES(soNumber), {
+        axios.get(API.SO_CHAT.MESSAGES(orderId), {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -106,7 +108,7 @@ export default function SoChatDrawer({
   useEffect(() => {
     if (open) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, soNumber]);
+  }, [open, orderId]);
 
   const filteredUsers = useMemo(() => {
     const q = mentionQuery.trim().toLowerCase();
@@ -158,7 +160,7 @@ export default function SoChatDrawer({
   };
 
   const handleSend = async () => {
-    if (!soNumber || !token) return;
+    if (!orderId || !token) return;
     if (!taggedUser) return; // force tagging
     const msg = text.trim();
     if (!msg) return;
@@ -166,7 +168,7 @@ export default function SoChatDrawer({
     setSending(true);
     try {
       await axios.post(
-        API.SO_CHAT.SEND(soNumber),
+        API.SO_CHAT.SEND(orderId),
         { toUserId: taggedUser.id, message: msg },
         { headers: { Authorization: `Bearer ${token}` } }
       );

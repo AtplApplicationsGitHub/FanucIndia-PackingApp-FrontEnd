@@ -32,6 +32,7 @@ import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useSearchParams } from "next/navigation";
 
 interface SalesOrder {
+  id: number;
   saleOrderNumber: string;
   status: string;
   deliveryDate: string;
@@ -247,19 +248,22 @@ export default function SoSearchPage() {
     }
   }, [router]);
 
-  const performSearch = useCallback(async (searchNumber: string) => {
+  const performSearch = useCallback(async (searchNumber: string, searchObd?: string) => {
     if (!searchNumber) return;
     setLoading(true);
     setError(null);
     setData(null);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        API.SO_SEARCH.BY_SO_NUMBER(searchNumber.trim()),
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+
+      let url = API.SO_SEARCH.BY_SO_NUMBER(searchNumber.trim());
+      if (searchObd) {
+        url += `?obd=${encodeURIComponent(searchObd.trim())}`;
+      }
+
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setData(res.data);
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -274,10 +278,14 @@ export default function SoSearchPage() {
 
   useEffect(() => {
     const soFromUrl = params.soNumber?.[0];
+    const obdFromUrl = params.soNumber?.[1];
+
     if (soFromUrl) {
       const decodedSo = decodeURIComponent(soFromUrl);
+      const decodedObd = obdFromUrl ? decodeURIComponent(obdFromUrl) : undefined;
+      
       setSoNumber(decodedSo);
-      performSearch(decodedSo);
+      performSearch(decodedSo, decodedObd);
     }
   }, [params.soNumber, performSearch]);
 
@@ -520,6 +528,7 @@ export default function SoSearchPage() {
             <SoChatDrawer
               open={chatOpen}
               onClose={() => setChatOpen(false)}
+              orderId={data?.salesOrder?.id || null}
               soNumber={data?.salesOrder?.saleOrderNumber || null}
               buttonSx={buttonSx}
             />

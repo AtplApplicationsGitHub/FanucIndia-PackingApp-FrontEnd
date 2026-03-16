@@ -565,7 +565,7 @@ export default function AssignOrdersToolbar({
               <FileDownloadOutlinedIcon fontSize="small" sx={{ color: "#2e7d32" }} />
             </ListItemIcon>
             <ListItemText
-              primary="ERP DATA"
+              primary="DOWNLOAD ERP DATA"
               primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
             />
           </MenuItem>
