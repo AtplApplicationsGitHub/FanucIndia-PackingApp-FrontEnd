@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   IconButton,
@@ -71,6 +71,11 @@ export default function AdminOrdersToolbar({
   onBulkSkipIssue,
   assignableUsers = [],
 }: Props) {
+  const [localSearch, setLocalSearch] = useState(searchInput);
+  useEffect(() => {
+    setLocalSearch(searchInput);
+  }, [searchInput]);
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box
@@ -102,10 +107,12 @@ export default function AdminOrdersToolbar({
             mx: "auto",
           }}
         >
-          {/* Search Field */}
           <Box
             component="form"
-            onSubmit={(e: React.FormEvent) => e.preventDefault()}
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault();
+              onSearchInputChange(localSearch);
+            }}
             sx={{
               p: "2px 4px",
               display: "flex",
@@ -122,19 +129,22 @@ export default function AdminOrdersToolbar({
               sx={{ ml: 1, flex: 1, fontSize: "14px" }}
               placeholder="Search"
               inputProps={{ "aria-label": "search" }}
-              value={searchInput}
-              onChange={(e) => onSearchInputChange(e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
-            {searchInput && (
+            {localSearch && (
               <IconButton
                 sx={{ p: "5px" }}
                 aria-label="clear"
-                onClick={() => onSearchInputChange("")}
+                onClick={() => {
+                  setLocalSearch("");
+                  onSearchInputChange("");
+                }}
               >
                 <ClearIcon sx={{ fontSize: 20 }} />
               </IconButton>
             )}
-            <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
+            <IconButton type="submit" sx={{ p: "5px" }} aria-label="search">
               <SearchIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Box>

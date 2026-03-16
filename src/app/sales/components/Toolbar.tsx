@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -34,6 +34,7 @@ type Props = {
   onSearchChange: (value: string) => void;
   onCreate: () => void;
   onDownload: () => void;
+  onDownloadBlank: () => void;
   onBulkUpload: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -57,6 +58,7 @@ export default function SalesDashboardToolbar({
   onSearchChange,
   onCreate,
   onDownload,
+  onDownloadBlank,
   onBulkUpload,
   fileInputRef,
   onFileChange,
@@ -75,6 +77,11 @@ export default function SalesDashboardToolbar({
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const [localSearch, setLocalSearch] = useState(searchValue);
+  useEffect(() => {
+    setLocalSearch(searchValue);
+  }, [searchValue]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -108,7 +115,10 @@ export default function SalesDashboardToolbar({
         >
           <Box
             component="form"
-            onSubmit={(e: React.FormEvent) => e.preventDefault()}
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault();
+              onSearchChange(localSearch);
+            }}
             sx={{
               p: "2px 4px",
               display: "flex",
@@ -124,22 +134,32 @@ export default function SalesDashboardToolbar({
             <InputBase
               sx={{ ml: 1, flex: 1, fontSize: "14px" }}
               placeholder="Search orders..."
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
-            {searchValue && (
-              <IconButton sx={{ p: "5px" }} onClick={() => onSearchChange("")}>
+            {localSearch && (
+              <IconButton 
+                sx={{ p: "5px" }} 
+                onClick={() => {
+                  setLocalSearch("");
+                  onSearchChange("");
+                }}
+              >
                 <ClearIcon sx={{ fontSize: 20 }} />
               </IconButton>
             )}
-            <IconButton type="button" sx={{ p: "5px" }}>
+            <IconButton type="submit" sx={{ p: "5px" }}>
               <SearchIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Box>
 
           <FormControl
             size="small"
-            sx={{ minWidth: { xs: 100, md: 110 }, bgcolor: "background.paper", flexShrink: 1 }}
+            sx={{
+              minWidth: { xs: 100, md: 110 },
+              bgcolor: "background.paper",
+              flexShrink: 1,
+            }}
           >
             <Select
               value={paymentFilter}
@@ -147,15 +167,25 @@ export default function SalesDashboardToolbar({
               onChange={(e) => onPaymentFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="" sx={{ fontSize: "13px" }}>PAYMENT</MenuItem>
-              <MenuItem value="true" sx={{ fontSize: "13px" }}>Yes</MenuItem>
-              <MenuItem value="false" sx={{ fontSize: "13px" }}>No</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>
+                PAYMENT
+              </MenuItem>
+              <MenuItem value="true" sx={{ fontSize: "13px" }}>
+                Yes
+              </MenuItem>
+              <MenuItem value="false" sx={{ fontSize: "13px" }}>
+                No
+              </MenuItem>
             </Select>
           </FormControl>
 
           <FormControl
             size="small"
-            sx={{ minWidth: { xs: 110, md: 120 }, bgcolor: "background.paper", flexShrink: 1 }}
+            sx={{
+              minWidth: { xs: 110, md: 120 },
+              bgcolor: "background.paper",
+              flexShrink: 1,
+            }}
           >
             <Select
               value={zoneFilter}
@@ -163,9 +193,15 @@ export default function SalesDashboardToolbar({
               onChange={(e) => onZoneFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="" sx={{ fontSize: "13px" }}>SALES ZONE</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>
+                SALES ZONE
+              </MenuItem>
               {salesZones.map((zone) => (
-                <MenuItem key={zone.id} value={String(zone.id)} sx={{ fontSize: "13px" }}>
+                <MenuItem
+                  key={zone.id}
+                  value={String(zone.id)}
+                  sx={{ fontSize: "13px" }}
+                >
                   {zone.name}
                 </MenuItem>
               ))}
@@ -174,7 +210,11 @@ export default function SalesDashboardToolbar({
 
           <FormControl
             size="small"
-            sx={{ minWidth: { xs: 100, md: 100 }, bgcolor: "background.paper", flexShrink: 1 }}
+            sx={{
+              minWidth: { xs: 100, md: 100 },
+              bgcolor: "background.paper",
+              flexShrink: 1,
+            }}
           >
             <Select
               value={statusFilter}
@@ -182,7 +222,9 @@ export default function SalesDashboardToolbar({
               onChange={(e) => onStatusFilterChange(e.target.value)}
               sx={{ height: 40, fontSize: "13px" }}
             >
-              <MenuItem value="" sx={{ fontSize: "13px" }}>STATUS</MenuItem>
+              <MenuItem value="" sx={{ fontSize: "13px" }}>
+                STATUS
+              </MenuItem>
               {STATUS_OPTIONS.map((status) => (
                 <MenuItem key={status} value={status} sx={{ fontSize: "13px" }}>
                   {status}
@@ -237,7 +279,7 @@ export default function SalesDashboardToolbar({
             <CloseIcon fontSize="small" />
           </IconButton>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {view !== "dispatched" && (
               <>
                 <Button
@@ -275,6 +317,21 @@ export default function SalesDashboardToolbar({
             sx: { mt: 1.5, minWidth: 200, borderRadius: "8px" },
           }}
         >
+          <MenuItem
+            onClick={() => {
+              onDownloadBlank();
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              <FileDownloadOutlinedIcon
+                fontSize="small"
+                sx={{ color: "#ed6c02" }}
+              />
+            </ListItemIcon>
+            <ListItemText primary="BLANK TEMPLATE" />
+          </MenuItem>
+
           <MenuItem
             onClick={() => {
               onDownload();

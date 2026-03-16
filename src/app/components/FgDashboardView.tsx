@@ -148,6 +148,7 @@ export default function FgDashboardView() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
   const [paymentFilter, setPaymentFilter] = useState("");
   const [zoneFilter, setZoneFilter] = useState("");
@@ -165,6 +166,7 @@ export default function FgDashboardView() {
 
   const handleClear = () => {
     setSearch("");
+    setLocalSearch("");
     setPaymentFilter("");
     setZoneFilter("");
     setStatusFilter("");
@@ -343,10 +345,13 @@ export default function FgDashboardView() {
               mx: "auto",
             }}
           >
-            {/* Search Field */}
             <Box
               component="form"
-              onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              onSubmit={(e: React.FormEvent) => {
+                e.preventDefault();
+                setSearch(localSearch); // Trigger data fetch only on Enter
+                setPage(0);
+              }}
               sx={{
                 p: "2px 4px",
                 display: "flex",
@@ -363,17 +368,15 @@ export default function FgDashboardView() {
                 sx={{ ml: 1, flex: 1, fontSize: "14px" }}
                 placeholder="Search"
                 inputProps={{ "aria-label": "search" }}
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(0);
-                }}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
-              {search && (
+              {localSearch && (
                 <IconButton
                   sx={{ p: "5px" }}
                   aria-label="clear"
                   onClick={() => {
+                    setLocalSearch("");
                     setSearch("");
                     setPage(0);
                   }}
@@ -381,7 +384,7 @@ export default function FgDashboardView() {
                   <ClearIcon sx={{ fontSize: 20 }} />
                 </IconButton>
               )}
-              <IconButton type="button" sx={{ p: "5px" }} aria-label="search">
+              <IconButton type="submit" sx={{ p: "5px" }} aria-label="search">
                 <SearchIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Box>

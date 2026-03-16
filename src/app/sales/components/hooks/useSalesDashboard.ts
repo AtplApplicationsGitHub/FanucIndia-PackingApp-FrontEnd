@@ -284,11 +284,11 @@ export function useSalesDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
 
-  const handleDownloadTemplate = useCallback(async () => {
+  const handleDownloadTemplate = useCallback(async (isBlank: boolean = false) => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
     try {
-      setAlert({ severity: "info", message: "Downloading Template..." });
+      setAlert({ severity: "info", message: isBlank ? "Downloading Blank Template..." : "Downloading Template..." });
 
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
@@ -296,6 +296,8 @@ export function useSalesDashboard() {
       if (zoneFilter) params.append("salesZoneId", zoneFilter);
       if (startDate) params.append("startDate", toLocalYMD(startDate));
       if (endDate) params.append("endDate", toLocalYMD(endDate));
+      
+      if (isBlank) params.append("blank", "true");
 
       if (view === "dispatched") {
         params.append("status", "Dispatched");
@@ -452,6 +454,10 @@ export function useSalesDashboard() {
     }
   };
 
+  const handleDownloadBlankTemplate = useCallback(() => {
+    return handleDownloadTemplate(true);
+  }, [handleDownloadTemplate]);
+
   return {
     orders,
     pageSize,
@@ -480,7 +486,8 @@ export function useSalesDashboard() {
     handleDelete,
     handleDeleteModalClose,
     handleLogout,
-    handleDownloadTemplate,
+    handleDownloadTemplate: () => handleDownloadTemplate(false),
+    handleDownloadBlankTemplate,
     handleBulkUpload,
     fileInputRef,
     handleFileChange,

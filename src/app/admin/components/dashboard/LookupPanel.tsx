@@ -72,6 +72,7 @@ export default function AdminMasterLookupPanel() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
 
   // Dialog State
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -120,7 +121,8 @@ export default function AdminMasterLookupPanel() {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: MasterLookupKey) => {
     setSelectedType(newValue);
-    setSearchQuery(""); 
+    setSearchQuery("");
+    setLocalSearch("");
   };
 
   const getSearchKey = React.useCallback((): string => {
@@ -347,7 +349,10 @@ export default function AdminMasterLookupPanel() {
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 1.5 }}>
         <Paper
           component="form"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setSearchQuery(localSearch);
+          }}
           sx={{ 
             p: '2px 4px', 
             display: 'flex', 
@@ -361,15 +366,22 @@ export default function AdminMasterLookupPanel() {
             sx={{ ml: 1, flex: 1 }}
             placeholder={`Search ${getSearchKey() === 'erpCode' ? 'ERP Code' : getSearchKey().replace(/([A-Z])/g, " $1").toLowerCase()}...`}
             inputProps={{ 'aria-label': 'search' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
           />
-          {searchQuery && (
-            <IconButton sx={{ p: '10px' }} aria-label="clear" onClick={() => setSearchQuery("")}>
+          {localSearch && ( // <--- Check localSearch instead
+            <IconButton 
+              sx={{ p: '10px' }} 
+              aria-label="clear" 
+              onClick={() => {
+                setLocalSearch(""); // <--- Clear local state
+                setSearchQuery(""); // <--- Clear actual filter
+              }}
+            >
               <ClearIcon />
             </IconButton>
           )}
-          <IconButton type="button" sx={{ p: '10px' }} aria-label="search" disabled>
+          <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
             <SearchIcon />
           </IconButton>
         </Paper>

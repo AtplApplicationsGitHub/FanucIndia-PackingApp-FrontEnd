@@ -32,6 +32,7 @@ import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 import { useAssign } from "@/app/admin/components/hooks/UseAssign";
 import AssignOrdersToolbar from "./AssignOrdersToolbar";
+import ErpUploadDialog from "./ErpUploadDialog";
 
 type InlineEditField = "status" | "priority" | "assignedUserId";
 
@@ -86,6 +87,28 @@ export default function AssignSO() {
   );
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
   const [customerFilter, setCustomerFilter] = React.useState("");
+  const [erpDialogOpen, setErpDialogOpen] = React.useState(false);
+  const [selectedSoForErp, setSelectedSoForErp] = React.useState<string | null>(null);
+
+  const handleOpenErpDialog = (soNumber: string) => {
+    if (!soNumber) return;
+    setSelectedSoForErp(soNumber);
+    setErpDialogOpen(true);
+  };
+
+  const handleErpUploadSuccess = () => {
+    setErpDialogOpen(false);
+    setSelectedSoForErp(null);
+    setSnackbar({
+      open: true,
+      message: "ERP data imported successfully!",
+      severity: "success",
+    });
+    setTimeout(() => {
+      window.location.reload(); 
+    }, 1500);
+  };
+
   const onClear = () => {
     setSearchInput("");
     setPaymentFilter("");
@@ -923,7 +946,7 @@ export default function AssignSO() {
                           title={
                             row.hasMaterialData
                               ? "ERP Data Imported"
-                              : "Material Data Pending"
+                              : "Material Data Pending - Click to Import"
                           }
                         >
                           {row.hasMaterialData ? (
@@ -933,7 +956,13 @@ export default function AssignSO() {
                             />
                           ) : (
                             <ErrorOutlineIcon
-                              sx={{ color: theme.palette.warning.main, ml: 1 }}
+                              onClick={() => handleOpenErpDialog(row.saleOrderNumber || "")}
+                              sx={{ 
+                                color: theme.palette.warning.main, 
+                                ml: 1,
+                                cursor: "pointer", // <--- Added cursor
+                                "&:hover": { opacity: 0.7 } // <--- Added hover effect
+                              }}
                               fontSize="small"
                             />
                           )}
@@ -1190,6 +1219,15 @@ export default function AssignSO() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <ErpUploadDialog
+        open={erpDialogOpen}
+        onClose={() => {
+          setErpDialogOpen(false);
+          setSelectedSoForErp(null);
+        }}
+        onUploadSuccess={handleErpUploadSuccess}
+        saleOrderNumber={selectedSoForErp}
+      />
     </Box>
   );
 }

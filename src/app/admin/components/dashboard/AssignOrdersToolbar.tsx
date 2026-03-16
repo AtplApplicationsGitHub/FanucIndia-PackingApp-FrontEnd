@@ -123,6 +123,11 @@ export default function AssignOrdersToolbar({
 
   const [assignPriority, setAssignPriority] = useState<string>("");
 
+  const [localSearch, setLocalSearch] = useState(searchInput);
+  React.useEffect(() => {
+    setLocalSearch(searchInput);
+  }, [searchInput]);
+
   const handleActionClick = (action: () => void) => {
     if (selectedIds.length === 0) {
       setSnackbarOpen(true);
@@ -192,10 +197,12 @@ export default function AssignOrdersToolbar({
               flex: 1,
             }}
           >
-            {/* Search Field */}
             <Box
               component="form"
-              onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              onSubmit={(e: React.FormEvent) => {
+                e.preventDefault();
+                onSearchInputChange(localSearch);
+              }}
               sx={{
                 p: "2px 4px",
                 display: "flex",
@@ -215,21 +222,24 @@ export default function AssignOrdersToolbar({
                 sx={{ ml: 1, flex: 1, fontSize: "13px" }}
                 placeholder="Search"
                 inputProps={{ "aria-label": "search" }}
-                value={searchInput}
-                onChange={(e) => onSearchInputChange(e.target.value)}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
-              {searchInput && (
+              {localSearch && (
                 <IconButton
                   sx={{ p: "5px" }}
                   aria-label="clear"
-                  onClick={() => onSearchInputChange("")}
+                  onClick={() => {
+                    setLocalSearch("");
+                    onSearchInputChange("");
+                  }}
                 >
                   <ClearIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               )}
-              <SearchIcon
-                sx={{ color: "text.secondary", ml: 1, fontSize: 20 }}
-              />
+              <IconButton type="submit" sx={{ p: "5px" }}>
+                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+              </IconButton>
             </Box>
 
             {/* Payment Filter */}

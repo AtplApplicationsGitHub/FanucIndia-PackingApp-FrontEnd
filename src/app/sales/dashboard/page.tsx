@@ -45,6 +45,7 @@ export default function SalesDashboard() {
     handleDelete,
     handleDeleteModalClose,
     handleDownloadTemplate,
+    handleDownloadBlankTemplate,
     handleBulkUpload,
     fileInputRef,
     handleFileChange,
@@ -136,6 +137,7 @@ export default function SalesDashboard() {
               onSearchChange={setSearchTerm}
               onCreate={handleCreate}
               onDownload={handleDownloadTemplate}
+              onDownloadBlank={handleDownloadBlankTemplate}
               onBulkUpload={handleBulkUpload}
               onClear={handleClearFilters}
               fileInputRef={fileInputRef}
