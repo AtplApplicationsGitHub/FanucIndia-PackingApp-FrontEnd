@@ -20,11 +20,13 @@ import {
   DialogActions,
   Snackbar,
   Alert,
+  Chip,
+  CircularProgress
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import ListIcon from "@mui/icons-material/List";
-
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -42,6 +44,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { LookupRow } from "@/app/admin/components/types/admin";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { TextField } from "@mui/material";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 
 const STATUS_OPTIONS = ["None", "R105", "W105"];
 
@@ -127,6 +130,19 @@ export default function AssignOrdersToolbar({
   React.useEffect(() => {
     setLocalSearch(searchInput);
   }, [searchInput]);
+
+  const [sftpStatus, setSftpStatus] = useState<"UP" | "DOWN" | "UNKNOWN" | "LOADING">("UNKNOWN");
+
+  const handleCheckSambaStatus = async () => {
+    setSftpStatus("LOADING");
+    try {
+      const res = await fetchWithAuth(API.ADMIN.SFTP_STATUS); 
+      const data = await res.json();
+      setSftpStatus(data.status === "UP" ? "UP" : "DOWN");
+    } catch (e) {
+      setSftpStatus("DOWN");
+    }
+  };
 
   const handleActionClick = (action: () => void) => {
     if (selectedIds.length === 0) {
@@ -399,6 +415,40 @@ export default function AssignOrdersToolbar({
             >
               <ListIcon />
             </IconButton>
+
+            <Chip
+              icon={
+                sftpStatus === "LOADING" ? (
+                  <CircularProgress size={16} sx={{ color: "inherit" }} />
+                ) : sftpStatus === "UP" ? (
+                  <CheckCircleOutlineIcon />
+                ) : sftpStatus === "DOWN" ? (
+                  <ErrorOutlineIcon />
+                ) : (
+                  <StorageOutlinedIcon />
+                )
+              }
+              label={
+                sftpStatus === "LOADING" ? "Checking Server..." :
+                sftpStatus === "UP" ? "Samba Connected" :
+                sftpStatus === "DOWN" ? "Samba Disconnected" :
+                "Check Samba Status"
+              }
+              color={
+                sftpStatus === "UP" ? "success" :
+                sftpStatus === "DOWN" ? "error" :
+                "default"
+              }
+              variant={sftpStatus === "UNKNOWN" ? "outlined" : "filled"}
+              onClick={handleCheckSambaStatus}
+              sx={{
+                ml: 1,
+                fontWeight: 600,
+                cursor: "pointer",
+                height: 36,
+                "& .MuiChip-icon": { ml: 1 }
+              }}
+            />
           </Box>
 
           {/* Status & Menu Group */}

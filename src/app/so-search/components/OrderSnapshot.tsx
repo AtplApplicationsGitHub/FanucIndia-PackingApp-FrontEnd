@@ -70,7 +70,7 @@ export default function OrderSnapshot({
     customerDisplay += `\n${customerAddress}`;
   }
   if (customerContact) {
-    customerDisplay += `\n ${customerContact}`;
+    customerDisplay += `\n${customerContact}`;
   }
 
   return (

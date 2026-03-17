@@ -77,8 +77,8 @@ export default function MaterialDetails({
     return list.filter((m) => m.Group === groupFilter);
   }, [materialDetails, groupFilter]);
 
-  // [NEW] Calculate Durations for Issue and Packing Stages
-  const { issueDuration, packingDuration } = useMemo(() => {
+  // [NEW] Calculate Durations and Extract User Names for Issue and Packing Stages
+  const { issueDuration, packingDuration, issueUpdatedBy, packingUpdatedBy } = useMemo(() => {
     const calculate = (dates: (string | undefined)[]) => {
       const validDates = dates
         .filter((d): d is string => !!d)
@@ -89,7 +89,7 @@ export default function MaterialDetails({
 
       const min = Math.min(...validDates);
       const max = Math.max(...validDates);
-      const diffMins = Math.floor((max - min) / 60000); // Convert ms to minutes
+      const diffMins = Math.floor((max - min) / 60000);
 
       if (diffMins === 0) return "0 mins";
       if (diffMins < 60) return `${diffMins} mins`;
@@ -103,9 +103,14 @@ export default function MaterialDetails({
       return `${days} day${days > 1 ? "s" : ""}${hrs > 0 ? ` ${hrs} hr${hrs > 1 ? "s" : ""}` : ""}`;
     };
 
+    const firstIssueUser = materialDetails?.find((m) => m.IssueUpdatedBy)?.IssueUpdatedBy || null;
+    const firstPackingUser = materialDetails?.find((m) => m.PackingUpdatedBy)?.PackingUpdatedBy || null;
+
     return {
       issueDuration: calculate(materialDetails?.map((m) => m.IssueUpdatedDate)),
       packingDuration: calculate(materialDetails?.map((m) => m.PackingUpdatedDate)),
+      issueUpdatedBy: firstIssueUser,
+      packingUpdatedBy: firstPackingUser,
     };
   }, [materialDetails]);
 
@@ -145,11 +150,13 @@ export default function MaterialDetails({
           {issueDuration && (
             <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
               Issue Duration: <span style={{ color: "#d32f2f" }}>{issueDuration}</span>
+              {issueUpdatedBy && <span style={{ color: "#666", marginLeft: "4px" }}>({issueUpdatedBy})</span>}
             </Typography>
           )}
           {packingDuration && (
             <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
               Packing Duration: <span style={{ color: "#1976d2" }}>{packingDuration}</span>
+              {packingUpdatedBy && <span style={{ color: "#666", marginLeft: "4px" }}>({packingUpdatedBy})</span>}
             </Typography>
           )}
         </Box>
@@ -216,76 +223,18 @@ export default function MaterialDetails({
         >
           <TableHead sx={{ bgcolor: "primary.main" }}>
             <TableRow>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Material Code
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Description
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Batch
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                SO Donor
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Cert No
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Bin
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                A/D/F
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Required Quantity
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Issue
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Packing
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Issue Updated By
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Issue Updated Date
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Packing Updated By
-              </TableCell>
-              <TableCell
-                sx={{ color: "primary.contrastText", fontWeight: "bold" }}
-              >
-                Packing Updated Date
-              </TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Material Code</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Description</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Batch</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>SO Donor</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Cert No</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Bin</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>A/D/F</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Required Quantity</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Issue</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Packing</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Issue Updated Date</TableCell>
+              <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>Packing Updated Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -320,13 +269,11 @@ export default function MaterialDetails({
                 <TableCell>{m.Required_Qty}</TableCell>
                 <TableCell>{m.Issue_stage}</TableCell>
                 <TableCell>{m.Packing_stage}</TableCell>
-                <TableCell>{m.IssueUpdatedBy || "-"}</TableCell>
                 <TableCell>
                   {m.IssueUpdatedDate
                     ? new Date(m.IssueUpdatedDate).toLocaleString()
                     : "-"}
                 </TableCell>
-                <TableCell>{m.PackingUpdatedBy || "-"}</TableCell>
                 <TableCell>
                   {m.PackingUpdatedDate
                     ? new Date(m.PackingUpdatedDate).toLocaleString()
@@ -336,7 +283,8 @@ export default function MaterialDetails({
             ))}
             {displayMaterials.length === 0 && (
               <TableRow>
-                <TableCell colSpan={14} align="center" sx={{ py: 3 }}>
+                {/* Changed colSpan from 14 to 12 because we removed 2 columns */}
+                <TableCell colSpan={12} align="center" sx={{ py: 3 }}>
                   <Typography color="text.secondary">
                     No material details found for this group.
                   </Typography>

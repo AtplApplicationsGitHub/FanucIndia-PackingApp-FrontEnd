@@ -35,6 +35,7 @@ export const API = {
 
     USERS:                                        `${API_BASE_URL}/users`,
     USER_BY_ID:          (id: number) =>          `${API_BASE_URL}/users/${id}`,
+    SFTP_STATUS:                                  `${API_BASE_URL}/admin/sales-orders/sftp-status`,
 // ASSIGN SO 
     ACTIVE_EXPORT_LIST:                               `${API_BASE_URL}/admin/sales-orders/active-export-list`,
    USED_CUSTOMERS:                                     `${API_BASE_URL}/admin/sales-orders/used-customers`,
