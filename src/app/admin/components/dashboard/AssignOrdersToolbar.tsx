@@ -21,7 +21,8 @@ import {
   Snackbar,
   Alert,
   Chip,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -416,39 +417,47 @@ export default function AssignOrdersToolbar({
               <ListIcon />
             </IconButton>
 
-            <Chip
-              icon={
-                sftpStatus === "LOADING" ? (
-                  <CircularProgress size={16} sx={{ color: "inherit" }} />
-                ) : sftpStatus === "UP" ? (
-                  <CheckCircleOutlineIcon />
-                ) : sftpStatus === "DOWN" ? (
-                  <ErrorOutlineIcon />
-                ) : (
-                  <StorageOutlinedIcon />
-                )
-              }
-              label={
+            <Tooltip
+              title={
                 sftpStatus === "LOADING" ? "Checking Server..." :
                 sftpStatus === "UP" ? "Samba Connected" :
                 sftpStatus === "DOWN" ? "Samba Disconnected" :
-                "Check Samba Status"
+                "Check Samba Server Status"
               }
-              color={
-                sftpStatus === "UP" ? "success" :
-                sftpStatus === "DOWN" ? "error" :
-                "default"
-              }
-              variant={sftpStatus === "UNKNOWN" ? "outlined" : "filled"}
-              onClick={handleCheckSambaStatus}
-              sx={{
-                ml: 1,
-                fontWeight: 600,
-                cursor: "pointer",
-                height: 36,
-                "& .MuiChip-icon": { ml: 1 }
-              }}
-            />
+            >
+              <IconButton
+                onClick={handleCheckSambaStatus}
+                disabled={sftpStatus === "LOADING"}
+                sx={{
+                  ml: 1,
+                  width: 36,
+                  height: 36,
+                  bgcolor: 
+                    sftpStatus === "UP" ? "success.main" : 
+                    sftpStatus === "DOWN" ? "error.main" : 
+                    "transparent",
+                  color: 
+                    sftpStatus === "UP" || sftpStatus === "DOWN" ? "#ffffff" : 
+                    "text.secondary",
+                  "&:hover": {
+                    bgcolor: 
+                      sftpStatus === "UP" ? "success.dark" : 
+                      sftpStatus === "DOWN" ? "error.dark" : 
+                      "action.hover",
+                  }
+                }}
+              >
+                {sftpStatus === "LOADING" ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : sftpStatus === "UP" ? (
+                  <CheckCircleOutlineIcon fontSize="small" />
+                ) : sftpStatus === "DOWN" ? (
+                  <ErrorOutlineIcon fontSize="small" />
+                ) : (
+                  <StorageOutlinedIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {/* Status & Menu Group */}

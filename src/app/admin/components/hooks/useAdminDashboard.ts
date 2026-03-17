@@ -220,15 +220,14 @@ export function useAdminDashboard() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const isSearching = !!(searchProduct || startDate || endDate);
+    // const isSearching = !!(searchProduct || startDate || endDate);
 
     try {
       const res = await axios.get(API.ADMIN.SALES_ORDERS, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
-          ...(isSearching
-            ? { limit: 10000 }
-            : { page: currentPage, limit: pageSize }),
+          page: currentPage, 
+          limit: pageSize,
           search: searchInput || undefined,
           paymentClearance: paymentFilter || undefined,
           salesZoneId: zoneFilter || undefined,
@@ -240,9 +239,7 @@ export function useAdminDashboard() {
         },
       });
       setOrders(res.data.data || []);
-      setTotalOrders(
-        isSearching ? res.data.data?.length || 0 : res.data.total || 0
-      );
+      setTotalOrders(res.data.total || 0);
     } catch (err: unknown) {
       let msg = "Failed to fetch orders.";
 
