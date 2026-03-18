@@ -89,6 +89,7 @@ export default function AssignSO() {
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [erpDialogOpen, setErpDialogOpen] = React.useState(false);
   const [selectedSoForErp, setSelectedSoForErp] = React.useState<string | null>(null);
+  const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
 
   const handleOpenErpDialog = (soNumber: string) => {
     if (!soNumber) return;
@@ -117,6 +118,7 @@ export default function AssignSO() {
     setStartDate(null);
     setEndDate(null);
     setCustomerFilter("");
+    setPendingImportFilter(false);
   };
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -362,12 +364,13 @@ export default function AssignSO() {
         statusFilter,
         customerFilter,
         startDate,
-        endDate
+        endDate,
+        pendingImportFilter
       });
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchInput, paymentFilter, zoneFilter, statusFilter, customerFilter, startDate, endDate, fetchDynamicCounts]);
+  }, [searchInput, paymentFilter, zoneFilter, statusFilter, customerFilter, startDate, endDate, pendingImportFilter, fetchDynamicCounts]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -457,13 +460,16 @@ export default function AssignSO() {
         }
       }
 
+      const matchesPendingImport = !pendingImportFilter || !order.hasMaterialData;
+
       return (
         matchesSearch &&
         matchesPayment &&
         matchesZone &&
         matchesStatus &&
         matchesDate &&
-        matchesCustomer
+        matchesCustomer &&
+        matchesPendingImport
       );
     });
   }, [
@@ -475,6 +481,7 @@ export default function AssignSO() {
     startDate,
     endDate,
     customerFilter,
+    pendingImportFilter,
     lookup.customers,
   ]);
 
@@ -835,6 +842,8 @@ export default function AssignSO() {
           onExcelExport={handleExcelExport}
           onExcelImport={() => fileInputRef.current?.click()}
           statusCounts={dynamicCounts}
+          pendingImportFilter={pendingImportFilter}
+          onPendingImportClick={() => setPendingImportFilter(!pendingImportFilter)}
         />
       </Box>
 

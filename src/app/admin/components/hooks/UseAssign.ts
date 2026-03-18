@@ -9,7 +9,7 @@ export function useAssign() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dynamicCounts, setDynamicCounts] = useState({ R105: 0, W105: 0 });
+  const [dynamicCounts, setDynamicCounts] = useState({ R105: 0, W105: 0, PendingImport: 0 });
 
   const fetchDynamicCounts = useCallback(async (filters: any) => {
     try {
@@ -21,6 +21,7 @@ export function useAssign() {
       if (filters.customerFilter) queryParams.append('customerFilter', filters.customerFilter);
       if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
       if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
+      if (filters.pendingImportFilter) queryParams.append('pendingImportFilter', 'true'); // <-- Add this line
 
       const res = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/counts/dynamic?${queryParams.toString()}`);
       if (res.ok) {

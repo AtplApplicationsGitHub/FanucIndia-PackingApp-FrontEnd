@@ -78,7 +78,10 @@ type Props = {
   statusCounts?: {
     R105: number;
     W105: number;
+    PendingImport?: number;
   };
+  pendingImportFilter?: boolean;
+  onPendingImportClick?: () => void;
   onUpdatePriority?: (val: string) => Promise<void>;
   customerFilter: string;
   onCustomerFilterChange: (val: string) => void;
@@ -108,7 +111,9 @@ export default function AssignOrdersToolbar({
   onDownloadErpData,
   onExcelExport,
   onExcelImport,
-  statusCounts = { R105: 0, W105: 0 },
+  statusCounts = { R105: 0, W105: 0, PendingImport: 0 },
+  pendingImportFilter = false,
+  onPendingImportClick,
   customerFilter,
   onCustomerFilterChange,
   customers = [],
@@ -214,6 +219,15 @@ export default function AssignOrdersToolbar({
               flex: 1,
             }}
           >
+            <IconButton
+              onClick={handleMenuOpen}
+              sx={{ ml: 0.5 }}
+              aria-controls={open ? "actions-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+            >
+              <ListIcon />
+            </IconButton>
             <Box
               component="form"
               onSubmit={(e: React.FormEvent) => {
@@ -405,19 +419,111 @@ export default function AssignOrdersToolbar({
             >
               <CloseIcon fontSize="small" />
             </IconButton>
+          </Box>
 
-            {/* Hamburger Menu Actions Dropdown */}
-            <IconButton
-              onClick={handleMenuOpen}
-              sx={{ ml: 0.5 }}
-              aria-controls={open ? "actions-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
+          {/* Status & Menu Group */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              flexWrap: "wrap",
+              justifyContent: { xs: "center", lg: "flex-end" },
+              borderTop: { xs: 1, lg: 0 },
+              borderColor: "divider",
+              pt: { xs: 1.5, lg: 0 },
+            }}
+          >
+            {/* Status Count Cards */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+                justifyContent: "center",
+              }}
             >
-              <ListIcon />
-            </IconButton>
-
-            <Tooltip
+              <Box
+                onClick={onPendingImportClick}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.2,
+                  px: 2,
+                  py: 1,
+                  borderRadius: "32px",
+                  bgcolor: pendingImportFilter ? "#fff3e0" : "#fff8e1",
+                  border: "1px solid",
+                  borderColor: pendingImportFilter ? "#ff9800" : "#ffe0b2",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": { bgcolor: "#fff3e0" },
+                }}
+              >
+                <Box sx={{ color: "#ed6c02", display: "flex" }}>
+                  <ErrorOutlineIcon sx={{ fontSize: 20 }} />
+                </Box>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    color: "#ed6c02",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >{statusCounts.PendingImport ?? 0}
+                </Typography>
+              </Box>
+              {[
+                {
+                  label: "R",
+                  count: statusCounts.R105,
+                  color: "#1976d2", // Blue
+                  bgcolor: "#f0f7ff",
+                  border: "#e1effe",
+                  icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />,
+                },
+                {
+                  label: "W",
+                  count: statusCounts.W105,
+                  color: "#ed6c02", // Orange
+                  bgcolor: "#fffaf0",
+                  border: "#fef3c7",
+                  icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />,
+                },
+              ].map((card) => (
+                <Box
+                  key={card.label}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.2,
+                    px: 2,
+                    py: 1,
+                    borderRadius: "32px",
+                    bgcolor: card.bgcolor,
+                    border: "1px solid",
+                    borderColor: card.border,
+                  }}
+                >
+                  <Box sx={{ color: card.color, display: "flex" }}>
+                    {card.icon}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: card.color,
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {card.label}: {card.count}
+                  </Typography>
+                </Box>
+              ))}
+              <Tooltip
               title={
                 sftpStatus === "LOADING" ? "Checking Server..." :
                 sftpStatus === "UP" ? "Samba Connected" :
@@ -458,79 +564,6 @@ export default function AssignOrdersToolbar({
                 )}
               </IconButton>
             </Tooltip>
-          </Box>
-
-          {/* Status & Menu Group */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              flexWrap: "wrap",
-              justifyContent: { xs: "center", lg: "flex-end" },
-              borderTop: { xs: 1, lg: 0 },
-              borderColor: "divider",
-              pt: { xs: 1.5, lg: 0 },
-            }}
-          >
-            {/* Status Count Cards */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              {[
-                {
-                  label: "R105",
-                  count: statusCounts.R105,
-                  color: "#1976d2", // Blue
-                  bgcolor: "#f0f7ff",
-                  border: "#e1effe",
-                  icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />,
-                },
-                {
-                  label: "W105",
-                  count: statusCounts.W105,
-                  color: "#ed6c02", // Orange
-                  bgcolor: "#fffaf0",
-                  border: "#fef3c7",
-                  icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />,
-                },
-              ].map((card) => (
-                <Box
-                  key={card.label}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.2,
-                    px: 2,
-                    py: 1,
-                    borderRadius: "32px",
-                    bgcolor: card.bgcolor,
-                    border: "1px solid",
-                    borderColor: card.border,
-                  }}
-                >
-                  <Box sx={{ color: card.color, display: "flex" }}>
-                    {card.icon}
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: card.color,
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card.label}: {card.count}
-                  </Typography>
-                </Box>
-              ))}
             </Box>
           </Box>
         </Paper>
