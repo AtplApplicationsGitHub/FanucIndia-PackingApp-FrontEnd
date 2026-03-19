@@ -65,6 +65,7 @@
     "typescript": "^5"
   },
   "overrides": {
+    "socket.io-parser": "^4.2.6",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "minimatch": "^10.2.3",
