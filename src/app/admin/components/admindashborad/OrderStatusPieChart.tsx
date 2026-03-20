@@ -80,7 +80,7 @@ export default function OrderStatusPieChart() {
   return (
     <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold uppercase tracking-wider text-[#D00000] dark:text-[#FF6B6B]">
+        <h2 className="text-base font-semibold uppercase tracking-wider text-[#D00000] dark:text-[#FF6B6B]">
           Overall Order Status Count
         </h2>
 

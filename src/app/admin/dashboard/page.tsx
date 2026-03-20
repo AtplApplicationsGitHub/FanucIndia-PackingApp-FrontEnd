@@ -20,6 +20,9 @@ import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
 import Admindashboard from "@/app/admin/components/dashboard/AdminDashboard";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
+import ReportPanel from "../components/dashboard/PlanvsActual";
+import FgStorageReport from "../components/dashboard/FgStorageReport";
+import CustomerReport from "../components/dashboard/CustomerReport";
 
 
 export default function AdminDashboard() {
@@ -40,14 +43,14 @@ export default function AdminDashboard() {
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
 
-  const handleOpenChat = async (soNumber: string, orderId: number) => { 
+  const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
     setChatOrderId(orderId);
     setChatOpen(true);
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), { 
+      await axios.delete(API.SO_NOTIFICATIONS.CLEAR_SO(orderId), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -169,142 +172,176 @@ export default function AdminDashboard() {
         }}
       >
         <Box sx={{ flexGrow: 1 }}>
-        <AdminDashboardHeader
-          userName={admin.userName}
-          view={admin.view}
-          setView={admin.setView}
-        />
+          <AdminDashboardHeader
+            userName={admin.userName}
+            view={admin.view}
+            setView={admin.setView}
+          />
 
-        {/* HOME VIEW */}
-        {admin.view === "home" && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ padding: "1rem" }}
-          >
-            <Admindashboard />
-          </motion.div>
-        )}
-        {admin.view === "assignso" && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ padding: "0.5% 0 2rem 0" }}
-          >
-            <AssignSO />
-          </motion.div>
-        )}
-
-        {/* ORDERS VIEW */}
-        {admin.view === "orders" && (
-          <Box sx={{ pt: 1, pb: 4, width: "100%" }}>
+          {/* HOME VIEW */}
+          {admin.view === "home" && (
             <motion.div
-              initial={{ opacity: 0, y: -30, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "1rem" }}
             >
-              <Box
+              <Admindashboard />
+            </motion.div>
+          )}
+          {admin.view === "assignso" && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <AssignSO />
+            </motion.div>
+          )}
+
+          {/* ORDERS VIEW */}
+          {admin.view === "orders" && (
+            <Box sx={{ pt: 1, pb: 4, width: "100%" }}>
+              <motion.div
+                initial={{ opacity: 0, y: -30, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 3,
+                    px: { xs: 2, md: 4 },
+                    mb: 1,
+                  }}
+                >
+                  <AdminOrdersToolbar
+                    searchInput={admin.searchInput}
+                    onSearchInputChange={(val) => {
+                      admin.setSearchInput(val);
+                      admin.setSearchProduct(val);
+                      admin.setCurrentPage(1);
+                    }}
+                    paymentFilter={admin.paymentFilter}
+                    onPaymentFilterChange={(val) => {
+                      admin.setPaymentFilter(val);
+                      admin.setCurrentPage(1);
+                    }}
+                    zoneFilter={admin.zoneFilter}
+                    onZoneFilterChange={(val) => {
+                      admin.setZoneFilter(val);
+                      admin.setCurrentPage(1);
+                    }}
+                    statusFilter={admin.statusFilter}
+                    onStatusFilterChange={(val) => {
+                      admin.setStatusFilter(val);
+                      admin.setCurrentPage(1);
+                    }}
+                    onClear={admin.handleClearFilters}
+                    salesZones={admin.lookup?.salesZones ?? []}
+                    startDate={admin.startDate}
+                    onStartDateChange={(date: Date | null) => {
+                      admin.setStartDate(date);
+                      admin.setCurrentPage(1);
+                    }}
+                    endDate={admin.endDate}
+                    onEndDateChange={(date: Date | null) => {
+                      admin.setEndDate(date);
+                      admin.setCurrentPage(1);
+                    }}
+                  />
+                </Box>
+              </motion.div>
+              <Paper
+                elevation={0}
                 sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", md: "row" },
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 3,
-                  px: { xs: 2, md: 4 },
-                  mb: 1,
+                  width: "100%",
+                  mb: 2,
+                  px: { xs: 1, md: 2 },
+                  py: 1,
+                  bgcolor: "background.paper",
                 }}
               >
-                <AdminOrdersToolbar
-                  searchInput={admin.searchInput}
-                  onSearchInputChange={(val) => {
-                    admin.setSearchInput(val);
-                    admin.setSearchProduct(val);
-                    admin.setCurrentPage(1);
+                <AdminOrdersTable
+                  orders={displayedOrders}
+                  lookup={admin.lookup}
+                  currentPage={admin.currentPage}
+                  pageSize={admin.pageSize}
+                  rowCount={admin.totalOrders}
+                  setCurrentPage={admin.setCurrentPage}
+                  setPageSize={admin.setPageSize}
+                  onDelete={(id: number) =>
+                    admin.setConfirmDelete({ type: "orders", id })
+                  }
+                  onUpdateInline={onUpdateInline}
+                  onOpenChat={handleOpenChat}
+                  onEdit={(order: SalesOrder) => {
+                    setEditOrder(order);
+                    setEditModalOpen(true);
                   }}
-                  paymentFilter={admin.paymentFilter}
-                  onPaymentFilterChange={(val) => {
-                    admin.setPaymentFilter(val);
-                    admin.setCurrentPage(1);
-                  }}
-                  zoneFilter={admin.zoneFilter}
-                  onZoneFilterChange={(val) => {
-                    admin.setZoneFilter(val);
-                    admin.setCurrentPage(1);
-                  }}
-                  statusFilter={admin.statusFilter}
-                  onStatusFilterChange={(val) => {
-                    admin.setStatusFilter(val);
-                    admin.setCurrentPage(1);
-                  }}
-                  onClear={admin.handleClearFilters}
-                  salesZones={admin.lookup?.salesZones ?? []}
-                  startDate={admin.startDate}
-                  onStartDateChange={(date: Date | null) => {
-                    admin.setStartDate(date);
-                    admin.setCurrentPage(1);
-                  }}
-                  endDate={admin.endDate}
-                  onEndDateChange={(date: Date | null) => {
-                    admin.setEndDate(date);
-                    admin.setCurrentPage(1);
-                  }}
+                  onDetailedView={handleDetailedViewClick}
+                  loading={admin.loading}
                 />
-              </Box>
+              </Paper>
+            </Box>
+          )}
+
+          {admin.view === "master" && <AdminMasterLookupPanel />}
+          {admin.view === "dispatch" && <DispatchView />}
+          {admin.view === "fg_dashboard" && <FgDashboardView />}
+
+          {admin.view === "status_hub" && (
+
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <ReportPanel />
             </motion.div>
-            <Paper
-              elevation={0}
+
+          )}
+
+          {admin.view === "customer_report" && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <CustomerReport />
+            </motion.div>
+          )}
+
+          {admin.view === "fg_report" && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <FgStorageReport />
+            </motion.div>
+          )}
+          {admin.error && (
+            <Box
               sx={{
-                width: "100%",
-                mb: 2,
-                px: { xs: 1, md: 2 },
-                py: 1,
-                bgcolor: "background.paper",
+                minHeight: "40vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 18,
+                color: "error.main",
               }}
             >
-              <AdminOrdersTable
-                orders={displayedOrders}
-                lookup={admin.lookup}
-                currentPage={admin.currentPage}
-                pageSize={admin.pageSize}
-                rowCount={admin.totalOrders}
-                setCurrentPage={admin.setCurrentPage}
-                setPageSize={admin.setPageSize}
-                onDelete={(id: number) =>
-                  admin.setConfirmDelete({ type: "orders", id })
-                }
-                onUpdateInline={onUpdateInline}
-                onOpenChat={handleOpenChat}
-                onEdit={(order: SalesOrder) => {
-                  setEditOrder(order);
-                  setEditModalOpen(true);
-                }}
-                onDetailedView={handleDetailedViewClick}
-                loading={admin.loading}
-              />
-            </Paper>
-          </Box>
-        )}
-
-        {admin.view === "master" && <AdminMasterLookupPanel />}
-        {admin.view === "dispatch" && <DispatchView />}
-        {admin.view === "fg_dashboard" && <FgDashboardView />}
-
-        {admin.error && (
-          <Box
-            sx={{
-              minHeight: "40vh",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 18,
-              color: "error.main",
-            }}
-          >
-            {admin.error}
-          </Box>
-        )}
+              {admin.error}
+            </Box>
+          )}
 
         </Box>
 

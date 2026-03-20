@@ -88,7 +88,7 @@ export default function LookupFormDialog({
       <DialogContent dividers>
         <Box display="flex" flexDirection="column" gap={2} pt={1}>
           {fields.map((key, index) => {
-            const isBoolean = key === "acceptBulkData" || key === "remarksRequired";
+            const isBoolean = key === "acceptBulkData" || key === "remarksRequired"; 
             
             if (isBoolean) {
               return (

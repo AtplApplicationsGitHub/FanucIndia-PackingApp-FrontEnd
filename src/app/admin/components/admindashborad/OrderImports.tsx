@@ -50,7 +50,7 @@ export default function OrderImportsCard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+            <h3 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               Orders Created
             </h3>
             <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-1 mt-1">

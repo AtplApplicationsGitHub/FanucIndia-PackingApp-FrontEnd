@@ -63,7 +63,7 @@ export default function OrderStatusByZone() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <h2 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+          <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Order Status by Sales Zone
           </h2>
           <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">

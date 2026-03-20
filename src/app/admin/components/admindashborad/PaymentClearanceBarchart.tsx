@@ -27,7 +27,7 @@ export default function PaymentClearanceByZone() {
     return (
       <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
         <div className="flex flex-col">
-          <h3 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
+          <h3 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
             Payment Clearance by Sales Zone
           </h3>
           <div className="w-full h-[340px] md:h-[420px] flex items-center justify-center">
@@ -44,7 +44,7 @@ export default function PaymentClearanceByZone() {
   if (error) {
     return (
       <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
-        <h3 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
+        <h3 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
           Payment Clearance by Sales Zone
         </h3>
         <div className="w-full h-[340px] md:h-[420px] flex items-center justify-center text-[#D00000] dark:text-[#FF6B6B]">
@@ -59,7 +59,7 @@ export default function PaymentClearanceByZone() {
       {/* Header with Toggle */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
-          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+          <p className="text- uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Payment Clearance by Sales Zone
           </p>
           <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">

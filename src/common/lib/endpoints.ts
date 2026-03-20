@@ -36,6 +36,43 @@ export const API = {
     USERS:                                        `${API_BASE_URL}/users`,
     USER_BY_ID:          (id: number) =>          `${API_BASE_URL}/users/${id}`,
     SFTP_STATUS:                                  `${API_BASE_URL}/admin/sales-orders/sftp-status`,
+    FG_STORAGE_REPORT: (params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+}) => {
+  const query = new URLSearchParams();
+  if (params?.search) query.set('search', params.search);
+  if (params?.page)   query.set('page',   String(params.page));
+  if (params?.limit)  query.set('limit',  String(params.limit));
+  const qs = query.toString();
+  return `${API_BASE_URL}/reports/sales-order/fg-storage-report${qs ? '?' + qs : ''}`;
+},  
+  REPORT_ANALYSIS: (params?: {
+  search?: string;
+  payment?: string;
+  salesZoneId?: number | string;
+  customerId?: number | string;
+  date?: string;
+  status?: string;
+  page?: number;    
+  limit?: number;
+}) => {
+  const query = new URLSearchParams();
+  if (params?.search)      query.set('search',      params.search);
+  if (params?.payment)     query.set('payment',     params.payment);
+  if (params?.salesZoneId) query.set('salesZoneId', String(params.salesZoneId));
+  if (params?.customerId)  query.set('customerId',  String(params.customerId));
+  if (params?.date)        query.set('date',        params.date);
+  if (params?.status)      query.set('status',      params.status);
+  if (params?.page)        query.set('page',        String(params.page));
+  if (params?.limit)       query.set('limit',       String(params.limit));
+  const qs = query.toString();
+  return `${API_BASE_URL}/reports/sales-order/summary${qs ? '?' + qs : ''}`;
+},
+CUSTOMER_SO_COUNT:       `${API_BASE_URL}/reports/sales-order/customer-report`,
+CUSTOMER_SO_BY_MATERIAL: `${API_BASE_URL}/reports/sales-order/customers-by-material`,
+
 // ASSIGN SO 
     ACTIVE_EXPORT_LIST:                               `${API_BASE_URL}/admin/sales-orders/active-export-list`,
    USED_CUSTOMERS:                                     `${API_BASE_URL}/admin/sales-orders/used-customers`,
@@ -170,15 +207,15 @@ export const API = {
   },
   SO_SOCKET_BASE: API_BASE_URL,
   // TERMINAL USER DASHBOARD
-  TERMINAL_USER_DASHBOARD: {
+TERMINAL_USER_DASHBOARD: {
   ORDERS_ASSIGNED_TO_ME:      `${API_BASE_URL}/user-dashboard/stats`,
   OVERDUE_ORDERS:             `${API_BASE_URL}/dashboard/admin-kpis`,
   ORDERS_CREATED:             `${API_BASE_URL}/dashboard/admin-new-imports`,
   TODAYS_DISPATCH:            `${API_BASE_URL}/dashboard/admin-dispatch-summary`,
   ORDER_STATUS_DISTRIBUTION:  `${API_BASE_URL}/dashboard/admin-overall-status`,
   RECENT_ACTIVITY:            `${API_BASE_URL}/user-dashboard/recent-activity`,
-  },
-  SAMBA: {
+},
+ SAMBA: {
     FILES: `${API_BASE_URL}/samba/files`,
     DOWNLOAD: `${API_BASE_URL}/samba/download`,
   },

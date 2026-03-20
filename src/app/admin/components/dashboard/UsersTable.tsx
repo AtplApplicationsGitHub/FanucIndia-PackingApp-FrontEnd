@@ -167,7 +167,7 @@ const AdminUsersTable: React.FC<Props> = ({
         </Table>
       </TableContainer>
 
-      <TablePagination
+      <TablePagination 
         rowsPerPageOptions={[5, 10, 20]}
         component="div"
         count={users.length}
