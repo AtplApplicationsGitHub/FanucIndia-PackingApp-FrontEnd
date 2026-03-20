@@ -124,10 +124,12 @@ export default function SalesDashboardToolbar({
               display: "flex",
               alignItems: "center",
               width: { xs: "100%", sm: 160, md: 200 },
-              border: "1px solid #e0e0e0",
-              borderRadius: "4px",
+              borderColor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.23)"
+                  : "#e0e0e0", borderRadius: "4px",
               height: 40,
-              bgcolor: "#fff",
+              bgcolor: "background.paper",
               flexShrink: 1,
             }}
           >
@@ -138,8 +140,8 @@ export default function SalesDashboardToolbar({
               onChange={(e) => setLocalSearch(e.target.value)}
             />
             {localSearch && (
-              <IconButton 
-                sx={{ p: "5px" }} 
+              <IconButton
+                sx={{ p: "5px" }}
                 onClick={() => {
                   setLocalSearch("");
                   onSearchChange("");

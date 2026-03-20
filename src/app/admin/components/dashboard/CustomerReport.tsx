@@ -72,10 +72,6 @@ function ViewToggleButton({
     );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Shared Bar Chart + MUI Table
-// Table structure is identical to FgStorageReportPanel
-// ─────────────────────────────────────────────────────────────
 function SOBarChartAndTable({
     rows,
     barColor,
@@ -85,6 +81,7 @@ function SOBarChartAndTable({
     setPage,
     rowsPerPage,
     setRowsPerPage,
+    yAxisLabel = "SO Count",
 }: {
     rows: { customerName: string; soCount: number }[];
     barColor: string;
@@ -94,6 +91,7 @@ function SOBarChartAndTable({
     setPage: (p: number) => void;
     rowsPerPage: number;
     setRowsPerPage: (r: number) => void;
+    yAxisLabel?: string;
 }) {
     const theme = useTheme();
     const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -130,9 +128,10 @@ function SOBarChartAndTable({
                         xAxis={[{
                             dataKey: "customerName",
                             scaleType: "band",
+                            label: "Customer Name",
                             tickLabelStyle: { angle: -30, textAnchor: "end", fontSize: 11 },
                         }]}
-                        yAxis={[{ scaleType: "linear", tickMinStep: 1, label: "SO Count" }]}
+                        yAxis={[{ scaleType: "linear", tickMinStep: 1, label: yAxisLabel }]}
                         series={[{
                             dataKey: "soCount",
                             label: barLabel,
@@ -273,7 +272,7 @@ function CustomerSOCountTab() {
         <Box>
             {/* Date range filter */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, mb: 3 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 2, mb: 3 }}>
                     <DatePicker
                         label="From"
                         value={fromDate}
@@ -367,22 +366,21 @@ function MaterialSOCountTab() {
     const [committedCode, setCommittedCode] = React.useState<string | null>(null);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
- 
-    // Hook 2 no longer accepts materialCode — fetch() is called manually on Search
+
     const { rows, loading, error, notFound, fetch: fetchByMaterial } = useCustomerSOByMaterial();
- 
+
     const handleSearch = () => {
         const code = inputValue.trim().toUpperCase();
         if (!code) return;
         setCommittedCode(code);
         setPage(0);
-        fetchByMaterial(code);   // ← API call fires here, only on Search
+        fetchByMaterial(code);
     };
- 
+
     return (
         <Box>
             {/* Search bar */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 2, mb: 3 }}>
                 <Paper
                     component="form"
                     onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
@@ -421,15 +419,19 @@ function MaterialSOCountTab() {
                             <ClearIcon sx={{ fontSize: 18 }} />
                         </IconButton>
                     )}
-                    <IconButton type="submit" sx={{ p: "5px" }}>
+                    <IconButton type="submit" sx={{ p: "5px" }} disabled={!inputValue.trim()}>
                         <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                     </IconButton>
                 </Paper>
-                <Button onClick={handleSearch} sx={getButtonSx(theme)}>
+                <Button
+                    onClick={handleSearch}
+                    disabled={!inputValue.trim()}
+                    sx={getButtonSx(theme)}
+                >
                     Search
                 </Button>
             </Box>
- 
+
             {/* States */}
             {!committedCode && (
                 <Typography variant="body2" color="text.disabled" sx={{ py: 8, textAlign: "center" }}>
@@ -469,17 +471,15 @@ function MaterialSOCountTab() {
                         setPage={setPage}
                         rowsPerPage={rowsPerPage}
                         setRowsPerPage={setRowsPerPage}
+                        yAxisLabel="Total Quantity"
                     />
                 </>
             )}
         </Box>
     );
 }
- 
 
-// ─────────────────────────────────────────────────────────────
-// Main Page
-// ─────────────────────────────────────────────────────────────
+
 export default function CustomerReport() {
     const [activeTab, setActiveTab] = React.useState(0);
     const theme = useTheme();
@@ -527,8 +527,8 @@ export default function CustomerReport() {
                         },
                     }}
                 >
-                    <Tab label="Tab A" />
-                    <Tab label="Tab B" />
+                    <Tab label="SO's per Customer" />
+                    <Tab label="Material Required per Customer" />
                 </Tabs>
             </Paper>
 

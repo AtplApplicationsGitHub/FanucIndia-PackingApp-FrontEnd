@@ -203,7 +203,7 @@ export default function AdminDashboardHeader({
             <Button
               disableRipple
               variant="text"
-              onMouseEnter={(e) => setReportsAnchor(e.currentTarget)}
+              onClick={(e) => setReportsAnchor(e.currentTarget)}
               endIcon={<ChevronDown size={16} />}
               sx={{
                 borderRadius: 0,
@@ -233,7 +233,6 @@ export default function AdminDashboardHeader({
               anchorEl={reportsAnchor}
               open={reportsOpen}
               onClose={() => setReportsAnchor(null)}
-              MenuListProps={{ onMouseLeave: () => setReportsAnchor(null) }}
               anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
               transformOrigin={{ vertical: "top", horizontal: "left" }}
             >

@@ -138,7 +138,7 @@ export default function RecentActivity(): React.ReactElement {
             const iconNode = getIconByLabel(label);
             const pillClasses = getPillClasses(label);
 
-            const key = `${activity.salesOrderNumber ?? "unknown"}-${activity.activityTimestamp ?? index}`;
+            const key = `${activity.salesOrderNumber ?? "unknown"}-${activity.activityTimestamp ?? "ts"}-${index}`;
 
             return (
               <motion.div
