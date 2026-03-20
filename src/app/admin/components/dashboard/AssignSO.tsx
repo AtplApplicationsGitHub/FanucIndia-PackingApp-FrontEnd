@@ -33,6 +33,7 @@ import dayjs from "dayjs";
 import { useAssign } from "@/app/admin/components/hooks/UseAssign";
 import AssignOrdersToolbar from "./AssignOrdersToolbar";
 import ErpUploadDialog from "./ErpUploadDialog";
+import SambaFilesView from "./SambaFilesView";
 
 type InlineEditField = "status" | "priority" | "assignedUserId";
 
@@ -88,8 +89,11 @@ export default function AssignSO() {
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [erpDialogOpen, setErpDialogOpen] = React.useState(false);
-  const [selectedSoForErp, setSelectedSoForErp] = React.useState<string | null>(null);
+  const [selectedSoForErp, setSelectedSoForErp] = React.useState<string | null>(
+    null,
+  );
   const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
+  const [showSambaView, setShowSambaView] = React.useState(false);
 
   const handleOpenErpDialog = (soNumber: string) => {
     if (!soNumber) return;
@@ -106,7 +110,7 @@ export default function AssignSO() {
       severity: "success",
     });
     setTimeout(() => {
-      window.location.reload(); 
+      window.location.reload();
     }, 1500);
   };
 
@@ -365,12 +369,22 @@ export default function AssignSO() {
         customerFilter,
         startDate,
         endDate,
-        pendingImportFilter
+        pendingImportFilter,
       });
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchInput, paymentFilter, zoneFilter, statusFilter, customerFilter, startDate, endDate, pendingImportFilter, fetchDynamicCounts]);
+  }, [
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    customerFilter,
+    startDate,
+    endDate,
+    pendingImportFilter,
+    fetchDynamicCounts,
+  ]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -460,7 +474,8 @@ export default function AssignSO() {
         }
       }
 
-      const matchesPendingImport = !pendingImportFilter || !order.hasMaterialData;
+      const matchesPendingImport =
+        !pendingImportFilter || !order.hasMaterialData;
 
       return (
         matchesSearch &&
@@ -634,7 +649,9 @@ export default function AssignSO() {
       setSelectedIds((prev) => [...new Set([...prev, ...allFilteredIds])]);
     } else {
       const allFilteredIds = filteredOrders.map((n) => n.id);
-      setSelectedIds((prev) => prev.filter((id) => !allFilteredIds.includes(id)));
+      setSelectedIds((prev) =>
+        prev.filter((id) => !allFilteredIds.includes(id)),
+      );
     }
   };
 
@@ -755,7 +772,11 @@ export default function AssignSO() {
 
   const handleDownloadErpData = async () => {
     if (selectedIds.length === 0) {
-      setSnackbar({ open: true, message: "Please select at least one order", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Please select at least one order",
+        severity: "warning",
+      });
       return;
     }
 
@@ -774,23 +795,39 @@ export default function AssignSO() {
     });
 
     if (validSaleOrderNumbers.length === 0 && skippedSOs.length > 0) {
-      setSnackbar({ open: true, message: "Selected orders already have ERP data imported.", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Selected orders already have ERP data imported.",
+        severity: "warning",
+      });
       return;
     }
 
-    setSnackbar({ open: true, message: `Downloading ERP data for ${validSaleOrderNumbers.length} orders...`, severity: "info" });
+    setSnackbar({
+      open: true,
+      message: `Downloading ERP data for ${validSaleOrderNumbers.length} orders...`,
+      severity: "info",
+    });
 
     try {
       const result = await downloadErpData(validSaleOrderNumbers);
 
       if (!result.success) {
-        setSnackbar({ open: true, message: result.message || "Download failed", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: result.message || "Download failed",
+          severity: "error",
+        });
         return;
       }
 
-      const downloadedCount = validSaleOrderNumbers.length - result.missingSOs.length;
-      let msg = downloadedCount > 0 ? `Successfully downloaded data for ${downloadedCount} orders.` : '';
-      
+      const downloadedCount =
+        validSaleOrderNumbers.length - result.missingSOs.length;
+      let msg =
+        downloadedCount > 0
+          ? `Successfully downloaded data for ${downloadedCount} orders.`
+          : "";
+
       if (result.missingSOs.length > 0) {
         msg += ` Data not available for the SO(s): ${result.missingSOs.join(", ")}`;
       }
@@ -798,10 +835,17 @@ export default function AssignSO() {
       setSnackbar({
         open: true,
         message: msg.trim(),
-        severity: result.missingSOs.length === validSaleOrderNumbers.length ? "error" : "success"
+        severity:
+          result.missingSOs.length === validSaleOrderNumbers.length
+            ? "error"
+            : "success",
       });
     } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || "Failed to download ERP data", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: err.message || "Failed to download ERP data",
+        severity: "error",
+      });
     }
   };
 
@@ -814,6 +858,10 @@ export default function AssignSO() {
         style={{ display: "none" }}
         onChange={handleExcelImportSelect}
       />
+      {showSambaView ? (
+        <SambaFilesView onBack={() => setShowSambaView(false)} />
+      ) : (
+        <>
       <Box sx={{ mb: 1 }}>
         <AssignOrdersToolbar
           searchInput={searchInput}
@@ -843,377 +891,403 @@ export default function AssignSO() {
           onExcelImport={() => fileInputRef.current?.click()}
           statusCounts={dynamicCounts}
           pendingImportFilter={pendingImportFilter}
-          onPendingImportClick={() => setPendingImportFilter(!pendingImportFilter)}
+          onPendingImportClick={() =>
+            setPendingImportFilter(!pendingImportFilter)
+          }
+          onOpenSambaView={() => setShowSambaView(true)}
         />
       </Box>
-
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ borderRadius: 0, width: "100%", overflowX: "auto" }}
-      >
-        <Table
-          sx={{
-            minWidth: 650,
-            width: "100%",
-            "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
-              backgroundColor: lightYellow,
-            },
-            "& .MuiTableBody-root .MuiTableRow-root:hover": {
-              backgroundColor: alpha(theme.palette.primary.main, 0.2),
-            },
-            "& .MuiTableCell-root": {
-              borderBottom: "none",
-              py: 0.5,
-              px: 1,
-              fontSize: "0.875rem",
-              whiteSpace: "nowrap",
-            },
-          }}
-        >
-          <TableHead
-            sx={{
-              bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
-            }}
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ borderRadius: 0, width: "100%", overflowX: "auto" }}
           >
-            <TableRow sx={{ height: 60 }}>
-              <TableCell sx={{ width: 48 }}>
-                <Checkbox
-                  indeterminate={isIndeterminate}
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                  sx={{
-                    p: 0.5,
-                    color:
-                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
-                    "&.Mui-checked": { color: theme.palette.primary.main },
-                  }}
-                />
-              </TableCell>
-              {[
-                "SALE ORDER NUMBER",
-                "OUT BOUND DELIVERY",
-                "TRANSFER ORDER",
-                "REQUIRED DATE",
-                "PAYMENT",
-                "SALES ZONE",
-                "CUSTOMER",
-                "STATUS",
-                "A/D/F",
-                "BIN",
-                "PRIORITY",
-                "ASSIGNED USER",
-              ].map((head) => (
-                <TableCell
-                  key={head}
-                  sx={{
-                    color:
-                      theme.palette.mode === "dark" ? "#ffffff" : "#000000",
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {head}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {paginatedOrders.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={13}
-                  align="center"
-                  sx={{
-                    bgcolor: lightYellow,
-                    py: 1,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  No orders found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedOrders.map((row) => {
-                const isDispatched = row.status === "Dispatched";
-                // const isAssignedUserLocked = isDispatched || row.status === "F105"; // unused for now
-
-                return (
-                  <TableRow
-                    key={row.id}
-                    selected={selectedIds.includes(row.id)}
-                  >
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Checkbox
-                          checked={selectedIds.includes(row.id)}
-                          onChange={() => handleSelectOne(row.id)}
-                          sx={{ p: 0.5 }}
-                        />
-                        <Tooltip
-                          title={
-                            row.hasMaterialData
-                              ? "ERP Data Imported"
-                              : "Material Data Pending - Click to Import"
-                          }
-                        >
-                          {row.hasMaterialData ? (
-                            <CheckCircleOutlineIcon
-                              sx={{ color: theme.palette.success.main, ml: 1 }}
-                              fontSize="small"
-                            />
-                          ) : (
-                            <ErrorOutlineIcon
-                              onClick={() => handleOpenErpDialog(row.saleOrderNumber || "")}
-                              sx={{ 
-                                color: theme.palette.warning.main, 
-                                ml: 1,
-                                cursor: "pointer", // <--- Added cursor
-                                "&:hover": { opacity: 0.7 } // <--- Added hover effect
-                              }}
-                              fontSize="small"
-                            />
-                          )}
-                        </Tooltip>
-                      </Box>
+            <Table
+              sx={{
+                minWidth: 650,
+                width: "100%",
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:hover": {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                },
+                "& .MuiTableCell-root": {
+                  borderBottom: "none",
+                  py: 0.5,
+                  px: 1,
+                  fontSize: "0.875rem",
+                  whiteSpace: "nowrap",
+                },
+              }}
+            >
+              <TableHead
+                sx={{
+                  bgcolor:
+                    theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                }}
+              >
+                <TableRow sx={{ height: 60 }}>
+                  <TableCell sx={{ width: 48 }}>
+                    <Checkbox
+                      indeterminate={isIndeterminate}
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      sx={{
+                        p: 0.5,
+                        color:
+                          theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                        "&.Mui-checked": { color: theme.palette.primary.main },
+                      }}
+                    />
+                  </TableCell>
+                  {[
+                    "SALE ORDER NUMBER",
+                    "OUT BOUND DELIVERY",
+                    "TRANSFER ORDER",
+                    "REQUIRED DATE",
+                    "PAYMENT",
+                    "SALES ZONE",
+                    "CUSTOMER",
+                    "STATUS",
+                    "A/D/F",
+                    "BIN",
+                    "PRIORITY",
+                    "ASSIGNED USER",
+                  ].map((head) => (
+                    <TableCell
+                      key={head}
+                      sx={{
+                        color:
+                          theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {head}
                     </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
 
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        {row.skipIssueStage ? (
-                          <Tooltip title="Skip Stages">
-                            <FlagIcon
-                              sx={{ color: theme.palette.error.main }}
-                              fontSize="small"
-                            />
-                          </Tooltip>
-                        ) : (
-                          <FlagIcon
-                            sx={{ visibility: "hidden" }}
-                            fontSize="small"
-                          />
-                        )}
-                        <MuiLink
-                          component={Link}
-                          href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
-                          underline="hover"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {row.saleOrderNumber || "-"}
-                        </MuiLink>
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>{row.outboundDelivery || "-"}</TableCell>
-
-                    <TableCell>{row.transferOrder || "-"}</TableCell>
-
-                    <TableCell>
-                      {row.deliveryDate ? formatDate(row.deliveryDate) : "-"}
-                    </TableCell>
-
-                    <TableCell>
-                      {row.paymentClearance ? (
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "3px 10px",
-                            borderRadius: "16px",
-                            border: "1px solid",
-                            borderColor: alpha(theme.palette.success.main, 0.5),
-                            backgroundColor: alpha(
-                              theme.palette.success.main,
-                              0.1,
-                            ),
-                            color: theme.palette.success.dark,
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            minWidth: "50px",
-                          }}
-                        >
-                          Yes
-                        </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "3px 10px",
-                            borderRadius: "16px",
-                            border: "1px solid",
-                            borderColor: alpha(theme.palette.error.main, 0.5),
-                            backgroundColor: alpha(
-                              theme.palette.error.main,
-                              0.1,
-                            ),
-                            color: theme.palette.error.main,
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            minWidth: "50px",
-                          }}
-                        >
-                          No
-                        </Box>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {row.salesZone?.name ||
-                        findName(lookup.salesZones, row.salesZoneId ?? 0) ||
-                        "-"}
-                    </TableCell>
-
-                    <TableCell>{row.customerNameText || "-"}</TableCell>
-
-                    <TableCell sx={{ minWidth: 100 }}>
-                      {(() => {
-                        if (!row.status) return <Box>-</Box>;
-                        let colorMain = theme.palette.grey[500];
-                        let label = row.status;
-                        if (row.status === "R105") {
-                          colorMain = "#3b82f6";
-                          label = "R105";
-                        } else if (row.status === "W105") {
-                          colorMain = "#eab308";
-                          label = "W105";
-                        } else if (row.status === "Dispatched") {
-                          colorMain = "#10b981";
-                          label = "Dispatched";
-                        }
-
-                        return (
-                          <Box
-                            sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: "3px 10px",
-                              borderRadius: "16px",
-                              border: "1px solid",
-                              borderColor: alpha(colorMain, 0.5),
-                              backgroundColor: alpha(colorMain, 0.1),
-                              color:
-                                colorMain === "#eab308" ? "#b45309" : colorMain,
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              minWidth: "50px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {label}
-                          </Box>
-                        );
-                      })()}
-                    </TableCell>
-
-                    <TableCell sx={{ minWidth: 100 }}>
-                      {row.materialData?.[0]?.A_D_F || "-"}
-                    </TableCell>
-
-                    <TableCell sx={{ minWidth: 60 }}>
-                      {row.binCount ?? "-"}
-                    </TableCell>
-
-                    <TableCell sx={{ minWidth: 80 }}>
-                      {inlineEdit?.id === row.id &&
-                      inlineEdit.field === "priority" ? (
-                        <CustomEditTextField
-                          initialValue={inlineEdit.value}
-                          onCommit={(val) => handleInlineSave(val)}
-                          onCancel={() => setInlineEdit(null)}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            cursor: isDispatched ? "default" : "pointer",
-                            textDecoration: isDispatched
-                              ? "none"
-                              : "underline dotted",
-                          }}
-                          onClick={() =>
-                            !isDispatched &&
-                            setInlineEdit({
-                              id: row.id,
-                              field: "priority",
-                              value: row.priority ?? "",
-                              original: row.priority ?? "",
-                            })
-                          }
-                        >
-                          {row.priority ?? "-"}
-                        </Box>
-                      )}
-                    </TableCell>
-
-                    <TableCell sx={{ minWidth: 150 }}>
-                      {inlineEdit?.id === row.id &&
-                      inlineEdit.field === "assignedUserId" ? (
-                        <CustomEditSelect
-                          initialValue={inlineEdit.value}
-                          onCommit={(val: string | number) =>
-                            handleInlineSave(val)
-                          }
-                          onCancel={() => setInlineEdit(null)}
-                          options={lookup.assignableUsers || []}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            cursor: isDispatched ? "default" : "pointer",
-                            textDecoration: isDispatched
-                              ? "none"
-                              : "underline dotted",
-                          }}
-                          onClick={() =>
-                            !isDispatched &&
-                            setInlineEdit({
-                              id: row.id,
-                              field: "assignedUserId",
-                              value: row.assignedUserId ?? "",
-                              original: row.assignedUserId ?? "",
-                            })
-                          }
-                        >
-                          {row.assignedUser?.name ||
-                            findName(
-                              lookup.assignableUsers,
-                              row.assignedUserId ?? 0,
-                            ) ||
-                            "-"}
-                        </Box>
-                      )}
+              <TableBody>
+                {paginatedOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={13}
+                      align="center"
+                      sx={{
+                        bgcolor: lightYellow,
+                        py: 1,
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      No orders found.
                     </TableCell>
                   </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                ) : (
+                  paginatedOrders.map((row) => {
+                    const isDispatched = row.status === "Dispatched";
+                    // const isAssignedUserLocked = isDispatched || row.status === "F105"; // unused for now
 
-      <TablePagination
-        component="div"
-        count={filteredOrders.length}
-        page={currentPage - 1}
-        onPageChange={(_, page) => setCurrentPage(page + 1)}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={(e) => {
-          setPageSize(parseInt(e.target.value, 10));
-          setCurrentPage(1);
-        }}
-        rowsPerPageOptions={[10, 20, 50]}
-        sx={{
-          borderTop: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-        }}
-      />
+                    return (
+                      <TableRow
+                        key={row.id}
+                        selected={selectedIds.includes(row.id)}
+                      >
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Checkbox
+                              checked={selectedIds.includes(row.id)}
+                              onChange={() => handleSelectOne(row.id)}
+                              sx={{ p: 0.5 }}
+                            />
+                            <Tooltip
+                              title={
+                                row.hasMaterialData
+                                  ? "ERP Data Imported"
+                                  : "Material Data Pending - Click to Import"
+                              }
+                            >
+                              {row.hasMaterialData ? (
+                                <CheckCircleOutlineIcon
+                                  sx={{
+                                    color: theme.palette.success.main,
+                                    ml: 1,
+                                  }}
+                                  fontSize="small"
+                                />
+                              ) : (
+                                <ErrorOutlineIcon
+                                  onClick={() =>
+                                    handleOpenErpDialog(
+                                      row.saleOrderNumber || "",
+                                    )
+                                  }
+                                  sx={{
+                                    color: theme.palette.warning.main,
+                                    ml: 1,
+                                    cursor: "pointer", // <--- Added cursor
+                                    "&:hover": { opacity: 0.7 }, // <--- Added hover effect
+                                  }}
+                                  fontSize="small"
+                                />
+                              )}
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            {row.skipIssueStage ? (
+                              <Tooltip title="Skip Stages">
+                                <FlagIcon
+                                  sx={{ color: theme.palette.error.main }}
+                                  fontSize="small"
+                                />
+                              </Tooltip>
+                            ) : (
+                              <FlagIcon
+                                sx={{ visibility: "hidden" }}
+                                fontSize="small"
+                              />
+                            )}
+                            <MuiLink
+                              component={Link}
+                              href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
+                              underline="hover"
+                              sx={{ fontWeight: 500 }}
+                            >
+                              {row.saleOrderNumber || "-"}
+                            </MuiLink>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell>{row.outboundDelivery || "-"}</TableCell>
+
+                        <TableCell>{row.transferOrder || "-"}</TableCell>
+
+                        <TableCell>
+                          {row.deliveryDate
+                            ? formatDate(row.deliveryDate)
+                            : "-"}
+                        </TableCell>
+
+                        <TableCell>
+                          {row.paymentClearance ? (
+                            <Box
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "3px 10px",
+                                borderRadius: "16px",
+                                border: "1px solid",
+                                borderColor: alpha(
+                                  theme.palette.success.main,
+                                  0.5,
+                                ),
+                                backgroundColor: alpha(
+                                  theme.palette.success.main,
+                                  0.1,
+                                ),
+                                color: theme.palette.success.dark,
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                minWidth: "50px",
+                              }}
+                            >
+                              Yes
+                            </Box>
+                          ) : (
+                            <Box
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "3px 10px",
+                                borderRadius: "16px",
+                                border: "1px solid",
+                                borderColor: alpha(
+                                  theme.palette.error.main,
+                                  0.5,
+                                ),
+                                backgroundColor: alpha(
+                                  theme.palette.error.main,
+                                  0.1,
+                                ),
+                                color: theme.palette.error.main,
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                minWidth: "50px",
+                              }}
+                            >
+                              No
+                            </Box>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {row.salesZone?.name ||
+                            findName(lookup.salesZones, row.salesZoneId ?? 0) ||
+                            "-"}
+                        </TableCell>
+
+                        <TableCell>{row.customerNameText || "-"}</TableCell>
+
+                        <TableCell sx={{ minWidth: 100 }}>
+                          {(() => {
+                            if (!row.status) return <Box>-</Box>;
+                            let colorMain = theme.palette.grey[500];
+                            let label = row.status;
+                            if (row.status === "R105") {
+                              colorMain = "#3b82f6";
+                              label = "R105";
+                            } else if (row.status === "W105") {
+                              colorMain = "#eab308";
+                              label = "W105";
+                            } else if (row.status === "Dispatched") {
+                              colorMain = "#10b981";
+                              label = "Dispatched";
+                            }
+
+                            return (
+                              <Box
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  padding: "3px 10px",
+                                  borderRadius: "16px",
+                                  border: "1px solid",
+                                  borderColor: alpha(colorMain, 0.5),
+                                  backgroundColor: alpha(colorMain, 0.1),
+                                  color:
+                                    colorMain === "#eab308"
+                                      ? "#b45309"
+                                      : colorMain,
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  minWidth: "50px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {label}
+                              </Box>
+                            );
+                          })()}
+                        </TableCell>
+
+                        <TableCell sx={{ minWidth: 100 }}>
+                          {row.materialData?.[0]?.A_D_F || "-"}
+                        </TableCell>
+
+                        <TableCell sx={{ minWidth: 60 }}>
+                          {row.binCount ?? "-"}
+                        </TableCell>
+
+                        <TableCell sx={{ minWidth: 80 }}>
+                          {inlineEdit?.id === row.id &&
+                          inlineEdit.field === "priority" ? (
+                            <CustomEditTextField
+                              initialValue={inlineEdit.value}
+                              onCommit={(val) => handleInlineSave(val)}
+                              onCancel={() => setInlineEdit(null)}
+                            />
+                          ) : (
+                            <Box
+                              sx={{
+                                cursor: isDispatched ? "default" : "pointer",
+                                textDecoration: isDispatched
+                                  ? "none"
+                                  : "underline dotted",
+                              }}
+                              onClick={() =>
+                                !isDispatched &&
+                                setInlineEdit({
+                                  id: row.id,
+                                  field: "priority",
+                                  value: row.priority ?? "",
+                                  original: row.priority ?? "",
+                                })
+                              }
+                            >
+                              {row.priority ?? "-"}
+                            </Box>
+                          )}
+                        </TableCell>
+
+                        <TableCell sx={{ minWidth: 150 }}>
+                          {inlineEdit?.id === row.id &&
+                          inlineEdit.field === "assignedUserId" ? (
+                            <CustomEditSelect
+                              initialValue={inlineEdit.value}
+                              onCommit={(val: string | number) =>
+                                handleInlineSave(val)
+                              }
+                              onCancel={() => setInlineEdit(null)}
+                              options={lookup.assignableUsers || []}
+                            />
+                          ) : (
+                            <Box
+                              sx={{
+                                cursor: isDispatched ? "default" : "pointer",
+                                textDecoration: isDispatched
+                                  ? "none"
+                                  : "underline dotted",
+                              }}
+                              onClick={() =>
+                                !isDispatched &&
+                                setInlineEdit({
+                                  id: row.id,
+                                  field: "assignedUserId",
+                                  value: row.assignedUserId ?? "",
+                                  original: row.assignedUserId ?? "",
+                                })
+                              }
+                            >
+                              {row.assignedUser?.name ||
+                                findName(
+                                  lookup.assignableUsers,
+                                  row.assignedUserId ?? 0,
+                                ) ||
+                                "-"}
+                            </Box>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={filteredOrders.length}
+            page={currentPage - 1}
+            onPageChange={(_, page) => setCurrentPage(page + 1)}
+            rowsPerPage={pageSize}
+            onRowsPerPageChange={(e) => {
+              setPageSize(parseInt(e.target.value, 10));
+              setCurrentPage(1);
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            sx={{
+              borderTop: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
+            }}
+          />
+        </>
+      )}
 
       <Snackbar
         open={snackbar.open}

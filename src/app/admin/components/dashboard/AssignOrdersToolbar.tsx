@@ -86,6 +86,7 @@ type Props = {
   customerFilter: string;
   onCustomerFilterChange: (val: string) => void;
   customers?: { id: number; name: string }[];
+  onOpenSambaView?: () => void;
 };
 
 export default function AssignOrdersToolbar({
@@ -117,6 +118,7 @@ export default function AssignOrdersToolbar({
   customerFilter,
   onCustomerFilterChange,
   customers = [],
+  onOpenSambaView,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -149,6 +151,10 @@ export default function AssignOrdersToolbar({
       setSftpStatus("DOWN");
     }
   };
+
+  React.useEffect(() => {
+    handleCheckSambaStatus();
+  }, []);
 
   const handleActionClick = (action: () => void) => {
     if (selectedIds.length === 0) {
@@ -526,13 +532,19 @@ export default function AssignOrdersToolbar({
               <Tooltip
               title={
                 sftpStatus === "LOADING" ? "Checking Server..." :
-                sftpStatus === "UP" ? "Samba Connected" :
+                sftpStatus === "UP" ? "Samba Connected (Click to view files)" :
                 sftpStatus === "DOWN" ? "Samba Disconnected" :
                 "Check Samba Server Status"
               }
             >
               <IconButton
-                onClick={handleCheckSambaStatus}
+                onClick={() => {
+                  if (sftpStatus === "UP" && onOpenSambaView) {
+                    onOpenSambaView();
+                  } else {
+                    handleCheckSambaStatus();
+                  }
+                }}
                 disabled={sftpStatus === "LOADING"}
                 sx={{
                   ml: 1,

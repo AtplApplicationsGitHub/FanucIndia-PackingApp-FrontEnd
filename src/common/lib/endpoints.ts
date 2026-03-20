@@ -170,14 +170,18 @@ export const API = {
   },
   SO_SOCKET_BASE: API_BASE_URL,
   // TERMINAL USER DASHBOARD
-TERMINAL_USER_DASHBOARD: {
+  TERMINAL_USER_DASHBOARD: {
   ORDERS_ASSIGNED_TO_ME:      `${API_BASE_URL}/user-dashboard/stats`,
   OVERDUE_ORDERS:             `${API_BASE_URL}/dashboard/admin-kpis`,
   ORDERS_CREATED:             `${API_BASE_URL}/dashboard/admin-new-imports`,
   TODAYS_DISPATCH:            `${API_BASE_URL}/dashboard/admin-dispatch-summary`,
   ORDER_STATUS_DISTRIBUTION:  `${API_BASE_URL}/dashboard/admin-overall-status`,
   RECENT_ACTIVITY:            `${API_BASE_URL}/user-dashboard/recent-activity`,
-},
+  },
+  SAMBA: {
+    FILES: `${API_BASE_URL}/samba/files`,
+    DOWNLOAD: `${API_BASE_URL}/samba/download`,
+  },
 
 };
 
