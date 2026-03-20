@@ -155,25 +155,29 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
         link.href = url;
         const outName =
           filenames.length === 1 ? filenames[0] : `${activeTab}_FILES.zip`;
-        link.setAttribute("download", outName);
-        document.body.appendChild(link);
+        
+        const sanitizedOutName = outName.replace(/[^a-zA-Z0-9.\-_ ]/g, "_");
+        link.setAttribute("download", sanitizedOutName);
         link.click();
-        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
       }
     } catch (error) {
       console.error("Download failed", error);
     }
     setDownloading(false);
-  };
+};
 
   const getTabCount = (tab: string) => {
     const tabFiles = filesByTab[tab] || [];
-    return tabFiles.filter(f => {
+    return tabFiles.filter((f) => {
       if (selectedDate) {
-        const fileDate = f.createdDatetime ? new Date(f.createdDatetime).toISOString().split("T")[0] : "";
+        const fileDate = f.createdDatetime
+          ? new Date(f.createdDatetime).toISOString().split("T")[0]
+          : "";
         if (fileDate !== selectedDate) return false;
       }
-      if (search && !f.filename.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !f.filename.toLowerCase().includes(search.toLowerCase()))
+        return false;
       return true;
     }).length;
   };
@@ -181,15 +185,18 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   const filteredFiles = useMemo(() => {
     const currentFiles = filesByTab[activeTab] || [];
     return currentFiles
-      .filter(f => {
+      .filter((f) => {
         // 1. Date Filter
         if (selectedDate) {
           // FIX: Safely convert numeric timestamp to Date object before splitting
-          const fileDate = f.createdDatetime ? new Date(f.createdDatetime).toISOString().split("T")[0] : "";
+          const fileDate = f.createdDatetime
+            ? new Date(f.createdDatetime).toISOString().split("T")[0]
+            : "";
           if (fileDate !== selectedDate) return false;
         }
         // 2. Search Filter
-        if (search && !f.filename.toLowerCase().includes(search.toLowerCase())) return false;
+        if (search && !f.filename.toLowerCase().includes(search.toLowerCase()))
+          return false;
         return true;
       })
       .sort((a, b) => {
@@ -273,16 +280,19 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
               slotProps={{
                 field: {
                   clearable: true,
-                  onClear: () => { setSelectedDate(""); setPage(0); },
+                  onClear: () => {
+                    setSelectedDate("");
+                    setPage(0);
+                  },
                 },
                 textField: {
                   size: "small",
                   placeholder: "Select Date",
-                  sx: { 
+                  sx: {
                     width: { xs: "170px", sm: "200px" },
                     "& .MuiInputBase-root": { borderRadius: 1.5 },
-                  }
-                }
+                  },
+                },
               }}
             />
           </LocalizationProvider>
@@ -318,7 +328,10 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
             minHeight: 48,
             // 1. Fix the Indicator line color
             "& .MuiTabs-indicator": {
-              backgroundColor: theme.palette.mode === "light" ? theme.palette.text.primary : theme.palette.primary.main,
+              backgroundColor:
+                theme.palette.mode === "light"
+                  ? theme.palette.text.primary
+                  : theme.palette.primary.main,
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -329,27 +342,38 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
               color: theme.palette.text.secondary,
               // 2. Fix the Selected text color
               "&.Mui-selected": {
-                color: theme.palette.mode === "light" ? theme.palette.text.primary : theme.palette.primary.main,
-              }
+                color:
+                  theme.palette.mode === "light"
+                    ? theme.palette.text.primary
+                    : theme.palette.primary.main,
+              },
             },
           }}
         >
           {TABS.map((tab) => {
             // 3. Keep Tabs capitalized
             const labelText = tab === "ARCHIVE" ? "ARCHIVED" : tab;
-            return <Tab key={tab} label={`${labelText} (${getTabCount(tab)})`} value={tab} />;
+            return (
+              <Tab
+                key={tab}
+                label={`${labelText} (${getTabCount(tab)})`}
+                value={tab}
+              />
+            );
           })}
         </Tabs>
 
         {/* RIGHT: Status & Quick Actions */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          
           <Tooltip
             title={
-              sftpStatus === "LOADING" ? "Checking Server..." :
-              sftpStatus === "UP" ? "Samba Connected" :
-              sftpStatus === "DOWN" ? "Samba Disconnected" :
-              "Check Samba Server Status"
+              sftpStatus === "LOADING"
+                ? "Checking Server..."
+                : sftpStatus === "UP"
+                  ? "Samba Connected"
+                  : sftpStatus === "DOWN"
+                    ? "Samba Disconnected"
+                    : "Check Samba Server Status"
             }
           >
             <IconButton
@@ -358,11 +382,24 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
               sx={{
                 width: 36,
                 height: 36,
-                bgcolor: sftpStatus === "UP" ? "success.main" : sftpStatus === "DOWN" ? "error.main" : "transparent",
-                color: sftpStatus === "UP" || sftpStatus === "DOWN" ? "#ffffff" : "text.secondary",
+                bgcolor:
+                  sftpStatus === "UP"
+                    ? "success.main"
+                    : sftpStatus === "DOWN"
+                      ? "error.main"
+                      : "transparent",
+                color:
+                  sftpStatus === "UP" || sftpStatus === "DOWN"
+                    ? "#ffffff"
+                    : "text.secondary",
                 "&:hover": {
-                  bgcolor: sftpStatus === "UP" ? "success.dark" : sftpStatus === "DOWN" ? "error.dark" : "action.hover",
-                }
+                  bgcolor:
+                    sftpStatus === "UP"
+                      ? "success.dark"
+                      : sftpStatus === "DOWN"
+                        ? "error.dark"
+                        : "action.hover",
+                },
               }}
             >
               {sftpStatus === "LOADING" ? (
@@ -379,7 +416,12 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
 
           {/* NEW: Refresh Icon Button */}
           <Tooltip title="Refresh Files">
-            <IconButton onClick={fetchAllFiles} sx={{ color: theme.palette.mode === 'dark' ? '#90caf9' : '#1976d2' }}>
+            <IconButton
+              onClick={fetchAllFiles}
+              sx={{
+                color: theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
+              }}
+            >
               <RefreshCcw size={20} />
             </IconButton>
           </Tooltip>
@@ -387,16 +429,19 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
           {/* NEW: Conditional ZIP Download Icon Button */}
           {selectedFiles.length > 0 && (
             <Tooltip title={`Download ZIP (${selectedFiles.length})`}>
-              <IconButton 
-                onClick={() => handleDownload(selectedFiles)} 
+              <IconButton
+                onClick={() => handleDownload(selectedFiles)}
                 disabled={downloading}
                 color="warning"
               >
-                {downloading ? <CircularProgress size={20} color="inherit" /> : <FolderZipIcon />}
+                {downloading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <FolderZipIcon />
+                )}
               </IconButton>
             </Tooltip>
           )}
-
         </Box>
       </Paper>
 
@@ -490,7 +535,9 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                         {row.filename}
                       </TableCell>
                       <TableCell align="center">
-                        {row.createdDatetime ? new Date(row.createdDatetime).toLocaleString() : "N/A"}
+                        {row.createdDatetime
+                          ? new Date(row.createdDatetime).toLocaleString()
+                          : "N/A"}
                       </TableCell>
                       <TableCell align="center">
                         <Tooltip title="Download File">
