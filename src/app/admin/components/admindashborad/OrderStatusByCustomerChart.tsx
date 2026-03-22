@@ -1,32 +1,32 @@
-// components/charts/OrderStatusByZone.tsx
 "use client";
 
 import React, { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { Table, BarChart3 } from "lucide-react";
-import { useOrderZoneBarChart, ZoneStatus } from "../hooks/useOrderzoneBarchart";
+import { useOrderStatusByCustomer } from "../hooks/useOrderStatusByCustomer";
 
 interface Props {
   selectedDate: string;
   displayDate: string;
 }
 
-export default function OrderStatusByZone({ selectedDate, displayDate }: Props) {
-  const { data, loading, error, refetch } = useOrderZoneBarChart(selectedDate);
+// 2. Change the component declaration:
+export default function OrderStatusByCustomerChart({ selectedDate, displayDate }: Props) {
+  const { data, loading, error, refetch } = useOrderStatusByCustomer(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
-  // Finalized Colors - Updated to match new palette
+  // Finalized Colors
   const COLORS = {
-    toBeIssued: "#FF6B6B", // Vibrant coral red
-    assigned: "#3B82F6", // Professional blue
-    issued: "#FFD93D", // Golden yellow
-    packed: "#6C5CE7", // Purple
-    dispatched: "#00B894", // Emerald green
+    toBeIssued: "#FF6B6B", 
+    assigned: "#3B82F6", 
+    issued: "#FFD93D", 
+    packed: "#6C5CE7", 
+    dispatched: "#00B894", 
   };
 
-  // Transform API data (business logic unchanged)
-  const chartData = (data || []).map((item: ZoneStatus) => ({
-    zone: item.zoneName,
+  // Transform API data
+  const chartData = (data || []).map((item: any) => ({
+    customer: item.customerName,
     toBeIssued: item.toBeIssuedCount,
     assigned: item.r105Count,
     issued: item.w105Count,
@@ -40,7 +40,7 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
         <div className="flex items-center justify-center h-96">
           <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-3">
             <BarChart3 className="w-6 h-6 animate-spin" />
-            Loading order status by zone...
+            Loading order status by customer...
           </div>
         </div>
       </div>
@@ -69,10 +69,10 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div>
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
-            Order Status by Sales Zone ({displayDate})
+            Order Status by Customer ({displayDate})
           </h2>
           <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">
-            Real-time counts per zone — Assigned, Issued, Packed, Dispatched
+            Real-time counts per customer — Assigned, Issued, Packed, Dispatched
           </p>
         </div>
 
@@ -101,7 +101,6 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
         <>
           <style>
             {`
-              /* Remove yellow border when clicking chart */
               .chart-no-focus *:focus {
                 outline: none !important;
                 box-shadow: none !important;
@@ -111,20 +110,18 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
 
           <div className="h-[450px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
             <BarChart
-              aria-label="Order status by sales zone"
+              aria-label="Order status by customer"
               dataset={chartData}
               height={380}
               margin={{ top: 20, right: 40, left: 50, bottom: 60 }}
               xAxis={[
                 {
-                  dataKey: "zone",
+                  dataKey: "customer",
                    scaleType: "band",
                    tickLabelStyle: {
                      angle: 0,
                      textAnchor: 'middle',
                      fontSize: 12,
-                     // We rely on MUI ThemeProvider to swap text color in dark mode
-                     // or we can pass explicit fill if the theme provider isn't enough
                    },
                 },
               ]}
@@ -170,7 +167,7 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
                 legend: {
                   position: { vertical: "bottom", horizontal: "center" },
                   sx: {
-                    gap: 2, // Use gap in sx if it's a flex container, or rely on default spacing
+                    gap: 2,
                     "& .MuiChartsLegend-label": {
                       fontSize: 12,
                       fontWeight: 600,
@@ -179,9 +176,7 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
                   },
                 },
               }}
-
               sx={{
-                // Ensure text colors adapt to theme context if inherited
                 "& .MuiChartsAxis-tickLabel": {
                    fill: "currentColor !important"
                 },
@@ -206,7 +201,7 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
             <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
-                  Zone
+                  Customer
                 </th>
                 <th
                   className="px-6 py-4 text-center font-semibold"
@@ -242,9 +237,9 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
             </thead>
             <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
               {chartData.map((row) => (
-                <tr key={row.zone} className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]">
+                <tr key={row.customer} className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]">
                   <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
-                    {row.zone}
+                    {row.customer}
                   </td>
                   <td
                     className="px-6 py-4 text-center font-bold"

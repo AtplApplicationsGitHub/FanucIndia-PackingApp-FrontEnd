@@ -1,56 +1,39 @@
-// hooks/useOrderZoneBarChart.ts
 import { useEffect, useState } from "react";
-import { API } from "@/common/lib/endpoints";
-import { fetchWithAuth } from "@/common/lib/endpoints";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 
 export interface ZoneStatus {
   zoneName: string;
-  r105Count: number;     // Imported
-  w105Count: number;     // Issued
-  f105Count: number;     // Packed
   toBeIssuedCount: number;
+  r105Count: number;
+  w105Count: number;
+  f105Count: number;
   dispatchedCount: number;
 }
 
-interface UseOrderZoneBarChartResult {
-  data: ZoneStatus[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-}
-
-export const useOrderZoneBarChart = (): UseOrderZoneBarChartResult => {
-  const [data, setData] = useState<ZoneStatus[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+export const useOrderZoneBarChart = (selectedDate: string) => {
+  const [data, setData] = useState<ZoneStatus[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (date: string) => {
     try {
       setLoading(true);
+      const url = date ? `${API.DASHBOARD.ADMIN_STATUS_BY_ZONE}?date=${date}` : API.DASHBOARD.ADMIN_STATUS_BY_ZONE;
+      const response = await fetchWithAuth(url);
+      if (!response.ok) throw new Error("Failed to fetch data");
+      const json = await response.json();
+      setData(json);
       setError(null);
-
-      const response = await fetchWithAuth(API.DASHBOARD.ADMIN_STATUS_BY_ZONE);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-      }
-
-      const result: ZoneStatus[] = await response.json();
-
-      // Optional: Sort zones alphabetically or keep backend order
-      const sorted = result.sort((a, b) => a.zoneName.localeCompare(b.zoneName));
-      setData(sorted);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-      console.error("Error fetching zone status:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(selectedDate);
+  }, [selectedDate]);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: () => fetchData(selectedDate) };
 };

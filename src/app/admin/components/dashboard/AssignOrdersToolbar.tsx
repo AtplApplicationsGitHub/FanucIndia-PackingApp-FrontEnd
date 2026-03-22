@@ -22,7 +22,7 @@ import {
   Alert,
   Chip,
   CircularProgress,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -139,12 +139,14 @@ export default function AssignOrdersToolbar({
     setLocalSearch(searchInput);
   }, [searchInput]);
 
-  const [sftpStatus, setSftpStatus] = useState<"UP" | "DOWN" | "UNKNOWN" | "LOADING">("UNKNOWN");
+  const [sftpStatus, setSftpStatus] = useState<
+    "UP" | "DOWN" | "UNKNOWN" | "LOADING"
+  >("UNKNOWN");
 
   const handleCheckSambaStatus = async () => {
     setSftpStatus("LOADING");
     try {
-      const res = await fetchWithAuth(API.ADMIN.SFTP_STATUS); 
+      const res = await fetchWithAuth(API.ADMIN.SFTP_STATUS);
       const data = await res.json();
       setSftpStatus(data.status === "UP" ? "UP" : "DOWN");
     } catch (e) {
@@ -219,73 +221,78 @@ export default function AssignOrdersToolbar({
           <Box
             sx={{
               display: "flex",
-              flexWrap: "wrap",
-              gap: 1.5,
+              flexWrap: "nowrap",
+              gap: 1.25,
               alignItems: "center",
               flex: 1,
+              width: "100%",
+              minWidth: 0,
             }}
           >
-            <IconButton
-              onClick={handleMenuOpen}
-              sx={{ ml: 0.5 }}
-              aria-controls={open ? "actions-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
-            >
-              <ListIcon />
-            </IconButton>
+            {/* Menu & Search Container */}
             <Box
-              component="form"
-              onSubmit={(e: React.FormEvent) => {
-                e.preventDefault();
-                onSearchInputChange(localSearch);
-              }}
               sx={{
-                p: "2px 4px",
                 display: "flex",
                 alignItems: "center",
-                width: { xs: "100%", md: 160, lg: 180 },
-                border: 1,
-                borderColor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? "rgba(255, 255, 255, 0.23)"
-                    : "#e0e0e0",
-                borderRadius: "4px",
-                height: 40,
-                bgcolor: "background.paper",
+                gap: 1,
+                width: { xs: "100%", lg: "auto" },
+                flex: { lg: "0 1 260px" },
+                minWidth: { lg: 220 },
+                maxWidth: { lg: 280 },
               }}
             >
-              <InputBase
-                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
-                placeholder="Search"
-                inputProps={{ "aria-label": "search" }}
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              {localSearch && (
-                <IconButton
-                  sx={{ p: "5px" }}
-                  aria-label="clear"
-                  onClick={() => {
-                    setLocalSearch("");
-                    onSearchInputChange("");
-                  }}
-                >
-                  <ClearIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              )}
-              <IconButton type="submit" sx={{ p: "5px" }}>
-                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+              <IconButton onClick={handleMenuOpen}>
+                <ListIcon />
               </IconButton>
+              <Box
+                component="form"
+                onSubmit={(e: React.FormEvent) => {
+                  e.preventDefault();
+                  onSearchInputChange(localSearch);
+                }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: 1,
+                  minWidth: 0,
+                  p: "2px 4px",
+                  border: 1,
+                  borderColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.23)"
+                      : "#e0e0e0",
+                  borderRadius: "4px",
+                  height: 40,
+                  bgcolor: "background.paper",
+                }}
+              >
+                <InputBase
+                  sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                  placeholder="Search"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+                {localSearch && (
+                  <IconButton
+                    sx={{ p: "5px" }}
+                    onClick={() => {
+                      setLocalSearch("");
+                      onSearchInputChange("");
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                )}
+                <IconButton type="submit" sx={{ p: "5px" }}>
+                  <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                </IconButton>
+              </Box>
             </Box>
 
             {/* Payment Filter */}
             <FormControl
               size="small"
-              sx={{
-                minWidth: { xs: "calc(50% - 8px)", sm: 85 },
-                flex: { xs: 1, sm: "initial" },
-              }}
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 72 } }}
             >
               <Select
                 value={paymentFilter}
@@ -293,7 +300,7 @@ export default function AssignOrdersToolbar({
                 onChange={(e) => onPaymentFilterChange(e.target.value)}
                 sx={{ height: 40, fontSize: "13px" }}
               >
-                <MenuItem value="">PAYMENT</MenuItem>
+                <MenuItem value="">PAY</MenuItem>
                 <MenuItem value="true">Yes</MenuItem>
                 <MenuItem value="false">No</MenuItem>
               </Select>
@@ -302,10 +309,7 @@ export default function AssignOrdersToolbar({
             {/* Zone Filter */}
             <FormControl
               size="small"
-              sx={{
-                minWidth: { xs: "calc(50% - 8px)", sm: 90 },
-                flex: { xs: 1, sm: "initial" },
-              }}
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 84 } }}
             >
               <Select
                 value={zoneFilter}
@@ -313,7 +317,7 @@ export default function AssignOrdersToolbar({
                 onChange={(e) => onZoneFilterChange(e.target.value)}
                 sx={{ height: 40, fontSize: "13px" }}
               >
-                <MenuItem value="">SALES ZONE</MenuItem>
+                <MenuItem value="">ZONE</MenuItem>
                 {salesZones.map((zone) => (
                   <MenuItem key={zone.id} value={String(zone.id)}>
                     {String(zone.name || zone.code || zone.id)}
@@ -325,10 +329,7 @@ export default function AssignOrdersToolbar({
             {/* Status Filter */}
             <FormControl
               size="small"
-              sx={{
-                minWidth: { xs: "calc(50% - 8px)", sm: 85 },
-                flex: { xs: 1, sm: "initial" },
-              }}
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 100 } }}
             >
               <Select
                 value={statusFilter}
@@ -348,10 +349,7 @@ export default function AssignOrdersToolbar({
             {/* Customer Filter */}
             <FormControl
               size="small"
-              sx={{
-                minWidth: { xs: "calc(50% - 8px)", sm: 120 },
-                flex: { xs: 1, sm: "initial" },
-              }}
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 118 } }}
             >
               <Select
                 value={customerFilter}
@@ -381,11 +379,18 @@ export default function AssignOrdersToolbar({
                 },
                 textField: {
                   size: "small",
+                  variant: "outlined",
                   sx: {
-                    width: { xs: "100%", sm: 210 },
-                    flexShrink: 0,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
-                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    width: { xs: 140, sm: 150, md: 160, lg: 185 },
+                    flex: "0 0 auto",
+                    minWidth: 160,
+                    "& .MuiInputBase-root": {
+                      height: 40,
+                      fontSize: "13px",
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "12px",
+                    },
                   },
                 },
               }}
@@ -404,11 +409,18 @@ export default function AssignOrdersToolbar({
                 },
                 textField: {
                   size: "small",
+                  variant: "outlined",
                   sx: {
-                    width: { xs: "100%", sm: 210 },
-                    flexShrink: 0,
-                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
-                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    width: { xs: 140, sm: 150, md: 160, lg: 185 },
+                    flex: "0 0 auto",
+                    minWidth: 160,
+                    "& .MuiInputBase-root": {
+                      height: 40,
+                      fontSize: "13px",
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "12px",
+                    },
                   },
                 },
               }}
@@ -420,6 +432,7 @@ export default function AssignOrdersToolbar({
               title="Clear Filters"
               sx={{
                 color: "text.secondary",
+                flex: "0 0 auto",
                 "&:hover": { color: "error.main" },
               }}
             >
@@ -433,7 +446,8 @@ export default function AssignOrdersToolbar({
               display: "flex",
               alignItems: "center",
               gap: 1.5,
-              flexWrap: "wrap",
+              flexWrap: "nowrap",
+              overflowX: "auto",
               justifyContent: { xs: "center", lg: "flex-end" },
               borderTop: { xs: 1, lg: 0 },
               borderColor: "divider",
@@ -446,7 +460,8 @@ export default function AssignOrdersToolbar({
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
+                overflowX: "auto",
                 justifyContent: "center",
               }}
             >
@@ -478,7 +493,8 @@ export default function AssignOrdersToolbar({
                     display: "flex",
                     alignItems: "center",
                   }}
-                >{statusCounts.PendingImport ?? 0}
+                >
+                  {statusCounts.PendingImport ?? 0}
                 </Typography>
               </Box>
               {[
@@ -530,52 +546,60 @@ export default function AssignOrdersToolbar({
                 </Box>
               ))}
               <Tooltip
-              title={
-                sftpStatus === "LOADING" ? "Checking Server..." :
-                sftpStatus === "UP" ? "Samba Connected (Click to view files)" :
-                sftpStatus === "DOWN" ? "Samba Disconnected" :
-                "Check Samba Server Status"
-              }
-            >
-              <IconButton
-                onClick={() => {
-                  if (sftpStatus === "UP" && onOpenSambaView) {
-                    onOpenSambaView();
-                  } else {
-                    handleCheckSambaStatus();
-                  }
-                }}
-                disabled={sftpStatus === "LOADING"}
-                sx={{
-                  ml: 1,
-                  width: 36,
-                  height: 36,
-                  bgcolor: 
-                    sftpStatus === "UP" ? "success.main" : 
-                    sftpStatus === "DOWN" ? "error.main" : 
-                    "transparent",
-                  color: 
-                    sftpStatus === "UP" || sftpStatus === "DOWN" ? "#ffffff" : 
-                    "text.secondary",
-                  "&:hover": {
-                    bgcolor: 
-                      sftpStatus === "UP" ? "success.dark" : 
-                      sftpStatus === "DOWN" ? "error.dark" : 
-                      "action.hover",
-                  }
-                }}
+                title={
+                  sftpStatus === "LOADING"
+                    ? "Checking Server..."
+                    : sftpStatus === "UP"
+                      ? "Samba Connected (Click to view files)"
+                      : sftpStatus === "DOWN"
+                        ? "Samba Disconnected"
+                        : "Check Samba Server Status"
+                }
               >
-                {sftpStatus === "LOADING" ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : sftpStatus === "UP" ? (
-                  <CheckCircleOutlineIcon fontSize="small" />
-                ) : sftpStatus === "DOWN" ? (
-                  <ErrorOutlineIcon fontSize="small" />
-                ) : (
-                  <StorageOutlinedIcon fontSize="small" />
-                )}
-              </IconButton>
-            </Tooltip>
+                <IconButton
+                  onClick={() => {
+                    if (sftpStatus === "UP" && onOpenSambaView) {
+                      onOpenSambaView();
+                    } else {
+                      handleCheckSambaStatus();
+                    }
+                  }}
+                  disabled={sftpStatus === "LOADING"}
+                  sx={{
+                    ml: 1,
+                    width: 36,
+                    height: 36,
+                    bgcolor:
+                      sftpStatus === "UP"
+                        ? "success.main"
+                        : sftpStatus === "DOWN"
+                          ? "error.main"
+                          : "transparent",
+                    color:
+                      sftpStatus === "UP" || sftpStatus === "DOWN"
+                        ? "#ffffff"
+                        : "text.secondary",
+                    "&:hover": {
+                      bgcolor:
+                        sftpStatus === "UP"
+                          ? "success.dark"
+                          : sftpStatus === "DOWN"
+                            ? "error.dark"
+                            : "action.hover",
+                    },
+                  }}
+                >
+                  {sftpStatus === "LOADING" ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : sftpStatus === "UP" ? (
+                    <CheckCircleOutlineIcon fontSize="small" />
+                  ) : sftpStatus === "DOWN" ? (
+                    <ErrorOutlineIcon fontSize="small" />
+                  ) : (
+                    <StorageOutlinedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
         </Paper>
@@ -676,7 +700,10 @@ export default function AssignOrdersToolbar({
             }
           >
             <ListItemIcon>
-              <FileDownloadOutlinedIcon fontSize="small" sx={{ color: "#2e7d32" }} />
+              <FileDownloadOutlinedIcon
+                fontSize="small"
+                sx={{ color: "#2e7d32" }}
+              />
             </ListItemIcon>
             <ListItemText
               primary="DOWNLOAD ERP DATA"

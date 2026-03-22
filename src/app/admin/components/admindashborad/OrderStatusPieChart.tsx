@@ -14,8 +14,13 @@ const COLORS = {
   dispatched: "#00B894", // Emerald green
 };
 
-export default function OrderStatusPieChart() {
-  const { data, loading, error } = useOrderOverallStatus();
+interface Props {
+  selectedDate: string;
+  displayDate: string;
+}
+
+export default function OrderStatusPieChart({ selectedDate, displayDate }: Props) {
+  const { data, loading, error } = useOrderOverallStatus(selectedDate);
 
   if (loading) {
     return (
@@ -81,7 +86,7 @@ export default function OrderStatusPieChart() {
     <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans">
       <div className="mb-5">
         <h2 className="text-base font-semibold uppercase tracking-wider text-[#D00000] dark:text-[#FF6B6B]">
-          Overall Order Status Count
+          Overall Order Status Count ({displayDate})
         </h2>
 
         <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">

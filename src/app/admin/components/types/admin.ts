@@ -116,9 +116,32 @@ export interface StatusCardData {
   iconColor: string;
 }
 
-
 export type AdminNewImportItem = {
   date: string;       
   dayLabel: string;   
   count: number;
 };
+
+export interface AdminStatusByCustomerDto {
+  customerName: string;
+  toBeIssuedCount: number;
+  r105Count: number;
+  w105Count: number;
+  f105Count: number;
+  dispatchedCount: number;
+}
+
+export interface AdminPaymentByCustomerDto {
+  customerName: string;
+  paymentCleared: number;
+  paymentPending: number;
+}
+
+export interface AdminOverallStatusDto {
+  totalOrders: number;
+  toBeIssuedCount: number;
+  r105Count: number;
+  w105Count: number;
+  f105Count: number;
+  dispatchedCount: number;
+}

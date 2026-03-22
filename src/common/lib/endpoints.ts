@@ -186,6 +186,7 @@ CUSTOMER_SO_BY_MATERIAL: `${API_BASE_URL}/reports/sales-order/customers-by-mater
     SALES_KPIS:              `${API_BASE_URL}/dashboard/sales-kpis`,
     SALES_ACTIVITY:          `${API_BASE_URL}/dashboard/sales-activity`,
     SALES_PAYMENT_CLEARANCE: `${API_BASE_URL}/dashboard/sales-payment-clearance`,
+
     ADMIN_KPIS:              `${API_BASE_URL}/dashboard/admin-kpis`,
     ADMIN_NEW_IMPORTS:       `${API_BASE_URL}/dashboard/admin-new-imports`,
     ADMIN_DISPATCH_SUMMARY:  `${API_BASE_URL}/dashboard/admin-dispatch-summary`,
@@ -194,6 +195,9 @@ CUSTOMER_SO_BY_MATERIAL: `${API_BASE_URL}/reports/sales-order/customers-by-mater
     ADMIN_PAYMENT_BY_ZONE:   `${API_BASE_URL}/dashboard/admin-payment-by-zone`,
     ADMIN_ORDERS_BY_PRODUCT: `${API_BASE_URL}/dashboard/admin-orders-by-product`,
     ADMIN_ORDERS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-orders-by-customer`,
+    ADMIN_UPCOMING_ORDERS:   `${API_BASE_URL}/dashboard/admin-upcoming-orders`,
+    ADMIN_STATUS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-status-by-customer`,
+    ADMIN_PAYMENT_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-payment-by-customer`,
   },
   SO_CHAT: {
     MENTION_USERS: (orderId: number) => `${API_BASE_URL}/so-chat/${orderId}/mention-users`,

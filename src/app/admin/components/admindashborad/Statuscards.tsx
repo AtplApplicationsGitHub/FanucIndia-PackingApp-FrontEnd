@@ -98,8 +98,8 @@ const ErrorBanner = ({ message }: { message: string }) => (
 );
 
 // Main component 
-const StatusCards = () => {
-  const { cards, loading: cardsLoading, error: cardsError } = useStatusCards();
+const StatusCards = ({ selectedDate }: { selectedDate: string }) => {
+  const { cards, loading: cardsLoading, error: cardsError } = useStatusCards(selectedDate);
   const { data: dispatch, loading: dispatchLoading, error: dispatchError } = useDispatchSummary();
 
   // dispatch row cards built from hook data

@@ -1,66 +1,58 @@
 import { useEffect, useState } from "react";
-import { API } from "../../../../common/lib/endpoints";
-import { fetchWithAuth } from "../../../../common/lib/endpoints";
-import { AdminKpisResponse, StatusCardData } from "../types/admin";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
+import type { StatusCardData } from "../types/admin";
 
-export const useStatusCards = () => {
+export const useStatusCards = (selectedDate: string) => {
   const [cards, setCards] = useState<StatusCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchKpis = async () => {
+  const fetchKpis = async (date: string) => {
     try {
       setLoading(true);
-      const res = await fetchWithAuth(API.DASHBOARD.ADMIN_KPIS);
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} – Failed to fetch KPIs`);
-      }
-
-      const data: AdminKpisResponse = await res.json();
+      const url = date ? `${API.DASHBOARD.ADMIN_KPIS}?date=${date}` : API.DASHBOARD.ADMIN_KPIS;
+      const res = await fetchWithAuth(url);
+      if (!res.ok) throw new Error("Failed to fetch KPIs");
+      const data = await res.json();
 
       const formattedCards: StatusCardData[] = [
         {
-          title: "TOTAL SO COUNT",
-          value: data.totalSoCount.toLocaleString("en-IN"),
+          title: "Total Order Count",
+          value: data.totalSoCount.toLocaleString(),
           percentage: `${Math.abs(data.totalSoCountPercentageChange)}%`,
           isPositive: data.totalSoCountPercentageChange >= 0,
           iconType: "cart",
-          iconColor: "text-blue-600",
+          iconColor: "text-blue-500 dark:text-blue-400",
         },
         {
-          title: "DISPATCHED ORDERS",
-          value: data.dispatchedSoCount.toLocaleString("en-IN"),
+          title: "Dispatched Orders",
+          value: data.dispatchedSoCount.toLocaleString(),
           percentage: `${Math.abs(data.dispatchedSoCountPercentageChange)}%`,
           isPositive: data.dispatchedSoCountPercentageChange >= 0,
           iconType: "truck",
-          iconColor: "text-green-600",
+          iconColor: "text-green-500 dark:text-green-400",
         },
         {
-          title: "OVERDUE ORDERS",
-          value: data.overdueSoCount.toLocaleString("en-IN"),
+          title: "Overdue Orders",
+          value: data.overdueSoCount.toLocaleString(),
           percentage: `${Math.abs(data.overdueSoCountPercentageChange)}%`,
-          // lower overdue = positive trend
-          isPositive: data.overdueSoCountPercentageChange <= 0,
+          isPositive: data.overdueSoCountPercentageChange <= 0, // Less overdue is positive
           iconType: "alert",
-          iconColor: "text-red-600",
+          iconColor: "text-red-500 dark:text-red-400",
         },
       ];
-
       setCards(formattedCards);
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-      console.error("useStatusCards →", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchKpis();
-  }, []);
+    fetchKpis(selectedDate);
+  }, [selectedDate]);
 
-  return { cards, loading, error, refetch: fetchKpis };
+  return { cards, loading, error, refetch: () => fetchKpis(selectedDate) };
 };
