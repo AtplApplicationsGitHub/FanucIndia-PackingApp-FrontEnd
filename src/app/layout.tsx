@@ -41,17 +41,24 @@ export default function RootLayout({
           <AppProviders>
             <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
               
-              <div style={{ flexGrow: 1 }}>
+              <div style={{ flexGrow: 1, paddingBottom: "30px" }}>
                 <PageAnimationWrapper>
                     {children}
                 </PageAnimationWrapper>
               </div>
 
               <footer style={{ 
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                width: "100%",
                 textAlign: "center", 
-                // padding: "1rem", 
-                fontSize: "0.875rem", 
-                color: "#888" 
+                padding: "6px", 
+                fontSize: "0.75rem", 
+                color: "#888",
+                backgroundColor: "rgba(var(--background-default), 0.8)", // Slight transparency
+                backdropFilter: "blur(4px)", // Nice glass effect
+                zIndex: 9999
               }}>
                 Version {process.env.NEXT_PUBLIC_APP_VERSION}
               </footer>

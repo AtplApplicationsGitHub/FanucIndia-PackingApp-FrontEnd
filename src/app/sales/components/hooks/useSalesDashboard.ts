@@ -317,11 +317,13 @@ export function useSalesDashboard() {
 
       const cd = res.headers.get("content-disposition") || "";
       const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
+      const fallbackFilename = isBlank ? "Blank_Sales_Orders_Template.xlsx" : "Sales_Orders_Template.xlsx";
+
       const filename =
         (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
         cd.match(/filename="([^"]+)"/i)?.[1] ||
         cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
-        "Sales_Orders_Template.xlsx";
+        fallbackFilename;
 
       const blob = await res.blob();
       secureDownload(blob, filename);
