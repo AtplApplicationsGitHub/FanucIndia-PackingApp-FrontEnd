@@ -43,7 +43,7 @@ export function useCustomerSOCount(fromDate: string | null, toDate: string | nul
         else setRefreshing(true);
 
         try {
-            const url = `${API.ADMIN.CUSTOMER_SO_COUNT}?fromDate=${encodeURIComponent(fromDate)}&toDate=${encodeURIComponent(toDate)}`;
+            const url = `${API.ADMIN.CUSTOMER_SO_COUNT}?startDate=${encodeURIComponent(fromDate)}&endDate=${encodeURIComponent(toDate)}`;
             const res = await fetchWithAuth(url);
 
             if (res.status === 401 || res.status === 403) {

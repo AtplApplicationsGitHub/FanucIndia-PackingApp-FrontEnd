@@ -32,9 +32,7 @@ import TableRowsIcon from "@mui/icons-material/TableRows";
 import { useCustomerSOCount, useCustomerSOByMaterial } from "@/app/admin/components/hooks/useCustomerReport";
 import ClearIcon from "@mui/icons-material/Clear";
 
-// ─────────────────────────────────────────────────────────────
-// Shared chart colors — matches OrderStatusByZone palette
-// ─────────────────────────────────────────────────────────────
+// Shared chart colors 
 const COLORS = {
     tab1Bar: "#FF6B6B",
     tab2Bar: "#3B82F6",
@@ -42,9 +40,7 @@ const COLORS = {
     yellow: "#FFC107",
 };
 
-// ─────────────────────────────────────────────────────────────
-// Chart ↔ Table toggle — MUI Button, no Tailwind
-// ─────────────────────────────────────────────────────────────
+// Chart - Table toggle button
 function ViewToggleButton({
     viewMode,
     onToggle,
@@ -155,7 +151,6 @@ function SOBarChartAndTable({
                     />
                 </Box>
             ) : (
-                /* ── Table — identical structure to FgStorageReportPanel ── */
                 <>
                     <Paper
                         elevation={0}
@@ -236,7 +231,6 @@ function SOBarChartAndTable({
                         </TableContainer>
                     </Paper>
 
-                    {/* Pagination — outside Paper, same as FgStorageReportPanel */}
                     <TablePagination
                         component="div"
                         count={rows.length}
@@ -263,8 +257,8 @@ function CustomerSOCountTab() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-    const fromIso = fromDate?.toISOString() ?? null;
-    const toIso = toDate?.toISOString() ?? null;
+    const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
+    const toIso = toDate?.format("YYYY-MM-DD") ?? null;
 
     const { rows, loading, error } = useCustomerSOCount(fromIso, toIso);
 
@@ -293,7 +287,6 @@ function CustomerSOCountTab() {
                         format="DD-MM-YYYY"
                         onChange={(val) => { setToDate(val); setPage(0); }}
                         minDate={fromDate ?? undefined}
-                        maxDate={dayjs()}
                         slotProps={{
                             textField: {
                                 size: "small",
