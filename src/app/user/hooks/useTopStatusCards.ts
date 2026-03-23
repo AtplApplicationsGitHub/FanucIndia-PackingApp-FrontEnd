@@ -3,6 +3,7 @@ import { API, fetchWithAuth } from "../../../common/lib/endpoints";
 
 interface DashboardStats {
   assignedOrdersCount: number;
+  completedOrdersCount?: number;
 }
 
 interface AdminKpis {
@@ -17,9 +18,10 @@ interface AdminKpis {
 interface TopStatusData {
   assignedOrdersCount: number;
   overdueOrdersCount: number;
+  completedOrdersCount?: number;
 }
 
-export const useTopStatusCards = () => {
+export const useTopStatusCards = (dateStr?: string) => {
   const [data, setData] = useState<TopStatusData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +32,12 @@ export const useTopStatusCards = () => {
         setLoading(true);
         setError(null);
 
+        const statsUrl = dateStr 
+          ? `${API.USER_DASHBOARD.STATS}?date=${dateStr}` 
+          : API.USER_DASHBOARD.STATS;
+
         const [statsResponse, kpisResponse] = await Promise.all([
-          fetchWithAuth(API.USER_DASHBOARD.STATS),
+          fetchWithAuth(statsUrl),
           fetchWithAuth(API.DASHBOARD.ADMIN_KPIS),
         ]);
 
@@ -47,6 +53,7 @@ export const useTopStatusCards = () => {
 
         setData({
           assignedOrdersCount: statsData.assignedOrdersCount ?? 0,
+          completedOrdersCount: statsData.completedOrdersCount,
           overdueOrdersCount: kpisData.overdueSoCount ?? 0,
         });
       } catch (err) {
@@ -58,7 +65,7 @@ export const useTopStatusCards = () => {
     };
 
     fetchData();
-  }, []);
+  }, [dateStr]);
 
   return { data, loading, error };
 };
