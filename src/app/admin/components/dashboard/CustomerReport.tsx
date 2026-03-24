@@ -700,7 +700,7 @@ export default function CustomerReport() {
                         },
                     }}
                 >
-                    <Tab label="Overview" />
+                    <Tab label="Overall Count" />
                     <Tab label="SO's per Customer" />
                     <Tab label="Customer vs Quantity" />
                 </Tabs>
