@@ -294,7 +294,7 @@ function getButtonSx(theme: any) {
 
 // TAB 1
 function TabACards() {
-    const { cards, loading, error } = useStatusCards(dayjs().format("DD-MMM-YYYY"));
+    const { cards, loading, error } = useStatusCards();
 
     if (loading) return (
         <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -425,9 +425,10 @@ function CustomerSOCountTab() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
+    const [cleared, setCleared] = React.useState(false);
 
-    const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
-    const toIso = toDate?.format("YYYY-MM-DD") ?? null;
+    const fromIso = cleared ? null : (fromDate?.format("YYYY-MM-DD") ?? null);
+    const toIso = cleared ? null : (toDate?.format("YYYY-MM-DD") ?? null);
 
     const { rows, loading, error } = useCustomerSOCount(fromIso, toIso);
 
@@ -441,7 +442,7 @@ function CustomerSOCountTab() {
                             label="From"
                             value={fromDate}
                             format="DD-MM-YYYY"
-                            onChange={(val) => { setFromDate(val); setPage(0); }}
+                            onChange={(val) => { setFromDate(val); setPage(0); setCleared(false); }}
                             maxDate={toDate ?? undefined}
                             slotProps={{
                                 textField: {
@@ -454,7 +455,7 @@ function CustomerSOCountTab() {
                             label="To"
                             value={toDate}
                             format="DD-MM-YYYY"
-                            onChange={(val) => { setToDate(val); setPage(0); }}
+                            onChange={(val) => { setToDate(val); setPage(0); setCleared(false); }}
                             minDate={fromDate ?? undefined}
                             slotProps={{
                                 textField: {
@@ -463,13 +464,13 @@ function CustomerSOCountTab() {
                                 },
                             }}
                         />
-                        <Button
-                            onClick={() => { setFromDate(null); setToDate(null); setPage(0); }}
-                            startIcon={<ClearIcon />}
-                            sx={getButtonSx(theme)}
+                        <IconButton
+                            onClick={() => { setFromDate(null); setToDate(null); setPage(0); setCleared(true); }}
+                            size="small"
+                            sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}
                         >
-                            CLEAR
-                        </Button>
+                            <ClearIcon fontSize="small" />
+                        </IconButton>
 
                     </Box>
 

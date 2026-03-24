@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 import type { StatusCardData } from "../types/admin";
 
-export const useStatusCards = (selectedDate: string) => {
+export const useStatusCards = () => {
   const [cards, setCards] = useState<StatusCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchKpis = async (date: string) => {
+  const fetchKpis = async () => {
     try {
       setLoading(true);
-      const url = date ? `${API.DASHBOARD.ADMIN_KPIS}?date=${date}` : API.DASHBOARD.ADMIN_KPIS;
+      const url = API.DASHBOARD.ADMIN_KPIS;
       const res = await fetchWithAuth(url);
       if (!res.ok) throw new Error("Failed to fetch KPIs");
       const data = await res.json();
@@ -51,8 +51,8 @@ export const useStatusCards = (selectedDate: string) => {
   };
 
   useEffect(() => {
-    fetchKpis(selectedDate);
-  }, [selectedDate]);
+    fetchKpis();
+  }, []);
 
-  return { cards, loading, error, refetch: () => fetchKpis(selectedDate) };
+  return { cards, loading, error, refetch: fetchKpis };
 };

@@ -22,7 +22,7 @@ function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
 function normalizeCustomerSOByMaterialRow(item: any): CustomerSOByMaterialRow {
     return {
         customerName: item.customerName ?? "",
-        soCount: item.totalQuantity ?? item.soCount ?? 0, 
+        soCount: item.totalQuantity ?? item.soCount ?? 0,
     };
 }
 
@@ -35,13 +35,15 @@ export function useCustomerSOCount(fromDate: string | null, toDate: string | nul
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = useCallback(async (isSilent = false) => {
-        if (!fromDate || !toDate) return;
+        if (fromDate === undefined || toDate === undefined) return;
 
         if (!isSilent) setLoading(true);
         else setRefreshing(true);
 
         try {
-            const url = `${API.ADMIN.CUSTOMER_SO_COUNT}?startDate=${encodeURIComponent(fromDate)}&endDate=${encodeURIComponent(toDate)}`;
+            const url = fromDate && toDate
+                ? `${API.ADMIN.CUSTOMER_SO_COUNT}?startDate=${encodeURIComponent(fromDate)}&endDate=${encodeURIComponent(toDate)}`
+                : API.ADMIN.CUSTOMER_SO_COUNT;
             const res = await fetchWithAuth(url);
 
             if (res.status === 401 || res.status === 403) {
