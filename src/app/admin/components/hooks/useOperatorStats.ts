@@ -4,8 +4,10 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 export interface OperatorStat {
   operatorName: string;
-  assigned: number;
-  closed: number;
+  issueAssigned: number;
+  issueCompleted: number;
+  packingAssigned: number;
+  packingCompleted: number;
 }
 
 export function useOperatorStats(date?: string) {
