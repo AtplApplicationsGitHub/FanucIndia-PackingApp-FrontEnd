@@ -13,13 +13,13 @@ interface Props {
 
 export default function OrderStatusByZone({ selectedDate, displayDate }: Props) {
   const { data, loading, error, refetch } = useOrderZoneBarChart(selectedDate);
-  const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
+  const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
   // Finalized Colors - Updated to match new palette
   const COLORS = {
     toBeIssued: "#FF6B6B", // Vibrant coral red
     assigned: "#3B82F6", // Professional blue
-    issued: "#FFD93D", // Golden yellow
+    issued: "#D97706", // Dark Amber
     packed: "#6C5CE7", // Purple
     dispatched: "#00B894", // Emerald green
   };

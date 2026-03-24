@@ -24,7 +24,7 @@ const formatNumber = (n: number | string) => {
 
 export default function PaymentClearanceByZone({ selectedDate, displayDate }: Props) {
   const { data: rawData, loading, error } = usePaymentClearanceBarchart(selectedDate);
-  const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
+  const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
   const data = (rawData as unknown as ChartDatum[]) ?? [];
 

@@ -8,6 +8,7 @@ export type FgStorageReportRow = {
     outboundDelivery: string;
     LastUpdatedBy: string;
     dateTime: string;
+    durationText: string;
 };
 
 function normalizeRow(item: any): FgStorageReportRow {
@@ -15,8 +16,9 @@ function normalizeRow(item: any): FgStorageReportRow {
         fgLocation: item.fgLocation ?? null,
         saleOrderNumber: item.saleOrderNumber ?? "",
         outboundDelivery: item.outboundDelivery ?? "",
-        LastUpdatedBy: item.LastUpdatedBy ?? "",
+        LastUpdatedBy: item.LastUpdatedBy === "Unknown" ? "-" : (item.LastUpdatedBy ?? "-"),
         dateTime: item.dateTime ?? "",
+        durationText: item.durationText ?? "-",
     };
 }
 
@@ -49,7 +51,7 @@ export function useFgStorageReport(page: number, rowsPerPage: number, search: st
             const json = await res.json();
             const reportData = json.data?.reportData ?? [];
             setRows(reportData.map(normalizeRow));
-            setTotalCount(json.data?.totalOrders ?? 0);  // for pagination count
+            setTotalCount(json.data?.totalOrders ?? 0);  
             setError(null);
         } catch (err: any) {
             setError(err.message || "Failed to load FG Storage Report");
