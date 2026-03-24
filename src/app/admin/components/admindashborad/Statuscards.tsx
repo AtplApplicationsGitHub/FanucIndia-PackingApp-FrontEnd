@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
 import { ShoppingCart, Truck, AlertTriangle, PackageCheck, Clock, Send } from "lucide-react";
 // import { useStatusCards } from "../hooks/useStatuscards"; // <-- Commented out unused hook
@@ -12,6 +12,12 @@ import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
+
+// --- ADDED MUI ICON AND TOOLTIP IMPORTS ---
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import ClearIcon from "@mui/icons-material/Clear";
 
 // extend iconMap to include dispatch icons 
 const iconMap: Record<string, React.ReactNode> = {
@@ -44,45 +50,78 @@ const StatCard = ({
   selectedDate,
   onDateChange
 }: StatCardProps) => {
+  // Add state to manually control the DatePicker
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
   return (
     <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all flex flex-col justify-center">
       <div className="flex items-start justify-between">
         
         <div className="flex-1 mr-3">
           {/* --- TITLE & INLINE DATE PICKER ROW --- */}
-          <div className="flex items-center flex-wrap gap-3">
+          <div className="flex items-center justify-between gap-3 w-full">
             <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               {title}
             </p>
 
             {hasDatePicker && onDateChange && (
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DesktopDatePicker
-                  value={selectedDate ? dayjs(selectedDate) : null}
-                  onChange={(newDate) => {
-                    const dateString = newDate && dayjs.isDayjs(newDate) && newDate.isValid() ? newDate.format('YYYY-MM-DD') : '';
-                    onDateChange(dateString);
-                  }}
-                  slotProps={{
-                    field: { clearable: true, onClear: () => onDateChange('') },
-                    textField: { 
-                      size: 'small', 
-                      sx: {
-                        width: '200px', // <--- ADJUST THE WIDTH HERE
-                        '& .MuiInputBase-root': { 
-                          borderRadius: '0.4rem', 
-                          height: '32px', // Shorter height
-                          fontSize: '0.85rem' // Smaller text
-                        },
-                        '& .MuiSvgIcon-root': {
-                          fontSize: '1.2rem' // Smaller calendar icon
+              <div className="flex items-center gap-0.5">
+                
+                {selectedDate && (
+                  <span className="text-sm font-medium text-[#4B5563] dark:text-[#E5E7EB] mr-1 mt-0.5">
+                    {dayjs(selectedDate).format('DD-MMM-YYYY')}
+                  </span>
+                )}
+
+                <IconButton 
+                  onClick={() => setCalendarOpen(true)} 
+                  size="small" 
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CalendarMonthIcon fontSize="small" />
+                </IconButton>
+
+                {selectedDate && (
+                  <Tooltip title="Clear Date" arrow placement="top">
+                    <IconButton 
+                      onClick={() => onDateChange('')} 
+                      size="small" 
+                      sx={{ color: "text.secondary" }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DesktopDatePicker
+                    open={calendarOpen}
+                    onClose={() => setCalendarOpen(false)}
+                    value={selectedDate ? dayjs(selectedDate) : null}
+                    onChange={(newDate) => {
+                      const dateString = newDate && dayjs.isDayjs(newDate) && newDate.isValid() ? newDate.format('YYYY-MM-DD') : '';
+                      onDateChange(dateString);
+                    }}
+                    format="DD-MMM-YYYY"
+                    slotProps={{
+                      textField: { 
+                        sx: {
+                          visibility: 'hidden', // Hide the text box visually
+                          width: 0,
+                          height: 0,
+                          padding: 0,
+                          margin: 0,
+                          '& .MuiInputBase-root': {
+                            width: 0,
+                            height: 0,
+                            overflow: 'hidden'
+                          }
                         }
                       }
-                    }
-                  }}
-                  format="DD-MMM-YYYY"
-                />
-              </LocalizationProvider>
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
             )}
           </div>
 
