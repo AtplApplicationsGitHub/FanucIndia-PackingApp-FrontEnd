@@ -91,10 +91,17 @@ export function useReport(filters?: {
             }
 
             const data = await res.json();
-            const arr = data?.data?.orders ?? [];
-            setRows(arr.map(mapToReportRow));
-            setTotalCount(data?.data?.totalOrders ?? 0);
-            setError(null);
+            // NEW
+            const grouped = data?.data?.groupedOrders ?? [];
+            const allRows: ReportRow[] = [];
+            let idx = 0;
+            for (const group of grouped) {
+                for (const order of group.orders ?? []) {
+                    allRows.push(mapToReportRow(order, idx++));
+                }
+            }
+            setRows(allRows);
+            setTotalCount(data?.data?.totalOrders ?? 0); setError(null);
         } catch (err: any) {
             console.error(err);
             setError(err.message || "Failed to load report summary");

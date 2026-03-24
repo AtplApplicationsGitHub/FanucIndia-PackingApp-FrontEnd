@@ -36,14 +36,6 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useStatusCards } from "@/app/admin/components/hooks/useStatuscards";
 
-// Shared chart colors 
-const COLORS = {
-    tab1Bar: "#D97706",
-    tab2Bar: "#3B82F6",
-    primary: "#D00000",
-    yellow: "#FFC107",
-};
-
 // Chart - Table toggle button
 function ViewToggleButton({
     viewMode,
@@ -101,7 +93,6 @@ function SOBarChartAndTable({
 }) {
     const theme = useTheme();
     const lightYellow = alpha(theme.palette.primary.main, 0.25);
-    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
 
     const paginated = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -439,7 +430,7 @@ function CustomerSOCountTab() {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                     {/* Date pickers */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, justifyContent: "center" }}>
                         <DatePicker
                             label="From"
                             value={fromDate}
@@ -549,7 +540,7 @@ function MaterialSOCountTab() {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 {/* Search bar */}
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, justifyContent: "center" }}>
                         {/* FROM date */}
                         <DatePicker
                             label="From"

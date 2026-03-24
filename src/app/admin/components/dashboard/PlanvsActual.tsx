@@ -29,23 +29,27 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
-import { useReport } from "@/app/admin/components/hooks/useReport";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
+import { TableChart } from "@mui/icons-material";
+import { useReport, ReportRow } from "@/app/admin/components/hooks/useReport";
 
 type StageKey = "erpImport" | "issued" | "packed" | "stored" | "storage" | "labelPrint" | "dispatched";
 
+type StageDef = {
+  key: StageKey;
+  line1: string;
+};
 
-// STAGE DEFS — unified green/grey, ERP Import added as first stage 
-
-const STAGE_DEFS: { key: StageKey; statusCode: string; line1: string; line2: string }[] = [
-  { key: "erpImport", statusCode: "", line1: "ERP", line2: "" },
-  { key: "issued", statusCode: "", line1: "R105", line2: "" },
-  { key: "packed", statusCode: "", line1: "W105", line2: "" },
-  { key: "stored", statusCode: "", line1: "F105", line2: "" },
-  { key: "storage", statusCode: "", line1: "Storage", line2: "" },
-  { key: "labelPrint", statusCode: "", line1: "Label Print", line2: "" },
-  { key: "dispatched", statusCode: "", line1: "Dispatched", line2: "" },
+// STAGE DEFINITION
+const STAGE_DEFS: StageDef[] = [
+  { key: "erpImport", line1: "ERP" },
+  { key: "issued", line1: "R105" },
+  { key: "packed", line1: "W105" },
+  { key: "stored", line1: "F105" },
+  { key: "storage", line1: "Storage" },
+  { key: "labelPrint", line1: "Label Print" },
+  { key: "dispatched", line1: "Dispatched" },
 ];
 
 //  STAGE STEPPER — all grey, green tick when done
@@ -58,12 +62,10 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
   const dimText = isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.30)";
   const dimBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
   const dimLine = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-
   return (
     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
       {STAGE_DEFS.map((stage, idx) => {
         const isDone = stages[stage.key] === true;
-        const isActive = false;
         const isLast = idx === STAGE_DEFS.length - 1;
 
         const circleSize = 22;
@@ -81,15 +83,6 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
             color: "#fff",
             boxShadow: `0 0 8px ${GREEN}55`,
           };
-        } else if (isActive) {
-          circleSx = {
-            ...circleSx,
-            bgcolor: "transparent",
-            borderColor: GREEN,
-            color: GREEN,
-            boxShadow: `0 0 0 4px ${GREEN}25`,
-            animation: "activePulse 2s ease-in-out infinite",
-          };
         } else {
           circleSx = {
             ...circleSx,
@@ -99,8 +92,8 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
           };
         }
 
-        const labelColor = isActive ? GREEN : isDone ? (isDark ? "#ffffff" : "#111111") : dimText;
-        const labelWeight = isActive ? 700 : isDone ? 600 : 400;
+        const labelColor = isDone ? (isDark ? "#ffffff" : "#111111") : dimText;
+        const labelWeight = isDone ? 600 : 400;
 
         const nextStage = !isLast ? STAGE_DEFS[idx + 1] : null;
         const nextDone = nextStage ? stages[nextStage.key] : false;
@@ -112,19 +105,10 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
               <Box sx={circleSx}>
                 <CheckIcon sx={{ fontSize: 11, color: isDone ? "#fff" : dimColor }} />
               </Box>
-
               <Box sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.2 }}>
-                <Typography sx={{ fontSize: "9px", fontWeight: 700, color: labelColor, lineHeight: 1.2 }}>
-                  {stage.statusCode}
-                </Typography>
                 <Typography sx={{ fontSize: "8.5px", fontWeight: labelWeight, color: labelColor, lineHeight: 1.2 }}>
                   {stage.line1}
                 </Typography>
-                {stage.line2 && (
-                  <Typography sx={{ fontSize: "8.5px", fontWeight: labelWeight, color: labelColor, lineHeight: 1.2 }}>
-                    {stage.line2}
-                  </Typography>
-                )}
               </Box>
             </Box>
 
@@ -155,6 +139,17 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
     </Box>
   );
 }
+type GroupedRows = { customerName: string; rows: ReportRow[] }[];
+
+function groupRowsByCustomer(rows: ReportRow[]): GroupedRows {
+  const map = new Map<string, ReportRow[]>();
+  for (const row of rows) {
+    const key = row.customerNameText;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(row);
+  }
+  return Array.from(map.entries()).map(([customerName, rows]) => ({ customerName, rows }));
+}
 
 export default function ReportPage() {
   const theme = useTheme();
@@ -169,6 +164,7 @@ export default function ReportPage() {
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+
   const { rows, loading, error, lookup, totalCount } = useReport({
     search: searchInput || undefined,
     payment: paymentFilter || undefined,
@@ -179,6 +175,7 @@ export default function ReportPage() {
     page: currentPage,
     limit: pageSize,
   });
+  const groupedRows = useMemo(() => groupRowsByCustomer(rows), [rows]);
 
   function handleClear() {
     setSearchInput(""); setPaymentFilter(""); setZoneFilter("");
@@ -186,7 +183,7 @@ export default function ReportPage() {
     setCurrentPage(0);
   }
 
-  // ERP IMPORT column removed — now part of the stage timeline
+  // Column Names
   const COLUMNS = [
     { id: "so", label: "SALE ORDER NUMBER", width: 160 },
     { id: "obd", label: "OUT BOUND DELIVERY", width: 170 },
@@ -200,7 +197,7 @@ export default function ReportPage() {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
 
-        {/* ── TOOLBAR ── */}
+        {/* TOOLBAR */}
         <Box sx={{ width: "100%", mt: 1, px: { xs: 1, sm: 2 }, display: "flex", flexDirection: "column", gap: 2 }}>
           <Paper
             elevation={2}
@@ -306,7 +303,7 @@ export default function ReportPage() {
           </Paper>
         </Box>
 
-        {/* ── TABLE ── */}
+        {/* TABLE */}
         <Box sx={{ mt: 2, px: 2 }}>
           {error && (
             <Box sx={{ textAlign: "center", py: 4 }}>
@@ -318,7 +315,6 @@ export default function ReportPage() {
               sx={{
                 minWidth: 980,
                 tableLayout: "fixed",
-                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": { backgroundColor: lightYellow },
                 "& .MuiTableBody-root .MuiTableRow-root:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.2) },
                 "& .MuiTableCell-root": {
                   borderBottom: "none",
@@ -349,77 +345,81 @@ export default function ReportPage() {
               </TableHead>
 
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.rowIndex}>
-                    {/* SO # */}
-                    <TableCell>
-                      <MuiLink
-                        component={Link}
-                        href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
-                        underline="hover"
-                        sx={{ fontWeight: 500 }}
-                      >
-                        {row.saleOrderNumber}
-                      </MuiLink>
-                    </TableCell>
-
-                    {/* OBD # */}
-                    <TableCell sx={{ color: isDark ? "rgba(255,255,255,0.65)" : "text.secondary", fontWeight: 500 }}>
-                      {row.outboundDelivery}
-                    </TableCell>
-
-                    {/* Customer */}
-                    <TableCell sx={{ fontWeight: 500, fontSize: "0.8rem" }}>
-                      {row.customerNameText}
-                    </TableCell>
-
-                    {/* Zone */}
-                    <TableCell sx={{ fontWeight: 500, fontSize: "0.8rem" }}>
-                      {row.salesZone}
-                    </TableCell>
-
-                    {/* Payment */}
-                    <TableCell>
-                      {row.paymentClearance ? (
-                        <Box sx={{
-                          display: "inline-flex", alignItems: "center", justifyContent: "center",
-                          padding: "3px 10px", borderRadius: "16px", border: "1px solid",
-                          borderColor: alpha(theme.palette.success.main, 0.5),
-                          backgroundColor: alpha(theme.palette.success.main, 0.1),
-                          color: theme.palette.success.dark,
-                          fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
-                        }}>
-                          Yes
-                        </Box>
-                      ) : (
-                        <Box sx={{
-                          display: "inline-flex", alignItems: "center", justifyContent: "center",
-                          padding: "3px 10px", borderRadius: "16px", border: "1px solid",
-                          borderColor: alpha(theme.palette.error.main, 0.5),
-                          backgroundColor: alpha(theme.palette.error.main, 0.1),
-                          color: theme.palette.error.main,
-                          fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
-                        }}>
-                          No
-                        </Box>
-                      )}
-                    </TableCell>
-
-                    {/* Stage Timeline */}
-                    <TableCell sx={{ py: 1.5, overflow: "visible", whiteSpace: "normal" }}>
-                      <StageStepper stages={row.stages} />
-                    </TableCell>
-
-                  </TableRow>
-                ))}
-
-                {rows.length === 0 && (
+                {groupedRows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                       <AssessmentOutlinedIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1, display: "block", mx: "auto" }} />
                       <Typography variant="body2" color="text.secondary">No report data found.</Typography>
                     </TableCell>
                   </TableRow>
+                ) : (
+                  groupedRows.map((group) => {
+                    return (
+                      <React.Fragment key={group.customerName}>
+
+                        {/* GROUP HEADER ROW */}
+                        <TableRow sx={{ bgcolor: lightYellow, '&:hover': { bgcolor: lightYellow } }}>
+                          <TableCell colSpan={6} sx={{ py: 1, borderBottom: '1px solid #E0E0E0' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <TableChart sx={{ color: '#D00000', fontSize: 20 }} />
+                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#D00000' }}>
+                                {group.customerName} ({group.rows.length} order{group.rows.length !== 1 ? 's' : ''})
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                        {group.rows.map((row) => (
+                          <TableRow key={row.rowIndex}
+                            sx={{
+                              backgroundColor: "background.paper",
+                              "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.2) },
+                            }}
+                          >
+                            <TableCell>
+                              <MuiLink
+                                component={Link}
+                                href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
+                                underline="hover"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                {row.saleOrderNumber}
+                              </MuiLink>
+                            </TableCell>
+                            <TableCell sx={{ color: isDark ? "rgba(255,255,255,0.65)" : "text.secondary", fontWeight: 500 }}>
+                              {row.outboundDelivery}
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 500, fontSize: "0.8rem" }}>{row.customerNameText}</TableCell>
+                            <TableCell sx={{ fontWeight: 500, fontSize: "0.8rem" }}>{row.salesZone}</TableCell>
+                            <TableCell>
+                              {row.paymentClearance ? (
+                                <Box sx={{
+                                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                  padding: "3px 10px", borderRadius: "16px", border: "1px solid",
+                                  borderColor: alpha(theme.palette.success.main, 0.5),
+                                  backgroundColor: alpha(theme.palette.success.main, 0.1),
+                                  color: theme.palette.success.dark,
+                                  fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
+                                }}>Yes</Box>
+                              ) : (
+                                <Box sx={{
+                                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                  padding: "3px 10px", borderRadius: "16px", border: "1px solid",
+                                  borderColor: alpha(theme.palette.error.main, 0.5),
+                                  backgroundColor: alpha(theme.palette.error.main, 0.1),
+                                  color: theme.palette.error.main,
+                                  fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
+                                }}>No</Box>
+                              )}
+                            </TableCell>
+                            <TableCell sx={{ py: 1.5, overflow: "visible", whiteSpace: "normal" }}>
+                              <StageStepper stages={row.stages} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
