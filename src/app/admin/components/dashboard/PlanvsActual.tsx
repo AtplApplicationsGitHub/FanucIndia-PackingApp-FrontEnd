@@ -361,8 +361,8 @@ export default function ReportPage() {
                         <TableRow sx={{ bgcolor: lightYellow, '&:hover': { bgcolor: lightYellow } }}>
                           <TableCell colSpan={6} sx={{ py: 1, borderBottom: '1px solid #E0E0E0' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <TableChart sx={{ color: '#D00000', fontSize: 20 }} />
-                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#D00000' }}>
+                              <TableChart sx={{ color: isDark ?'#FFF':'#D00000', fontSize: 20 }} />
+                              <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ?   '#FFF': '#D00000' }}>
                                 {group.customerName} ({group.rows.length} order{group.rows.length !== 1 ? 's' : ''})
                               </Typography>
                             </Box>
