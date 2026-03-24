@@ -70,9 +70,15 @@ export const API = {
   const qs = query.toString();
   return `${API_BASE_URL}/reports/sales-order/summary${qs ? '?' + qs : ''}`;
 },
+//Customer report
 CUSTOMER_SO_COUNT:       `${API_BASE_URL}/reports/sales-order/customer-report`,
-CUSTOMER_SO_BY_MATERIAL: `${API_BASE_URL}/reports/sales-order/customers-by-material`,
-
+CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate?: string | null) => {
+    const query = new URLSearchParams();
+    if (fromDate) query.set("startDate", fromDate);
+    if (toDate)   query.set("endDate",   toDate);
+    const qs = query.toString();
+    return `${API_BASE_URL}/reports/sales-order/customers-by-material/${encodeURIComponent(materialCode)}${qs ? "?" + qs : ""}`;
+},
 // ASSIGN SO 
     ACTIVE_EXPORT_LIST:                               `${API_BASE_URL}/admin/sales-orders/active-export-list`,
    USED_CUSTOMERS:                                     `${API_BASE_URL}/admin/sales-orders/used-customers`,

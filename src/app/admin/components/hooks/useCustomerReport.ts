@@ -80,7 +80,10 @@ export function useCustomerSOByMaterial() {
     const [error, setError] = useState<string | null>(null);
     const [notFound, setNotFound] = useState(false);
 
-    const fetchData = useCallback(async (materialCode: string, isSilent = false) => {
+    const fetchData = useCallback(async (materialCode: string,
+        fromDate?: string | null,
+        toDate?: string | null,
+        isSilent = false) => {
         if (!materialCode) return;
 
         if (!isSilent) setLoading(true);
@@ -89,7 +92,7 @@ export function useCustomerSOByMaterial() {
         setError(null);
 
         try {
-            const url = `${API.ADMIN.CUSTOMER_SO_BY_MATERIAL}/${encodeURIComponent(materialCode)}`;
+            const url = API.ADMIN.CUSTOMER_SO_BY_MATERIAL(materialCode, fromDate, toDate);
             const res = await fetchWithAuth(url);
 
             if (res.status === 401 || res.status === 403) {

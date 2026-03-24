@@ -522,6 +522,11 @@ function MaterialSOCountTab() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
+    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs());
+    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
+
+    const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
+    const toIso = toDate?.format("YYYY-MM-DD") ?? null;
 
     const { rows, loading, error, notFound, fetch: fetchByMaterial } = useCustomerSOByMaterial();
 
@@ -530,82 +535,129 @@ function MaterialSOCountTab() {
         if (!code) return;
         setCommittedCode(code);
         setPage(0);
-        fetchByMaterial(code);
+        fetchByMaterial(code, fromIso, toIso);
     };
+
+    React.useEffect(() => {
+        if (!committedCode) return;
+        fetchByMaterial(committedCode, fromIso, toIso);
+        setPage(0);
+    }, [fromIso, toIso]);
 
     return (
         <Box>
-            {/* Search bar */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }}>
-                    <Paper component="form" onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-                        sx={{
-                            p: "2px 4px", display: "flex", alignItems: "center",
-                            width: 260, border: 1,
-                            borderColor: (t) => t.palette.mode === "dark" ? "rgba(255,255,255,0.23)" : "#e0e0e0",
-                            borderRadius: "4px", height: 40, bgcolor: "background.paper", boxShadow: "none",
-                        }}
-                    >
-                        <InputBase
-                            sx={{ ml: 1, flex: 1, fontSize: "13px" }}
-                            placeholder="e.g. MAT-001-K22"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                            inputProps={{ "aria-label": "material code search" }}
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                {/* Search bar */}
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }}>
+                        {/* FROM date */}
+                        <DatePicker
+                            label="From"
+                            value={fromDate}
+                            format="DD-MM-YYYY"
+                            onChange={(val) => { setFromDate(val); setPage(0); }}
+                            maxDate={toDate ?? undefined}
+                            slotProps={{
+                                textField: {
+                                    size: "small",
+                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
+                                },
+                            }}
                         />
-                        {inputValue && (
-                            <IconButton sx={{ p: "5px" }} onClick={() => { setInputValue(""); setCommittedCode(null); }}>
-                                <ClearIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                        )}
-                        <IconButton type="submit" sx={{ p: "5px" }} disabled={!inputValue.trim()}>
-                            <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                        </IconButton>
-                    </Paper>
-                    <Button onClick={handleSearch} disabled={!inputValue.trim()} sx={getButtonSx(theme)}>
-                        Search
-                    </Button>
-                </Box>
 
-                {/* Toggle pinned to right */}
-                <ViewToggleButton
-                    viewMode={viewMode}
-                    onToggle={() => setViewMode(v => v === "chart" ? "table" : "chart")}
-                />
-            </Box>
-            {committedCode && loading && (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                    <CircularProgress size={28} />
+                        {/* TO date */}
+                        <DatePicker
+                            label="To"
+                            value={toDate}
+                            format="DD-MM-YYYY"
+                            onChange={(val) => { setToDate(val); setPage(0); }}
+                            minDate={fromDate ?? undefined}
+                            slotProps={{
+                                textField: {
+                                    size: "small",
+                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
+                                },
+                            }}
+                        />
+
+                        {/* Clear dates X */}
+                        <IconButton
+                            onClick={() => { setFromDate(null); setToDate(null); setPage(0); }}
+                            size="small"
+                            sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}
+                        >
+                            <ClearIcon fontSize="small" />
+                        </IconButton>
+
+                        <Paper component="form" onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+                            sx={{
+                                p: "2px 4px", display: "flex", alignItems: "center",
+                                width: 260, border: 1,
+                                borderColor: (t) => t.palette.mode === "dark" ? "rgba(255,255,255,0.23)" : "#e0e0e0",
+                                borderRadius: "4px", height: 40, bgcolor: "background.paper", boxShadow: "none",
+                            }}
+                        >
+                            <InputBase
+                                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                                placeholder="e.g. MAT-001-K22"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                                inputProps={{ "aria-label": "material code search" }}
+                            />
+                            {inputValue && (
+                                <IconButton sx={{ p: "5px" }} onClick={() => { setInputValue(""); setCommittedCode(null); }}>
+                                    <ClearIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            )}
+                            <IconButton type="submit" sx={{ p: "5px" }} disabled={!inputValue.trim()}>
+                                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                            </IconButton>
+                        </Paper>
+                        <Button onClick={handleSearch} disabled={!inputValue.trim()} sx={getButtonSx(theme)}>
+                            Search
+                        </Button>
+                    </Box>
+
+                    {/* Toggle pinned to right */}
+                    <ViewToggleButton
+                        viewMode={viewMode}
+                        onToggle={() => setViewMode(v => v === "chart" ? "table" : "chart")}
+                    />
                 </Box>
-            )}
-            {committedCode && !loading && error && (
-                <Typography color="error" variant="body2" sx={{ py: 4, textAlign: "center" }}>
-                    {error}
-                </Typography>
-            )}
-            {committedCode && !loading && !error && notFound && (
-                <Typography variant="body2" color="error" sx={{ py: 8, textAlign: "center" }}>
-                    No data found for material code{" "}
-                    <Box component="span" sx={{ fontWeight: 700 }}>{committedCode}</Box>.
-                </Typography>
-            )}
-            {committedCode && !loading && !error && !notFound && rows.length > 0 && (
-                <SOBarChartAndTable
-                    rows={rows}
-                    barColor={chartBlue}
-                    barLabel={`Quantity — ${committedCode}`}
-                    emptyMessage="No customers found."
-                    page={page}
-                    setPage={setPage}
-                    rowsPerPage={rowsPerPage}
-                    setRowsPerPage={setRowsPerPage}
-                    yAxisLabel="Total Quantity"
-                    countColumnLabel="QUANTITY"
-                    viewMode={viewMode}
-                    onToggleView={() => setViewMode(v => v === "chart" ? "table" : "chart")}
-                />
-            )}
+                {committedCode && loading && (
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                        <CircularProgress size={28} />
+                    </Box>
+                )}
+                {committedCode && !loading && error && (
+                    <Typography color="error" variant="body2" sx={{ py: 4, textAlign: "center" }}>
+                        {error}
+                    </Typography>
+                )}
+                {committedCode && !loading && !error && notFound && (
+                    <Typography variant="body2" color="error" sx={{ py: 8, textAlign: "center" }}>
+                        No data found for material code{" "}
+                        <Box component="span" sx={{ fontWeight: 700 }}>{committedCode}</Box>.
+                    </Typography>
+                )}
+                {committedCode && !loading && !error && !notFound && rows.length > 0 && (
+                    <SOBarChartAndTable
+                        rows={rows}
+                        barColor={chartBlue}
+                        barLabel={`Quantity — ${committedCode}`}
+                        emptyMessage="No customers found."
+                        page={page}
+                        setPage={setPage}
+                        rowsPerPage={rowsPerPage}
+                        setRowsPerPage={setRowsPerPage}
+                        yAxisLabel="Total Quantity"
+                        countColumnLabel="QUANTITY"
+                        viewMode={viewMode}
+                        onToggleView={() => setViewMode(v => v === "chart" ? "table" : "chart")}
+                    />
+                )}
+            </LocalizationProvider>
         </Box>
     );
 }
