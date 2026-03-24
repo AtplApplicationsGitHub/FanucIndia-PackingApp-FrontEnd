@@ -69,6 +69,23 @@ export default function ResetPasswordDialog({
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [actualRole, setActualRole] = useState<UserRole>(userRole || "USER");
+
+  React.useEffect(() => {
+    if (open) {
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          if (userObj && userObj.role) {
+            setActualRole(userObj.role);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse user from local storage", e);
+      }
+    }
+  }, [open, userRole]);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -81,7 +98,7 @@ export default function ResetPasswordDialog({
   };
 
   const newPassword = watch("newPassword", "");
-  const isUserRole = userRole === "USER";
+  const isUserRole = actualRole === "USER";
 
   const passwordStatus = useMemo(() => {
     if (isUserRole) return [pinValidation.check(newPassword)];

@@ -19,6 +19,7 @@ import { useOperatorStats } from "../hooks/useOperatorStats";
 
 export default function OperatorStatsTable({ selectedDate }: { selectedDate: string }) {
   const theme = useTheme();
+  // Ensure your useOperatorStats hook maps the new properties if it has strict TypeScript interfaces
   const { data, loading, error } = useOperatorStats(selectedDate);
 
   return (
@@ -44,7 +45,7 @@ export default function OperatorStatsTable({ selectedDate }: { selectedDate: str
             OPERATOR PRODUCTIVITY
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Assigned vs Closed Orders
+            Issue & Packing Stage Tracking
           </Typography>
         </div>
       </Box>
@@ -57,21 +58,23 @@ export default function OperatorStatsTable({ selectedDate }: { selectedDate: str
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, bgcolor: "background.paper" }}>OPERATOR NAME</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper" }}>ASSIGNED</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper" }}>CLOSED</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>ISSUE<br/>ASSIGNED</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>ISSUE<br/>COMPLETED</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>PACKING<br/>ASSIGNED</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>PACKING<br/>COMPLETED</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 3 }}>Loading...</TableCell>
+                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>Loading...</TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 3 }}>No operators found.</TableCell>
+                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>No operators found.</TableCell>
                 </TableRow>
               ) : (
-                data.map((row, idx) => (
+                data.map((row: any, idx: number) => (
                   <TableRow 
                     key={idx}
                     sx={{
@@ -80,22 +83,47 @@ export default function OperatorStatsTable({ selectedDate }: { selectedDate: str
                     }}
                   >
                     <TableCell sx={{ fontWeight: 500 }}>{row.operatorName}</TableCell>
+                    
+                    {/* ISSUE ASSIGNED (Blue) */}
                     <TableCell align="center">
                       <Box sx={{ 
                         display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
                         bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 600
                       }}>
-                        {row.assigned}
+                        {row.issueAssigned}
                       </Box>
                     </TableCell>
+
+                    {/* ISSUE COMPLETED (Green) */}
                     <TableCell align="center">
                       <Box sx={{ 
                         display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
                         bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 600
                       }}>
-                        {row.closed}
+                        {row.issueCompleted}
                       </Box>
                     </TableCell>
+
+                    {/* PACKING ASSIGNED (Blue) */}
+                    <TableCell align="center">
+                      <Box sx={{ 
+                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
+                        bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 600
+                      }}>
+                        {row.packingAssigned}
+                      </Box>
+                    </TableCell>
+
+                    {/* PACKING COMPLETED (Green) */}
+                    <TableCell align="center">
+                      <Box sx={{ 
+                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
+                        bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 600
+                      }}>
+                        {row.packingCompleted}
+                      </Box>
+                    </TableCell>
+
                   </TableRow>
                 ))
               )}

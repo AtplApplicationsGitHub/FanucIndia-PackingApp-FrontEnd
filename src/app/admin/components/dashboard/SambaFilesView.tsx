@@ -52,6 +52,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
 
   const [activeTab, setActiveTab] = useState("ACTIVE");
   const [search, setSearch] = useState("");
+  const [searchStr, setSearchStr] = useState("");
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
     return new Date(today.getTime() - today.getTimezoneOffset() * 60000)
@@ -71,6 +72,8 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const [dbLogs, setDbLogs] = useState<any[]>([]);
+
   const [sftpStatus, setSftpStatus] = useState<
     "UP" | "DOWN" | "UNKNOWN" | "LOADING"
   >("UNKNOWN");
@@ -81,6 +84,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     handleCheckSambaStatus();
     fetchAllFiles();
+    fetchDbLogs();
   }, []);
 
   const fetchAllFiles = async () => {
@@ -105,8 +109,39 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   };
 
   useEffect(() => {
-    setSelectedFiles([]);
-    setPage(0);
+    if (activeTab === "LOGS") {
+      fetchDbLogs();
+    } else {
+      fetchFiles(activeTab);
+      setSelectedFiles([]);
+      setSearch("");
+      setPage(0);
+    }
+  }, [activeTab, selectedDate]);
+
+  const fetchDbLogs = async () => {
+    setLoading(true);
+    try {
+      // Fetch without date constraint to get recent logs
+      const url = `${API.SAMBA.FILES.replace('/files', '/db-logs')}`;
+      const res = await fetchWithAuth(url);
+      if (res.ok) {
+        setDbLogs(await res.json());
+      }
+    } catch (error) {
+      console.error("Failed to fetch DB logs", error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab !== "LOGS") {
+      fetchFiles(activeTab);
+      setSelectedFiles([]);
+      setSearch("");
+      setSearchStr("");
+      setPage(0);
+    }
   }, [activeTab]);
 
   const handleCheckSambaStatus = async () => {
@@ -167,21 +202,6 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     setDownloading(false);
 };
 
-  const getTabCount = (tab: string) => {
-    const tabFiles = filesByTab[tab] || [];
-    return tabFiles.filter((f) => {
-      if (selectedDate) {
-        const fileDate = f.createdDatetime
-          ? new Date(f.createdDatetime).toISOString().split("T")[0]
-          : "";
-        if (fileDate !== selectedDate) return false;
-      }
-      if (search && !f.filename.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      return true;
-    }).length;
-  };
-
   const filteredFiles = useMemo(() => {
     const currentFiles = filesByTab[activeTab] || [];
     return currentFiles
@@ -206,6 +226,48 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
         return dateA - dateB;
       });
   }, [filesByTab, activeTab, search, selectedDate]);
+
+  const filteredDbLogs = useMemo(() => {
+    return dbLogs.filter((log) => {
+      // 1. Date Filter
+      if (selectedDate) {
+        const logD = new Date(log.createdAt);
+        const istDate = new Date(logD.getTime() + 5.5 * 60 * 60 * 1000);
+        const fileDate = istDate.toISOString().split("T")[0];
+        if (fileDate !== selectedDate) return false;
+      }
+      // 2. Search Filter
+      if (search) {
+        const s = search.toLowerCase();
+        if (
+          !log.saleOrderNumber.toLowerCase().includes(s) &&
+          !log.status.toLowerCase().includes(s) &&
+          !(log.message && log.message.toLowerCase().includes(s))
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [dbLogs, search, selectedDate]);
+
+  const getTabCount = (tab: string) => {
+    if (tab === "LOGS") {
+      return filteredDbLogs.length; // Returns dynamic count for logs
+    }
+    const tabFiles = filesByTab[tab] || [];
+    return tabFiles.filter((f) => {
+      if (selectedDate) {
+        const fileDate = f.createdDatetime
+          ? new Date(f.createdDatetime).toISOString().split("T")[0]
+          : "";
+        if (fileDate !== selectedDate) return false;
+      }
+      if (search && !f.filename.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      return true;
+    }).length;
+  };
 
   const paginatedFiles = filteredFiles.slice(
     page * rowsPerPage,
@@ -264,47 +326,49 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
             </IconButton>
           </Tooltip>
 
-          {/* NEW: MUI Desktop Date Picker Filter */}
+          {/* Date Picker Filter */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DesktopDatePicker
               format="DD-MM-YYYY"
               value={selectedDate ? dayjs(selectedDate) : null}
+              disabled
               onChange={(newDate) => {
                 if (newDate && newDate.isValid()) {
                   setSelectedDate(newDate.format("YYYY-MM-DD"));
-                } else {
-                  setSelectedDate("");
                 }
                 setPage(0);
               }}
               slotProps={{
-                field: {
-                  clearable: true,
-                  onClear: () => {
-                    setSelectedDate("");
-                    setPage(0);
-                  },
-                },
                 textField: {
                   size: "small",
                   placeholder: "Select Date",
                   sx: {
                     width: { xs: "170px", sm: "200px" },
                     "& .MuiInputBase-root": { borderRadius: 1.5 },
+                    // This forces the disabled text to appear in solid primary text color
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: theme.palette.text.primary,
+                      color: theme.palette.text.primary,
+                    },
                   },
                 },
               }}
             />
           </LocalizationProvider>
 
+          {/* Search Bar */}
           <TextField
             placeholder={`Search ${activeTab.toLowerCase()}...`}
             variant="outlined"
             size="small"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
+            value={searchStr} // Bind to the typing state, not the active filter
+            onChange={(e) => setSearchStr(e.target.value)}
+            onKeyDown={(e) => {
+              // Apply the filter ONLY when Enter is pressed
+              if (e.key === 'Enter') {
+                setSearch(searchStr);
+                setPage(0);
+              }
             }}
             sx={{ width: { xs: "150px", sm: "220px" } }}
             InputProps={{
@@ -313,6 +377,21 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                   <SearchIcon fontSize="small" />
                 </InputAdornment>
               ),
+              endAdornment: searchStr ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSearchStr("");
+                      setSearch("");
+                      setPage(0);
+                    }}
+                    edge="end"
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
               sx: { borderRadius: 1.5 },
             }}
           />
@@ -466,104 +545,126 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                 },
               }}
             >
-              <TableHead
-                sx={{
-                  bgcolor:
-                    theme.palette.mode === "dark" ? "#000000" : "#ffffff",
-                }}
-              >
-                <TableRow sx={{ height: 50 }}>
-                  <TableCell padding="checkbox" align="center">
-                    <Checkbox
-                      checked={isAllSelected}
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: 700, width: "10%" }}
+              {activeTab === "LOGS" ? (
+                <>
+                  <TableHead
+                    sx={{
+                      bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                    }}
                   >
-                    S.No
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: 700, width: "45%" }}
-                  >
-                    Filename
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: 700, width: "25%" }}
-                  >
-                    Created DateTime
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
-                      <CircularProgress size={30} />
-                    </TableCell>
-                  </TableRow>
-                ) : paginatedFiles.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      align="center"
-                      sx={{ py: 5, bgcolor: lightYellow }}
-                    >
-                      No files found in {activeTab}.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedFiles.map((row, index) => (
-                    <TableRow key={row.filename}>
-                      <TableCell padding="checkbox" align="center">
-                        <Checkbox
-                          checked={selectedFiles.includes(row.filename)}
-                          onChange={() => handleSelectOne(row.filename)}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        {page * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 500 }}>
-                        {row.filename}
-                      </TableCell>
-                      <TableCell align="center">
-                        {row.createdDatetime
-                          ? new Date(row.createdDatetime).toLocaleString()
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Download File">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDownload([row.filename])}
-                            sx={{
-                              color:
-                                theme.palette.mode === "dark"
-                                  ? "#90caf9"
-                                  : "#1976d2",
-                            }}
-                          >
-                            <FileDownloadOutlinedIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
+                    <TableRow sx={{ height: 50 }}>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: "10%" }}>S.No</TableCell>
+                      {/* Left Aligned */}
+                      <TableCell align="left" sx={{ fontWeight: 700, width: "20%" }}>SO Number</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: "15%" }}>Status</TableCell>
+                      {/* Left Aligned */}
+                      <TableCell align="left" sx={{ fontWeight: 700, width: "35%" }}>Message</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: "20%" }}>Timestamp</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
+                          <CircularProgress size={30} />
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredDbLogs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 5, bgcolor: lightYellow }}>
+                          No logs found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredDbLogs
+                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                        .map((log, index) => (
+                          <TableRow key={log.id}>
+                            <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+                            {/* Left Aligned */}
+                            <TableCell align="left" sx={{ fontWeight: 600 }}>{log.saleOrderNumber}</TableCell>
+                            <TableCell align="center">
+                              <span style={{ color: log.status === "Success" ? "green" : "red", fontWeight: 600 }}>
+                                {log.status}
+                              </span>
+                            </TableCell>
+                            {/* Left Aligned */}
+                            <TableCell align="left">{log.message}</TableCell>
+                            <TableCell align="center">{new Date(log.createdAt).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </>
+              ) : (
+                <>
+                  <TableHead
+                    sx={{
+                      bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                    }}
+                  >
+                    <TableRow sx={{ height: 50 }}>
+                      <TableCell padding="checkbox" align="center">
+                        <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: "10%" }}>S.No</TableCell>
+                      {/* Left Aligned */}
+                      <TableCell align="left" sx={{ fontWeight: 700, width: "45%" }}>Filename</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: "25%" }}>Created DateTime</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
+                          <CircularProgress size={30} />
+                        </TableCell>
+                      </TableRow>
+                    ) : paginatedFiles.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 5, bgcolor: lightYellow }}>
+                          No files found in {activeTab}.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedFiles.map((row, index) => (
+                        <TableRow key={row.filename}>
+                          <TableCell padding="checkbox" align="center">
+                            <Checkbox
+                              checked={selectedFiles.includes(row.filename)}
+                              onChange={() => handleSelectOne(row.filename)}
+                            />
+                          </TableCell>
+                          <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+                          {/* Left Aligned */}
+                          <TableCell align="left" sx={{ fontWeight: 500 }}>{row.filename}</TableCell>
+                          <TableCell align="center">
+                            {row.createdDatetime ? new Date(row.createdDatetime).toLocaleString() : "N/A"}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Download File">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDownload([row.filename])}
+                                sx={{ color: theme.palette.mode === "dark" ? "#90caf9" : "#1976d2" }}
+                              >
+                                <FileDownloadOutlinedIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </>
+              )}
             </Table>
           </TableContainer>
           <TablePagination
             component="div"
-            count={filteredFiles.length}
+            // Ensure count uses filteredDbLogs for the LOGS tab
+            count={activeTab === "LOGS" ? filteredDbLogs.length : filteredFiles.length}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}

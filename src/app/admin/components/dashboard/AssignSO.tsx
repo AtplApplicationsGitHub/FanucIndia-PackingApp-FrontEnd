@@ -62,6 +62,7 @@ export default function AssignSO() {
     downloadErpData,
     dynamicCounts,
     fetchDynamicCounts,
+    refresh,
   } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
@@ -109,9 +110,8 @@ export default function AssignSO() {
       message: "ERP data imported successfully!",
       severity: "success",
     });
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+    
+    refresh(); 
   };
 
   const onClear = () => {
@@ -385,6 +385,60 @@ export default function AssignSO() {
     pendingImportFilter,
     fetchDynamicCounts,
   ]);
+
+  const availableCustomers = React.useMemo(() => {
+    const ordersMatchingOtherFilters = orders.filter((order) => {
+      const searchStr = searchInput.toLowerCase();
+      const productName = (order.product?.name || findName(lookup.products, order.productId ?? 0) || "").toLowerCase();
+      const salesZoneName = (order.salesZone?.name || findName(lookup.salesZones, order.salesZoneId ?? 0) || "").toLowerCase();
+      const assignedUserName = (order.assignedUser?.name || findName(lookup.assignableUsers, order.assignedUserId ?? 0) || "").toLowerCase();
+      const paymentString = order.paymentClearance ? "yes" : "no";
+
+      const matchesSearch = !searchInput ||
+        (order.saleOrderNumber || "").toLowerCase().includes(searchStr) ||
+        (order.outboundDelivery || "").toLowerCase().includes(searchStr) ||
+        (order.customerNameText || "").toLowerCase().includes(searchStr) ||
+        (order.transferOrder || "").toLowerCase().includes(searchStr) ||
+        (order.status || "").toLowerCase().includes(searchStr) ||
+        (order.priority !== null && order.priority !== undefined ? String(order.priority) : "").includes(searchStr) ||
+        productName.includes(searchStr) ||
+        salesZoneName.includes(searchStr) ||
+        assignedUserName.includes(searchStr) ||
+        paymentString.includes(searchStr);
+
+      const matchesPayment = !paymentFilter || (paymentFilter === "true" ? order.paymentClearance : !order.paymentClearance);
+      const matchesZone = !zoneFilter || String(order.salesZoneId) === zoneFilter;
+      const matchesStatus = !statusFilter || (statusFilter === "None" ? !order.status : order.status === statusFilter);
+
+      let matchesDate = true;
+      if (startDate || endDate) {
+        const orderDate = order.deliveryDate ? new Date(order.deliveryDate) : null;
+        if (!orderDate) matchesDate = false;
+        else {
+          const d = new Date(orderDate);
+          d.setHours(0, 0, 0, 0);
+          if (startDate) {
+            const s = new Date(startDate);
+            s.setHours(0, 0, 0, 0);
+            if (d < s) matchesDate = false;
+          }
+          if (endDate) {
+            const e = new Date(endDate);
+            e.setHours(0, 0, 0, 0);
+            if (d > e) matchesDate = false;
+          }
+        }
+      }
+
+      const matchesPendingImport = !pendingImportFilter || !order.hasMaterialData;
+
+      return matchesSearch && matchesPayment && matchesZone && matchesStatus && matchesDate && matchesPendingImport;
+    });
+
+    const activeNames = new Set(ordersMatchingOtherFilters.map(o => (o.customerNameText || "").toLowerCase()).filter(Boolean));
+    
+    return lookup.customers.filter(c => activeNames.has(c.name.toLowerCase()));
+  }, [orders, searchInput, paymentFilter, zoneFilter, statusFilter, startDate, endDate, pendingImportFilter, lookup.customers]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -875,7 +929,7 @@ export default function AssignSO() {
           salesZones={lookup.salesZones}
           customerFilter={customerFilter}
           onCustomerFilterChange={setCustomerFilter}
-          customers={lookup.customers}
+          customers={availableCustomers}
           startDate={startDate}
           onStartDateChange={setStartDate}
           endDate={endDate}
