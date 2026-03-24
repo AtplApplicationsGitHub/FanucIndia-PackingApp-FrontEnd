@@ -204,7 +204,7 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
-      setSelectedIds([]);
+      // setSelectedIds([]); // Removed so checkboxes stay selected
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -264,7 +264,7 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
-      setSelectedIds([]);
+      // setSelectedIds([]); 
     } catch (err: any) {
       setSnackbar({
         open: true,
