@@ -101,6 +101,7 @@ function SOBarChartAndTable({
 }) {
     const theme = useTheme();
     const lightYellow = alpha(theme.palette.primary.main, 0.25);
+    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
 
     const paginated = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -420,6 +421,7 @@ function TabACards() {
 // TAB 2
 function CustomerSOCountTab() {
     const theme = useTheme();
+    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
     const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs());
     const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
     const [page, setPage] = React.useState(0);
@@ -495,7 +497,7 @@ function CustomerSOCountTab() {
             {!loading && !error && (
                 <SOBarChartAndTable
                     rows={rows}
-                    barColor={COLORS.tab1Bar}
+                    barColor={chartBlue}
                     barLabel="SO Count"
                     emptyMessage="No data for the selected date range."
                     page={page}
@@ -514,6 +516,7 @@ function CustomerSOCountTab() {
 // TAB 3
 function MaterialSOCountTab() {
     const theme = useTheme();
+    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
     const [inputValue, setInputValue] = React.useState("");
     const [committedCode, setCommittedCode] = React.useState<string | null>(null);
     const [page, setPage] = React.useState(0);
@@ -590,7 +593,7 @@ function MaterialSOCountTab() {
             {committedCode && !loading && !error && !notFound && rows.length > 0 && (
                 <SOBarChartAndTable
                     rows={rows}
-                    barColor={COLORS.tab2Bar}
+                    barColor={chartBlue}
                     barLabel={`Quantity — ${committedCode}`}
                     emptyMessage="No customers found."
                     page={page}
