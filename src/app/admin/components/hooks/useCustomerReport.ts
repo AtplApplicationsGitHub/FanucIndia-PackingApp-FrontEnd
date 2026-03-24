@@ -12,8 +12,6 @@ export type CustomerSOByMaterialRow = {
     soCount: number;
 };
 
-
-
 function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
     return {
         customerName: item.customerName ?? "",
@@ -24,7 +22,7 @@ function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
 function normalizeCustomerSOByMaterialRow(item: any): CustomerSOByMaterialRow {
     return {
         customerName: item.customerName ?? "",
-        soCount: item.totalQuantity ?? item.soCount ?? 0,  // API returns totalQuantity
+        soCount: item.totalQuantity ?? item.soCount ?? 0, 
     };
 }
 

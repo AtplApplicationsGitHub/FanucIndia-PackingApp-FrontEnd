@@ -66,7 +66,7 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
         const isActive = false;
         const isLast = idx === STAGE_DEFS.length - 1;
 
-        const circleSize = 34;
+        const circleSize = 22;
         let circleSx: any = {
           width: circleSize, height: circleSize, borderRadius: "50%",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -99,7 +99,7 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
           };
         }
 
-        const labelColor = isDone || isActive ? GREEN : dimText;
+        const labelColor = isActive ? GREEN : isDone ? (isDark ? "#ffffff" : "#111111") : dimText;
         const labelWeight = isActive ? 700 : isDone ? 600 : 400;
 
         const nextStage = !isLast ? STAGE_DEFS[idx + 1] : null;
@@ -108,9 +108,9 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
         return (
           <Box key={stage.key} sx={{ display: "flex", alignItems: "flex-start" }}>
             {/* Node + label */}
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 52 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 36 }}>
               <Box sx={circleSx}>
-                <CheckIcon sx={{ fontSize: 15, color: isDone ? "#fff" : dimColor }} />
+                <CheckIcon sx={{ fontSize: 11, color: isDone ? "#fff" : dimColor }} />
               </Box>
 
               <Box sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.2 }}>
@@ -132,8 +132,8 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
             {!isLast && (
               <Box
                 sx={{
-                  mt: `${(34 / 2) - 1}px`,
-                  width: 36,
+                  mt: `${(22 / 2) - 1}px`,
+                  width: 18,
                   height: 2,
                   borderRadius: 1,
                   flexShrink: 0,
@@ -193,7 +193,7 @@ export default function ReportPage() {
     { id: "customer", label: "CUSTOMER NAME", width: 160 },
     { id: "zone", label: "SALES ZONE", width: 100 },
     { id: "payment", label: "PAYMENT", width: 90 },
-    { id: "stages", label: "STATUS TIMELINE", width: 500 },
+    { id: "stages", label: "STATUS TIMELINE", width: 340 },
   ];
 
   return (
@@ -316,7 +316,7 @@ export default function ReportPage() {
           <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, overflowX: "auto" }}>
             <Table
               sx={{
-                minWidth: 1150,
+                minWidth: 980,
                 tableLayout: "fixed",
                 "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": { backgroundColor: lightYellow },
                 "& .MuiTableBody-root .MuiTableRow-root:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.2) },
