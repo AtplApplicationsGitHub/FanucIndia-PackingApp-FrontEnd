@@ -209,7 +209,7 @@ export default function ReportPage() {
             }}
           >
             {/* Filters */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", flex: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", flex: 1, justifyContent:"center" }}>
 
               {/* Search */}
               <Box
