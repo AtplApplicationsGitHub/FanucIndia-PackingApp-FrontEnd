@@ -198,10 +198,11 @@ export default function ReportPage() {
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
 
         {/* TOOLBAR */}
-        <Box sx={{ width: "100%", mt: 1, px: { xs: 1, sm: 2 }, display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ width: "100%", mt: 1, px: { xs: 1, sm: 2 }, display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
           <Paper
             elevation={2}
             sx={{
+              maxWidth: 1050,
               borderRadius: 2, bgcolor: "background.paper", width: "100%",
               display: "flex", flexDirection: { xs: "column", lg: "row" },
               alignItems: { xs: "stretch", lg: "center" },
@@ -209,8 +210,7 @@ export default function ReportPage() {
             }}
           >
             {/* Filters */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", flex: 1, justifyContent:"center" }}>
-
+            <Box sx={{ display: "flex", flexWrap: "nowrap", gap: 1.5, alignItems: "center", flex: 1, justifyContent: "flex-start" }}>
               {/* Search */}
               <Box
                 component="form"
@@ -361,8 +361,8 @@ export default function ReportPage() {
                         <TableRow sx={{ bgcolor: lightYellow, '&:hover': { bgcolor: lightYellow } }}>
                           <TableCell colSpan={6} sx={{ py: 1, borderBottom: '1px solid #E0E0E0' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <TableChart sx={{ color: isDark ?'#FFF':'#D00000', fontSize: 20 }} />
-                              <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ?   '#FFF': '#D00000' }}>
+                              <TableChart sx={{ color: isDark ? '#FFF' : '#D00000', fontSize: 20 }} />
+                              <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? '#FFF' : '#D00000' }}>
                                 {group.customerName} ({group.rows.length} order{group.rows.length !== 1 ? 's' : ''})
                               </Typography>
                             </Box>

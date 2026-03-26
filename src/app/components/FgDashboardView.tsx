@@ -63,13 +63,16 @@ interface FgDashboardRow {
   payment: boolean;
   status: string;
   fgLocation: any;
-  specialRemarks: string;
-  updatedBy?: string;
+  createdBy?: string;
   updatedDate?: string;
   assignedUserId?: number | null;
   isReadyForDispatch?: boolean;
   isWipStorage?: boolean;
   transporter?: string;
+  vehicleNumber?: string;
+  salesUser?: string;
+  specialRemarks?: string;
+  additionalRemarks?: string;
 }
 
 const formatDate = (dateString?: string) => {
@@ -153,6 +156,7 @@ export default function FgDashboardView() {
   const [paymentFilter, setPaymentFilter] = useState("");
   const [zoneFilter, setZoneFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [remarksPopup, setRemarksPopup] = useState<{ title: string; content: string } | null>(null);
 
   const [salesZones, setSalesZones] = useState<{ id: number; name: string }[]>(
     [],
@@ -296,20 +300,20 @@ export default function FgDashboardView() {
   };
 
   const columns = [
-    { id: "saleOrderNumber", label: "SO NUMBER", width: 90 },
+    { id: "saleOrderNumber", label: "SALE ORDER NUMBER", width: 90 },
+    { id: "outboundDelivery", label: "OUT BOUND DELIVERY	", width: 130 },
     { id: "customerName", label: "CUSTOMER NAME", width: 180 },
-    { id: "payment", label: "PAYMENT", width: 60 },
-    { id: "progress", label: "PROGRESS", width: 250 },
-    { id: "status", label: "STATUS", width: 100 },
     { id: "salesZone", label: "SALES ZONE", width: 90 },
+    { id: "deliveryDate", label: "REQUIRED DATE", width: 120 },
+    { id: "progress", label: "STAGE STATUS ", width: 250 },
+    { id: "payment", label: "PAYMENT", width: 60 },
     { id: "transporter", label: "TRANSPORTER", width: 110 },
+    { id: "vehicleNumber", label: "VEHICLE NUMBER", width: 120 },
     { id: "fgLocation", label: "FG LOCATION", width: 120 },
-    { id: "specialRemarks", label: "SPECIAL REMARKS", width: 150 },
-    { id: "updatedBy", label: "UPDATED BY", width: 110 },
-    { id: "updatedDate", label: "UPDATED DATE", width: 140 },
+    { id: "specialRemarks", label: "REMARKS", width: 150 },
+    { id: "salesUser", label: "SALES USER", width: 110 },
   ];
-
-  const lightYellow = alpha(theme.palette.primary.main, 0.25);
+  const lightYellow = alpha(theme.palette.primary.main, 0.15);
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
 
@@ -538,13 +542,11 @@ export default function FgDashboardView() {
                       <TableRow
                         key={row.id}
                         sx={{
-                          backgroundColor:
-                            index % 2 === 0 ? "inherit" : lightYellow,
-                          "&:hover": {
-                            backgroundColor: theme.palette.action.hover,
-                          },
+                          backgroundColor: index % 2 === 0 ? "inherit" : lightYellow,
+                          "&:hover": { backgroundColor: theme.palette.action.hover },
                         }}
                       >
+                        {/* SO NUMBER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           <MuiLink
                             component={Link}
@@ -555,135 +557,97 @@ export default function FgDashboardView() {
                             {row.saleOrderNumber}
                           </MuiLink>
                         </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.customerName}</TableCell>
+
+                        {/* OBD */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          <Box
-                            sx={{
-                              display: "inline-block",
-                              px: 1.5,
-                              py: 0.25,
-                              borderRadius: "16px",
-                              border: "1px solid",
-                              borderColor: row.payment ? "#4caf50" : "#ef5350",
-                              backgroundColor: row.payment ? "#e8f5e9" : "#ffebee",
-                              color: row.payment ? "#1b5e20" : "#c62828",
-                              fontWeight: 700,
-                              fontSize: "0.85rem",
-                              textAlign: "center",
-                              minWidth: "50px",
-                            }}
-                          >
-                            {row.payment ? "Yes" : "No"}
-                          </Box>
+                          {row.outboundDelivery || "-"}
                         </TableCell>
+
+                        {/* CUSTOMER NAME */}
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.customerName}</TableCell>
+
+                        {/* SALES ZONE */}
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.salesZone}</TableCell>
+
+                        {/* REQUIRED DATE */}
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {formatDate(row.deliveryDate)}
+                        </TableCell>
+
+                        {/* STAGE STATUS (progress) */}
                         <TableCell sx={{ px: 1 }}>
-                           {(() => {
-                            const { percent, current, next, color } =
-                              getStatusInfo(row);
+                          {(() => {
+                            const { percent, current, next, color } = getStatusInfo(row);
                             return (
                               <Box sx={{ width: "100%", minWidth: 220, py: 0.5 }}>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    mb: 0,
-                                  }}
-                                >
-                                  <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      fontWeight={700}
-                                      color="text.primary"
-                                      sx={{ fontSize: "0.75rem", whiteSpace: "nowrap", lineHeight: 1 }}
-                                    >
-                                      {current}
-                                    </Typography>
-                                  </Box>
+                                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5, mb: 0 }}>
+                                  <Typography variant="caption" fontWeight={700} color="text.primary"
+                                    sx={{ fontSize: "0.75rem", whiteSpace: "nowrap", lineHeight: 1 }}>
+                                    {current}
+                                  </Typography>
                                 </Box>
-
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                   <Box sx={{ flexGrow: 1 }}>
-                                    <LinearProgress
-                                      variant="determinate"
-                                      value={percent}
+                                    <LinearProgress variant="determinate" value={percent}
                                       sx={{
-                                        height: 8,
-                                        borderRadius: 4,
+                                        height: 8, borderRadius: 4,
                                         backgroundColor: alpha(color, 0.15),
                                         "& .MuiLinearProgress-bar": {
-                                          backgroundColor: color,
-                                          borderRadius: 4,
+                                          backgroundColor: color, borderRadius: 4,
                                           boxShadow: `0 0 8px ${alpha(color, 0.4)}`,
                                         },
                                       }}
                                     />
                                   </Box>
-                                  <Box
-                                    sx={{
-                                      backgroundColor: alpha(color, 0.1),
-                                      color: color,
-                                      px: 1,
-                                      py: 0.25,
-                                      borderRadius: "12px",
-                                      fontWeight: 500, // Not bold
-                                      fontSize: "0.75rem",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      border: `1px solid ${alpha(color, 0.2)}`
-                                    }}
-                                  >
+                                  <Box sx={{
+                                    backgroundColor: alpha(color, 0.1), color: color,
+                                    px: 1, py: 0.25, borderRadius: "12px", fontWeight: 500,
+                                    fontSize: "0.75rem", display: "inline-flex", alignItems: "center",
+                                    border: `1px solid ${alpha(color, 0.2)}`
+                                  }}>
                                     {percent}%
                                   </Box>
                                 </Box>
                                 {next && (
-                                  <Box sx={{ mt: 0 }}>
-                                    <Typography
-                                      variant="caption"
-                                      sx={{ color: "#000", fontSize: "0.75rem", whiteSpace: "nowrap", fontWeight: 500, lineHeight: 1 }}
-                                    >
-                                      {next}
-                                    </Typography>
-                                  </Box>
+                                  <Typography variant="caption"
+                                    sx={{ color: "#000", fontSize: "0.75rem", whiteSpace: "nowrap", fontWeight: 500, lineHeight: 1 }}>
+                                    {next}
+                                  </Typography>
+                                )}
+                                {row.updatedDate && (
+                                  <Typography variant="caption"
+                                    sx={{ color: "text.secondary", fontSize: "0.7rem", whiteSpace: "nowrap", lineHeight: 1, ml: 1 }}>                                    {new Date(row.updatedDate).toLocaleString("en-IN", {
+                                      day: "2-digit", month: "2-digit", year: "numeric",
+                                      hour: "2-digit", minute: "2-digit", hour12: true,
+                                    })}
+                                  </Typography>
                                 )}
                               </Box>
                             );
                           })()}
                         </TableCell>
+
+                        {/* PAYMENT */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          {(() => {
-                            const getStatusStyles = (status: string) => {
-                              const s = status ? status.toUpperCase() : "";
-                              if (s.includes("W105")) return { borderColor: "#ffd54f", backgroundColor: "#fff8e1", color: "#ef6c00" };
-                              if (s.includes("R105")) return { borderColor: "#90caf9", backgroundColor: "#e3f2fd", color: "#1976d2" };
-                              if (s.includes("F105")) return { borderColor: "#ce93d8", backgroundColor: "#f3e5f5", color: "#9c27b0" };
-                              if (s.includes("DISPATCHED")) return { borderColor: "#4db6ac", backgroundColor: "#e0f2f1", color: "#00897b" };
-                              return { borderColor: "#e0e0e0", backgroundColor: "#f5f5f5", color: "#757575" };
-                            };
-                            const styles = getStatusStyles(row.status);
-
-                            if (!row.status) return "-";
-
-                            return (
-                              <Box
-                                sx={{
-                                  display: "inline-block",
-                                  px: 1.5,
-                                  py: 0.25,
-                                  borderRadius: "16px",
-                                  border: "1px solid",
-                                  ...styles,
-                                  fontWeight: 700,
-                                  fontSize: "0.85rem",
-                                  textAlign: "center",
-                                  minWidth: "60px",
-                                }}
-                              >
-                                {row.status}
-                              </Box>
-                            );
-                          })()}
+                          <Box sx={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            padding: "3px 10px", borderRadius: "16px", border: "1px solid",
+                            borderColor: row.payment ? alpha(theme.palette.success.main, 0.5) : alpha(theme.palette.error.main, 0.5),
+                            backgroundColor: row.payment ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
+                            color: row.payment ? theme.palette.success.dark : theme.palette.error.main,
+                            fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
+                          }}>
+                            {row.payment ? "Yes" : "No"}
+                          </Box>
                         </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.salesZone}</TableCell>
+
+                        {/* TRANSPORTER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.transporter || "-"}</TableCell>
+
+                        {/* VEHICLE NUMBER */}
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.vehicleNumber || "-"}</TableCell>
+
+                        {/* FG LOCATION */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.fgLocation
                             ? typeof row.fgLocation === "string"
@@ -693,23 +657,67 @@ export default function FgDashboardView() {
                                 : JSON.stringify(row.fgLocation)
                             : "-"}
                         </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>{row.specialRemarks}</TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.updatedBy || "-"}</TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          {row.updatedDate
-                            ? new Date(row.updatedDate).toLocaleString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                },
-                              )
-                            : "-"}
+                        {/* REMARKS */}
+                        <TableCell sx={{ px: 1, maxWidth: 200 }}>
+                          {(() => {
+                            const special = row.specialRemarks || "";
+                            const additional = row.additionalRemarks || "";
+
+                            if (!special && !additional) return "-";
+
+                            return (
+                              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                                {special && (
+                                  special.length > 20 ? (
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.8rem",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: 150,
+                                        cursor: "pointer",
+                                        color: "#3B82F6",
+                                      }}
+                                      onClick={() => setRemarksPopup({ title: "Special Remark", content: special })}
+                                    >
+                                      {special}
+                                    </Typography>
+                                  ) : (
+                                    <Typography sx={{ fontSize: "0.8rem", whiteSpace: "nowrap", color: "#3B82F6" }}>
+                                      {special}
+                                    </Typography>
+                                  )
+                                )}
+                                {additional && (
+                                  additional.length > 20 ? (
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.8rem",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: 150,
+                                        cursor: "pointer",
+                                        color: "#00B894",
+                                      }}
+                                      onClick={() => setRemarksPopup({ title: "Additional Remark", content: additional })}
+                                    >
+                                      {additional}
+                                    </Typography>
+                                  ) : (
+                                    <Typography sx={{ fontSize: "0.8rem", whiteSpace: "nowrap", color: "#00B894" }}>
+                                      {additional}
+                                    </Typography>
+                                  )
+                                )}
+                              </Box>
+                            );
+                          })()}
                         </TableCell>
+                        {/* SALES USER */}
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.createdBy || "-"}</TableCell>
+
                       </TableRow>
                     );
                   })
@@ -744,6 +752,48 @@ export default function FgDashboardView() {
               {snackbar.message}
             </Alert>
           </Snackbar>
+        )}
+        {/* Remarks Popup */}
+        {remarksPopup && (
+          <Box
+            onClick={() => setRemarksPopup(null)}
+            sx={{
+              position: "fixed", inset: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 1300,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <Paper
+              onClick={(e) => e.stopPropagation()}
+              sx={{ minWidth: 340, maxWidth: 480, borderRadius: 2, overflow: "hidden", boxShadow: 6 }}
+            >
+              <Box sx={{
+                backgroundColor: "background.paper", px: 3, py: 1.5,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                position: "relative",
+                borderBottom: "1px solid",
+                borderColor: "divider",
+              }}>
+                <Typography fontWeight={700} fontSize="1rem"
+                  sx={{ color: "#d32f2f", letterSpacing: 1, textTransform: "uppercase" }}>
+                  {remarksPopup.title}
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => setRemarksPopup(null)}
+                  sx={{ position: "absolute", right: 12 }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Box sx={{ px: 3, py: 3, backgroundColor: "background.paper" }}>
+                <Paper variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 1, backgroundColor: "action.hover" }}>
+                  <Typography fontSize="0.9rem" color="text.primary">{remarksPopup.content}</Typography>
+                </Paper>
+              </Box>
+            </Paper>
+          </Box>
         )}
       </Box>
     </LocalizationProvider>
