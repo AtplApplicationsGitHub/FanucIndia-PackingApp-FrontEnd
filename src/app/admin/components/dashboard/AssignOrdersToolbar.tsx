@@ -23,6 +23,10 @@ import {
   Chip,
   CircularProgress,
   Tooltip,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -69,7 +73,14 @@ type Props = {
 
   selectedIds?: number[];
   assignableUsers?: { id: number; name: string }[];
-  onAssignUser?: (userId: string, priority?: string) => Promise<void>;
+  onAssignUser?: (
+    userId?: string,
+    priority?: string,
+    issueUserId?: string,
+    packingUserId?: string,
+    skipIssue?: string,
+    skipPacking?: string,
+  ) => Promise<void>;
   onSkipStage?: (val: string) => Promise<void>;
   onImportERPData?: () => void;
   onDownloadErpData?: () => void;
@@ -124,10 +135,11 @@ export default function AssignOrdersToolbar({
   const open = Boolean(anchorEl);
 
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [tempAssignUser, setTempAssignUser] = useState<string>("placeholder");
+  const [tempIssueUser, setTempIssueUser] = useState<string>("placeholder");
+  const [tempPackingUser, setTempPackingUser] = useState<string>("placeholder");
 
-  const [skipStageDialogOpen, setSkipStageDialogOpen] = useState(false);
-  const [tempSkipStage, setTempSkipStage] = useState<string>("yes");
+  const [tempSkipIssue, setTempSkipIssue] = useState<string>("no");
+  const [tempSkipPacking, setTempSkipPacking] = useState<string>("no");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -179,6 +191,7 @@ export default function AssignOrdersToolbar({
   const handleAssignChange = async (e: any) => {
     const val = e.target.value;
     if (val !== "placeholder" && onAssignUser) {
+      // NOTE: Here we preserve signature, but actual submit is from Dialog
       await onAssignUser(val);
     }
   };
@@ -735,21 +748,7 @@ export default function AssignOrdersToolbar({
               <PersonAddOutlinedIcon fontSize="small" color="secondary" />
             </ListItemIcon>
             <ListItemText
-              primary="ASSIGN USER"
-              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
-            />
-          </MenuItem>
-
-          <MenuItem
-            onClick={() =>
-              handleActionClick(() => setSkipStageDialogOpen(true))
-            }
-          >
-            <ListItemIcon>
-              <FastForwardOutlinedIcon fontSize="small" color="warning" />
-            </ListItemIcon>
-            <ListItemText
-              primary="SKIP STAGE"
+              primary="BULK ACTIONS"
               primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
             />
           </MenuItem>
@@ -758,117 +757,173 @@ export default function AssignOrdersToolbar({
           open={assignDialogOpen}
           onClose={() => {
             setAssignDialogOpen(false);
-            setTempAssignUser("placeholder");
+            setTempIssueUser("placeholder");
+            setTempPackingUser("placeholder");
+            setTempSkipIssue("no");
+            setTempSkipPacking("no");
             setAssignPriority("");
           }}
-          maxWidth="xs"
+          maxWidth="sm"
           fullWidth
-        >
-          <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
-            ASSIGN USER & PRIORITY
-          </DialogTitle>
-          <DialogContent>
-            <FormControl size="small" fullWidth sx={{ mt: 1, mb: 2 }}>
-              <Select
-                value={tempAssignUser}
-                displayEmpty
-                onChange={(e) => setTempAssignUser(e.target.value)}
-                sx={{ fontSize: "14px" }}
-              >
-                <MenuItem value="placeholder" disabled>
-                  SELECT USER
-                </MenuItem>
-                <MenuItem value="unassign">UNASSIGNED</MenuItem>
-                {assignableUsers.map((u: any) => (
-                  <MenuItem key={u.id} value={u.id}>
-                    {u.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Set Bulk Priority (Optional):
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              placeholder="e.g. 1 (Leave blank to keep existing)"
-              value={assignPriority}
-              onChange={(e) => setAssignPriority(e.target.value)}
-            />
-          </DialogContent>
-
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button
-              onClick={() => {
-                setAssignDialogOpen(false);
-                setTempAssignUser("placeholder");
-                setAssignPriority("");
-              }}
-              color="inherit"
-            >
-              CANCEL
-            </Button>
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={async () => {
-                if (tempAssignUser !== "placeholder" && onAssignUser) {
-                  await onAssignUser(tempAssignUser, assignPriority);
-                }
-                setAssignDialogOpen(false);
-                setTempAssignUser("placeholder");
-                setAssignPriority("");
-              }}
-              sx={{
-                bgcolor: "#facd02",
-                color: "#000",
-                "&:hover": { bgcolor: "#e5bb01" },
-              }}
-            >
-              SUBMIT
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Skip Stage Dialog */}
-        <Dialog
-          open={skipStageDialogOpen}
-          onClose={() => {
-            setSkipStageDialogOpen(false);
-            setTempSkipStage("yes");
+          PaperProps={{
+            sx: { p: 1 },
           }}
-          maxWidth="xs"
-          fullWidth
         >
-          <DialogTitle sx={{ fontSize: "16px", fontWeight: 600 }}>
-            SKIP STAGE
+          <DialogTitle sx={{ fontSize: "18px", fontWeight: 700, pb: 1 }}>
+            BULK ACTIONS
           </DialogTitle>
           <DialogContent>
-            <FormControl size="small" fullWidth sx={{ mt: 1 }}>
-              <Select
-                value={tempSkipStage}
-                displayEmpty
-                onChange={(e) => setTempSkipStage(e.target.value)}
-                sx={{ fontSize: "14px" }}
-              >
-                <MenuItem value="placeholder" disabled>
-                  SELECT OPTION
-                </MenuItem>
-                <MenuItem value="yes">YES</MenuItem>
-                <MenuItem value="no">NO</MenuItem>
-              </Select>
-            </FormControl>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 3,
+                pt: 1,
+                mt: 1,
+              }}
+            >
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Assign User (Issue Stage)"
+                  value={tempIssueUser}
+                  onChange={(e) => setTempIssueUser(e.target.value)}
+                  InputProps={{ sx: { fontSize: "14px" } }}
+                  InputLabelProps={{ sx: { fontSize: "14px" } }}
+                >
+                  <MenuItem value="placeholder" disabled>
+                    <em>Select User</em>
+                  </MenuItem>
+                  <MenuItem value="unassign">UNASSIGNED</MenuItem>
+                  {assignableUsers.map((u: any) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Assign User (Packing Stage)"
+                  value={tempPackingUser}
+                  onChange={(e) => setTempPackingUser(e.target.value)}
+                  InputProps={{ sx: { fontSize: "14px" } }}
+                  InputLabelProps={{ sx: { fontSize: "14px" } }}
+                >
+                  <MenuItem value="placeholder" disabled>
+                    <em>Select User</em>
+                  </MenuItem>
+                  <MenuItem value="unassign">UNASSIGNED</MenuItem>
+                  {assignableUsers.map((u: any) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              <Box sx={{ display: "flex", gap: 3 }}>
+                <FormControl component="fieldset" sx={{ flex: 1 }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: "13px",
+                      color: "text.secondary",
+                      mb: 0.5,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Skip Issue Stage
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={tempSkipIssue}
+                    onChange={(e) => setTempSkipIssue(e.target.value)}
+                  >
+                    <FormControlLabel
+                      value="yes"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: "14px" }}>Yes</Typography>
+                      }
+                      sx={{ mr: 2 }}
+                    />
+                    <FormControlLabel
+                      value="no"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: "14px" }}>No</Typography>
+                      }
+                    />
+                  </RadioGroup>
+                </FormControl>
+
+                <FormControl component="fieldset" sx={{ flex: 1 }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: "13px",
+                      color: "text.secondary",
+                      mb: 0.5,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Skip Packing Stage
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={tempSkipPacking}
+                    onChange={(e) => setTempSkipPacking(e.target.value)}
+                  >
+                    <FormControlLabel
+                      value="yes"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: "14px" }}>Yes</Typography>
+                      }
+                      sx={{ mr: 2 }}
+                    />
+                    <FormControlLabel
+                      value="no"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: "14px" }}>No</Typography>
+                      }
+                    />
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label="Set Bulk Priority (Optional)"
+                placeholder="e.g. 1"
+                value={assignPriority}
+                onChange={(e) => setAssignPriority(e.target.value)}
+                InputProps={{ sx: { fontSize: "14px" } }}
+                InputLabelProps={{ shrink: true, sx: { fontSize: "14px" } }}
+              />
+            </Box>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
+
+          <DialogActions sx={{ px: 3, pb: 2, pt: 2 }}>
             <Button
               onClick={() => {
-                setSkipStageDialogOpen(false);
-                setTempSkipStage("yes");
+                setAssignDialogOpen(false);
+                setTempIssueUser("placeholder");
+                setTempPackingUser("placeholder");
+                setTempSkipIssue("no");
+                setTempSkipPacking("no");
+                setAssignPriority("");
               }}
               color="inherit"
+              sx={{ fontWeight: 600, px: 2 }}
             >
               CANCEL
             </Button>
@@ -876,15 +931,45 @@ export default function AssignOrdersToolbar({
               variant="contained"
               disableElevation
               onClick={async () => {
-                if (tempSkipStage !== "placeholder" && onSkipStage) {
-                  await onSkipStage(tempSkipStage);
+                const issueVal =
+                  tempIssueUser === "placeholder" ? undefined : tempIssueUser;
+                const packingVal =
+                  tempPackingUser === "placeholder"
+                    ? undefined
+                    : tempPackingUser;
+                const skipIssueVal = tempSkipIssue;
+                const skipPackingVal = tempSkipPacking;
+
+                // If anything was selected, submit it. Omitting general user so it's undefined.
+                if (
+                  onAssignUser &&
+                  (issueVal ||
+                    packingVal ||
+                    assignPriority ||
+                    skipIssueVal ||
+                    skipPackingVal)
+                ) {
+                  await onAssignUser(
+                    undefined,
+                    assignPriority,
+                    issueVal,
+                    packingVal,
+                    skipIssueVal,
+                    skipPackingVal,
+                  );
                 }
-                setSkipStageDialogOpen(false);
-                setTempSkipStage("yes");
+                setAssignDialogOpen(false);
+                setTempIssueUser("placeholder");
+                setTempPackingUser("placeholder");
+                setTempSkipIssue("no");
+                setTempSkipPacking("no");
+                setAssignPriority("");
               }}
               sx={{
                 bgcolor: "#facd02",
                 color: "#000",
+                fontWeight: 600,
+                px: 3,
                 "&:hover": { bgcolor: "#e5bb01" },
               }}
             >
@@ -892,6 +977,7 @@ export default function AssignOrdersToolbar({
             </Button>
           </DialogActions>
         </Dialog>
+
         <Snackbar
           open={snackbarOpen}
           onClose={handleSnackbarClose}

@@ -35,7 +35,7 @@ import AssignOrdersToolbar from "./AssignOrdersToolbar";
 import ErpUploadDialog from "./ErpUploadDialog";
 import SambaFilesView from "./SambaFilesView";
 
-type InlineEditField = "status" | "priority" | "assignedUserId";
+type InlineEditField = "status" | "priority" | "issueUserId" | "packingUserId";
 
 type InlineEdit = {
   id: number;
@@ -110,8 +110,8 @@ export default function AssignSO() {
       message: "ERP data imported successfully!",
       severity: "success",
     });
-    
-    refresh(); 
+
+    refresh();
   };
 
   const onClear = () => {
@@ -169,7 +169,14 @@ export default function AssignSO() {
     }
   };
 
-  const handleAssignUser = async (val: string, priorityVal?: string) => {
+  const handleAssignUser = async (
+    val?: string,
+    priorityVal?: string,
+    issueVal?: string,
+    packingVal?: string,
+    skipIssue?: string,
+    skipPacking?: string,
+  ) => {
     const ordersToAssign: number[] = [];
     const skippedSOs: string[] = [];
 
@@ -186,7 +193,15 @@ export default function AssignSO() {
 
     try {
       if (ordersToAssign.length > 0) {
-        await bulkUpdate(ordersToAssign, val, priorityVal);
+        await bulkUpdate(
+          ordersToAssign,
+          val,
+          priorityVal,
+          issueVal,
+          packingVal,
+          skipIssue,
+          skipPacking,
+        );
       }
 
       const messageParts = [];
@@ -264,7 +279,7 @@ export default function AssignSO() {
         message: messageParts.join(" | "),
         severity: "info",
       });
-      // setSelectedIds([]); 
+      // setSelectedIds([]);
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -389,30 +404,61 @@ export default function AssignSO() {
   const availableCustomers = React.useMemo(() => {
     const ordersMatchingOtherFilters = orders.filter((order) => {
       const searchStr = searchInput.toLowerCase();
-      const productName = (order.product?.name || findName(lookup.products, order.productId ?? 0) || "").toLowerCase();
-      const salesZoneName = (order.salesZone?.name || findName(lookup.salesZones, order.salesZoneId ?? 0) || "").toLowerCase();
-      const assignedUserName = (order.assignedUser?.name || findName(lookup.assignableUsers, order.assignedUserId ?? 0) || "").toLowerCase();
+      const productName = (
+        order.product?.name ||
+        findName(lookup.products, order.productId ?? 0) ||
+        ""
+      ).toLowerCase();
+      const salesZoneName = (
+        order.salesZone?.name ||
+        findName(lookup.salesZones, order.salesZoneId ?? 0) ||
+        ""
+      ).toLowerCase();
+      const assignedUserName = (
+        (order.issueUser?.name ||
+          findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
+          "") +
+        " " +
+        (order.packingUser?.name ||
+          findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
+          "")
+      ).toLowerCase();
       const paymentString = order.paymentClearance ? "yes" : "no";
 
-      const matchesSearch = !searchInput ||
+      const matchesSearch =
+        !searchInput ||
         (order.saleOrderNumber || "").toLowerCase().includes(searchStr) ||
         (order.outboundDelivery || "").toLowerCase().includes(searchStr) ||
         (order.customerNameText || "").toLowerCase().includes(searchStr) ||
         (order.transferOrder || "").toLowerCase().includes(searchStr) ||
         (order.status || "").toLowerCase().includes(searchStr) ||
-        (order.priority !== null && order.priority !== undefined ? String(order.priority) : "").includes(searchStr) ||
+        (order.priority !== null && order.priority !== undefined
+          ? String(order.priority)
+          : ""
+        ).includes(searchStr) ||
         productName.includes(searchStr) ||
         salesZoneName.includes(searchStr) ||
         assignedUserName.includes(searchStr) ||
         paymentString.includes(searchStr);
 
-      const matchesPayment = !paymentFilter || (paymentFilter === "true" ? order.paymentClearance : !order.paymentClearance);
-      const matchesZone = !zoneFilter || String(order.salesZoneId) === zoneFilter;
-      const matchesStatus = !statusFilter || (statusFilter === "None" ? !order.status : order.status === statusFilter);
+      const matchesPayment =
+        !paymentFilter ||
+        (paymentFilter === "true"
+          ? order.paymentClearance
+          : !order.paymentClearance);
+      const matchesZone =
+        !zoneFilter || String(order.salesZoneId) === zoneFilter;
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "None"
+          ? !order.status
+          : order.status === statusFilter);
 
       let matchesDate = true;
       if (startDate || endDate) {
-        const orderDate = order.deliveryDate ? new Date(order.deliveryDate) : null;
+        const orderDate = order.deliveryDate
+          ? new Date(order.deliveryDate)
+          : null;
         if (!orderDate) matchesDate = false;
         else {
           const d = new Date(orderDate);
@@ -430,15 +476,39 @@ export default function AssignSO() {
         }
       }
 
-      const matchesPendingImport = !pendingImportFilter || !order.hasMaterialData;
+      const matchesPendingImport =
+        !pendingImportFilter || !order.hasMaterialData;
 
-      return matchesSearch && matchesPayment && matchesZone && matchesStatus && matchesDate && matchesPendingImport;
+      return (
+        matchesSearch &&
+        matchesPayment &&
+        matchesZone &&
+        matchesStatus &&
+        matchesDate &&
+        matchesPendingImport
+      );
     });
 
-    const activeNames = new Set(ordersMatchingOtherFilters.map(o => (o.customerNameText || "").toLowerCase()).filter(Boolean));
-    
-    return lookup.customers.filter(c => activeNames.has(c.name.toLowerCase()));
-  }, [orders, searchInput, paymentFilter, zoneFilter, statusFilter, startDate, endDate, pendingImportFilter, lookup.customers]);
+    const activeNames = new Set(
+      ordersMatchingOtherFilters
+        .map((o) => (o.customerNameText || "").toLowerCase())
+        .filter(Boolean),
+    );
+
+    return lookup.customers.filter((c) =>
+      activeNames.has(c.name.toLowerCase()),
+    );
+  }, [
+    orders,
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    pendingImportFilter,
+    lookup.customers,
+  ]);
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
@@ -455,9 +525,13 @@ export default function AssignSO() {
         ""
       ).toLowerCase();
       const assignedUserName = (
-        order.assignedUser?.name ||
-        findName(lookup.assignableUsers, order.assignedUserId ?? 0) ||
-        ""
+        (order.issueUser?.name ||
+          findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
+          "") +
+        " " +
+        (order.packingUser?.name ||
+          findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
+          "")
       ).toLowerCase();
 
       const paymentString = order.paymentClearance ? "yes" : "no";
@@ -581,7 +655,8 @@ export default function AssignSO() {
       { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 },
       { header: "LABEL REMARKS", key: "labelRemarks", width: 25 },
       { header: "PRIORITY", key: "priority", width: 12 },
-      { header: "ASSIGNED USER", key: "assignedUser", width: 20 },
+      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 },
+      { header: "PACKING STAGE USER", key: "packingUser", width: 20 },
       { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 },
       { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 },
     ];
@@ -590,7 +665,8 @@ export default function AssignSO() {
 
     exportRows.forEach((row: any) => {
       const clearHyphen = (val: any) => (val === "-" ? "" : val || "");
-      const isSkipped = row.skipIssueStage ? "Yes" : "No";
+      const isIssueSkipped = row.skipIssueStage ? "Yes" : "No";
+      const isPackingSkipped = row.skipPackingStage ? "Yes" : "No";
 
       worksheet.addRow({
         product:
@@ -609,9 +685,10 @@ export default function AssignSO() {
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
         priority: row.priority ?? "",
-        assignedUser: clearHyphen(row.assignedUser?.name),
-        skipIssueStage: isSkipped,
-        skipPackingStage: isSkipped,
+        issueUser: clearHyphen(row.issueUser?.name),
+        packingUser: clearHyphen(row.packingUser?.name),
+        skipIssueStage: isIssueSkipped,
+        skipPackingStage: isPackingSkipped,
       });
     });
 
@@ -629,8 +706,15 @@ export default function AssignSO() {
       };
 
       if (assignableUserNames.length < 255) {
-        const userCell = worksheet.getCell(`N${i}`);
-        userCell.dataValidation = {
+        const issueUserCell = worksheet.getCell(`N${i}`);
+        issueUserCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`"${assignableUserNames}"`],
+        };
+
+        const packingUserCell = worksheet.getCell(`O${i}`);
+        packingUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
           formulae: [`"${assignableUserNames}"`],
@@ -646,14 +730,14 @@ export default function AssignSO() {
         };
       }
 
-      const skipIssueCell = worksheet.getCell(`O${i}`);
+      const skipIssueCell = worksheet.getCell(`P${i}`);
       skipIssueCell.dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: ['"Yes,No"'],
       };
 
-      const skipPackingCell = worksheet.getCell(`P${i}`);
+      const skipPackingCell = worksheet.getCell(`Q${i}`);
       skipPackingCell.dataValidation = {
         type: "list",
         allowBlank: true,
@@ -732,7 +816,11 @@ export default function AssignSO() {
     if (!inlineEdit) return;
 
     const normalize = (field: InlineEditField, val: any) => {
-      if (field === "priority" || field === "assignedUserId") {
+      if (
+        field === "priority" ||
+        field === "issueUserId" ||
+        field === "packingUserId"
+      ) {
         if (val === "" || val === null || val === undefined) return null;
         const n = Number(val);
         return Number.isNaN(n) ? null : n;
@@ -799,8 +887,12 @@ export default function AssignSO() {
           setLocalValue(val as string);
           onCommit(val as string);
         }}
-        onBlur={onCancel}
-        autoFocus
+        onClose={() => {
+          setTimeout(() => {
+            onCancel();
+          }, 150);
+        }}
+        defaultOpen={true}
         variant="standard"
         sx={{ width: "100%", fontSize: "0.875rem" }}
       >
@@ -916,41 +1008,41 @@ export default function AssignSO() {
         <SambaFilesView onBack={() => setShowSambaView(false)} />
       ) : (
         <>
-      <Box sx={{ mb: 1 }}>
-        <AssignOrdersToolbar
-          searchInput={searchInput}
-          onSearchInputChange={setSearchInput}
-          paymentFilter={paymentFilter}
-          onPaymentFilterChange={setPaymentFilter}
-          zoneFilter={zoneFilter}
-          onZoneFilterChange={setZoneFilter}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          salesZones={lookup.salesZones}
-          customerFilter={customerFilter}
-          onCustomerFilterChange={setCustomerFilter}
-          customers={availableCustomers}
-          startDate={startDate}
-          onStartDateChange={setStartDate}
-          endDate={endDate}
-          onEndDateChange={setEndDate}
-          onClear={onClear}
-          selectedIds={selectedIds}
-          assignableUsers={lookup.assignableUsers}
-          onAssignUser={handleAssignUser}
-          onSkipStage={handleSkipStage}
-          onImportERPData={handleImportERPData}
-          onDownloadErpData={handleDownloadErpData}
-          onExcelExport={handleExcelExport}
-          onExcelImport={() => fileInputRef.current?.click()}
-          statusCounts={dynamicCounts}
-          pendingImportFilter={pendingImportFilter}
-          onPendingImportClick={() =>
-            setPendingImportFilter(!pendingImportFilter)
-          }
-          onOpenSambaView={() => setShowSambaView(true)}
-        />
-      </Box>
+          <Box sx={{ mb: 1 }}>
+            <AssignOrdersToolbar
+              searchInput={searchInput}
+              onSearchInputChange={setSearchInput}
+              paymentFilter={paymentFilter}
+              onPaymentFilterChange={setPaymentFilter}
+              zoneFilter={zoneFilter}
+              onZoneFilterChange={setZoneFilter}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              salesZones={lookup.salesZones}
+              customerFilter={customerFilter}
+              onCustomerFilterChange={setCustomerFilter}
+              customers={availableCustomers}
+              startDate={startDate}
+              onStartDateChange={setStartDate}
+              endDate={endDate}
+              onEndDateChange={setEndDate}
+              onClear={onClear}
+              selectedIds={selectedIds}
+              assignableUsers={lookup.assignableUsers}
+              onAssignUser={handleAssignUser}
+              onSkipStage={handleSkipStage}
+              onImportERPData={handleImportERPData}
+              onDownloadErpData={handleDownloadErpData}
+              onExcelExport={handleExcelExport}
+              onExcelImport={() => fileInputRef.current?.click()}
+              statusCounts={dynamicCounts}
+              pendingImportFilter={pendingImportFilter}
+              onPendingImportClick={() =>
+                setPendingImportFilter(!pendingImportFilter)
+              }
+              onOpenSambaView={() => setShowSambaView(true)}
+            />
+          </Box>
           <TableContainer
             component={Paper}
             elevation={0}
@@ -1007,7 +1099,8 @@ export default function AssignSO() {
                     "A/D/F",
                     "BIN",
                     "PRIORITY",
-                    "ASSIGNED USER",
+                    "ISSUE STAGE USER",
+                    "PACK STAGE USER",
                   ].map((head) => (
                     <TableCell
                       key={head}
@@ -1099,10 +1192,25 @@ export default function AssignSO() {
                               gap: 0.5,
                             }}
                           >
-                            {row.skipIssueStage ? (
-                              <Tooltip title="Skip Stages">
+                            {row.skipIssueStage || row.skipPackingStage ? (
+                              <Tooltip
+                                title={`Skip Stages: ${
+                                  row.skipIssueStage && row.skipPackingStage
+                                    ? "Issue & Packing"
+                                    : row.skipIssueStage
+                                      ? "Issue"
+                                      : "Packing"
+                                }`}
+                              >
                                 <FlagIcon
-                                  sx={{ color: theme.palette.error.main }}
+                                  sx={{
+                                    color:
+                                      row.skipIssueStage && row.skipPackingStage
+                                        ? "#9c27b0" // purple
+                                        : row.skipIssueStage
+                                          ? theme.palette.info.main // blue
+                                          : theme.palette.error.main, // red
+                                  }}
                                   fontSize="small"
                                 />
                               </Tooltip>
@@ -1279,7 +1387,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 150 }}>
                           {inlineEdit?.id === row.id &&
-                          inlineEdit.field === "assignedUserId" ? (
+                          inlineEdit.field === "issueUserId" ? (
                             <CustomEditSelect
                               initialValue={inlineEdit.value}
                               onCommit={(val: string | number) =>
@@ -1300,16 +1408,55 @@ export default function AssignSO() {
                                 !isDispatched &&
                                 setInlineEdit({
                                   id: row.id,
-                                  field: "assignedUserId",
-                                  value: row.assignedUserId ?? "",
-                                  original: row.assignedUserId ?? "",
+                                  field: "issueUserId",
+                                  value: row.issueUserId ?? "",
+                                  original: row.issueUserId ?? "",
                                 })
                               }
                             >
-                              {row.assignedUser?.name ||
+                              {row.issueUser?.name ||
                                 findName(
                                   lookup.assignableUsers,
-                                  row.assignedUserId ?? 0,
+                                  row.issueUserId ?? 0,
+                                ) ||
+                                "-"}
+                            </Box>
+                          )}
+                        </TableCell>
+
+                        <TableCell sx={{ minWidth: 150 }}>
+                          {inlineEdit?.id === row.id &&
+                          inlineEdit.field === "packingUserId" ? (
+                            <CustomEditSelect
+                              initialValue={inlineEdit.value}
+                              onCommit={(val: string | number) =>
+                                handleInlineSave(val)
+                              }
+                              onCancel={() => setInlineEdit(null)}
+                              options={lookup.assignableUsers || []}
+                            />
+                          ) : (
+                            <Box
+                              sx={{
+                                cursor: isDispatched ? "default" : "pointer",
+                                textDecoration: isDispatched
+                                  ? "none"
+                                  : "underline dotted",
+                              }}
+                              onClick={() =>
+                                !isDispatched &&
+                                setInlineEdit({
+                                  id: row.id,
+                                  field: "packingUserId",
+                                  value: row.packingUserId ?? "",
+                                  original: row.packingUserId ?? "",
+                                })
+                              }
+                            >
+                              {row.packingUser?.name ||
+                                findName(
+                                  lookup.assignableUsers,
+                                  row.packingUserId ?? 0,
                                 ) ||
                                 "-"}
                             </Box>

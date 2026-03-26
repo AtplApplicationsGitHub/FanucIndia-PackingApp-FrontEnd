@@ -98,12 +98,13 @@ export function useAssign() {
 
             user:
               detail.user ||
+              item.user ||
               (item.userName ? { name: item.userName } : null) ||
               null,
 
             product:
               detail.product ||
-              (item.product ? { name: item.product } : null) ||
+              (item.product ? (typeof item.product === "string" ? { name: item.product } : item.product) : null) ||
               null,
             productId: detail.productId || null,
 
@@ -147,10 +148,20 @@ export function useAssign() {
 
             assignedUser:
               detail.assignedUser ||
-              (item.assignedUser ? { name: item.assignedUser } : null) ||
+              (item.assignedUser ? (typeof item.assignedUser === "string" ? { name: item.assignedUser } : item.assignedUser) : null) ||
               null,
             assignedUserId:
               detail.assignedUserId || item.assignedUserId || null,
+            issueUser:
+              detail.issueUser ||
+              (item.issueUser ? (typeof item.issueUser === "string" ? { name: item.issueUser } : item.issueUser) : null) ||
+              null,
+            issueUserId: detail.issueAssignedUserId || detail.issueUserId || item.issueAssignedUserId || item.issueUserId || null,
+            packingUser:
+              detail.packingUser ||
+              (item.packingUser ? (typeof item.packingUser === "string" ? { name: item.packingUser } : item.packingUser) : null) ||
+              null,
+            packingUserId: detail.packingAssignedUserId || detail.packingUserId || item.packingAssignedUserId || item.packingUserId || null,
 
             hasMaterialData:
               detail.hasMaterialData ?? item.hasMaterialData ?? false,
@@ -160,6 +171,7 @@ export function useAssign() {
               detail.skipStage ??
               item.skipStage ??
               false,
+            skipPackingStage: detail.skipPackingStage ?? item.skipPackingStage ?? false,
             notificationCount: detail.notificationCount ?? 0,
             transporter: detail.transporter || item.transporter || null,
             plantCode: detail.plantCode || item.plantCode || "",
@@ -246,7 +258,24 @@ export function useAssign() {
   const updateInline = async (id: number, field: string, value: any) => {
     // Optimistic update
     setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, [field]: value } : o)),
+      prev.map((o) => {
+        if (o.id !== id) return o;
+        
+        const updated = { ...o, [field]: value };
+        
+        if (field === "issueUserId") {
+          const userObj = lookup.assignableUsers.find((u) => u.id === value);
+          updated.issueUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+        } else if (field === "packingUserId") {
+          const userObj = lookup.assignableUsers.find((u) => u.id === value);
+          updated.packingUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+        } else if (field === "assignedUserId") {
+          const userObj = lookup.assignableUsers.find((u) => u.id === value);
+          updated.assignedUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+        }
+        
+        return updated;
+      })
     );
 
     try {
@@ -269,15 +298,16 @@ export function useAssign() {
   };
 
   const bulkUpdate = useCallback(
-    async (ids: number[], assignedUserId: any, priorityStr?: string) => {
+    async (ids: number[], assignedUserId: any, priorityStr?: string, issueUserId?: string, packingUserId?: string, skipIssue?: string, skipPacking?: string) => {
       // Optimistic update
-      const normalizedId =
-        assignedUserId === "" ||
-        assignedUserId === "null" ||
-        assignedUserId === null ||
-        assignedUserId === "unassign"
-          ? undefined
-          : Number(assignedUserId);
+      let normalizedId: number | null | undefined;
+      if (assignedUserId === "unassign" || assignedUserId === null || assignedUserId === "null") {
+        normalizedId = null;
+      } else if (assignedUserId === undefined || assignedUserId === "") {
+        normalizedId = undefined;
+      } else {
+        normalizedId = Number(assignedUserId);
+      }
 
       // Find the user name from lookup for optimistic update of the object
       const selectedUser = lookup.assignableUsers.find(
@@ -288,20 +318,30 @@ export function useAssign() {
           ? Number(priorityStr)
           : undefined;
 
+      const normalizedIssueId = issueUserId === "" || issueUserId === "null" || issueUserId === null || issueUserId === "unassign" ? null : issueUserId ? Number(issueUserId) : undefined;
+      const normalizedPackingId = packingUserId === "" || packingUserId === "null" || packingUserId === null || packingUserId === "unassign" ? null : packingUserId ? Number(packingUserId) : undefined;
+      const issueUserObj = normalizedIssueId ? lookup.assignableUsers.find((u) => u.id === normalizedIssueId) : null;
+      const packingUserObj = normalizedPackingId ? lookup.assignableUsers.find((u) => u.id === normalizedPackingId) : null;
+
       setOrders((prev) =>
         prev.map((o) => {
           if (ids.includes(o.id)) {
             const shouldUpdateToR105 = 
               (o.status === null || !o.status) && 
-              (normalizedId !== undefined || priorityVal !== undefined);
+              (normalizedId !== undefined || priorityVal !== undefined || normalizedIssueId !== undefined || normalizedPackingId !== undefined);
 
             return {
               ...o,
-              assignedUserId: normalizedId,
-              assignedUser: selectedUser
-                ? { id: selectedUser.id, name: selectedUser.name }
-                : null,
+              ...(normalizedId !== undefined ? { assignedUserId: normalizedId === null ? undefined : normalizedId } : {}),
+              ...(selectedUser ? { assignedUser: { id: selectedUser.id, name: selectedUser.name } } : normalizedId === null ? { assignedUser: null } : {}),
               ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
+              ...(normalizedIssueId !== undefined ? { issueUserId: normalizedIssueId === null ? undefined : normalizedIssueId } : {}),
+              ...(issueUserObj ? { issueUser: { id: issueUserObj.id, name: issueUserObj.name } } : normalizedIssueId === null ? { issueUser: null } : {}),
+              ...(normalizedPackingId !== undefined ? { packingUserId: normalizedPackingId === null ? undefined : normalizedPackingId } : {}),
+              ...(packingUserObj ? { packingUser: { id: packingUserObj.id, name: packingUserObj.name } } : normalizedPackingId === null ? { packingUser: null } : {}),
+
+              ...(skipIssue !== undefined && skipIssue !== "none" ? { skipIssueStage: skipIssue === "yes" } : {}),
+            ...(skipPacking !== undefined && skipPacking !== "none" ? { skipPackingStage: skipPacking === "yes" } : {}),
               ...(shouldUpdateToR105 ? { status: "R105" } : {}),
             };
           }
@@ -310,6 +350,9 @@ export function useAssign() {
       );
 
       try {
+        // removed
+        // removed
+
         const response = await fetchWithAuth(API.ADMIN.BULK_ASSIGN, {
           method: "PATCH",
           headers: {
@@ -317,8 +360,12 @@ export function useAssign() {
           },
           body: JSON.stringify({
             salesOrderIds: ids,
-            assignedUserId: normalizedId ?? null,
+            ...(normalizedId !== undefined ? { assignedUserId: normalizedId } : {}),
             ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
+            ...(normalizedIssueId !== undefined ? { issueUserId: normalizedIssueId } : {}),
+            ...(normalizedPackingId !== undefined ? { packingUserId: normalizedPackingId } : {}),
+            ...(skipIssue !== undefined && skipIssue !== "none" ? { skipIssueStage: skipIssue === "yes" } : {}),
+            ...(skipPacking !== undefined && skipPacking !== "none" ? { skipPackingStage: skipPacking === "yes" } : {}),
           }),
         });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, CircularProgress, Alert, IconButton
 } from '@mui/material';
@@ -128,7 +128,14 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
     setLoading(false);
     setImportLoading(false);
     setError(null);
+    setIsDragging(false);
   };
+
+  useEffect(() => {
+    if (open) {
+      resetState();
+    }
+  }, [open]);
 
   const handleClose = () => {
     resetState();

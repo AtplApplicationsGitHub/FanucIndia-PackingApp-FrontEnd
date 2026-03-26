@@ -20,6 +20,10 @@ export type SalesOrder = {
   priority?: number | null;
   assignedUser?: { id: number; name: string } | null; 
   assignedUserId?: number;
+  issueUser?: { id: number; name: string } | null;
+  issueUserId?: number;
+  packingUser?: { id: number; name: string } | null;
+  packingUserId?: number;
   customerId?: number;
   customer?: { id: number; name: string } | null;
   customerNameText?: string | null;
@@ -30,6 +34,7 @@ export type SalesOrder = {
   fgLocation?: string | null; 
   hasMaterialData?: boolean;
   skipIssueStage?: boolean;
+  skipPackingStage?: boolean;
   address?: string | null;
   notificationCount?: number;
   materialData?: { A_D_F?: string | null }[];
