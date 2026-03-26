@@ -1121,7 +1121,7 @@ export default function AssignSO() {
                 {paginatedOrders.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={13}
+                      colSpan={14}
                       align="center"
                       sx={{
                         bgcolor: lightYellow,

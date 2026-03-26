@@ -1,136 +1,228 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
-  Paper,
+  Card,
+  CardContent,
+  Typography,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
-  Typography,
   Box,
-  alpha,
-  useTheme
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  IconButton,
+  Button,
 } from "@mui/material";
-import { Users } from "lucide-react";
-import { useOperatorStats } from "../hooks/useOperatorStats";
+import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
+import { useOperatorStats, OrderDetail } from "../hooks/useOperatorStats";
 
-export default function OperatorStatsTable({ selectedDate }: { selectedDate: string }) {
-  const theme = useTheme();
-  // Ensure your useOperatorStats hook maps the new properties if it has strict TypeScript interfaces
-  const { data, loading, error } = useOperatorStats(selectedDate);
+export default function OperatorStatsTable({
+  selectedDate,
+}: {
+  selectedDate: string;
+}) {
+  const { data: stats = [], loading } = useOperatorStats(selectedDate);
+
+  // Dialog State
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogData, setDialogData] = useState<OrderDetail[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleOpenDialog = (title: string, data: OrderDetail[]) => {
+    setDialogTitle(title);
+    setDialogData(data);
+    setSearchQuery("");
+    setDialogOpen(true);
+  };
+
+  const filteredDialogData = dialogData.filter(
+    (d) =>
+      d.saleOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.outboundDelivery.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mr-3">
-          <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div>
-          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
-            OPERATOR PRODUCTIVITY
+    <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
+      <CardContent sx={{ height: "100%", p: 0 }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid #eee" }}>
+          <Typography variant="h6" fontWeight="600" color="primary.main">
+            Operator Productivity
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Issue & Packing Stage Tracking
-          </Typography>
-        </div>
-      </Box>
+        </Box>
 
-      {error ? (
-        <Typography color="error" variant="body2">{error}</Typography>
-      ) : (
-        <TableContainer sx={{ flexGrow: 1, maxHeight: 400, overflow: 'auto' }}>
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700, bgcolor: "background.paper" }}>OPERATOR NAME</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>ISSUE<br/>ASSIGNED</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>ISSUE<br/>COMPLETED</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>PACKING<br/>ASSIGNED</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700, bgcolor: "background.paper", fontSize: '0.75rem' }}>PACKING<br/>COMPLETED</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: 250,
+            }}
+          >
+            <CircularProgress size={30} />
+          </Box>
+        ) : stats.length === 0 ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: 250,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              No operator data available.
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ overflowX: "auto" }}>
+            <Table size="small">
+              <TableHead sx={{ bgcolor: "grey.100" }}>
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>Loading...</TableCell>
-                </TableRow>
-              ) : data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>No operators found.</TableCell>
-                </TableRow>
-              ) : (
-                data.map((row: any, idx: number) => (
-                  <TableRow 
-                    key={idx}
-                    sx={{
-                      "&:nth-of-type(odd)": { backgroundColor: alpha(theme.palette.primary.main, 0.02) },
-                      "&:hover": { backgroundColor: alpha(theme.palette.primary.main, 0.05) }
-                    }}
+                  <TableCell
+                    sx={{ fontWeight: "bold", borderRight: "1px solid #ddd" }}
                   >
-                    <TableCell sx={{ fontWeight: 500 }}>{row.operatorName}</TableCell>
+                    Operator
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: "bold" }} colSpan={2}>
+                    Issue Stage
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ fontWeight: "bold", borderLeft: "1px solid #ddd" }}
+                    colSpan={2}
+                  >
+                    Packing Stage
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ borderRight: "1px solid #ddd" }}></TableCell>
+                  <TableCell align="center" sx={{ fontSize: "0.75rem", color: "text.secondary" }}>Assigned</TableCell>
+                  <TableCell align="center" sx={{ fontSize: "0.75rem", color: "text.secondary" }}>Completed</TableCell>
+                  <TableCell align="center" sx={{ fontSize: "0.75rem", color: "text.secondary", borderLeft: "1px solid #ddd" }}>Assigned</TableCell>
+                  <TableCell align="center" sx={{ fontSize: "0.75rem", color: "text.secondary" }}>Completed</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {stats.map((row) => (
+                  <TableRow key={row.operatorName} hover>
+                    <TableCell sx={{ fontWeight: 500, borderRight: "1px solid #eee" }}>
+                      {row.operatorName}
+                    </TableCell>
                     
-                    {/* ISSUE ASSIGNED (Blue) */}
                     <TableCell align="center">
-                      <Box sx={{ 
-                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
-                        bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 600
-                      }}>
-                        {row.issueAssigned}
-                      </Box>
+                      <Button
+                        onClick={() => handleOpenDialog(`${row.operatorName} - Issue Assigned`, row.issueAssigned)}
+                        sx={{ minWidth: 0, p: 0.5, fontWeight: "bold", color: "#D97706" }} 
+                        disabled={row.issueAssigned.length === 0}
+                      >
+                        {row.issueAssigned.length}
+                      </Button>
                     </TableCell>
-
-                    {/* ISSUE COMPLETED (Green) */}
+                    
                     <TableCell align="center">
-                      <Box sx={{ 
-                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
-                        bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 600
-                      }}>
-                        {row.issueCompleted}
-                      </Box>
+                      <Button
+                        onClick={() => handleOpenDialog(`${row.operatorName} - Issue Completed`, row.issueCompleted)}
+                        sx={{ minWidth: 0, p: 0.5, fontWeight: "bold", color: "success.main" }}
+                        disabled={row.issueCompleted.length === 0}
+                      >
+                        {row.issueCompleted.length}
+                      </Button>
                     </TableCell>
-
-                    {/* PACKING ASSIGNED (Blue) */}
+                    
+                    <TableCell align="center" sx={{ borderLeft: "1px solid #eee" }}>
+                      <Button
+                        onClick={() => handleOpenDialog(`${row.operatorName} - Packing Assigned`, row.packingAssigned)}
+                        sx={{ minWidth: 0, p: 0.5, fontWeight: "bold", color: "#D97706" }} 
+                        disabled={row.packingAssigned.length === 0}
+                      >
+                        {row.packingAssigned.length}
+                      </Button>
+                    </TableCell>
+                    
                     <TableCell align="center">
-                      <Box sx={{ 
-                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
-                        bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 600
-                      }}>
-                        {row.packingAssigned}
-                      </Box>
+                      <Button
+                        onClick={() => handleOpenDialog(`${row.operatorName} - Packing Completed`, row.packingCompleted)}
+                        sx={{ minWidth: 0, p: 0.5, fontWeight: "bold", color: "success.main" }}
+                        disabled={row.packingCompleted.length === 0}
+                      >
+                        {row.packingCompleted.length}
+                      </Button>
                     </TableCell>
-
-                    {/* PACKING COMPLETED (Green) */}
-                    <TableCell align="center">
-                      <Box sx={{ 
-                        display: 'inline-block', px: 1.5, py: 0.5, borderRadius: 1, 
-                        bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 600
-                      }}>
-                        {row.packingCompleted}
-                      </Box>
-                    </TableCell>
-
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Paper>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
+        )}
+      </CardContent>
+
+      {/* Orders List Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6" component="div" fontWeight="bold"> 
+            {dialogTitle}
+          </Typography>
+          <IconButton onClick={() => setDialogOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 2 }}>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by SO Number or OBD..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ color: "text.secondary", mr: 1, fontSize: 20 }} />,
+              }}
+            />
+          </Box>
+          <Box sx={{ maxHeight: 400, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 1 }}>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", bgcolor: "#f5f5f5" }}>S.No</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", bgcolor: "#f5f5f5" }}>SO Number</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", bgcolor: "#f5f5f5" }}>OBD</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredDialogData.length > 0 ? (
+                  filteredDialogData.map((order, index) => (
+                    <TableRow key={index} hover>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{order.saleOrderNumber}</TableCell>
+                      <TableCell>{order.outboundDelivery}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center" sx={{ py: 3, color: "text.secondary" }}>
+                      No orders found matching your search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

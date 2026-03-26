@@ -254,9 +254,7 @@ export function useAssign() {
     fetchLookups();
   }, [fetchData, fetchLookups]);
 
-  // Restored functions that were missing
   const updateInline = async (id: number, field: string, value: any) => {
-    // Optimistic update
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== id) return o;
@@ -278,13 +276,20 @@ export function useAssign() {
       })
     );
 
+    let payloadField = field;
+    if (field === "issueUserId") {
+      payloadField = "issueAssignedUserId";
+    } else if (field === "packingUserId") {
+      payloadField = "packingAssignedUserId";
+    }
+
     try {
       const response = await fetchWithAuth(API.ADMIN.SALES_ORDER_BY_ID(id), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [payloadField]: value }),
       });
 
       if (!response.ok) {
@@ -292,7 +297,6 @@ export function useAssign() {
       }
     } catch (err) {
       console.error("Update failed:", err);
-      // Revert or refresh on error
       fetchData(true);
     }
   };

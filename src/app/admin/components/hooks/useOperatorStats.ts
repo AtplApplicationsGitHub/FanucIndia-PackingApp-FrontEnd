@@ -2,12 +2,17 @@
 import { useState, useEffect } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
+export interface OrderDetail {
+  saleOrderNumber: string;
+  outboundDelivery: string;
+}
+
 export interface OperatorStat {
   operatorName: string;
-  issueAssigned: number;
-  issueCompleted: number;
-  packingAssigned: number;
-  packingCompleted: number;
+  issueAssigned: OrderDetail[];    
+  issueCompleted: OrderDetail[];   
+  packingAssigned: OrderDetail[];  
+  packingCompleted: OrderDetail[]; 
 }
 
 export function useOperatorStats(date?: string) {
