@@ -16,7 +16,8 @@ import {
   ChevronDown,
   FileBarChart,
   Activity,
-  Boxes
+  Boxes,
+  ArchiveIcon
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -32,7 +33,8 @@ export type ViewType =
   | "assignso"
   | "status_hub"
   | "customer_report"
-  | "fg_report";
+  | "fg_report"
+  | "archived";
 
 type Props = {
   userName: string;
@@ -77,6 +79,7 @@ const REPORTS_MENU = [
   { label: "STATUS HUB", value: "status_hub", icon: <Activity size={16} /> },
   { label: "CUSTOMER REPORT", value: "customer_report", icon: <Users size={16} /> },
   { label: "FG STORAGE", value: "fg_report", icon: <Boxes size={16} /> },
+  { label: "ARCHIVED DATA", value: "archived", icon: <ArchiveIcon size={16} /> }
 ];
 
 const MAX_VISIBLE_ITEMS = 8;
@@ -210,11 +213,11 @@ export default function AdminDashboardHeader({
                 px: 1.5,
                 py: 1,
                 minWidth: "auto",
-                fontWeight: ["status_hub", "customer_report", "fg_report"].includes(view) ? 700 : 600,
+                fontWeight: ["status_hub", "customer_report", "fg_report", "archived"].includes(view) ? 700 : 600,
                 color: theme.palette.primary.contrastText,
                 bgcolor: "transparent",
                 boxShadow: "none",
-                borderBottom: ["status_hub", "customer_report", "fg_report"].includes(view)
+                borderBottom: ["status_hub", "customer_report", "fg_report", "archived"].includes(view)
                   ? `3px solid ${theme.palette.primary.contrastText}`
                   : "3px solid transparent",
                 "&:hover": {

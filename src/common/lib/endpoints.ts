@@ -86,7 +86,33 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
     ERP_MATERIAL_DATA:                            `${API_BASE_URL}/admin/sales-orders`,
     SKIP_ISSUE_STAGE: (orderId: number, materialId: number) => `${API_BASE_URL}/admin/orders/${orderId}/erp-materials/${materialId}/skip-issue`,
     RESET_ERP_DATA: (id: string | number) => `${API_BASE_URL}/sales-orders/${id}/reset`,
+
+    // Archived Orders table
+      ARCHIVED_ORDERS: (params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      paymentFilter?: string;
+      zoneFilter?: string;
+      statusFilter?: string;
+      startDate?: string;
+      endDate?: string;
+    }) => {
+      const query = new URLSearchParams();
+      if (params?.page)          query.set("page",          String(params.page));
+      if (params?.limit)         query.set("limit",         String(params.limit));
+      if (params?.search)        query.set("search",        params.search);
+      if (params?.paymentFilter) query.set("paymentFilter", params.paymentFilter);
+      if (params?.zoneFilter)    query.set("zoneFilter",    params.zoneFilter);
+      if (params?.statusFilter && params.statusFilter !== "None")
+                                 query.set("statusFilter",  params.statusFilter);
+      if (params?.startDate)     query.set("startDate",     params.startDate);
+      if (params?.endDate)       query.set("endDate",       params.endDate);
+      const qs = query.toString();
+      return `${API_BASE_URL}/archived-data${qs ? "?" + qs : ""}`;
+    },
   },
+  
   SALES: {
     CREATE_ORDER:                                         `${API_BASE_URL}/sales-crud`,
     EDIT_ORDER:                  (id: string | number) => `${API_BASE_URL}/sales-crud/${id}`,
@@ -159,6 +185,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
       LINK_SO: (id: number) =>         `${API_BASE_URL}/dispatch/mobile/${id}/so`,
     },
   },
+
   // Endpoints for Vehicle Entry Module
   VEHICLE_ENTRY: {
     CREATE:                                       `${API_BASE_URL}/vehicle-entry`,

@@ -64,6 +64,7 @@ interface FgDashboardRow {
   status: string;
   fgLocation: any;
   createdBy?: string;
+  createdByEmail?: string;
   updatedDate?: string;
   assignedUserId?: number | null;
   isReadyForDispatch?: boolean;
@@ -156,7 +157,10 @@ export default function FgDashboardView() {
   const [paymentFilter, setPaymentFilter] = useState("");
   const [zoneFilter, setZoneFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [remarksPopup, setRemarksPopup] = useState<{ title: string; content: string } | null>(null);
+  const [remarksPopup, setRemarksPopup] = useState<{
+    title: string;
+    content: string;
+  } | null>(null);
 
   const [salesZones, setSalesZones] = useState<{ id: number; name: string }[]>(
     [],
@@ -362,7 +366,10 @@ export default function FgDashboardView() {
                 alignItems: "center",
                 width: { xs: "100%", sm: 220 },
                 border: 1,
-                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
+                borderColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.23)"
+                    : "#e0e0e0",
                 borderRadius: "4px",
                 height: 40,
                 bgcolor: "background.paper",
@@ -542,15 +549,18 @@ export default function FgDashboardView() {
                       <TableRow
                         key={row.id}
                         sx={{
-                          backgroundColor: index % 2 === 0 ? "inherit" : lightYellow,
-                          "&:hover": { backgroundColor: theme.palette.action.hover },
+                          backgroundColor:
+                            index % 2 === 0 ? "inherit" : lightYellow,
+                          "&:hover": {
+                            backgroundColor: theme.palette.action.hover,
+                          },
                         }}
                       >
                         {/* SO NUMBER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
                           <MuiLink
                             component={Link}
-                            href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
+                            href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
                             underline="hover"
                             sx={{ fontWeight: 500 }}
                           >
@@ -564,10 +574,14 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* CUSTOMER NAME */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.customerName}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {row.customerName}
+                        </TableCell>
 
                         {/* SALES ZONE */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.salesZone}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {row.salesZone}
+                        </TableCell>
 
                         {/* REQUIRED DATE */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
@@ -577,49 +591,111 @@ export default function FgDashboardView() {
                         {/* STAGE STATUS (progress) */}
                         <TableCell sx={{ px: 1 }}>
                           {(() => {
-                            const { percent, current, next, color } = getStatusInfo(row);
+                            const { percent, current, next, color } =
+                              getStatusInfo(row);
                             return (
-                              <Box sx={{ width: "100%", minWidth: 220, py: 0.5 }}>
-                                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5, mb: 0 }}>
-                                  <Typography variant="caption" fontWeight={700} color="text.primary"
-                                    sx={{ fontSize: "0.75rem", whiteSpace: "nowrap", lineHeight: 1 }}>
+                              <Box
+                                sx={{ width: "100%", minWidth: 220, py: 0.5 }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    flexWrap: "wrap",
+                                    gap: 0.5,
+                                    mb: 0,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={700}
+                                    color="text.primary"
+                                    sx={{
+                                      fontSize: "0.75rem",
+                                      whiteSpace: "nowrap",
+                                      lineHeight: 1,
+                                    }}
+                                  >
                                     {current}
                                   </Typography>
                                 </Box>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
                                   <Box sx={{ flexGrow: 1 }}>
-                                    <LinearProgress variant="determinate" value={percent}
+                                    <LinearProgress
+                                      variant="determinate"
+                                      value={percent}
                                       sx={{
-                                        height: 8, borderRadius: 4,
+                                        height: 8,
+                                        borderRadius: 4,
                                         backgroundColor: alpha(color, 0.15),
                                         "& .MuiLinearProgress-bar": {
-                                          backgroundColor: color, borderRadius: 4,
+                                          backgroundColor: color,
+                                          borderRadius: 4,
                                           boxShadow: `0 0 8px ${alpha(color, 0.4)}`,
                                         },
                                       }}
                                     />
                                   </Box>
-                                  <Box sx={{
-                                    backgroundColor: alpha(color, 0.1), color: color,
-                                    px: 1, py: 0.25, borderRadius: "12px", fontWeight: 500,
-                                    fontSize: "0.75rem", display: "inline-flex", alignItems: "center",
-                                    border: `1px solid ${alpha(color, 0.2)}`
-                                  }}>
+                                  <Box
+                                    sx={{
+                                      backgroundColor: alpha(color, 0.1),
+                                      color: color,
+                                      px: 1,
+                                      py: 0.25,
+                                      borderRadius: "12px",
+                                      fontWeight: 500,
+                                      fontSize: "0.75rem",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      border: `1px solid ${alpha(color, 0.2)}`,
+                                    }}
+                                  >
                                     {percent}%
                                   </Box>
                                 </Box>
                                 {next && (
-                                  <Typography variant="caption"
-                                    sx={{ color: "#000", fontSize: "0.75rem", whiteSpace: "nowrap", fontWeight: 500, lineHeight: 1 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "#000",
+                                      fontSize: "0.75rem",
+                                      whiteSpace: "nowrap",
+                                      fontWeight: 500,
+                                      lineHeight: 1,
+                                    }}
+                                  >
                                     {next}
                                   </Typography>
                                 )}
                                 {row.updatedDate && (
-                                  <Typography variant="caption"
-                                    sx={{ color: "text.secondary", fontSize: "0.7rem", whiteSpace: "nowrap", lineHeight: 1, ml: 1 }}>                                    {new Date(row.updatedDate).toLocaleString("en-IN", {
-                                      day: "2-digit", month: "2-digit", year: "numeric",
-                                      hour: "2-digit", minute: "2-digit", hour12: true,
-                                    })}
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "text.secondary",
+                                      fontSize: "0.7rem",
+                                      whiteSpace: "nowrap",
+                                      lineHeight: 1,
+                                      ml: 1,
+                                    }}
+                                  >
+                                    {" "}
+                                    {new Date(row.updatedDate).toLocaleString(
+                                      "en-IN",
+                                      {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      },
+                                    )}
                                   </Typography>
                                 )}
                               </Box>
@@ -629,23 +705,41 @@ export default function FgDashboardView() {
 
                         {/* PAYMENT */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          <Box sx={{
-                            display: "inline-flex", alignItems: "center", justifyContent: "center",
-                            padding: "3px 10px", borderRadius: "16px", border: "1px solid",
-                            borderColor: row.payment ? alpha(theme.palette.success.main, 0.5) : alpha(theme.palette.error.main, 0.5),
-                            backgroundColor: row.payment ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
-                            color: row.payment ? theme.palette.success.dark : theme.palette.error.main,
-                            fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
-                          }}>
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "3px 10px",
+                              borderRadius: "16px",
+                              border: "1px solid",
+                              borderColor: row.payment
+                                ? alpha(theme.palette.success.main, 0.5)
+                                : alpha(theme.palette.error.main, 0.5),
+                              backgroundColor: row.payment
+                                ? alpha(theme.palette.success.main, 0.1)
+                                : alpha(theme.palette.error.main, 0.1),
+                              color: row.payment
+                                ? theme.palette.success.dark
+                                : theme.palette.error.main,
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              minWidth: "50px",
+                            }}
+                          >
                             {row.payment ? "Yes" : "No"}
                           </Box>
                         </TableCell>
 
                         {/* TRANSPORTER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.transporter || "-"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {row.transporter || "-"}
+                        </TableCell>
 
                         {/* VEHICLE NUMBER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.vehicleNumber || "-"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                          {row.vehicleNumber || "-"}
+                        </TableCell>
 
                         {/* FG LOCATION */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
@@ -666,9 +760,15 @@ export default function FgDashboardView() {
                             if (!special && !additional) return "-";
 
                             return (
-                              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
-                                {special && (
-                                  special.length > 20 ? (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 0.25,
+                                }}
+                              >
+                                {special &&
+                                  (special.length > 20 ? (
                                     <Typography
                                       sx={{
                                         fontSize: "0.8rem",
@@ -679,18 +779,28 @@ export default function FgDashboardView() {
                                         cursor: "pointer",
                                         color: "#3B82F6",
                                       }}
-                                      onClick={() => setRemarksPopup({ title: "Special Remark", content: special })}
+                                      onClick={() =>
+                                        setRemarksPopup({
+                                          title: "Special Remark",
+                                          content: special,
+                                        })
+                                      }
                                     >
                                       {special}
                                     </Typography>
                                   ) : (
-                                    <Typography sx={{ fontSize: "0.8rem", whiteSpace: "nowrap", color: "#3B82F6" }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.8rem",
+                                        whiteSpace: "nowrap",
+                                        color: "#3B82F6",
+                                      }}
+                                    >
                                       {special}
                                     </Typography>
-                                  )
-                                )}
-                                {additional && (
-                                  additional.length > 20 ? (
+                                  ))}
+                                {additional &&
+                                  (additional.length > 20 ? (
                                     <Typography
                                       sx={{
                                         fontSize: "0.8rem",
@@ -701,23 +811,34 @@ export default function FgDashboardView() {
                                         cursor: "pointer",
                                         color: "#00B894",
                                       }}
-                                      onClick={() => setRemarksPopup({ title: "Additional Remark", content: additional })}
+                                      onClick={() =>
+                                        setRemarksPopup({
+                                          title: "Additional Remark",
+                                          content: additional,
+                                        })
+                                      }
                                     >
                                       {additional}
                                     </Typography>
                                   ) : (
-                                    <Typography sx={{ fontSize: "0.8rem", whiteSpace: "nowrap", color: "#00B894" }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.8rem",
+                                        whiteSpace: "nowrap",
+                                        color: "#00B894",
+                                      }}
+                                    >
                                       {additional}
                                     </Typography>
-                                  )
-                                )}
+                                  ))}
                               </Box>
                             );
                           })()}
                         </TableCell>
                         {/* SALES USER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>{row.createdBy || "-"}</TableCell>
-
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                            {row.createdByEmail || "-"}
+                        </TableCell>
                       </TableRow>
                     );
                   })
@@ -758,25 +879,47 @@ export default function FgDashboardView() {
           <Box
             onClick={() => setRemarksPopup(null)}
             sx={{
-              position: "fixed", inset: 0,
+              position: "fixed",
+              inset: 0,
               backgroundColor: "rgba(0,0,0,0.4)",
               zIndex: 1300,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Paper
               onClick={(e) => e.stopPropagation()}
-              sx={{ minWidth: 340, maxWidth: 480, borderRadius: 2, overflow: "hidden", boxShadow: 6 }}
+              sx={{
+                minWidth: 340,
+                maxWidth: 480,
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: 6,
+              }}
             >
-              <Box sx={{
-                backgroundColor: "background.paper", px: 3, py: 1.5,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                position: "relative",
-                borderBottom: "1px solid",
-                borderColor: "divider",
-              }}>
-                <Typography fontWeight={700} fontSize="1rem"
-                  sx={{ color: "#d32f2f", letterSpacing: 1, textTransform: "uppercase" }}>
+              <Box
+                sx={{
+                  backgroundColor: "background.paper",
+                  px: 3,
+                  py: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Typography
+                  fontWeight={700}
+                  fontSize="1rem"
+                  sx={{
+                    color: "#d32f2f",
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                  }}
+                >
                   {remarksPopup.title}
                 </Typography>
                 <IconButton
@@ -788,8 +931,18 @@ export default function FgDashboardView() {
                 </IconButton>
               </Box>
               <Box sx={{ px: 3, py: 3, backgroundColor: "background.paper" }}>
-                <Paper variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 1, backgroundColor: "action.hover" }}>
-                  <Typography fontSize="0.9rem" color="text.primary">{remarksPopup.content}</Typography>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    borderRadius: 1,
+                    backgroundColor: "action.hover",
+                  }}
+                >
+                  <Typography fontSize="0.9rem" color="text.primary">
+                    {remarksPopup.content}
+                  </Typography>
                 </Paper>
               </Box>
             </Paper>

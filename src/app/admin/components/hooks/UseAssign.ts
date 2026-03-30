@@ -228,7 +228,7 @@ export function useAssign() {
 
       setLookup({
         assignableUsers: Array.isArray(users)
-          ? users.map((u: any) => ({ id: u.id, name: u.name || "Unknown" }))
+          ? users.map((u: any) => ({ id: u.id, name: u.email || u.name || "Unknown" }))
           : [],
         products: Array.isArray(products) ? products : [],
         salesZones: Array.isArray(zones) ? zones : [],

@@ -100,12 +100,24 @@ const FIELDS: {
   },
   { key: "address", label: "Address" },
   { key: "priority", label: "Priority", type: "number" },
+  // {
+  //   key: "assignedUserId",
+  //   label: "Assigned User",
+  //   type: "select",
+  //   options: "assignableUsers",
+  // },
   {
-    key: "assignedUserId",
-    label: "Assigned User",
-    type: "select",
-    options: "assignableUsers",
-  },
+  key: "issueUserId",
+  label: "Issue Assigned User",
+  type: "select",
+  options: "assignableUsers",
+},
+{
+  key: "packingUserId",
+  label: "Pack Assigned User",
+  type: "select",
+  options: "assignableUsers",
+},
   { key: "status", label: "Status", disabled: true },
   { key: "fgLocation", label: "FG Location" },
   { key: "specialRemarks", label: "Special Remarks" },
@@ -127,7 +139,9 @@ const PATCHABLE_KEYS = [
   "packConfigId",
   "status",
   "priority",
-  "assignedUserId",
+  // "assignedUserId",
+  "issueUserId",
+  "packingUserId",
   "customerId",
   "customerNameText",
   "specialRemarks",
@@ -226,7 +240,24 @@ export default function AdminOrderEditModal({
         // case "plantCodeId":
         case "salesZoneId":
         case "packConfigId":
-        case "assignedUserId":
+          if (typeof v === "string" && v.trim() !== "") {
+            patch[key] = Number(v) as SalesOrderPatch[typeof key];
+          } else if (typeof v === "number") {
+            patch[key] = v as SalesOrderPatch[typeof key];
+          }
+          break;
+
+        case "issueUserId":
+        case "packingUserId":
+          if (typeof v === "string" && v.trim() !== "") {
+            const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
+            (patch as any)[backendKey] = Number(v); 
+          } else if (typeof v === "number") {
+            const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
+            (patch as any)[backendKey] = v;
+          }
+          break;
+
         case "customerId":
           if (typeof v === "string" && v.trim() !== "") {
             patch[key] = Number(v) as SalesOrderPatch[typeof key];
