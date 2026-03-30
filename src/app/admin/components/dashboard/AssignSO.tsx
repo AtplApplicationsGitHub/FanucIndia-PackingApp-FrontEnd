@@ -641,24 +641,26 @@ export default function AssignSO() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("ASSIGN_SO");
 
+    // UPDATED: Added CUSTOMER NAME after TRANSPORTER
     worksheet.columns = [
-      { header: "PRODUCT", key: "product", width: 20 },
-      { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 },
-      { header: "OUT BOUND DELIVERY", key: "outboundDelivery", width: 20 },
-      { header: "TRANSFER ORDER", key: "transferOrder", width: 20 },
-      { header: "DELIVERY DATE", key: "deliveryDate", width: 18 },
-      { header: "TRANSPORTER", key: "transporter", width: 20 },
-      { header: "PLANT CODE", key: "plantCode", width: 15 },
-      { header: "PAYMENT CLEARANCE", key: "payment", width: 18 },
-      { header: "PACKING CONFIG", key: "packingConfig", width: 20 },
-      { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 },
-      { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 },
-      { header: "LABEL REMARKS", key: "labelRemarks", width: 25 },
-      { header: "PRIORITY", key: "priority", width: 12 },
-      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 },
-      { header: "PACKING STAGE USER", key: "packingUser", width: 20 },
-      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 },
-      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 },
+      { header: "PRODUCT", key: "product", width: 20 }, // A
+      { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 }, // B
+      { header: "OUT BOUND DELIVERY", key: "outboundDelivery", width: 20 }, // C
+      { header: "TRANSFER ORDER", key: "transferOrder", width: 20 }, // D
+      { header: "DELIVERY DATE", key: "deliveryDate", width: 18 }, // E
+      { header: "TRANSPORTER", key: "transporter", width: 20 }, // F
+      { header: "CUSTOMER NAME", key: "customerName", width: 25 }, // G (NEW)
+      { header: "PLANT CODE", key: "plantCode", width: 15 }, // H
+      { header: "PAYMENT CLEARANCE", key: "payment", width: 18 }, // I
+      { header: "PACKING CONFIG", key: "packingConfig", width: 20 }, // J
+      { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 }, // K
+      { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 }, // L
+      { header: "LABEL REMARKS", key: "labelRemarks", width: 25 }, // M
+      { header: "PRIORITY", key: "priority", width: 12 }, // N
+      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 }, // O
+      { header: "PACKING STAGE USER", key: "packingUser", width: 20 }, // P
+      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 }, // Q
+      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 }, // R
     ];
 
     worksheet.getRow(1).font = { bold: true };
@@ -678,6 +680,7 @@ export default function AssignSO() {
         transferOrder: clearHyphen(row.transferOrder),
         deliveryDate: row.deliveryDate ? formatDate(row.deliveryDate) : "",
         transporter: clearHyphen(row.transporter?.name),
+        customerName: clearHyphen(row.customerNameText || row.customer?.name), // NEW
         plantCode: clearHyphen(row.plantCode),
         payment: row.paymentClearance ? "Yes" : "No",
         packingConfig: clearHyphen(row.packConfig?.configName),
@@ -696,9 +699,23 @@ export default function AssignSO() {
       lookup.assignableUsers?.map((u: any) => u.name).join(",") || "Unassigned";
     const packConfigNames =
       lookup.packConfigs?.map((p: any) => p.configName).join(",") || "Default";
+    // NEW: Extract customer names for the dropdown
+    const customerNames =
+      lookup.customers?.map((c: any) => c.name).join(",") || "";
 
     for (let i = 2; i <= exportRows.length + 1; i++) {
-      const paymentCell = worksheet.getCell(`H${i}`);
+      // NEW: Customer Name Validation (Column G)
+      if (customerNames.length < 255) {
+        const custCell = worksheet.getCell(`G${i}`);
+        custCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`"${customerNames}"`],
+        };
+      }
+
+      // UPDATED: Shifted all subsequent column letters by +1 due to inserting G
+      const paymentCell = worksheet.getCell(`I${i}`); // Was H
       paymentCell.dataValidation = {
         type: "list",
         allowBlank: true,
@@ -706,14 +723,14 @@ export default function AssignSO() {
       };
 
       if (assignableUserNames.length < 255) {
-        const issueUserCell = worksheet.getCell(`N${i}`);
+        const issueUserCell = worksheet.getCell(`O${i}`); // Was N
         issueUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
           formulae: [`"${assignableUserNames}"`],
         };
 
-        const packingUserCell = worksheet.getCell(`O${i}`);
+        const packingUserCell = worksheet.getCell(`P${i}`); // Was O
         packingUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -722,7 +739,7 @@ export default function AssignSO() {
       }
 
       if (packConfigNames.length < 255) {
-        const packCell = worksheet.getCell(`I${i}`);
+        const packCell = worksheet.getCell(`J${i}`); // Was I
         packCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -730,14 +747,14 @@ export default function AssignSO() {
         };
       }
 
-      const skipIssueCell = worksheet.getCell(`P${i}`);
+      const skipIssueCell = worksheet.getCell(`Q${i}`); // Was P
       skipIssueCell.dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: ['"Yes,No"'],
       };
 
-      const skipPackingCell = worksheet.getCell(`Q${i}`);
+      const skipPackingCell = worksheet.getCell(`R${i}`); // Was Q
       skipPackingCell.dataValidation = {
         type: "list",
         allowBlank: true,
@@ -750,20 +767,16 @@ export default function AssignSO() {
       selectUnlockedCells: true,
     });
 
-    // 2. Define which columns should be strictly Read-Only
     const readOnlyColumns = ["PRODUCT", "SALE ORDER NUMBER", "TRANSFER ORDER"];
 
-    // 3. Iterate through all columns and unlock the ones that are NOT in the readOnly array
     worksheet.columns.forEach((column) => {
       const headerName = column.header ? column.header.toString() : "";
       const isReadOnly = readOnlyColumns.includes(headerName);
 
       column.eachCell!({ includeEmpty: true }, (cell, rowNumber) => {
         if (rowNumber === 1) {
-          // Always lock the header row so titles can't be changed
           cell.protection = { locked: true };
         } else {
-          // Lock or unlock based on the column name
           cell.protection = { locked: isReadOnly };
         }
       });
