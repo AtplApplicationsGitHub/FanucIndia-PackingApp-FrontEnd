@@ -186,16 +186,16 @@ export default function OperatorStatsTable({
               </TableHead>
               <TableBody>
                 {stats.map((row) => (
-                  <TableRow key={row.operatorName} hover>
+                  <TableRow key={row.operatorEmail} hover>
                     <TableCell sx={{ fontWeight: 500 }}>
-                      {row.operatorName}
+                      {row.operatorEmail}
                     </TableCell>
 
                     <TableCell align="center">
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorName} - Issue Assigned`,
+                            `${row.operatorEmail} - Issue Assigned`,
                             row.issueAssigned || [],
                           )
                         }
@@ -217,7 +217,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorName} - Issue Completed`,
+                            `${row.operatorEmail} - Issue Completed`,
                             row.issueCompleted || [],
                           )
                         }
@@ -239,7 +239,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorName} - Packing Assigned`,
+                            `${row.operatorEmail} - Packing Assigned`,
                             row.packingAssigned || [],
                           )
                         }
@@ -262,7 +262,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorName} - Packing Completed`,
+                            `${row.operatorEmail} - Packing Completed`,
                             row.packingCompleted || [],
                           )
                         }

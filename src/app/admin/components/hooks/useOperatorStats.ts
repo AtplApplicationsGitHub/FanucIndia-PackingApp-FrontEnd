@@ -9,6 +9,7 @@ export interface OrderDetail {
 
 export interface OperatorStat {
   operatorName: string;
+  operatorEmail: string;
   issueAssigned: OrderDetail[];    
   issueCompleted: OrderDetail[];   
   packingAssigned: OrderDetail[];  
