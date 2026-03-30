@@ -16,7 +16,7 @@ export default function ArchivedOrdersTable() {
     search: "",
     paymentFilter: "",
     zoneFilter: "",
-    statusFilter: "",
+    // statusFilter: "",
     startDate: null as Date | null,
     endDate: null as Date | null,
   });
@@ -43,10 +43,10 @@ export default function ArchivedOrdersTable() {
     setCurrentPage(1);
   };
 
-  const setStatusFilter = (val: string) => {
-    setFilters(f => ({ ...f, statusFilter: val }));
-    setCurrentPage(1);
-  };
+  // const setStatusFilter = (val: string) => {
+  //   setFilters(f => ({ ...f, statusFilter: val }));
+  //   setCurrentPage(1);
+  // };
 
   const setStartDate = (val: Date | null) => {
     setFilters(f => ({ ...f, startDate: val }));
@@ -63,7 +63,7 @@ export default function ArchivedOrdersTable() {
       search: "",
       paymentFilter: "",
       zoneFilter: "",
-      statusFilter: "",
+      // statusFilter: "",
       startDate: null,
       endDate: null,
     });
@@ -82,8 +82,8 @@ export default function ArchivedOrdersTable() {
         onPaymentFilterChange={setPaymentFilter}
         zoneFilter={filters.zoneFilter}
         onZoneFilterChange={setZoneFilter}
-        statusFilter={filters.statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        // statusFilter={filters.statusFilter}
+        // onStatusFilterChange={setStatusFilter}
         salesZones={lookup.salesZones}
         startDate={filters.startDate}
         onStartDateChange={setStartDate}

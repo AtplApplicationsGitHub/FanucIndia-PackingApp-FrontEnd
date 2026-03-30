@@ -6,9 +6,9 @@ import {
   IconButton,
   Paper,
   InputBase,
-  FormControl, 
-  Select,      
-  MenuItem,    
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -17,7 +17,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
-import { LookupRow } from "@/app/admin/components/types/admin"; 
+import { LookupRow } from "@/app/admin/components/types/admin";
 
 const STATUS_OPTIONS = [
   "None",
@@ -30,13 +30,13 @@ const STATUS_OPTIONS = [
 type Props = {
   searchInput: string;
   onSearchInputChange: (val: string) => void;
-  
+
   paymentFilter: string;
   onPaymentFilterChange: (val: string) => void;
   zoneFilter: string;
   onZoneFilterChange: (val: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (val: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (val: string) => void;
   salesZones: LookupRow[];
 
   startDate: Date | null;
@@ -187,24 +187,21 @@ export default function AdminOrdersToolbar({
           </FormControl>
 
           {/* Status Filter */}
-          <FormControl
-            size="small"
-            sx={{ minWidth: 140, bgcolor: "background.paper" }}
-          >
-            <Select
-              value={statusFilter}
-              displayEmpty
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "14px" }}
-            >
-              <MenuItem value="">STATUS</MenuItem>
-              {STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {onStatusFilterChange && (
+            <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+              <Select
+                value={statusFilter ?? ""}
+                displayEmpty
+                onChange={(e) => onStatusFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">STATUS</MenuItem>
+                {STATUS_OPTIONS.map((status) => (
+                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           {/* Date Pickers */}
           <DatePicker
