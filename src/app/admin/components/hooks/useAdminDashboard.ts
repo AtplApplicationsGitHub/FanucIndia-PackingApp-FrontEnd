@@ -207,7 +207,9 @@ export function useAdminDashboard() {
         plantCodes: pc.data,
         salesZones: sz.data,
         packConfigs: pk.data,
-        assignableUsers: au.data,
+        assignableUsers: Array.isArray(au.data) 
+    ? au.data.map((u: any) => ({ ...u, name: u.email || u.name || "Unknown" })) 
+    : [],
         customers: c.data,
       });
     } catch {

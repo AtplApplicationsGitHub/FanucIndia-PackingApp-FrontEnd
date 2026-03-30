@@ -415,14 +415,10 @@ export default function AssignSO() {
         ""
       ).toLowerCase();
       const assignedUserName = (
-        (order.issueUser?.name ||
-          findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
-          "") +
-        " " +
-        (order.packingUser?.name ||
-          findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
-          "")
-      ).toLowerCase();
+  (findName(lookup.assignableUsers, order.issueUserId ?? 0) || order.issueUser?.name || "") +
+  " " +
+  (findName(lookup.assignableUsers, order.packingUserId ?? 0) || order.packingUser?.name || "")
+).toLowerCase();
       const paymentString = order.paymentClearance ? "yes" : "no";
 
       const matchesSearch =
@@ -525,14 +521,10 @@ export default function AssignSO() {
         ""
       ).toLowerCase();
       const assignedUserName = (
-        (order.issueUser?.name ||
-          findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
-          "") +
-        " " +
-        (order.packingUser?.name ||
-          findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
-          "")
-      ).toLowerCase();
+  (findName(lookup.assignableUsers, order.issueUserId ?? 0) || order.issueUser?.name || "") +
+  " " +
+  (findName(lookup.assignableUsers, order.packingUserId ?? 0) || order.packingUser?.name || "")
+).toLowerCase();
 
       const paymentString = order.paymentClearance ? "yes" : "no";
 
@@ -688,8 +680,8 @@ export default function AssignSO() {
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
         priority: row.priority ?? "",
-        issueUser: clearHyphen(row.issueUser?.name),
-        packingUser: clearHyphen(row.packingUser?.name),
+        issueUser: clearHyphen(findName(lookup.assignableUsers, row.issueUserId ?? 0) || row.issueUser?.name),
+        packingUser: clearHyphen(findName(lookup.assignableUsers, row.packingUserId ?? 0) || row.packingUser?.name),
         skipIssueStage: isIssueSkipped,
         skipPackingStage: isPackingSkipped,
       });
@@ -1427,11 +1419,11 @@ export default function AssignSO() {
                                 })
                               }
                             >
-                              {row.issueUser?.name ||
-                                findName(
+                              {findName(
                                   lookup.assignableUsers,
                                   row.issueUserId ?? 0,
                                 ) ||
+                                row.issueUser?.name ||
                                 "-"}
                             </Box>
                           )}
@@ -1466,11 +1458,11 @@ export default function AssignSO() {
                                 })
                               }
                             >
-                              {row.packingUser?.name ||
-                                findName(
+                              {findName(
                                   lookup.assignableUsers,
                                   row.packingUserId ?? 0,
                                 ) ||
+                                row.packingUser?.name ||
                                 "-"}
                             </Box>
                           )}
