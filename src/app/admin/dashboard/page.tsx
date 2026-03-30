@@ -23,6 +23,7 @@ import SoChatDrawer from "@/app/components/SoChatDrawer";
 import ReportPanel from "../components/dashboard/PlanvsActual";
 import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
+import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 
 
 export default function AdminDashboard() {
@@ -326,6 +327,16 @@ export default function AdminDashboard() {
               style={{ padding: "0.5% 0 2rem 0" }}
             >
               <FgStorageReport />
+            </motion.div>
+          )}
+          {admin.view === "archived" && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <ArchivedOrdersTable />
             </motion.div>
           )}
           {admin.error && (
