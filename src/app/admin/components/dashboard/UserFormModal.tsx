@@ -17,7 +17,7 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  useTheme, 
+  useTheme,
   Theme,
   Checkbox,
   ListItemText,
@@ -27,12 +27,14 @@ import {
 import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
 import { User, UserRole } from "@/app/admin/components/types/admin";
-import { API } from '@/common/lib/endpoints';
+import { API, fetchWithAuth } from '@/common/lib/endpoints';
 
+// data sent on form submission
 export interface UserSubmitData {
   name: string;
   email: string;
   role: UserRole;
+  salesZoneId?: number;
   password?: string;
   accessPickPack?: boolean;
   accessLabelPrint?: boolean;
@@ -103,6 +105,7 @@ type FormFields = {
   password: string;
   confirmPassword: string;
   role: UserRole | "";
+  zone: number | "";
 };
 
 const AdminUserFormModal: React.FC<Props> = ({
@@ -129,6 +132,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       password: "",
       confirmPassword: "",
       role: "",
+      zone: "",
     },
   });
 
@@ -140,6 +144,7 @@ const AdminUserFormModal: React.FC<Props> = ({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [salesZones, setSalesZones] = useState<{ id: number; name: string }[]>([]);
 
   const { ref: nameFieldRef } = register("name", {
     required: "Name is required",
@@ -155,12 +160,20 @@ const AdminUserFormModal: React.FC<Props> = ({
     }
   }, [open]);
 
+  useEffect(() => {
+    fetchWithAuth(API.LOOKUP.SALES_ZONES)
+      .then((res) => res.json())
+      .then((data) => setSalesZones(data))
+      .catch((err) => console.error("Sales zones fetch failed:", err));
+  }, []);
+
   const name = watch("name");
   const email = watch("email");
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
   const role = watch("role");
   const isUserRole = role === "USER";
+  const isSalesRole = role === "SALES";
 
   const passwordStatus = useMemo(() => {
     if (isUserRole) {
@@ -200,36 +213,37 @@ const AdminUserFormModal: React.FC<Props> = ({
   }, [email, editingUser]);
 
   useEffect(() => {
-  if (editingUser) {
-    setValue("name", editingUser.name);
-    setValue("email", editingUser.email);
-    setValue("password", "");
-    setValue("confirmPassword", "");
-    setValue("role", editingUser.role);
+    if (editingUser) {
+      setValue("name", editingUser.name);
+      setValue("email", editingUser.email);
+      setValue("password", "");
+      setValue("confirmPassword", "");
+      setValue("role", editingUser.role);
+      setValue("zone", editingUser.salesZoneId ?? "");
 
-    const currentAccess: string[] = [];
-    if (editingUser.accessPickPack) currentAccess.push("accessPickPack");
-    if (editingUser.accessLabelPrint) currentAccess.push("accessLabelPrint");
-    if (editingUser.accessMaterialFgTransfer) currentAccess.push("accessMaterialFgTransfer");
-    if (editingUser.accessMaterialDispatch) currentAccess.push("accessMaterialDispatch");
-    if (editingUser.accessVehicleEntry) currentAccess.push("accessVehicleEntry");
-    if (editingUser.accessLocationAccuracy) currentAccess.push("accessLocationAccuracy");
-    if (editingUser.accessContentAccuracy) currentAccess.push("accessContentAccuracy");
-    if (editingUser.accessPutAway) currentAccess.push("accessPutAway");
-    if (editingUser.accessErpBarcode) currentAccess.push("accessErpBarcode");
-    setSelectedModules(currentAccess);
-  } else {
-    reset();
-    setSelectedModules([]); 
-  }
-}, [editingUser, open, setValue, reset]);
+      const currentAccess: string[] = [];
+      if (editingUser.accessPickPack) currentAccess.push("accessPickPack");
+      if (editingUser.accessLabelPrint) currentAccess.push("accessLabelPrint");
+      if (editingUser.accessMaterialFgTransfer) currentAccess.push("accessMaterialFgTransfer");
+      if (editingUser.accessMaterialDispatch) currentAccess.push("accessMaterialDispatch");
+      if (editingUser.accessVehicleEntry) currentAccess.push("accessVehicleEntry");
+      if (editingUser.accessLocationAccuracy) currentAccess.push("accessLocationAccuracy");
+      if (editingUser.accessContentAccuracy) currentAccess.push("accessContentAccuracy");
+      if (editingUser.accessPutAway) currentAccess.push("accessPutAway");
+      if (editingUser.accessErpBarcode) currentAccess.push("accessErpBarcode");
+      setSelectedModules(currentAccess);
+    } else {
+      reset();
+      setSelectedModules([]);
+    }
+  }, [editingUser, open, setValue, reset]);
 
-const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
-  const {
-    target: { value },
-  } = event;
-  setSelectedModules(typeof value === 'string' ? value.split(',') : value);
-};
+  const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedModules(typeof value === 'string' ? value.split(',') : value);
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -254,6 +268,9 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
       accessErpBarcode: false,
     };
 
+    if (role === "SALES" && data.zone) {
+      payload.salesZoneId = data.zone as number;
+    }
     if (password) {
       payload.password = password;
     }
@@ -283,12 +300,13 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
     !email.trim() ||
     emailStatus !== "available" ||
     !role ||
+    (isSalesRole && !watch("zone")) ||
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
-    (!!password && (!allSatisfied || !passwordsMatch));
+    (!!password && (!allSatisfied || !passwordsMatch))
 
   const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover, 
-    color: (theme: Theme) => theme.palette.text.primary,   
+    bgcolor: (theme: Theme) => theme.palette.action.hover,
+    color: (theme: Theme) => theme.palette.text.primary,
     borderRadius: 0,
     clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
     fontWeight: 600,
@@ -300,7 +318,7 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main, 
+      bgcolor: (theme: Theme) => theme.palette.primary.main,
       color: (theme: Theme) => theme.palette.primary.contrastText,
       boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
       "& .MuiSvgIcon-root, & svg": {
@@ -308,23 +326,27 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
       },
     },
     "&:disabled": {
-       opacity: 0.6,
-       bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
-       color: (theme: Theme) => theme.palette.text.disabled
+      opacity: 0.6,
+      bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
+      color: (theme: Theme) => theme.palette.text.disabled
     }
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       {/* Updated Title Color to Fanuc Red */}
-      <DialogTitle sx={{ 
-        color: theme.palette.secondary.main, // Fanuc Red
+      <DialogTitle sx={{
+        color: theme.palette.secondary.main,
         fontWeight: 'bold',
-        textTransform: 'uppercase'
+        textTransform: 'uppercase',
+        fontSize: 20,
+        textAlign: 'center',
+        pb: 1,
+        borderBottom: `1px solid ${theme.palette.divider}`,
       }}>
         {editingUser ? "Edit User Credentials" : "Create User Credentials"}
       </DialogTitle>
-      
+
       <DialogContent>
         <Box
           component="form"
@@ -412,6 +434,35 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
               </Typography>
             )}
           </FormControl>
+          {isSalesRole && (
+            <FormControl fullWidth size="small" error={!!errors.zone}>
+              <InputLabel id="zone-label">Zone</InputLabel>
+              <Controller
+                name="zone"
+                control={control}
+                rules={{ required: isSalesRole ? "Zone is required" : false }}
+                render={({ field }) => (
+                  <Select
+                    labelId="zone-label"
+                    label="Zone"
+                    size="small"
+                    {...field}
+                  >
+                    {salesZones.map((z) => (
+                      <MenuItem key={z.id} value={z.id}>
+                        {z.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              {errors.zone && (
+                <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
+                  {errors.zone.message}
+                </Typography>
+              )}
+            </FormControl>
+          )}
 
           {isUserRole && (
             <FormControl fullWidth size="small">
@@ -422,7 +473,7 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
                 value={selectedModules}
                 onChange={handleModuleChange}
                 input={<OutlinedInput label="Module Access" />}
-                renderValue={(selected) => 
+                renderValue={(selected) =>
                   MOBILE_MODULES
                     .filter(m => selected.includes(m.key))
                     .map(m => m.label)
@@ -452,8 +503,8 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
                   isUserRole
                     ? "Enter 4-digit PIN"
                     : editingUser
-                    ? "Leave blank to keep unchanged"
-                    : ""
+                      ? "Leave blank to keep unchanged"
+                      : ""
                 }
                 {...register("password", {
                   validate: (val) => {
@@ -533,20 +584,10 @@ const handleModuleChange = (event: SelectChangeEvent<string[]>) => {
           )}
         </Box>
       </DialogContent>
-      
-      <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
-        <Button
-          onClick={handleClose}
-          sx={buttonSx} 
-        >
-          CANCEL
-        </Button>
-        <Button
-          type="submit"
-          onClick={handleSubmit(submitHandler)}
-          disabled={disableSubmit}
-          sx={buttonSx}
-        >
+
+      <DialogActions sx={{ px: 3, pb: 3, pt: 2, justifyContent: 'flex-end', borderTop: `1px solid ${theme.palette.divider}` }}>
+        <Button onClick={handleClose} sx={buttonSx}>CANCEL</Button>
+        <Button onClick={handleSubmit(submitHandler)} disabled={disableSubmit} sx={buttonSx}>
           {editingUser ? "UPDATE" : "CREATE"}
         </Button>
       </DialogActions>

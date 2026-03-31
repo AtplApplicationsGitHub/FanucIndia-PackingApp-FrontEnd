@@ -118,6 +118,7 @@ const AdminUsersTable: React.FC<Props> = ({
               <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Name</TableCell>
               <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Email</TableCell>
               <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Role</TableCell>
+              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Zone</TableCell>
               <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Created</TableCell>
               <TableCell align="center" sx={{ fontWeight: "bold", width: 100, color: theme.palette.primary.contrastText }}>Actions</TableCell>
             </TableRow>
@@ -125,7 +126,7 @@ const AdminUsersTable: React.FC<Props> = ({
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">
                     No users found.
                   </Typography>
@@ -149,6 +150,9 @@ const AdminUsersTable: React.FC<Props> = ({
                     {row.role.toLowerCase()}
                   </TableCell>
                   <TableCell>
+                    {row.salesZone?.name ?? "-"}
+                  </TableCell>
+                  <TableCell>
                     {row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-"}
                   </TableCell>
                   <TableCell align="center">
@@ -167,7 +171,7 @@ const AdminUsersTable: React.FC<Props> = ({
         </Table>
       </TableContainer>
 
-      <TablePagination 
+      <TablePagination
         rowsPerPageOptions={[5, 10, 20]}
         component="div"
         count={users.length}

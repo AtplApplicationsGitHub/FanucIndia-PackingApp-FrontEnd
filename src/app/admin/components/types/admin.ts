@@ -7,7 +7,7 @@ export type SalesOrder = {
   saleOrderNumber?: string;
   outboundDelivery?: string;
   transferOrder?: string;
-  deliveryDate?: string; 
+  deliveryDate?: string;
   transporter?: { name?: string } | null;
   transporterId?: number;
   plantCode?: string | null;
@@ -18,7 +18,7 @@ export type SalesOrder = {
   packConfigId?: number;
   status?: string | null;
   priority?: number | null;
-  assignedUser?: { id: number; name: string } | null; 
+  assignedUser?: { id: number; name: string } | null;
   assignedUserId?: number;
   issueUser?: { id: number; name: string } | null;
   issueUserId?: number;
@@ -31,7 +31,7 @@ export type SalesOrder = {
   specialRemarks?: string | null;
   additionalRemarks?: string | null;
   labelRemarks?: string | null;
-  fgLocation?: string | null; 
+  fgLocation?: string | null;
   hasMaterialData?: boolean;
   skipIssueStage?: boolean;
   skipPackingStage?: boolean;
@@ -47,19 +47,19 @@ export type Lookup = {
   plantCodes: { id: number; code: string }[];
   salesZones: { id: number; name: string }[];
   packConfigs: { id: number; configName: string }[];
-  assignableUsers: { id: number; name: string }[]; 
+  assignableUsers: { id: number; name: string }[];
   customers: { id: number; name: string; address: string; contact?: string }[];
   [key: string]: LookupRow[];
 };
 
 export type LookupRow = {
   id: number;
-  [key:string]: string | number | boolean | null | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 };
 
 export type MasterRow = {
   id: number;
-  [key:string]: string | number | boolean | null | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 };
 
 export type EditableField =
@@ -75,7 +75,7 @@ export type EditableField =
   | "packConfigId"
   | "status"
   | "priority"
-  | "assignedUserId" 
+  | "assignedUserId"
   | "specialRemarks"
   | "additionalRemarks"
   | "labelRemarks"
@@ -90,7 +90,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  createdAt: string; 
+  salesZoneId?: number | null;
+  salesZone?: { id: number; name: string } | null;
+  createdAt: string;
   updatedAt: string;
   accessPickPack?: boolean;
   accessLabelPrint?: boolean;
@@ -101,6 +103,7 @@ export interface User {
   accessContentAccuracy?: boolean;
   accessPutAway?: boolean;
   accessErpBarcode?: boolean;
+
 }
 
 export interface AdminKpisResponse {
@@ -117,13 +120,13 @@ export interface StatusCardData {
   value: string | number;
   percentage: string;
   isPositive: boolean;
-  iconType: string;  
+  iconType: string;
   iconColor: string;
 }
 
 export type AdminNewImportItem = {
-  date: string;       
-  dayLabel: string;   
+  date: string;
+  dayLabel: string;
   count: number;
 };
 
