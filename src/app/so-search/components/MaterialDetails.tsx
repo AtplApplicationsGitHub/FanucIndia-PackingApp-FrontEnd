@@ -46,6 +46,7 @@ interface MaterialDetail {
   Remarks?: string;
   Remarks_Required?: boolean;
   Group?: string;
+  Classification?: string;
 }
 
 interface Props {
@@ -62,6 +63,7 @@ export default function MaterialDetails({
 
   // [NEW] Group Filter State
   const [groupFilter, setGroupFilter] = useState<string>("All");
+  const [classificationFilter, setClassificationFilter] = useState<string>("All");
 
   // [NEW] Extract unique groups from the data
   const uniqueGroups = useMemo(() => {
@@ -70,12 +72,22 @@ export default function MaterialDetails({
     return ["All", ...Array.from(new Set(groups)).sort()];
   }, [materialDetails]);
 
-  // [NEW] Filter materials based on selected group
+  // [NEW] Extract unique classifications from the data
+  const uniqueClassifications = useMemo(() => {
+    const list = materialDetails || [];
+    const classifications = list.map((m) => m.Classification).filter((c): c is string => !!c);
+    return ["All", ...Array.from(new Set(classifications)).sort()];
+  }, [materialDetails]);
+
+  // [UPDATED] Filter materials based on selected group AND classification
   const displayMaterials = useMemo(() => {
     const list = materialDetails || [];
-    if (groupFilter === "All") return list;
-    return list.filter((m) => m.Group === groupFilter);
-  }, [materialDetails, groupFilter]);
+    return list.filter((m) => {
+      const matchGroup = groupFilter === "All" || m.Group === groupFilter;
+      const matchClassification = classificationFilter === "All" || m.Classification === classificationFilter;
+      return matchGroup && matchClassification;
+    });
+  }, [materialDetails, groupFilter, classificationFilter]);
 
   // [NEW] Calculate Durations and Extract User Names for Issue and Packing Stages
   const { issueDuration, packingDuration, issueUpdatedBy, packingUpdatedBy } = useMemo(() => {
@@ -116,6 +128,10 @@ export default function MaterialDetails({
 
   const handleGroupChange = (event: SelectChangeEvent) => {
     setGroupFilter(event.target.value as string);
+  };
+
+  const handleClassificationChange = (event: SelectChangeEvent) => {
+    setClassificationFilter(event.target.value as string);
   };
 
   // State for Remarks Dialog
@@ -163,6 +179,24 @@ export default function MaterialDetails({
 
         <Box display="flex" alignItems="center" gap={2}>
           {/* [NEW] Group Filter Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel id="classification-filter-label">Classification</InputLabel>
+            <Select
+              labelId="classification-filter-label"
+              id="classification-filter"
+              value={classificationFilter}
+              label="Classification"
+              onChange={handleClassificationChange}
+              sx={{ borderRadius: 1 }}
+            >
+              {uniqueClassifications.map((cls) => (
+                <MenuItem key={cls} value={cls}>
+                  {cls}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="group-filter-label">Group</InputLabel>
             <Select
