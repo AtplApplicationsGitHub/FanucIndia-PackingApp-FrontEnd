@@ -413,8 +413,8 @@ function TabACards() {
 function CustomerSOCountTab() {
     const theme = useTheme();
     const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
-    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs());
-    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
+    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs().startOf("month"));
+    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs().endOf("month"));
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
@@ -513,8 +513,8 @@ function MaterialSOCountTab() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
-    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs());
-    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
+    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs().startOf("month"));
+    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs().endOf("month"));
 
     const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
     const toIso = toDate?.format("YYYY-MM-DD") ?? null;
@@ -701,7 +701,7 @@ export default function CustomerReport() {
                     }}
                 >
                     <Tab label="Overall Count" />
-                    <Tab label="SO's per Customer" />
+                    <Tab label="Customer vs SO" />
                     <Tab label="Customer vs Quantity" />
                 </Tabs>
             </Paper>

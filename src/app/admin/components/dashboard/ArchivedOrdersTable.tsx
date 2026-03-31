@@ -17,8 +17,8 @@ export default function ArchivedOrdersTable() {
     paymentFilter: "",
     zoneFilter: "",
     // statusFilter: "",
-    startDate: null as Date | null,
-    endDate: null as Date | null,
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1) as Date | null,
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0) as Date | null,
   });
 
   const [currentPage, setCurrentPage] = useState(1);

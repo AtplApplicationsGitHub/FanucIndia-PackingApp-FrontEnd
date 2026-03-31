@@ -60,7 +60,6 @@ export function useArchivedOrders(filters?: ArchivedOrderFilters) {
       if (!res.ok) throw new Error("Failed to fetch archived orders");
 
       const json = await res.json();
-
       setOrders(json.data ?? []);
       setRowCount(json.total ?? 0);
     } catch (err) {

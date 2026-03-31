@@ -29,7 +29,7 @@ export function formatDateDMY(iso?: string) {
 }
 export function formatDateTime(iso?: string) {
   try {
-    return iso ? format(parseISO(iso), "dd-MMM-yyyy HH:mm") : "-";
+    return iso ? format(parseISO(iso), "dd-MMM-yyyy hh:mm a") : "-";
   } catch {
     return "-";
   }
