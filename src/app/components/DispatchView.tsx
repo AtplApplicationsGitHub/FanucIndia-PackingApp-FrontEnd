@@ -162,7 +162,6 @@ const AttachmentDialog = ({
           responseType: "blob",
         }
       );
-      // secureDownload is already imported in your file
       secureDownload(response.data, fileName);
     } catch {
       showSnackbar("Failed to download attachment", "error");
@@ -188,8 +187,20 @@ const AttachmentDialog = ({
           responseType: "blob",
         }
       );
-      const fileURL = URL.createObjectURL(response.data);
-      window.open(fileURL, "_blank");
+      
+      const safeBlob = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileURL = URL.createObjectURL(safeBlob);
+      
+      if (fileURL.startsWith("blob:")) {
+        const link = document.createElement("a");
+        link.href = fileURL;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer"; 
+        
+        link.click();
+
+        setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
+      }
       
     } catch {
       showSnackbar("Failed to view attachment", "error");
