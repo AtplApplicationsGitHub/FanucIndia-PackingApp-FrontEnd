@@ -9,7 +9,9 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Button,
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import CloseIcon from "@mui/icons-material/Close";
@@ -44,8 +46,10 @@ type Props = {
   endDate: Date | null;
   onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
+  onTodayClick?: () => void;
 
   selectedIds?: number[];
+
   onBulkUpdate?: (userId: string | number) => Promise<void>;
   onBulkSkipIssue?: (status: boolean) => Promise<void>;
   assignableUsers?: { id: number; name: string }[];
@@ -66,7 +70,9 @@ export default function AdminOrdersToolbar({
   endDate,
   onEndDateChange,
   onClear,
+  onTodayClick,
   selectedIds = [],
+
   onBulkUpdate,
   onBulkSkipIssue,
   assignableUsers = [],
@@ -260,7 +266,31 @@ export default function AdminOrdersToolbar({
           >
             <CloseIcon fontSize="small" />
           </IconButton>
+
+          {/* Today Button */}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onTodayClick}
+            sx={{
+              height: 40,
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "primary.main",
+              borderColor: "rgba(25, 118, 210, 0.5)",
+              px: 1.5,
+              minWidth: "auto",
+              whiteSpace: "nowrap",
+              "&:hover": {
+                borderColor: "primary.main",
+                bgcolor: "rgba(25, 118, 210, 0.04)",
+              },
+            }}
+          >
+            TODAY
+          </Button>
         </Paper>
+
       </Box>
     </LocalizationProvider>
   );

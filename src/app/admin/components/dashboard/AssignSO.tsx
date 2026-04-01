@@ -80,6 +80,7 @@ export default function AssignSO() {
   });
 
   // Filter states
+  const [isStatesLoaded, setIsStatesLoaded] = React.useState(false);
   const [searchInput, setSearchInput] = React.useState("");
   const [paymentFilter, setPaymentFilter] = React.useState("");
   const [zoneFilter, setZoneFilter] = React.useState("");
@@ -89,12 +90,70 @@ export default function AssignSO() {
   );
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
   const [customerFilter, setCustomerFilter] = React.useState("");
+  const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
+
+  // Persistence logic - Load
+  React.useEffect(() => {
+    const saved = sessionStorage.getItem("assign_so_filters");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.search !== undefined) setSearchInput(parsed.search);
+        if (parsed.payment !== undefined) setPaymentFilter(parsed.payment);
+        if (parsed.zone !== undefined) setZoneFilter(parsed.zone);
+        if (parsed.status !== undefined) setStatusFilter(parsed.status);
+        if (parsed.customer !== undefined) setCustomerFilter(parsed.customer);
+        if (parsed.pendingImport !== undefined)
+          setPendingImportFilter(parsed.pendingImport);
+        if (parsed.start) setStartDate(dayjs(parsed.start).toDate());
+        else if (parsed.start === null) setStartDate(null);
+        if (parsed.end) setEndDate(dayjs(parsed.end).toDate());
+        else if (parsed.end === null) setEndDate(null);
+        if (parsed.currentPage) setCurrentPage(parsed.currentPage);
+        if (parsed.pageSize) setPageSize(parsed.pageSize);
+      } catch (e) {
+        console.error("Failed to load saved filters", e);
+      }
+    }
+    setIsStatesLoaded(true);
+  }, []);
+
+  // Persistence logic - Save
+  React.useEffect(() => {
+    if (!isStatesLoaded) return;
+    const filters = {
+      search: searchInput,
+      payment: paymentFilter,
+      zone: zoneFilter,
+      status: statusFilter,
+      customer: customerFilter,
+      pendingImport: pendingImportFilter,
+      start: startDate ? startDate.toISOString() : null,
+      end: endDate ? endDate.toISOString() : null,
+      currentPage,
+      pageSize,
+    };
+    sessionStorage.setItem("assign_so_filters", JSON.stringify(filters));
+  }, [
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    customerFilter,
+    pendingImportFilter,
+    startDate,
+    endDate,
+    currentPage,
+    pageSize,
+    isStatesLoaded,
+  ]);
+
   const [erpDialogOpen, setErpDialogOpen] = React.useState(false);
   const [selectedSoForErp, setSelectedSoForErp] = React.useState<string | null>(
     null,
   );
-  const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
   const [showSambaView, setShowSambaView] = React.useState(false);
+
 
   const handleOpenErpDialog = (soNumber: string) => {
     if (!soNumber) return;
@@ -114,6 +173,13 @@ export default function AssignSO() {
     refresh();
   };
 
+  const onToday = () => {
+    const today = dayjs().toDate();
+    setStartDate(today);
+    setEndDate(today);
+    setCurrentPage(1);
+  };
+
   const onClear = () => {
     setSearchInput("");
     setPaymentFilter("");
@@ -123,8 +189,11 @@ export default function AssignSO() {
     setEndDate(null);
     setCustomerFilter("");
     setPendingImportFilter(false);
+    setCurrentPage(1);
   };
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
 
   const handleExcelImportSelect = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -375,6 +444,7 @@ export default function AssignSO() {
   };
 
   React.useEffect(() => {
+    if (!isStatesLoaded) return;
     const timer = setTimeout(() => {
       fetchDynamicCounts({
         search: searchInput,
@@ -399,6 +469,7 @@ export default function AssignSO() {
     endDate,
     pendingImportFilter,
     fetchDynamicCounts,
+    isStatesLoaded,
   ]);
 
   const availableCustomers = React.useMemo(() => {
@@ -1014,40 +1085,64 @@ export default function AssignSO() {
       ) : (
         <>
           <Box sx={{ mb: 1 }}>
-            <AssignOrdersToolbar
-              searchInput={searchInput}
-              onSearchInputChange={setSearchInput}
-              paymentFilter={paymentFilter}
-              onPaymentFilterChange={setPaymentFilter}
-              zoneFilter={zoneFilter}
-              onZoneFilterChange={setZoneFilter}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              salesZones={lookup.salesZones}
-              customerFilter={customerFilter}
-              onCustomerFilterChange={setCustomerFilter}
-              customers={availableCustomers}
-              startDate={startDate}
-              onStartDateChange={setStartDate}
-              endDate={endDate}
-              onEndDateChange={setEndDate}
-              onClear={onClear}
-              selectedIds={selectedIds}
-              assignableUsers={lookup.assignableUsers}
-              onAssignUser={handleAssignUser}
-              onSkipStage={handleSkipStage}
-              onImportERPData={handleImportERPData}
-              onDownloadErpData={handleDownloadErpData}
-              onExcelExport={handleExcelExport}
-              onExcelImport={() => fileInputRef.current?.click()}
-              statusCounts={dynamicCounts}
-              pendingImportFilter={pendingImportFilter}
-              onPendingImportClick={() =>
-                setPendingImportFilter(!pendingImportFilter)
-              }
-              onOpenSambaView={() => setShowSambaView(true)}
-            />
+          <AssignOrdersToolbar
+            searchInput={searchInput}
+            onSearchInputChange={(val: string) => {
+              setSearchInput(val);
+              setCurrentPage(1);
+            }}
+            paymentFilter={paymentFilter}
+            onPaymentFilterChange={(val: string) => {
+              setPaymentFilter(val);
+              setCurrentPage(1);
+            }}
+            zoneFilter={zoneFilter}
+            onZoneFilterChange={(val: string) => {
+              setZoneFilter(val);
+              setCurrentPage(1);
+            }}
+            statusFilter={statusFilter}
+            onStatusFilterChange={(val: string) => {
+              setStatusFilter(val);
+              setCurrentPage(1);
+            }}
+            salesZones={lookup.salesZones}
+            startDate={startDate}
+            onStartDateChange={(val: Date | null) => {
+              setStartDate(val);
+              setCurrentPage(1);
+            }}
+            endDate={endDate}
+            onEndDateChange={(val: Date | null) => {
+              setEndDate(val);
+              setCurrentPage(1);
+            }}
+            onClear={onClear}
+            onTodayClick={onToday}
+            selectedIds={selectedIds}
+            assignableUsers={lookup.assignableUsers}
+            onAssignUser={handleAssignUser}
+            onSkipStage={handleSkipStage}
+            onImportERPData={handleImportERPData}
+            onDownloadErpData={handleDownloadErpData}
+            onExcelExport={handleExcelExport}
+            onExcelImport={() => fileInputRef.current?.click()}
+            statusCounts={dynamicCounts}
+            pendingImportFilter={pendingImportFilter}
+            onPendingImportClick={() => {
+              setPendingImportFilter(!pendingImportFilter);
+              setCurrentPage(1);
+            }}
+            customerFilter={customerFilter}
+            onCustomerFilterChange={(val: string) => {
+              setCustomerFilter(val);
+              setCurrentPage(1);
+            }}
+            customers={availableCustomers}
+            onOpenSambaView={() => setShowSambaView(true)}
+          />
           </Box>
+
           <TableContainer
             component={Paper}
             elevation={0}

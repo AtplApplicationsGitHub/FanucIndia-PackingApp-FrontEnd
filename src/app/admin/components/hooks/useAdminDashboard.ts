@@ -109,6 +109,58 @@ export function useAdminDashboard() {
   type ConfirmDeleteState = { type: string; id: number } | null;
   const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteState>(null);
 
+  const [isStatesLoaded, setIsStatesLoaded] = useState(false);
+
+  // Persistence - Load
+  useEffect(() => {
+    const saved = sessionStorage.getItem("admin_orders_filters");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.search !== undefined) setSearchInput(parsed.search);
+        if (parsed.payment !== undefined) setPaymentFilter(parsed.payment);
+        if (parsed.zone !== undefined) setZoneFilter(parsed.zone);
+        if (parsed.status !== undefined) setStatusFilter(parsed.status);
+        if (parsed.start) setStartDate(new Date(parsed.start));
+        else if (parsed.start === null) setStartDate(null);
+        if (parsed.end) setEndDate(new Date(parsed.end));
+        else if (parsed.end === null) setEndDate(null);
+        if (parsed.currentPage) setCurrentPage(parsed.currentPage);
+        if (parsed.pageSize) setPageSize(parsed.pageSize);
+      } catch (e) {
+        console.error("Failed to load admin filters", e);
+      }
+    }
+    setIsStatesLoaded(true);
+  }, []);
+
+  // Persistence - Save
+  useEffect(() => {
+    if (!isStatesLoaded) return;
+    const filters = {
+      search: searchInput,
+      payment: paymentFilter,
+      zone: zoneFilter,
+      status: statusFilter,
+      start: startDate ? startDate.toISOString() : null,
+      end: endDate ? endDate.toISOString() : null,
+      currentPage,
+      pageSize,
+    };
+    sessionStorage.setItem("admin_orders_filters", JSON.stringify(filters));
+  }, [
+    searchInput,
+    paymentFilter,
+    zoneFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    currentPage,
+    pageSize,
+    isStatesLoaded,
+  ]);
+
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -442,6 +494,14 @@ export function useAdminDashboard() {
     setCurrentPage(1);
   };
 
+  const handleTodayFilters = () => {
+    const today = new Date();
+    setStartDate(today);
+    setEndDate(today);
+    setCurrentPage(1);
+  };
+
+
   const refreshMaster = () => fetchMasterLookup(selectedMasterLookup);
 
   const fetchMasterLookup = async (type: string) => {
@@ -743,7 +803,10 @@ export function useAdminDashboard() {
     statusFilter,
     setStatusFilter,
 
+    handleTodayFilters,
+
     snackbar,
     onSnackbarClose: () => setSnackbar((prev) => ({ ...prev, open: false })),
   };
 }
+

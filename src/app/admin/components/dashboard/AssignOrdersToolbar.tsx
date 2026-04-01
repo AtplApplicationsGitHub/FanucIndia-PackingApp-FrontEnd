@@ -98,7 +98,10 @@ type Props = {
   onCustomerFilterChange: (val: string) => void;
   customers?: { id: number; name: string }[];
   onOpenSambaView?: () => void;
+  onTodayClick?: () => void;
 };
+
+
 
 export default function AssignOrdersToolbar({
   searchInput,
@@ -130,7 +133,10 @@ export default function AssignOrdersToolbar({
   onCustomerFilterChange,
   customers = [],
   onOpenSambaView,
+  onTodayClick,
 }: Props) {
+
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -439,6 +445,29 @@ export default function AssignOrdersToolbar({
               }}
             />
 
+            {/* Today Button */}
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onTodayClick}
+              sx={{
+                height: 40,
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "primary.main",
+                borderColor: "rgba(25, 118, 210, 0.5)",
+                px: 1.5,
+                minWidth: "auto",
+                whiteSpace: "nowrap",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: "rgba(25, 118, 210, 0.04)",
+                },
+              }}
+            >
+              TODAY
+            </Button>
+
             {/* Clear Button */}
             <IconButton
               onClick={onClear}
@@ -452,6 +481,7 @@ export default function AssignOrdersToolbar({
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
+
 
           {/* Status & Menu Group */}
           <Box

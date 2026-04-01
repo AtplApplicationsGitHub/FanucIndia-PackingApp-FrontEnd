@@ -254,6 +254,7 @@ export default function AdminDashboard() {
                       admin.setEndDate(date);
                       admin.setCurrentPage(1);
                     }}
+                    onTodayClick={admin.handleTodayFilters}
                   />
                 </Box>
               </motion.div>
