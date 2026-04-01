@@ -43,6 +43,7 @@ import {
   Close,
   FilePresent,
   Visibility as VisibilityIcon,
+  Download,
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
@@ -96,6 +97,9 @@ const AttachmentDialog = ({
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const theme = useTheme();
+  const iconBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles) => {
       setFiles((prev) => [...prev, ...acceptedFiles]);
@@ -144,6 +148,51 @@ const AttachmentDialog = ({
       onUpdate();
     } catch {
       showSnackbar("Failed to delete attachment", "error");
+    }
+  };
+
+  const handleDownload = async (fileName: string) => {
+    if (!dispatch) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API.DISPATCH.BASE}/${dispatch.id}/attachments/${encodeURIComponent(fileName)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+      // secureDownload is already imported in your file
+      secureDownload(response.data, fileName);
+    } catch {
+      showSnackbar("Failed to download attachment", "error");
+    }
+  };
+
+  const handleView = async (fileName: string) => {
+    if (!dispatch) return;
+
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    const viewableExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.txt', '.mp4', '.webm'];
+
+    if (!viewableExtensions.includes(ext)) {
+      return handleDownload(fileName);
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API.DISPATCH.BASE}/${dispatch.id}/attachments/${encodeURIComponent(fileName)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+      const fileURL = URL.createObjectURL(response.data);
+      window.open(fileURL, "_blank");
+      
+    } catch {
+      showSnackbar("Failed to view attachment", "error");
     }
   };
 
@@ -207,9 +256,9 @@ const AttachmentDialog = ({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>SiNo</TableCell>
-                <TableCell>File Name</TableCell>
-                <TableCell align="right">Action</TableCell>
+                <TableCell align="center">SiNo</TableCell>
+                <TableCell align="center">File Name</TableCell>
+                <TableCell align="center">Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -222,10 +271,28 @@ const AttachmentDialog = ({
               )}
               {dispatch?.attachments?.map((att, index) => (
                 <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{att.fileName}</TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleDelete(att.fileName)}>
+                  <TableCell align="center">{index + 1}</TableCell>
+                  <TableCell align="left">{att.fileName}</TableCell>
+                  <TableCell align="center">
+                    <IconButton 
+                      onClick={() => handleView(att.fileName)} 
+                      title="View"
+                      sx={{ color: iconBlue }}
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                    <IconButton 
+                      onClick={() => handleDownload(att.fileName)} 
+                      title="Download"
+                      sx={{ color: iconBlue }}
+                    >
+                      <Download />
+                    </IconButton>
+                    <IconButton 
+                      onClick={() => handleDelete(att.fileName)} 
+                      title="Delete"
+                      color="error"
+                    >
                       <Delete />
                     </IconButton>
                   </TableCell>
