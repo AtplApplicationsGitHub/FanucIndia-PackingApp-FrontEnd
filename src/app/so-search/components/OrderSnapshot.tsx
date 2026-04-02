@@ -48,6 +48,8 @@ interface Props {
   onViewPackingAttachments: () => void;
   onViewDispatchAttachments?: () => void;
   onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void;
+  onViewPaymentAttachments?: () => void;
+  hasPaymentAttachments?: boolean;
 }
 
 export default function OrderSnapshot({
@@ -56,6 +58,8 @@ export default function OrderSnapshot({
   onViewPackingAttachments,
   onViewDispatchAttachments,
   onViewVehicleAttachments,
+  onViewPaymentAttachments,
+  hasPaymentAttachments = false,
 }: Props) {
   const customerName =
     salesOrder.customerNameText?.trim() || salesOrder.customer?.name || "—";
@@ -107,10 +111,23 @@ export default function OrderSnapshot({
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Transfer Order" value={salesOrder.transferOrder} />
         <KVBox label="Outbound Delivery" value={salesOrder.outboundDelivery} />
-        <KVBox
-          label="Payment Status"
-          value={salesOrder.paymentClearance ? "Yes" : "No"}
-        />
+        <KVBox label="Payment Status">
+          {hasPaymentAttachments ? (
+            <Link
+              component="button"
+              variant="body2"
+              onClick={onViewPaymentAttachments}
+              underline="none"
+              sx={{ fontWeight: 600, cursor: "pointer" }}
+            >
+              {salesOrder.paymentClearance ? "Yes" : "No"}
+            </Link>
+          ) : (
+            <Typography variant="body2" component="span" sx={{ fontWeight: 600 }}>
+              {salesOrder.paymentClearance ? "Yes" : "No"}
+            </Typography>
+          )}
+        </KVBox>
         <KVBox label="Packing Attachment">
           <Link
             component="button"
@@ -129,7 +146,7 @@ export default function OrderSnapshot({
           label="Customer"
           value={customerDisplay}
           valueSx={{
-            fontSize: "0.85rem", 
+            fontSize: "0.85rem",
             lineHeight: 1.25,
             fontWeight: 600,
             whiteSpace: "pre-wrap"
@@ -145,9 +162,9 @@ export default function OrderSnapshot({
           value={salesOrder.packConfig?.configName}
         />
         <KVBox label="Transporter" value={salesOrder.transporter?.name} />
-        <KVBox 
-          label="Delivery Plant Code" 
-          value={typeof salesOrder.plantCode === 'object' ? salesOrder.plantCode?.code : salesOrder.plantCode} 
+        <KVBox
+          label="Delivery Plant Code"
+          value={typeof salesOrder.plantCode === 'object' ? salesOrder.plantCode?.code : salesOrder.plantCode}
         />
         <KVBox label="Sales Zone" value={salesOrder.salesZone?.name} />
       </Box>
@@ -164,7 +181,7 @@ export default function OrderSnapshot({
         />
         <KVBox
           label="Label Remarks"
-          value={salesOrder.labelRemarks} 
+          value={salesOrder.labelRemarks}
         />
         <Box sx={{ flex: "1 1 23%", minWidth: "200px" }} />
       </Box>
@@ -195,8 +212,8 @@ export default function OrderSnapshot({
                   component="button"
                   variant="body2"
                   onClick={() => dispatch.vehicleEntry && onViewVehicleAttachments?.(dispatch.vehicleEntry)}
-                  sx={{ 
-                    fontWeight: 600, 
+                  sx={{
+                    fontWeight: 600,
                     textDecoration: 'none',
                     color: dispatch.vehicleEntry ? '' : '',
                     cursor: dispatch.vehicleEntry ? 'pointer' : 'default'
@@ -205,14 +222,14 @@ export default function OrderSnapshot({
                   {dispatch.vehicleNumber}
                 </Link>
               </KVBox>
-              <KVBox 
-                label="Transporter" 
-                value={dispatch.transporterName || dispatch.transporter?.name || "-"} 
+              <KVBox
+                label="Transporter"
+                value={dispatch.transporterName || dispatch.transporter?.name || "-"}
               />
               <KVBox label="Updated By" value={dispatch.UpdatedBy || "-"} />
-              <KVBox 
-                label="Updated Datetime" 
-                value={dispatch.UpdatedDate ? new Date(dispatch.UpdatedDate).toLocaleString() : "-"} 
+              <KVBox
+                label="Updated Datetime"
+                value={dispatch.UpdatedDate ? new Date(dispatch.UpdatedDate).toLocaleString() : "-"}
               />
             </Box>
           ))}
