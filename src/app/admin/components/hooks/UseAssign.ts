@@ -200,13 +200,13 @@ export function useAssign() {
   const fetchLookups = useCallback(async () => {
     try {
       const [usersRes, productsRes, zonesRes, packConfigsRes, customersRes] =
-        await Promise.all([
-          fetchWithAuth(`${API.ADMIN.USERS}?role=USER`),
-          fetchWithAuth(API.LOOKUP.PRODUCTS),
-          fetchWithAuth(API.LOOKUP.SALES_ZONES),
-          fetchWithAuth(API.LOOKUP.PACK_CONFIGS),
-          fetchWithAuth(API.ADMIN.USED_CUSTOMERS),
-        ]);
+  await Promise.all([
+    fetchWithAuth(`${API.ADMIN.USERS}?role=USER`),
+    fetchWithAuth(API.LOOKUP.PRODUCTS),
+    fetchWithAuth(API.LOOKUP.SALES_ZONES),
+    fetchWithAuth(API.LOOKUP.PACK_CONFIGS),
+    fetchWithAuth(API.LOOKUP.CUSTOMERS),
+  ]);
 
       const [users, products, zones, packConfigs, customers] =
         await Promise.all([

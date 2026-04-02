@@ -82,6 +82,13 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           additionalRemarks: initialData.additionalRemarks ?? "",
           labelRemarks: initialData.labelRemarks ?? "",
         });
+      } else {
+        if (lookup.salesZones.length === 1) {
+          setForm((prev) => ({
+            ...prev,
+            salesZoneId: String(lookup.salesZones[0].id),
+          }));
+        }
       }
     }
   }, [
