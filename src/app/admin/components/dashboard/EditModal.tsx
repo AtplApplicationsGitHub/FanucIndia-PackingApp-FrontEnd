@@ -164,12 +164,13 @@ export default function AdminOrderEditModal({
 }: Props) {
   const [form, setForm] = useState<Partial<SalesOrder>>(() => ({
     ...order,
-    // ✅ If ERP override exists, keep customerId empty so dropdown doesn't visually override it
     customerId: order.customerId,
     customerNameText: order.customerNameText ?? order.customer?.name ?? "",
     deliveryDate: order.deliveryDate
       ? dayjs(order.deliveryDate).toISOString()
       : "",
+    issueUserId: order.issueUserId ?? (order as any).issueAssignedUserId ?? order.issueUser?.id,
+    packingUserId: order.packingUserId ?? (order as any).packingAssignedUserId ?? order.packingUser?.id,
   }));
   const [loading, setLoading] = useState(false);
 
@@ -188,6 +189,8 @@ export default function AdminOrderEditModal({
       deliveryDate: order.deliveryDate
         ? dayjs(order.deliveryDate).toISOString()
         : "",
+      issueUserId: order.issueUserId ?? (order as any).issueAssignedUserId ?? order.issueUser?.id,
+      packingUserId: order.packingUserId ?? (order as any).packingAssignedUserId ?? order.packingUser?.id,
     });
   }, [open, order]);
 

@@ -12,8 +12,10 @@ import {
   Alert,
   Stack,
   InputBase,
+  Dialog, DialogTitle, DialogContent, Table, TableHead,
+  TableRow, TableCell, TableBody
 } from "@mui/material";
-import { Search, Print, Archive, Delete } from "@mui/icons-material";
+import { Search, Print, Archive, Delete, Close, Visibility, Download } from "@mui/icons-material";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
@@ -30,6 +32,8 @@ import { Theme } from "@mui/material/styles";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useSearchParams } from "next/navigation";
+import { useTheme, alpha, TableContainer, Tooltip } from "@mui/material";
+import { FilePresent } from "@mui/icons-material";
 
 interface SalesOrder {
   id: number;
@@ -50,6 +54,7 @@ interface SalesOrder {
   customerNameText?: string | null;
   address?: string | null;
   specialRemarks?: string;
+  attachments?: any[];
 }
 
 interface DispatchInfoData {
@@ -112,6 +117,13 @@ interface MaterialAttachment {
   description: string | null;
 }
 
+interface PaymentAttachment {
+  id: number;
+  fileName: string;
+  saleOrderNumber: string;
+  outboundDelivery: string;
+  user: { name: string };
+}
 type UserRole = "ADMIN" | "SALES" | "USER" | null;
 
 const isViewable = (fileName: string) => {
@@ -150,9 +162,12 @@ export default function SoSearchPage() {
   const [currentVehicleEntryId, setCurrentVehicleEntryId] = useState<
     number | null
   >(null);
-
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentAttachments, setPaymentAttachments] = useState<PaymentAttachment[]>([]);
+  const [paymentAttachmentsLoading, setPaymentAttachmentsLoading] = useState(false);
   const searchParams = useSearchParams();
-
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
   useEffect(() => {
     if (searchParams.get("chat") === "1") {
       setChatOpen(true);
@@ -188,6 +203,44 @@ export default function SoSearchPage() {
       });
   };
 
+  const handleOpenPaymentAttachments = async () => {
+    if (!data?.salesOrder?.id) return;
+    setPaymentAttachmentsLoading(true);
+    setPaymentDialogOpen(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(API.SALES.ATTACHMENTS_BY_ORDER(data.salesOrder.id), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
+      const attachments = await res.json();
+      setPaymentAttachments(attachments);
+    } catch {
+      setError("Failed to load payment attachments.");
+      setPaymentDialogOpen(false);
+    } finally {
+      setPaymentAttachmentsLoading(false);
+    }
+  };
+  const handlePaymentAttachmentAction = (
+    fileId: number,
+    fileName: string,
+    action: "view" | "download"
+  ) => {
+    const token = localStorage.getItem("token");
+    fetch(API.SALES.ATTACHMENT_DOWNLOAD(fileId), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.blob() : Promise.reject("Failed")))
+      .then((blob) => {
+        if (action === "view" && isViewable(fileName)) {
+          secureView(blob);
+        } else {
+          secureDownload(blob, fileName);
+        }
+      })
+      .catch(() => setError(`Failed to ${action} attachment.`));
+  };
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
     color: (theme: Theme) => theme.palette.text.primary, // Dark text
@@ -283,7 +336,7 @@ export default function SoSearchPage() {
     if (soFromUrl) {
       const decodedSo = decodeURIComponent(soFromUrl);
       const decodedObd = obdFromUrl ? decodeURIComponent(obdFromUrl) : undefined;
-      
+
       setSoNumber(decodedSo);
       performSearch(decodedSo, decodedObd);
     }
@@ -609,6 +662,8 @@ export default function SoSearchPage() {
               onViewPackingAttachments={handleOpenMaterialAttachments}
               onViewDispatchAttachments={handleOpenDispatchAttachments}
               onViewVehicleAttachments={handleOpenVehicleAttachments}
+              onViewPaymentAttachments={handleOpenPaymentAttachments}
+              hasPaymentAttachments={Array.isArray(data.salesOrder.attachments) && data.salesOrder.attachments.length > 0}
             />
             <MaterialDetails
               materialDetails={data.materialDetails}
@@ -617,7 +672,101 @@ export default function SoSearchPage() {
           </>
         )}
       </Box>
-
+      {/* Payment Attachments Dialog */}
+      <Dialog
+        open={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
+          PAYMENT ATTACHMENTS
+          <IconButton
+            onClick={() => setPaymentDialogOpen(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <TableContainer component={Paper}>
+            <Table
+              sx={{
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
+                  borderBottom: 0,
+                },
+              }}
+            >
+              <TableHead sx={{ bgcolor: "primary.main" }}>
+                <TableRow>
+                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                    SO Number
+                  </TableCell>
+                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                    Outbound Delivery
+                  </TableCell>
+                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                    File Name
+                  </TableCell>
+                  <TableCell align="center" sx={{ color: "primary.contrastText", fontWeight: "bold", width: "150px" }}>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paymentAttachmentsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      <Box display="flex" justifyContent="center" p={4}>
+                        <CircularProgress />
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ) : paymentAttachments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      <Typography color="text.secondary" p={3}>
+                        No attachments found.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paymentAttachments.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell>{file.saleOrderNumber}</TableCell>
+                      <TableCell>{file.outboundDelivery}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{file.fileName}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="View">
+                          <IconButton
+                            size="small"
+                            onClick={() => handlePaymentAttachmentAction(file.id, file.fileName, "view")}
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Download">
+                          <IconButton
+                            size="small"
+                            onClick={() => handlePaymentAttachmentAction(file.id, file.fileName, "download")}
+                          >
+                            <Download />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+      </Dialog>
       <AttachmentDialogs
         dispatchDialogOpen={dispatchDialogOpen}
         onDispatchDialogClose={() => setDispatchDialogOpen(false)}
