@@ -28,6 +28,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
 } from "@mui/material";
 import {
   DataGrid,
@@ -54,7 +55,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { alpha, useTheme, Theme } from "@mui/material";
-import { X } from "lucide-react";
+import { X, Eye, Download as DownloadIcon, Trash2, CloudUpload, FileText, File as FileIcon } from "lucide-react";
 
 interface Transporter {
   id: number;
@@ -224,14 +225,28 @@ const AttachmentDialog = ({
           sx={{
             p: 4,
             my: 2,
-            border: "2px dashed #ccc",
-            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            border: "2px dashed",
+            borderColor: "divider",
+            borderRadius: 2,
             cursor: "pointer",
+            bgcolor: alpha(theme.palette.primary.main, 0.02),
+            transition: "all 0.2s ease",
+            "&:hover": {
+              borderColor: theme.palette.primary.main,
+              bgcolor: alpha(theme.palette.primary.main, 0.05),
+            }
           }}
         >
           <input {...getInputProps()} />
-          <Typography>
-            Drag &#39;n&#39; drop files here, or click to select files
+          <CloudUpload size={48} color={theme.palette.text.secondary} style={{ marginBottom: 16 }} />
+          <Typography variant="h6" color="textPrimary" fontWeight="500" textAlign="center">
+            Drag 'n' drop files here
+          </Typography>
+          <Typography variant="body2" color="textSecondary" textAlign="center">
+            or click to select files from your computer
           </Typography>
         </Box>
         {files.length > 0 && (
@@ -285,27 +300,44 @@ const AttachmentDialog = ({
                   <TableCell align="center">{index + 1}</TableCell>
                   <TableCell align="left">{att.fileName}</TableCell>
                   <TableCell align="center">
-                    <IconButton 
-                      onClick={() => handleView(att.fileName)} 
-                      title="View"
-                      sx={{ color: iconBlue }}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                    <IconButton 
-                      onClick={() => handleDownload(att.fileName)} 
-                      title="Download"
-                      sx={{ color: iconBlue }}
-                    >
-                      <Download />
-                    </IconButton>
-                    <IconButton 
-                      onClick={() => handleDelete(att.fileName)} 
-                      title="Delete"
-                      color="error"
-                    >
-                      <Delete />
-                    </IconButton>
+                    <Box display="flex" justifyContent="center" gap={0.5}>
+                      <Tooltip title="View Attachment">
+                        <IconButton 
+                          onClick={() => handleView(att.fileName)} 
+                          size="small"
+                          sx={{ 
+                            color: iconBlue,
+                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) } 
+                          }}
+                        >
+                          <Eye size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Download">
+                        <IconButton 
+                          onClick={() => handleDownload(att.fileName)} 
+                          size="small"
+                          sx={{ 
+                            color: iconBlue,
+                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) } 
+                          }}
+                        >
+                          <DownloadIcon size={20} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton 
+                          onClick={() => handleDelete(att.fileName)} 
+                          size="small"
+                          sx={{ 
+                            color: theme.palette.error.main,
+                            "&:hover": { bgcolor: alpha(theme.palette.error.main, 0.1) } 
+                          }}
+                        >
+                          <Trash2 size={20} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
