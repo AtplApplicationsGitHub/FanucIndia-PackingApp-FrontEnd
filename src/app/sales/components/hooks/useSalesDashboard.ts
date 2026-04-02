@@ -122,11 +122,16 @@ export function useSalesDashboard() {
     }
   }, [router]);
 
-  // --- FETCH LOOKUPS LOGIC ---
   const fetchLookups = useCallback(async () => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("token");
     if (!token) return;
+
+    let parsedUser: any = null;
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) parsedUser = JSON.parse(storedUser);
+    } catch (e) {}
 
     setLookupsLoading(true);
     setError("");
@@ -151,11 +156,17 @@ export function useSalesDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
+
+      let filteredSalesZones = sz.data;
+      if (parsedUser && parsedUser.role === 'SALES' && parsedUser.salesZoneId) {
+        filteredSalesZones = sz.data.filter((zone: any) => zone.id === parsedUser.salesZoneId);
+      }
+
       setLookup({
         products: p.data,
         transporters: t.data,
         plantCodes: pc.data,
-        salesZones: sz.data,
+        salesZones: filteredSalesZones,
         packConfigs: pk.data,
         customers: c.data,
       });
@@ -166,12 +177,10 @@ export function useSalesDashboard() {
     }
   }, []);
 
-  // Initial Fetch of Lookups
   useEffect(() => {
     fetchLookups();
   }, [fetchLookups]);
 
-  // Socket Connection
   useEffect(() => {
     if (!token) return;
 

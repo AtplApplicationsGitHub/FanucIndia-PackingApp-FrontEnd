@@ -764,7 +764,13 @@ export default function AssignSO() {
       lookup.packConfigs?.map((p: any) => p.configName).join(",") || "Default";
     // NEW: Extract customer names for the dropdown
     const customerNames =
-      lookup.customers?.map((c: any) => c.name).join(",") || "";
+  Array.from(
+    new Set(
+      (lookup.customers || [])
+        .map((c: any) => (c.name || "").trim())
+        .filter(Boolean),
+    ),
+  ).join(",") || "";
 
     for (let i = 2; i <= exportRows.length + 1; i++) {
       // NEW: Customer Name Validation (Column G)
