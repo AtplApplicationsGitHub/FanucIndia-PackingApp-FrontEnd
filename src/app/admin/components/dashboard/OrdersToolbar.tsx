@@ -268,34 +268,36 @@ export default function AdminOrdersToolbar({
           </IconButton>
 
           {/* Today Button */}
-          <Button
-            variant="contained"
-            size="small"
-            onClick={onTodayClick}
-            sx={{
-              height: 40,
-              fontSize: "13px",
-              fontWeight: 700,
-              bgcolor: "#FFD100", // Fanuc Yellow
-              color: "#1B254B", // Dark Blue
-              px: 2.5,
-              minWidth: "100px",
-              whiteSpace: "nowrap",
-              borderRadius: 0,
-              clipPath:
-                "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-              boxShadow: "none",
-              "&:hover": {
-                bgcolor: "#FFC107",
+          {onTodayClick && (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={onTodayClick}
+              sx={{
+                height: 40,
+                fontSize: "13px",
+                fontWeight: 700,
+                bgcolor: "#FFD100", // Fanuc Yellow
+                color: "#1B254B", // Dark Blue
+                px: 2.5,
+                minWidth: "100px",
+                whiteSpace: "nowrap",
+                borderRadius: 0,
+                clipPath:
+                  "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
                 boxShadow: "none",
-              },
-              "& .MuiButton-startIcon": {
-                color: "inherit",
-              },
-            }}
-          >
-            TODAY
-          </Button>
+                "&:hover": {
+                  bgcolor: "#FFC107",
+                  boxShadow: "none",
+                },
+                "& .MuiButton-startIcon": {
+                  color: "inherit",
+                },
+              }}
+            >
+              TODAY
+            </Button>
+          )}
         </Paper>
 
       </Box>
