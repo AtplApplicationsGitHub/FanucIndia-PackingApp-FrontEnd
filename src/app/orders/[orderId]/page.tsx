@@ -185,6 +185,8 @@ export default function MaterialDataPage() {
   // Group Filter State
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
+  const [selectedClassification, setSelectedClassification] = useState<string | null>(null);
+
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   const [showAll, setShowAll] = useState(false);
 
@@ -280,8 +282,19 @@ export default function MaterialDataPage() {
     return Array.from(new Set(groups)).sort();
   }, [localRows]);
 
+  const uniqueClassifications = useMemo(() => {
+    const classifications = localRows
+      .map((r) => r.classification)
+      .filter((c): c is string => !!c);
+    return Array.from(new Set(classifications)).sort();
+  }, [localRows]);
+
   const displayedRows = useMemo(() => {
     let rows = localRows;
+
+    if (selectedClassification) {
+      rows = rows.filter((r) => r.classification === selectedClassification);
+    }
 
     if (selectedGroup) {
       rows = rows.filter((r) => r.group === selectedGroup);
@@ -295,7 +308,7 @@ export default function MaterialDataPage() {
       }
     }
     return rows;
-  }, [localRows, showAll, allIssued, selectedGroup, isOrderFullyComplete]);
+  }, [localRows, showAll, allIssued, selectedGroup, selectedClassification, isOrderFullyComplete]);
 
   const showBulkButton = useMemo(() => {
     if (!selectedGroup) return false;
@@ -461,6 +474,7 @@ export default function MaterialDataPage() {
     Accept_Bulk_Data?: boolean | string;
     Mapping_Barcode?: string;
     Remarks_Required?: boolean | string;
+    Classification?: string;
   };
 
   const refetch = async () => {
@@ -488,6 +502,7 @@ export default function MaterialDataPage() {
         mappingBarcode: m.Mapping_Barcode || "",
         acceptBulkData: String(m.Accept_Bulk_Data).toLowerCase() === "true",
         remarksRequired: String(m.Remarks_Required).toLowerCase() === "true",
+        classification: m.Classification || "",
       }));
       setLocalRows(mapped);
     } catch (e) {
@@ -681,6 +696,9 @@ export default function MaterialDataPage() {
               }}
               disabled={isOrderFullyComplete}
               items={localRows}
+              uniqueClassifications={uniqueClassifications}
+              selectedClassification={selectedClassification}
+              onClassificationChange={setSelectedClassification}
               uniqueGroups={uniqueGroups}
               selectedGroup={selectedGroup}
               onGroupChange={setSelectedGroup}

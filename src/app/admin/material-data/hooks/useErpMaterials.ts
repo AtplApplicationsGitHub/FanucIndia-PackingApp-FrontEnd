@@ -23,6 +23,7 @@ type ApiMaterial = {
   Mapping_Barcode?: string;
   Remarks_Required?: boolean | string;
   Remarks?: string | null;
+  Classification?: string;
 };
 
 function getErrorMessage(error: unknown): string {
@@ -71,6 +72,7 @@ export function useErpMaterials(orderId: number, userId: number | null) {
           acceptBulkData: String(m.Accept_Bulk_Data).toLowerCase() === 'true',
           remarksRequired: String(m.Remarks_Required).toLowerCase() === 'true',
           remarks: m.Remarks || null,
+          classification: m.Classification || "",
         }));
 
         setRows(mapped);

@@ -36,6 +36,9 @@ interface Props {
   onFileCreated: () => void;
   disabled?: boolean;
   items: MaterialRow[];
+  uniqueClassifications?: string[];
+  selectedClassification?: string | null;
+  onClassificationChange?: (classification: string | null) => void;
   uniqueGroups?: string[];
   selectedGroup?: string | null;
   onGroupChange?: (group: string | null) => void;
@@ -87,6 +90,9 @@ const InputBoxSection: FC<Props> = ({
   onFileCreated,
   disabled = false,
   items,
+  uniqueClassifications = [],
+  selectedClassification = null,
+  onClassificationChange,
   uniqueGroups = [],
   selectedGroup = null,
   onGroupChange,
@@ -211,6 +217,32 @@ const InputBoxSection: FC<Props> = ({
           justifyContent="center"
           flex={2}
         >
+          {uniqueClassifications.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel id="classification-filter-label">Classification</InputLabel>
+              <Select
+                labelId="classification-filter-label"
+                value={selectedClassification || ""}
+                label="Classification"
+                onChange={(e) =>
+                  onClassificationChange?.(e.target.value === "" ? null : e.target.value)
+                }
+                sx={{ 
+                  bgcolor: "background.paper",
+                  "& .MuiOutlinedInput-root": { borderRadius: 1 } 
+                }}
+              >
+                <MenuItem value="">
+                  <em>All</em>
+                </MenuItem>
+                {uniqueClassifications.map((c) => (
+                  <MenuItem key={c} value={c}>
+                    {c}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
           {uniqueGroups.length > 0 && (
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel id="group-filter-label">Group Filter</InputLabel>

@@ -20,4 +20,5 @@ export interface MaterialRow {
   mappingBarcode?: string;
   remarksRequired?: boolean;
   remarks?: string | null;
+  classification?: string;
 }
