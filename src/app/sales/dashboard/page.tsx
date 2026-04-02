@@ -1,7 +1,7 @@
 // src/app/sales/dashboard/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -16,6 +16,7 @@ import { useSalesDashboard } from "@/app/sales/components/hooks/useSalesDashboar
 import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
+import AttachmentUploadDialog from "@/app/sales/components/AttachmentUploadDialog";
 
 export default function SalesDashboard() {
   const theme = useTheme();
@@ -64,11 +65,17 @@ export default function SalesDashboard() {
     endDate,
     setEndDate,
     handleClearFilters,
+    selectedIds,
+    setSelectedIds,
+    handleUploadAttachment,
+    attachmentFileInputRef,
+    handleAttachmentFileChange,
   } = useSalesDashboard();
 
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
+  const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
 
   const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
@@ -139,6 +146,7 @@ export default function SalesDashboard() {
               onDownload={handleDownloadTemplate}
               onDownloadBlank={handleDownloadBlankTemplate}
               onBulkUpload={handleBulkUpload}
+              onUploadAttachment={() => setAttachmentDialogOpen(true)}
               onClear={handleClearFilters}
               fileInputRef={fileInputRef}
               onFileChange={handleFileChange}
@@ -158,8 +166,8 @@ export default function SalesDashboard() {
             {orders.length === 0 ? (
               <Box display="flex" justifyContent="center" mt={4}>
                 <Alert severity="info">
-                  {view === "dispatched" 
-                    ? "No dispatched orders found." 
+                  {view === "dispatched"
+                    ? "No dispatched orders found."
                     : "No orders found. Create your first order!"}
                 </Alert>
               </Box>
@@ -178,6 +186,8 @@ export default function SalesDashboard() {
                   setPageSize(pageSize);
                   fetchOrders(page + 1, pageSize);
                 }}
+                selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
               />
             )}
           </Box>
@@ -229,6 +239,14 @@ export default function SalesDashboard() {
             "&:hover": {
               bgcolor: theme.palette.primary.dark,
             },
+          }}
+        />
+        <AttachmentUploadDialog
+          open={attachmentDialogOpen}
+          onClose={() => setAttachmentDialogOpen(false)}
+          // Change onUpload prop to async:
+          onUpload={async (files) => {
+            await handleAttachmentFileChange(files);
           }}
         />
       </Box>

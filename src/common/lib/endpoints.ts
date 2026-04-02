@@ -127,6 +127,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
     LIST_ORDERS:                                          `${API_BASE_URL}/sales-crud`,
     EXCEL_EXPORT:                                         `${API_BASE_URL}/sales-orders/excel-export`,
     EXCEL_IMPORT:                                         `${API_BASE_URL}/sales-orders/excel-import`,
+    ATTACHMENTS:                                          `${API_BASE_URL}/sales-crud/attachments`,
   },
   AUTH: {
     LOGIN:               `${API_BASE_URL}/auth/login`,

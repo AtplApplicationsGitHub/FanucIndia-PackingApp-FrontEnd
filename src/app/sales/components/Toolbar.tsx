@@ -25,6 +25,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
@@ -36,6 +37,7 @@ type Props = {
   onDownload: () => void;
   onDownloadBlank: () => void;
   onBulkUpload: () => void;
+  onUploadAttachment: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   paymentFilter: string;
@@ -60,6 +62,7 @@ export default function SalesDashboardToolbar({
   onDownload,
   onDownloadBlank,
   onBulkUpload,
+  onUploadAttachment,
   fileInputRef,
   onFileChange,
   paymentFilter,
@@ -113,6 +116,11 @@ export default function SalesDashboardToolbar({
             mx: "auto",
           }}
         >
+          {view !== "dispatched" && (
+            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <ListIcon />
+            </IconButton>
+          )}
           <Box
             component="form"
             onSubmit={(e: React.FormEvent) => {
@@ -302,9 +310,6 @@ export default function SalesDashboardToolbar({
                 >
                   CREATE ORDER
                 </Button>
-                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                  <ListIcon />
-                </IconButton>
               </>
             )}
           </Box>
@@ -334,6 +339,7 @@ export default function SalesDashboardToolbar({
             <ListItemText primary="BLANK TEMPLATE" />
           </MenuItem>
 
+
           <MenuItem
             onClick={() => {
               onDownload();
@@ -361,6 +367,20 @@ export default function SalesDashboardToolbar({
               />
             </ListItemIcon>
             <ListItemText primary="BULK UPLOAD" />
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              onUploadAttachment();
+              setAnchorEl(null);
+            }}
+          >
+            <ListItemIcon>
+              <AttachFileIcon
+                fontSize="small"
+                sx={{ color: "#7c3aed" }}
+              />
+            </ListItemIcon>
+            <ListItemText primary="UPLOAD ATTACHMENT" />
           </MenuItem>
         </Menu>
 

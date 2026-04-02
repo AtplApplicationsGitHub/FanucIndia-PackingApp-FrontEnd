@@ -23,6 +23,7 @@ export function useSalesDashboard() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const updateFileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentFileInputRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -49,6 +50,7 @@ export function useSalesDashboard() {
   const [userName, setUserName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const [alert, setAlert] = useState<{
     severity: "success" | "error" | "info" | "warning";
@@ -86,7 +88,7 @@ export function useSalesDashboard() {
     if (storedUser) {
       try {
         setUserName(JSON.parse(storedUser).name || "");
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -296,7 +298,7 @@ export function useSalesDashboard() {
       if (zoneFilter) params.append("salesZoneId", zoneFilter);
       if (startDate) params.append("startDate", toLocalYMD(startDate));
       if (endDate) params.append("endDate", toLocalYMD(endDate));
-      
+
       if (isBlank) params.append("blank", "true");
 
       if (view === "dispatched") {
@@ -337,6 +339,33 @@ export function useSalesDashboard() {
   }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
 
   const handleBulkUpload = () => fileInputRef.current?.click();
+
+  const handleUploadAttachment = () => attachmentFileInputRef.current?.click();
+
+  const handleAttachmentFileChange = useCallback(async (files: File[]) => {
+    if (files.length === 0 || selectedIds.length === 0) {
+      setAlert({ severity: "warning", message: "Please select orders and files." });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("salesOrderIds", selectedIds.join(","));
+      files.forEach((file) => formData.append("files", file));
+
+      await axios.post(API.SALES.ATTACHMENTS, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAlert({ severity: "success", message: "Attachments uploaded successfully!" });
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.message || "Upload failed."
+        : "Upload failed.";
+      setAlert({ severity: "error", message });
+    }
+  }, [selectedIds]);
 
   const handleFileChange = useCallback(async () => {
     const input = fileInputRef.current;
@@ -491,6 +520,11 @@ export function useSalesDashboard() {
     handleDownloadTemplate: () => handleDownloadTemplate(false),
     handleDownloadBlankTemplate,
     handleBulkUpload,
+    attachmentFileInputRef,
+    handleUploadAttachment,
+    handleAttachmentFileChange,
+    selectedIds,
+    setSelectedIds,
     fileInputRef,
     handleFileChange,
     handleModalClose,
