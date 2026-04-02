@@ -101,8 +101,6 @@ type Props = {
   onTodayClick?: () => void;
 };
 
-
-
 export default function AssignOrdersToolbar({
   searchInput,
   onSearchInputChange,
@@ -135,8 +133,6 @@ export default function AssignOrdersToolbar({
   onOpenSambaView,
   onTodayClick,
 }: Props) {
-
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -447,21 +443,28 @@ export default function AssignOrdersToolbar({
 
             {/* Today Button */}
             <Button
-              variant="outlined"
+              variant="contained"
               size="small"
               onClick={onTodayClick}
               sx={{
                 height: 40,
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "primary.main",
-                borderColor: "rgba(25, 118, 210, 0.5)",
-                px: 1.5,
-                minWidth: "auto",
+                fontSize: "13px",
+                fontWeight: 700,
+                bgcolor: "#FFD100", // Fanuc Yellow
+                color: "#1B254B", // Dark Blue
+                px: 2.5,
+                minWidth: "100px",
                 whiteSpace: "nowrap",
+                borderRadius: 0,
+                clipPath:
+                  "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+                boxShadow: "none",
                 "&:hover": {
-                  borderColor: "primary.main",
-                  bgcolor: "rgba(25, 118, 210, 0.04)",
+                  bgcolor: "#FFC107",
+                  boxShadow: "none",
+                },
+                "& .MuiButton-startIcon": {
+                  color: "inherit",
                 },
               }}
             >
@@ -481,7 +484,6 @@ export default function AssignOrdersToolbar({
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
-
 
           {/* Status & Menu Group */}
           <Box
