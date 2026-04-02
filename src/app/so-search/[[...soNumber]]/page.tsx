@@ -54,6 +54,7 @@ interface SalesOrder {
   customerNameText?: string | null;
   address?: string | null;
   specialRemarks?: string;
+  attachments?: any[];
 }
 
 interface DispatchInfoData {
@@ -662,7 +663,7 @@ export default function SoSearchPage() {
               onViewDispatchAttachments={handleOpenDispatchAttachments}
               onViewVehicleAttachments={handleOpenVehicleAttachments}
               onViewPaymentAttachments={handleOpenPaymentAttachments}
-              hasPaymentAttachments={paymentAttachments.length > 0}
+              hasPaymentAttachments={Array.isArray(data.salesOrder.attachments) && data.salesOrder.attachments.length > 0}
             />
             <MaterialDetails
               materialDetails={data.materialDetails}
@@ -678,7 +679,7 @@ export default function SoSearchPage() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
           PAYMENT ATTACHMENTS
           <IconButton
             onClick={() => setPaymentDialogOpen(false)}
