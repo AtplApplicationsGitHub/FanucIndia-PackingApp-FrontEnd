@@ -6,6 +6,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Box } from "@mui/material";
 import SalesEntryForm from "@/app/sales/components/forms/SalesEntryForm";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
+import Divider from "@mui/material/Divider";
+import CommonButton from "@/common/components/CommonButton";
 
 type Props = {
   open: boolean;
@@ -48,14 +50,14 @@ export default function SalesEntryDialog({
           position: "relative",
           bgcolor: "background.paper",
           px: 3,
-          py: 2.2,
+          py: 1.2,
         }}
       >
         <Box
           component="span"
           sx={{
             fontWeight: 700,
-            fontSize: 22,
+            fontSize: 20,
             flexGrow: 1,
             textAlign: "center",
             letterSpacing: 0,
@@ -77,9 +79,10 @@ export default function SalesEntryDialog({
           <CloseIcon />
         </IconButton>
       </Box>
+      <Divider />
       <DialogContent
         sx={{
-          p: { xs: 2, md: 3 },
+          p: { xs: 1.5, md: 2 },
           overflowY: "auto",
           bgcolor: "background.paper",
         }}
@@ -92,6 +95,12 @@ export default function SalesEntryDialog({
           />
         </Box>
       </DialogContent>
+      <Divider />
+      <Box sx={{ px: 3, py: 1, display: "flex", justifyContent: "flex-end", bgcolor: "background.paper" }}>
+        <CommonButton type="submit" form="sales-entry-form">
+          {initialData ? "Update" : "Save"}
+        </CommonButton>
+      </Box>
     </Dialog>
   );
 }

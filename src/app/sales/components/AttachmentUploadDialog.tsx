@@ -67,7 +67,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
         position: "relative",
       }}>
         UPLOAD ATTACHMENTS
-        <IconButton onClick={handleClose} size="small" disabled={uploading}  sx={{ position: "absolute", right: 12 }}>
+        <IconButton onClick={handleClose} size="small" disabled={uploading} sx={{ position: "absolute", right: 12 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
@@ -81,7 +81,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
           onDrop={handleDrop}
           sx={{
             border: "1.5px dashed",
-            borderColor: dragging ? "primary.main" : "grey.300",
+            borderColor: dragging ? "#FFD600" : "grey.300",
             borderRadius: 2,
             py: 4,
             px: 2,
@@ -91,6 +91,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
             transition: "all 0.2s",
             mb: 2,
             "&:hover": { borderColor: "grey.500" },
+            "&:active": { borderColor: "#FFD600" },
           }}
         >
           <CloudUploadOutlinedIcon sx={{ fontSize: 44, color: "grey.400", mb: 1 }} />

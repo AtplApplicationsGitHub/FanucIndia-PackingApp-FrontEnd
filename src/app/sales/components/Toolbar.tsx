@@ -52,6 +52,7 @@ type Props = {
   endDate: Date | null;
   onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
+  selectedIds: number[];
 };
 
 export default function SalesDashboardToolbar({
@@ -77,6 +78,7 @@ export default function SalesDashboardToolbar({
   endDate,
   onEndDateChange,
   onClear,
+  selectedIds,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);

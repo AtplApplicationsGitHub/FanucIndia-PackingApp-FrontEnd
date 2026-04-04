@@ -146,8 +146,13 @@ export default function SalesDashboard() {
               onDownload={handleDownloadTemplate}
               onDownloadBlank={handleDownloadBlankTemplate}
               onBulkUpload={handleBulkUpload}
-              onUploadAttachment={() => setAttachmentDialogOpen(true)}
-              onClear={handleClearFilters}
+              onUploadAttachment={() => {
+                if (selectedIds.length === 0) {
+                  setAlert({ severity: "error", message: "Please select at least one order before uploading attachments." });
+                  return;
+                }
+                setAttachmentDialogOpen(true);
+              }} onClear={handleClearFilters}
               fileInputRef={fileInputRef}
               onFileChange={handleFileChange}
               paymentFilter={paymentFilter}
@@ -161,6 +166,7 @@ export default function SalesDashboard() {
               onStartDateChange={setStartDate}
               endDate={endDate}
               onEndDateChange={setEndDate}
+              selectedIds={selectedIds}
             />
 
             {orders.length === 0 ? (

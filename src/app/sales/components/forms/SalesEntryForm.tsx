@@ -16,6 +16,7 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 
+
 interface SalesEntryFormProps {
   initialData?: SalesOrder | null;
   lookup: LookupData;
@@ -119,7 +120,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   };
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form id="sales-entry-form"  onSubmit={onSubmit} noValidate>
       {alert && (
         <Alert
           severity={alert.severity}
@@ -130,7 +131,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <ProductSelect
           value={form.productId}
           onChange={onChange}
@@ -273,22 +274,6 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
             }}
           />
         </div>
-      </div>
-      <div className="pt-6 flex justify-end">
-        <Button
-          type="submit"
-          disableElevation
-          sx={{
-            color: (theme) => theme.palette.text.primary,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.action.hover,
-            },
-            borderRadius: 0,
-          }}
-          disabled={submitting}
-        >
-          {submitting ? "Submitting…" : initialData ? "Update" : "Create"}
-        </Button>
       </div>
     </form>
   );
