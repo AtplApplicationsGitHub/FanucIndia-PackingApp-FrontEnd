@@ -195,7 +195,7 @@ export default function AttachmentDialogs({
         fullWidth
         maxWidth="lg"
       >
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
           MATERIAL ATTACHMENTS
           <IconButton
             onClick={onMaterialDialogClose}

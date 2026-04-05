@@ -124,18 +124,20 @@ export default function SalesOrdersTable({
             }}
           >
             <TableRow sx={{ height: 60 }}>
-              <TableCell padding="checkbox" sx={{ bgcolor: "inherit" }}>
-                <Checkbox
-                  indeterminate={
-                    selectedIds.length > 0 && selectedIds.length < orders.length
-                  }
-                  checked={
-                    orders.length > 0 && selectedIds.length === orders.length
-                  }
-                  onChange={handleSelectAll}
-                  sx={{ color: "inherit" }}
-                />
-              </TableCell>
+              {view !== "dispatched" && (
+                <TableCell padding="checkbox" sx={{ bgcolor: "inherit" }}>
+                  <Checkbox
+                    indeterminate={
+                      selectedIds.length > 0 && selectedIds.length < orders.length
+                    }
+                    checked={
+                      orders.length > 0 && selectedIds.length === orders.length
+                    }
+                    onChange={handleSelectAll}
+                    sx={{ color: "inherit" }}
+                  />
+                </TableCell>
+              )}
               {[
                 "ACTIONS",
                 "PRODUCT",
@@ -176,12 +178,14 @@ export default function SalesOrdersTable({
             ) : (
               orders.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedIds.includes(row.id)}
-                      onChange={() => handleSelectOne(row.id)}
-                    />
-                  </TableCell>
+                  {view !== "dispatched" && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedIds.includes(row.id)}
+                        onChange={() => handleSelectOne(row.id)}
+                      />
+                    </TableCell>
+                  )}
                   {view !== "dispatched" && (
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
                       {(() => {

@@ -219,31 +219,32 @@ export default function SalesDashboardToolbar({
               ))}
             </Select>
           </FormControl>
-
-          <FormControl
-            size="small"
-            sx={{
-              minWidth: { xs: 100, md: 100 },
-              bgcolor: "background.paper",
-              flexShrink: 1,
-            }}
-          >
-            <Select
-              value={statusFilter}
-              displayEmpty
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "13px" }}
+          {view !== "dispatched" && (
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: { xs: 100, md: 100 },
+                bgcolor: "background.paper",
+                flexShrink: 1,
+              }}
             >
-              <MenuItem value="" sx={{ fontSize: "13px" }}>
-                STATUS
-              </MenuItem>
-              {STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status} sx={{ fontSize: "13px" }}>
-                  {status}
+              <Select
+                value={statusFilter}
+                displayEmpty
+                onChange={(e) => onStatusFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
+              >
+                <MenuItem value="" sx={{ fontSize: "13px" }}>
+                  STATUS
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                {STATUS_OPTIONS.map((status) => (
+                  <MenuItem key={status} value={status} sx={{ fontSize: "13px" }}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           <DatePicker
             label="FROM"
