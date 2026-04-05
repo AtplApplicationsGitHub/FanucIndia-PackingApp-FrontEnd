@@ -142,7 +142,7 @@ export default function SoSearchPage() {
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
 
-  const [multipleOrders, setMultipleOrders] = useState<{saleOrderNumber: string, outboundDelivery: string}[] | null>(null);
+  const [multipleOrders, setMultipleOrders] = useState<{ saleOrderNumber: string, outboundDelivery: string }[] | null>(null);
   const [selectedObd, setSelectedObd] = useState<string>("");
   const [multipleDialogOpen, setMultipleDialogOpen] = useState(false);
 
@@ -207,18 +207,23 @@ export default function SoSearchPage() {
       });
   };
 
+  // function to fetch payment attachments and open dialog
   const handleOpenPaymentAttachments = async () => {
     if (!data?.salesOrder?.id) return;
+
     setPaymentAttachmentsLoading(true);
     setPaymentDialogOpen(true);
+
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(API.SALES.ATTACHMENTS_BY_ORDER(data.salesOrder.id), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetchWithAuth(
+        API.SALES.ATTACHMENTS_BY_ORDER(data.salesOrder.id)
+      );
+
       if (!res.ok) throw new Error("Failed to fetch");
+
       const attachments = await res.json();
       setPaymentAttachments(attachments);
+
     } catch {
       setError("Failed to load payment attachments.");
       setPaymentDialogOpen(false);
@@ -226,24 +231,27 @@ export default function SoSearchPage() {
       setPaymentAttachmentsLoading(false);
     }
   };
-  const handlePaymentAttachmentAction = (
+  // function to handle view/download of payment attachments
+  const handlePaymentAttachmentAction = async (
     fileId: number,
     fileName: string,
     action: "view" | "download"
   ) => {
-    const token = localStorage.getItem("token");
-    fetch(API.SALES.ATTACHMENT_DOWNLOAD(fileId), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.blob() : Promise.reject("Failed")))
-      .then((blob) => {
-        if (action === "view" && isViewable(fileName)) {
-          secureView(blob);
-        } else {
-          secureDownload(blob, fileName);
-        }
-      })
-      .catch(() => setError(`Failed to ${action} attachment.`));
+    try {
+      const res = await fetchWithAuth(API.SALES.ATTACHMENT_DOWNLOAD(fileId));
+
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+
+      if (action === "view" && isViewable(fileName)) {
+        secureView(blob);
+      } else {
+        secureDownload(blob, fileName);
+      }
+    } catch {
+      setError(`Failed to ${action} attachment.`);
+    }
   };
   const buttonSx = {
     bgcolor: (theme: Theme) => theme.palette.action.hover, // Grey by default
