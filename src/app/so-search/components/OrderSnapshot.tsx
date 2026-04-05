@@ -86,8 +86,7 @@ export default function OrderSnapshot({
         mb={2}
       >
         <Typography
-          variant="h5"
-          sx={{ color: "secondary.main", fontWeight: 600 }}
+          sx={{ color: "secondary.main", fontWeight: 600 , fontSize:"20px" }}
         >
           ORDER
         </Typography>

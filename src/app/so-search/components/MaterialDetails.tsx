@@ -24,6 +24,7 @@ import {
 import { useState, useMemo } from "react";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import CommonButton from "@/common/components/CommonButton";
 
 interface MaterialDetail {
   ID: number;
@@ -158,8 +159,7 @@ export default function MaterialDetails({
       >
         <Box display="flex" alignItems="baseline" gap={3}>
           <Typography
-            variant="h5"
-            sx={{ color: "secondary.main", fontWeight: 600 }}
+            sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
           >
             MATERIALS
           </Typography>
@@ -178,7 +178,7 @@ export default function MaterialDetails({
         </Box>
 
         <Box display="flex" alignItems="center" gap={2}>
-          {/* [NEW] Group Filter Dropdown */}
+          {/* Group Filter Dropdown */}
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="classification-filter-label">Classification</InputLabel>
             <Select
@@ -215,35 +215,35 @@ export default function MaterialDetails({
             </Select>
           </FormControl>
 
-          <Button
+          <CommonButton
             onClick={onViewAttachments}
             variant="contained"
-            sx={{
-              bgcolor: (theme) => theme.palette.action.hover,
-              color: (theme) => theme.palette.text.primary,
-              borderRadius: 0,
-              clipPath:
-                "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-              fontWeight: 600,
-              fontSize: 15,
-              minWidth: 120,
-              height: 40,
-              px: 3,
-              textTransform: "none",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                bgcolor: (theme) => theme.palette.primary.main,
-                color: (theme) => theme.palette.primary.contrastText,
-                boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-                "& .MuiSvgIcon-root, & svg": {
-                  color: "#000",
-                },
-              },
-            }}
+          // sx={{
+          //   bgcolor: (theme) => theme.palette.action.hover,
+          //   color: (theme) => theme.palette.text.primary,
+          //   borderRadius: 0,
+          //   clipPath:
+          //     "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+          //   fontWeight: 600,
+          //   fontSize: 15,
+          //   minWidth: 120,
+          //   height: 40,
+          //   px: 3,
+          //   textTransform: "none",
+          //   boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+          //   transition: "all 0.2s ease-in-out",
+          //   "&:hover": {
+          //     bgcolor: (theme) => theme.palette.primary.main,
+          //     color: (theme) => theme.palette.primary.contrastText,
+          //     boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+          //     "& .MuiSvgIcon-root, & svg": {
+          //       color: "#000",
+          //     },
+          //   },
+          // }}
           >
             ATTACHMENTS
-          </Button>
+          </CommonButton>
         </Box>
       </Box>
 

@@ -34,6 +34,7 @@ import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useSearchParams } from "next/navigation";
 import { useTheme, alpha, TableContainer, Tooltip } from "@mui/material";
 import { FilePresent } from "@mui/icons-material";
+import CommonButton from "@/common/components/CommonButton";
 
 interface SalesOrder {
   id: number;
@@ -588,15 +589,15 @@ export default function SoSearchPage() {
             </Button> */}
 
             {data && !data.isArchived && (
-              <Button
+              <CommonButton
                 variant="contained"
                 startIcon={<ChatBubbleOutlineIcon />}
                 onClick={() => setChatOpen(true)}
-                sx={buttonSx}
+               
                 disabled={!data?.salesOrder?.saleOrderNumber}
               >
                 CHAT
-              </Button>
+              </CommonButton>
             )}
 
             <SoChatDrawer
@@ -612,7 +613,7 @@ export default function SoSearchPage() {
               <>
                 {data.salesOrder.status === "Dispatched" &&
                   !data.isArchived && (
-                    <Button
+                    <CommonButton
                       variant="contained"
                       startIcon={<Archive fontSize="small" />}
                       onClick={() =>
@@ -622,17 +623,16 @@ export default function SoSearchPage() {
                         )
                       }
                       disabled={isActionLoading}
-                      sx={buttonSx}
                     >
                       {isActionLoading && confirmAction === "archive" ? (
                         <CircularProgress size={20} color="inherit" />
                       ) : (
                         "ARCHIVE"
                       )}
-                    </Button>
+                    </CommonButton>
                   )}
                 {data.isArchived && (
-                  <Button
+                  <CommonButton
                     variant="contained"
                     startIcon={<Delete fontSize="small" />}
                     onClick={() =>
@@ -642,14 +642,13 @@ export default function SoSearchPage() {
                       )
                     }
                     disabled={isActionLoading}
-                    sx={buttonSx}
                   >
                     {isActionLoading && confirmAction === "delete" ? (
                       <CircularProgress size={20} color="inherit" />
                     ) : (
                       "DELETE"
                     )}
-                  </Button>
+                  </CommonButton>
                 )}
               </>
             )}
