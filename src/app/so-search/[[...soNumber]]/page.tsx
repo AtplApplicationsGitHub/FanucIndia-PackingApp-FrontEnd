@@ -593,7 +593,7 @@ export default function SoSearchPage() {
                 variant="contained"
                 startIcon={<ChatBubbleOutlineIcon />}
                 onClick={() => setChatOpen(true)}
-               
+
                 disabled={!data?.salesOrder?.saleOrderNumber}
               >
                 CHAT
@@ -806,7 +806,11 @@ export default function SoSearchPage() {
       />
       {/* Multiple Orders Dialog */}
       <Dialog open={multipleDialogOpen} onClose={() => setMultipleDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ color: "primary.main", fontWeight: 600 }}>Multiple Orders Found</DialogTitle>
+        <DialogTitle sx={{
+          color: "secondary.main", fontWeight: 700, fontSize: 20, textAlign: "center", py: 1.5, px: 2
+        }}>
+          MULTIPLE ORDERS FOUND
+        </DialogTitle>
         <DialogContent dividers>
           <Typography mb={2} variant="body2" color="text.secondary">
             There are multiple Outbound Deliveries associated with SO <b>{soNumber}</b>. Please select the specific OBD to view:
@@ -825,8 +829,8 @@ export default function SoSearchPage() {
           </Select>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setMultipleDialogOpen(false)} color="inherit">Cancel</Button>
-          <Button
+          <CommonButton onClick={() => setMultipleDialogOpen(false)} color="inherit">Cancel</CommonButton>
+          <CommonButton
             variant="contained"
             onClick={() => {
               setMultipleDialogOpen(false);
@@ -835,7 +839,7 @@ export default function SoSearchPage() {
             }}
           >
             View Order
-          </Button>
+          </CommonButton>
         </DialogActions>
       </Dialog>
       {soNumberToProcess && (
