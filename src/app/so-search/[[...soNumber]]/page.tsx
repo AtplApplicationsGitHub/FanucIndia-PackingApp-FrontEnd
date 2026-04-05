@@ -12,7 +12,7 @@ import {
   Alert,
   Stack,
   InputBase,
-  Dialog, DialogTitle, DialogContent, Table, TableHead,
+  Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Table, TableHead, // Added DialogActions, Select, MenuItem
   TableRow, TableCell, TableBody
 } from "@mui/material";
 import { Search, Print, Archive, Delete, Close, Visibility, Download } from "@mui/icons-material";
@@ -141,6 +141,10 @@ export default function SoSearchPage() {
 
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
+
+  const [multipleOrders, setMultipleOrders] = useState<{saleOrderNumber: string, outboundDelivery: string}[] | null>(null);
+  const [selectedObd, setSelectedObd] = useState<string>("");
+  const [multipleDialogOpen, setMultipleDialogOpen] = useState(false);
 
   const [dispatchAttachments, setDispatchAttachments] = useState<
     { fileName: string }[]
@@ -306,6 +310,7 @@ export default function SoSearchPage() {
     setLoading(true);
     setError(null);
     setData(null);
+    setMultipleOrders(null); // Reset multiple orders state
     try {
       const token = localStorage.getItem("token");
 
@@ -317,7 +322,15 @@ export default function SoSearchPage() {
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setData(res.data);
+
+      // --- NEW MULTIPLE ORDERS CHECK ---
+      if (res.data.multiple) {
+        setMultipleOrders(res.data.orders);
+        setSelectedObd(res.data.orders[0].outboundDelivery); // Default selection
+        setMultipleDialogOpen(true);
+      } else {
+        setData(res.data);
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Failed to fetch SO details.");
@@ -784,6 +797,40 @@ export default function SoSearchPage() {
         onVehicleAttachmentAction={handleVehicleAttachmentAction}
         currentVehicleEntryId={currentVehicleEntryId}
       />
+      {/* Multiple Orders Dialog */}
+      <Dialog open={multipleDialogOpen} onClose={() => setMultipleDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ color: "primary.main", fontWeight: 600 }}>Multiple Orders Found</DialogTitle>
+        <DialogContent dividers>
+          <Typography mb={2} variant="body2" color="text.secondary">
+            There are multiple Outbound Deliveries associated with SO <b>{soNumber}</b>. Please select the specific OBD to view:
+          </Typography>
+          <Select
+            fullWidth
+            size="small"
+            value={selectedObd}
+            onChange={(e) => setSelectedObd(e.target.value)}
+          >
+            {multipleOrders?.map((order, idx) => (
+              <MenuItem key={idx} value={order.outboundDelivery}>
+                {order.saleOrderNumber} - {order.outboundDelivery}
+              </MenuItem>
+            ))}
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMultipleDialogOpen(false)} color="inherit">Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setMultipleDialogOpen(false);
+              // Pushing to URL triggers the useEffect which calls performSearch automatically
+              router.push(`/so-search/${encodeURIComponent(soNumber)}/${encodeURIComponent(selectedObd)}`);
+            }}
+          >
+            View Order
+          </Button>
+        </DialogActions>
+      </Dialog>
       {soNumberToProcess && (
         <>
           <ConfirmDeleteDialog
