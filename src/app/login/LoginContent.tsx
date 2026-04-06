@@ -298,11 +298,11 @@ export default function LoginContent() {
                     <Typography
                       variant="body2"
                       fontWeight={700}
-                      sx={{ color: "#1a1a1a", textTransform: "capitalize" }}
+                      sx={{ color: "text.primary", textTransform: "capitalize" }}
                     >
                       {apkInfo.pickPack?.appName || "Pick & Pack APK"}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: "#666", display: "block" }}>
+                    <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
                       {apkInfo.pickPack?.latestVersion 
                         ? `Version ${apkInfo.pickPack.latestVersion}` 
                         : "Latest Version"}
@@ -325,11 +325,11 @@ export default function LoginContent() {
                     <Typography
                       variant="body2"
                       fontWeight={700}
-                      sx={{ color: "#1a1a1a", textTransform: "capitalize" }}
+                      sx={{ color: "text.primary", textTransform: "capitalize" }}
                     >
                       {apkInfo.dispatch?.appName || "Dispatch APK"}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: "#666", display: "block" }}>
+                    <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
                       {apkInfo.dispatch?.latestVersion 
                         ? `Version ${apkInfo.dispatch.latestVersion}` 
                         : "Latest Version"}
