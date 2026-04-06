@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Table as TableIcon, BarChart3 } from "lucide-react";
-import { TablePagination } from "@mui/material";
 import { useSalesOrderStatusByCustomer } from "../hooks/useSalesOrderStatusByCustomer";
+import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, CircularProgress } from "@mui/material";
 
 interface CustomerOrderStatus {
   customerName: string;
@@ -22,16 +21,16 @@ interface Props {
 
 export default function SalesOrderStatusByCustomerChart({ selectedDate, displayDate }: Props) {
   const { data, loading, error, refetch } = useSalesOrderStatusByCustomer(selectedDate);
-  const [viewMode, setViewMode] = useState<"chart" | "table">("table"); 
+  const [viewMode, setViewMode] = useState<"chart" | "table">("table");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const COLORS = {
-    toBeIssued: "#FF6B6B", 
-    assigned: "#3B82F6", 
-    issued: "#D97706", 
-    packed: "#6C5CE7", 
-    dispatched: "#00B894", 
+    toBeIssued: "#FF6B6B",
+    assigned: "#3B82F6",
+    issued: "#D97706",
+    packed: "#6C5CE7",
+    dispatched: "#00B894",
   };
 
   const chartData = (data || []).map((item: CustomerOrderStatus) => ({
@@ -50,7 +49,7 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
       <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full">
         <div className="flex items-center justify-center h-full min-h-[300px]">
           <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-3">
-            <BarChart3 className="w-6 h-6 animate-spin" />
+            <CircularProgress size={24} />
             Loading order status by customer...
           </div>
         </div>
@@ -72,41 +71,53 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
   }
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-        <div>
-          <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+    <Box sx={{ bgcolor: "background.paper", borderRadius: 3, boxShadow: 1, p: 2, border: "1px solid", borderColor: "divider", height: "100%", display: "flex", flexDirection: "column", minHeight: 350 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0 }}>
+        <Box>
+          <p className="text- uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Order Status by Customer ({displayDate})
-          </h2>
-          <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">
-            Zone customer statuses
           </p>
-        </div>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
+          <Button
+            onClick={() => setViewMode("table")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+              color: viewMode === "table" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "table" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
+            }}
+          >
+            Table
+          </Button>
+          <Button
+            onClick={() => setViewMode("chart")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+              color: viewMode === "chart" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "chart" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
+            }}
+          >
+            Chart
+          </Button>
+        </Box>
+      </Box>
 
-        <button
-          onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F7F7F7] dark:bg-[#2C3540] hover:bg-gray-200 dark:hover:bg-gray-600 
-            text-[#1F2933] dark:text-[#F7F7F7] font-medium rounded-lg transition-all duration-200 focus:outline-none border border-[#E5E7EB] dark:border-[#4B5563]"
-        >
-          {viewMode === "chart" ? (
-            <>
-              <TableIcon className="w-5 h-5" />
-              <span>Table View</span>
-            </>
-          ) : (
-            <>
-              <BarChart3 className="w-5 h-5" />
-              <span>Chart View</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="flex-1">
+      <Box sx={{ flex: 1, position: "relative", display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: 250 }}>
         {viewMode === "chart" ? (
-          <div className="h-[350px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
+          <Box sx={{ width: "100%", height: 350 }}>
             <BarChart
               dataset={paginatedData}
+              width={undefined}
               height={320}
               margin={{ top: 20, right: 40, left: 50, bottom: 60 }}
               xAxis={[{ dataKey: "customer", scaleType: "band", tickLabelStyle: { angle: 0, textAnchor: 'middle', fontSize: 11 } }]}
@@ -119,42 +130,46 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
               ]}
               slotProps={{ legend: { position: { vertical: "bottom", horizontal: "center" } } }}
             />
-          </div>
+          </Box>
         ) : (
-          <div className="overflow-x-auto -mx-6 mt-2">
-            <table className="w-full text-sm">
-              <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.toBeIssued }}>To be Issued</th>
-                  <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.assigned }}>Assigned</th>
-                  <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.issued }}>Issued</th>
-                  <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.packed }}>Packed</th>
-                  <th className="px-6 py-4 text-center font-semibold" style={{ color: COLORS.dispatched }}>Dispatched</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
-                {paginatedData.length === 0 ? (
-                   <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No data available</td></tr>
-                ) : (
-                  paginatedData.map((row) => (
-                    <tr key={row.customer} className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]">
-                      <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">{row.customer}</td>
-                      <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.toBeIssued }}>{row.toBeIssued}</td>
-                      <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.assigned }}>{row.assigned}</td>
-                      <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.issued }}>{row.issued}</td>
-                      <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.packed }}>{row.packed}</td>
-                      <td className="px-6 py-4 text-center font-bold" style={{ color: COLORS.dispatched }}>{row.dispatched}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <TableContainer component={Paper} elevation={1} sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "action.hover" }}>
+                    <TableCell sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "text.secondary" }}>Customer</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: COLORS.toBeIssued }}>To be Issued</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: COLORS.assigned }}>Assigned</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: COLORS.issued }}>Issued</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: COLORS.packed }}>Packed</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: COLORS.dispatched }}>Dispatched</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4, color: "text.secondary" }}>No data available</TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedData.map((row) => (
+                      <TableRow key={row.customer} sx={{ "&:hover": { bgcolor: "action.hover" }, transition: "background-color 0.2s" }}>
+                        <TableCell sx={{ fontWeight: 500, color: "text.primary" }}>{row.customer}</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 700, color: COLORS.toBeIssued }}>{row.toBeIssued}</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 700, color: COLORS.assigned }}>{row.assigned}</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 700, color: COLORS.issued }}>{row.issued}</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 700, color: COLORS.packed }}>{row.packed}</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 700, color: COLORS.dispatched }}>{row.dispatched}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         )}
-      </div>
+      </Box>
 
-      <div className="flex justify-end pt-2 mt-2">
+      <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 1, mt: 1 }}>
         <TablePagination
           component="div"
           count={chartData.length}
@@ -168,7 +183,7 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
           rowsPerPageOptions={[5, 10, 25]}
           sx={{ color: 'text.primary' }}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
