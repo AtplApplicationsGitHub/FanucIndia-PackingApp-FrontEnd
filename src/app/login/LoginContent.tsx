@@ -8,8 +8,13 @@ import {
   AppBar,
   Toolbar,
   Typography,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Button,
+  Divider,
 } from "@mui/material";
-import CommonButton from "@/common/components/CommonButton";
+import { ChevronDown, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -19,8 +24,16 @@ import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
+import axios from "axios";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+
+interface ApkDetails {
+  appName: string;
+  latestVersion: string;
+  fileName: string;
+  downloadUrl: string;
+}
 
 type UserRole = "ADMIN" | "SALES" | "USER";
 type User = { role: UserRole; email: string } & Record<string, unknown>;
@@ -55,6 +68,43 @@ export default function LoginContent() {
   const router = useRouter();
   const [loggedOutSnackbar, setLoggedOutSnackbar] = useState<boolean>(false);
   const [sessionExpiredAlert, setSessionExpiredAlert] = useState(false);
+
+  // APK Dropdown state
+  const [apkAnchorEl, setApkAnchorEl] = useState<null | HTMLElement>(null);
+  const apkMenuOpen = Boolean(apkAnchorEl);
+  const handleApkClick = (event: React.MouseEvent<HTMLElement>) => {
+    setApkAnchorEl(event.currentTarget);
+  };
+  const handleApkClose = () => {
+    setApkAnchorEl(null);
+  };
+
+  // APK Info state
+  const [apkInfo, setApkInfo] = useState<{
+    dispatch: ApkDetails | null;
+    pickPack: ApkDetails | null;
+  }>({ dispatch: null, pickPack: null });
+
+  useEffect(() => {
+    const fetchApkInfo = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const [dispatchRes, pickPackRes] = await Promise.all([
+          apiClient.get<ApkDetails>(`${baseUrl}/app-update/dispatch`).catch(() => null),
+          apiClient.get<ApkDetails>(`${baseUrl}/app-update/pick-pack`).catch(() => null),
+        ]);
+
+        setApkInfo({
+          dispatch: dispatchRes?.data || null,
+          pickPack: pickPackRes?.data || null,
+        });
+      } catch (err) {
+        console.error("Failed to fetch APK info:", err);
+      }
+    };
+
+    fetchApkInfo();
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("loggedout") === "1") {
@@ -192,40 +242,103 @@ export default function LoginContent() {
             </Typography>
           </Box>
 
-          {/* App Download Links using CommonButton */}
-          <Box sx={{ display: 'flex', gap: 2, mr: 6 }}>
-             <CommonButton
-               component="a"
-               href={`${process.env.NEXT_PUBLIC_API_URL}/app-update/pick-pack/download`}
-               variant="contained"
-               sx={{ 
-                 borderColor: 'rgba(0,0,0,0.5)',
-                 color: '#000000',
-                 bgcolor: 'transparent',
-                 '&:hover': { 
-                   borderColor: '#000000',
-                   bgcolor: 'rgba(0,0,0,0.05)'
-                 } 
-               }}
-             >
-               Get Pick & Pack APK
-             </CommonButton>
-             <CommonButton
-               component="a"
-               href={`${process.env.NEXT_PUBLIC_API_URL}/app-update/dispatch/download`}
-               variant="contained"
-               sx={{ 
-                 borderColor: 'rgba(0,0,0,0.5)',
-                 color: '#000000',
-                 bgcolor: 'transparent',
-                 '&:hover': { 
-                   borderColor: '#000000',
-                   bgcolor: 'rgba(0,0,0,0.05)'
-                 } 
-               }}
-             >
-               Get Dispatch APK
-             </CommonButton>
+          {/* App Download Links using Dropdown */}
+          <Box sx={{ mr: 6 }}>
+            <Button
+              onClick={handleApkClick}
+              endIcon={<ChevronDown size={16} />}
+              sx={{
+                color: "#000000",
+                fontWeight: 600,
+                textTransform: "none",
+                fontSize: "0.9rem",
+                borderRadius: "8px",
+                px: 2,
+                "&:hover": {
+                  bgcolor: "rgba(0,0,0,0.05)",
+                },
+              }}
+            >
+              Get APK
+            </Button>
+            <Menu
+              anchorEl={apkAnchorEl}
+              open={apkMenuOpen}
+              onClose={handleApkClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              PaperProps={{
+                elevation: 3,
+                sx: {
+                  mt: 1,
+                  borderRadius: "12px",
+                  minWidth: 220,
+                  "& .MuiMenuItem-root": {
+                    borderRadius: "8px",
+                    mx: 0.5,
+                    my: 0.5,
+                  },
+                },
+              }}
+            >
+              <MenuItem
+                component="a"
+                href={apkInfo.pickPack?.downloadUrl || `${process.env.NEXT_PUBLIC_API_URL}/app-update/pick-pack/download`}
+                onClick={handleApkClose}
+                sx={{ py: 1.5 }}
+              >
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={700}
+                      sx={{ color: "#1a1a1a", textTransform: "capitalize" }}
+                    >
+                      {apkInfo.pickPack?.appName || "Pick & Pack APK"}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#666", display: "block" }}>
+                      {apkInfo.pickPack?.latestVersion 
+                        ? `Version ${apkInfo.pickPack.latestVersion}` 
+                        : "Latest Version"}
+                    </Typography>
+                  </Box>
+                <ListItemIcon sx={{ minWidth: "auto", ml: 2 }}>
+                  <Download size={20} color="#1976d2" />
+                </ListItemIcon>
+              </MenuItem>
+
+              <Divider sx={{ my: "0 !important", opacity: 0.6 }} />
+
+              <MenuItem
+                component="a"
+                href={apkInfo.dispatch?.downloadUrl || `${process.env.NEXT_PUBLIC_API_URL}/app-update/dispatch/download`}
+                onClick={handleApkClose}
+                sx={{ py: 1.5 }}
+              >
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={700}
+                      sx={{ color: "#1a1a1a", textTransform: "capitalize" }}
+                    >
+                      {apkInfo.dispatch?.appName || "Dispatch APK"}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#666", display: "block" }}>
+                      {apkInfo.dispatch?.latestVersion 
+                        ? `Version ${apkInfo.dispatch.latestVersion}` 
+                        : "Latest Version"}
+                    </Typography>
+                  </Box>
+                <ListItemIcon sx={{ minWidth: "auto", ml: 2 }}>
+                  <Download size={20} color="#1976d2" />
+                </ListItemIcon>
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
         
