@@ -30,6 +30,8 @@ import {
   TableRow,
   Tooltip,
 } from "@mui/material";
+
+
 import {
   DataGrid,
   GridColDef,
@@ -55,7 +57,48 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
 import { alpha, useTheme, Theme } from "@mui/material";
-import { X, Eye, Download as DownloadIcon, Trash2, CloudUpload, FileText, File as FileIcon } from "lucide-react";
+import {
+  X,
+  Eye,
+  Download as DownloadIcon,
+  Trash2,
+  CloudUpload,
+  FileText,
+  File as FileIcon,
+  Search,
+  Plus,
+  Calendar,
+  Truck,
+  Package,
+  Info,
+} from "lucide-react";
+
+const buttonSx = {
+  height: 40,
+  fontSize: "13px",
+  fontWeight: 700,
+  bgcolor: "#FFD100", // Fanuc Yellow
+  color: "#1B254B", // Dark Blue
+  px: 2.5,
+  minWidth: "100px",
+  whiteSpace: "nowrap",
+  borderRadius: 0,
+  clipPath:
+    "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+  boxShadow: "none",
+  "&:hover": {
+    bgcolor: "#FFC107",
+    boxShadow: "none",
+  },
+  "& .MuiButton-startIcon": {
+    color: "inherit",
+  },
+  "&:disabled": {
+    bgcolor: "rgba(255, 209, 0, 0.4)",
+    color: "rgba(27, 37, 75, 0.4)",
+  },
+};
+
 
 interface Transporter {
   id: number;
@@ -99,6 +142,7 @@ const AttachmentDialog = ({
   const [loading, setLoading] = useState(false);
 
   const theme = useTheme();
+  const headerBg = theme.palette.primary.main;
   const iconBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -106,6 +150,10 @@ const AttachmentDialog = ({
       setFiles((prev) => [...prev, ...acceptedFiles]);
     },
   });
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleUpload = async () => {
     if (!dispatch || files.length === 0) return;
@@ -125,7 +173,7 @@ const AttachmentDialog = ({
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       showSnackbar("Files uploaded successfully", "success");
       setFiles([]);
@@ -161,7 +209,7 @@ const AttachmentDialog = ({
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
-        }
+        },
       );
       secureDownload(response.data, fileName);
     } catch {
@@ -172,8 +220,19 @@ const AttachmentDialog = ({
   const handleView = async (fileName: string) => {
     if (!dispatch) return;
 
-    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-    const viewableExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.txt', '.mp4', '.webm'];
+    const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
+    const viewableExtensions = [
+      ".pdf",
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".webp",
+      ".svg",
+      ".txt",
+      ".mp4",
+      ".webm",
+    ];
 
     if (!viewableExtensions.includes(ext)) {
       return handleDownload(fileName);
@@ -186,23 +245,24 @@ const AttachmentDialog = ({
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
-        }
+        },
       );
-      
-      const safeBlob = new Blob([response.data], { type: response.headers['content-type'] });
+
+      const safeBlob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
       const fileURL = URL.createObjectURL(safeBlob);
-      
+
       if (fileURL.startsWith("blob:")) {
         const link = document.createElement("a");
         link.href = fileURL;
         link.target = "_blank";
-        link.rel = "noopener noreferrer"; 
-        
+        link.rel = "noopener noreferrer";
+
         link.click();
 
         setTimeout(() => URL.revokeObjectURL(fileURL), 1000);
       }
-      
     } catch {
       showSnackbar("Failed to view attachment", "error");
     }
@@ -237,12 +297,21 @@ const AttachmentDialog = ({
             "&:hover": {
               borderColor: theme.palette.primary.main,
               bgcolor: alpha(theme.palette.primary.main, 0.05),
-            }
+            },
           }}
         >
           <input {...getInputProps()} />
-          <CloudUpload size={48} color={theme.palette.text.secondary} style={{ marginBottom: 16 }} />
-          <Typography variant="h6" color="textPrimary" fontWeight="500" textAlign="center">
+          <CloudUpload
+            size={48}
+            color={theme.palette.text.secondary}
+            style={{ marginBottom: 16 }}
+          />
+          <Typography
+            variant="h6"
+            color="textPrimary"
+            fontWeight="500"
+            textAlign="center"
+          >
             Drag 'n' drop files here
           </Typography>
           <Typography variant="body2" color="textSecondary" textAlign="center">
@@ -250,29 +319,92 @@ const AttachmentDialog = ({
           </Typography>
         </Box>
         {files.length > 0 && (
-          <Box>
-            <Typography variant="subtitle1">New Files to Upload:</Typography>
-            <List>
-              {files.map((file, index) => (
-                <ListItem key={index}>
-                  <ListItemIcon>
-                    <FilePresent />
-                  </ListItemIcon>
-                  <ListItemText primary={file.name} />
-                </ListItem>
-              ))}
-            </List>
-            <Button
-              onClick={handleUpload}
-              variant="contained"
-              disabled={loading}
+          <Box sx={{ mt: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 1.5,
+              }}
             >
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : (
-                `Upload ${files.length} File(s)`
-              )}
-            </Button>
+              <Typography
+                variant="subtitle1"
+                fontWeight="600"
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <FileText size={20} /> New Files to Upload:
+              </Typography>
+              <Button
+                onClick={handleUpload}
+                variant="contained"
+                disabled={loading}
+                startIcon={
+                  loading ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <CloudUpload size={20} />
+                  )
+                }
+                sx={{
+                  ...buttonSx,
+                  textTransform: "none",
+                  clipPath:
+                    "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+                }}
+              >
+                {loading ? "Uploading..." : `Upload ${files.length} File(s)`}
+              </Button>
+            </Box>
+            <Paper
+              variant="outlined"
+              sx={{ borderRadius: 2, overflow: "hidden" }}
+            >
+              <List disablePadding>
+                {files.map((file, index) => (
+                  <ListItem
+                    key={index}
+                    divider={index < files.length - 1}
+                    sx={{
+                      "&:hover": {
+                        bgcolor: alpha(theme.palette.action.hover, 0.04),
+                      },
+                    }}
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => removeFile(index)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.1),
+                          },
+                        }}
+                      >
+                        <Trash2 size={18} />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <FileIcon
+                        size={20}
+                        color={theme.palette.text.secondary}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={file.name}
+                      secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                      primaryTypographyProps={{
+                        variant: "body2",
+                        fontWeight: 500,
+                      }}
+                      secondaryTypographyProps={{ variant: "caption" }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
           </Box>
         )}
         <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
@@ -282,9 +414,36 @@ const AttachmentDialog = ({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell align="center">SiNo</TableCell>
-                <TableCell align="center">File Name</TableCell>
-                <TableCell align="center">Action</TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    bgcolor: headerBg,
+                    color: "primary.contrastText",
+                    fontWeight: 600,
+                  }}
+                >
+                  Sl.No
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    bgcolor: headerBg,
+                    color: "primary.contrastText",
+                    fontWeight: 600,
+                  }}
+                >
+                  File Name
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    bgcolor: headerBg,
+                    color: "primary.contrastText",
+                    fontWeight: 600,
+                  }}
+                >
+                  Action
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -302,36 +461,38 @@ const AttachmentDialog = ({
                   <TableCell align="center">
                     <Box display="flex" justifyContent="center" gap={0.5}>
                       <Tooltip title="View Attachment">
-                        <IconButton 
-                          onClick={() => handleView(att.fileName)} 
+                        <IconButton
+                          onClick={() => handleView(att.fileName)}
                           size="small"
-                          sx={{ 
+                          sx={{
                             color: iconBlue,
-                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) } 
+                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) },
                           }}
                         >
                           <Eye size={20} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Download">
-                        <IconButton 
-                          onClick={() => handleDownload(att.fileName)} 
+                        <IconButton
+                          onClick={() => handleDownload(att.fileName)}
                           size="small"
-                          sx={{ 
+                          sx={{
                             color: iconBlue,
-                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) } 
+                            "&:hover": { bgcolor: alpha(iconBlue, 0.1) },
                           }}
                         >
                           <DownloadIcon size={20} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
-                        <IconButton 
-                          onClick={() => handleDelete(att.fileName)} 
+                        <IconButton
+                          onClick={() => handleDelete(att.fileName)}
                           size="small"
-                          sx={{ 
+                          sx={{
                             color: theme.palette.error.main,
-                            "&:hover": { bgcolor: alpha(theme.palette.error.main, 0.1) } 
+                            "&:hover": {
+                              bgcolor: alpha(theme.palette.error.main, 0.1),
+                            },
                           }}
                         >
                           <Trash2 size={20} />
@@ -352,7 +513,9 @@ const AttachmentDialog = ({
 // --- Main Component ---
 export default function DispatchView() {
   const theme = useTheme();
-  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().subtract(1, 'day'));
+  const [startDate, setStartDate] = useState<Dayjs | null>(
+    dayjs().subtract(1, "day"),
+  );
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   const [form, setForm] = useState<{
     transporterId: Transporter | null;
@@ -366,7 +529,7 @@ export default function DispatchView() {
   const [transporters, setTransporters] = useState<Transporter[]>([]);
   const soInputRef = useRef<HTMLInputElement>(null);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(
-    null
+    null,
   );
   const [dispatchSOs, setDispatchSOs] = useState<DispatchSO[]>([]);
   const [soInput, setSoInput] = useState("");
@@ -394,11 +557,11 @@ export default function DispatchView() {
   // --- Data Fetching ---
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" = "success"
+    severity: "success" | "error" = "success",
   ) => {
     setSnackbar({ open: true, message, severity });
   };
-  
+
   const fetchTransporters = useCallback(async () => {
     try {
       const res = await fetchWithAuth(API.LOOKUP.TRANSPORTERS);
@@ -418,7 +581,9 @@ export default function DispatchView() {
       if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
       if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
 
-      const res = await fetchWithAuth(`${API.DISPATCH.BASE}?${params.toString()}`);
+      const res = await fetchWithAuth(
+        `${API.DISPATCH.BASE}?${params.toString()}`,
+      );
       const data = await res.json();
       setDispatches(data);
     } catch {
@@ -428,8 +593,6 @@ export default function DispatchView() {
     }
   }, [startDate, endDate]);
 
-
-
   const handleClearFilters = () => {
     setStartDate(null);
     setEndDate(null);
@@ -437,38 +600,13 @@ export default function DispatchView() {
 
   const handleVehicleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    setForm(prev => ({ ...prev, vehicleNumber: val }));
+    setForm((prev) => ({ ...prev, vehicleNumber: val }));
   };
 
-  const headerBg = theme.palette.primary.main; 
+  const headerBg = theme.palette.primary.main;
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
-  const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover,
-    color: (theme: Theme) => theme.palette.text.primary,
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 120,
-    height: 40,
-    px: 3,
-    textTransform: "none",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main,
-      color: (theme: Theme) => theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-      "& .MuiSvgIcon-root, & svg": {
-        color: "#000",
-      },
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-  };
+
 
   const fetchDispatchSOs = useCallback(async (dispatchId: number) => {
     setSoLoading(true);
@@ -577,7 +715,7 @@ export default function DispatchView() {
       await axios.post(
         API.DISPATCH.SO(selectedDispatch.id),
         { saleOrderNumber: soInput.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setSoInput("");
       fetchDispatchSOs(selectedDispatch.id);
@@ -617,7 +755,7 @@ export default function DispatchView() {
 
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
-    id: number
+    id: number,
   ) => {
     setMenuAnchor(event.currentTarget);
     setCurrentMenuId(id);
@@ -631,9 +769,11 @@ export default function DispatchView() {
   const handleEdit = () => {
     const dispatchToEdit = dispatches.find((d) => d.id === currentMenuId);
     if (dispatchToEdit) {
-      const transporterName = dispatchToEdit.transporterName || dispatchToEdit.transporter?.name;
-      const transporter = transporters.find((t) => t.name === transporterName) || null;
-      
+      const transporterName =
+        dispatchToEdit.transporterName || dispatchToEdit.transporter?.name;
+      const transporter =
+        transporters.find((t) => t.name === transporterName) || null;
+
       setForm({
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
@@ -685,7 +825,7 @@ export default function DispatchView() {
     },
     {
       field: "siNo",
-      headerName: "SiNo",
+      headerName: "Sl.No",
       width: 70,
       valueGetter: (value, row) =>
         dispatches.findIndex((d) => d.id === row.id) + 1,
@@ -699,7 +839,8 @@ export default function DispatchView() {
       field: "transporterName",
       headerName: "Transporter",
       flex: 1,
-      valueGetter: (value, row) => row.transporterName || row.transporter?.name || "-",
+      valueGetter: (value, row) =>
+        row.transporterName || row.transporter?.name || "-",
     },
     {
       field: "vehicleNumber",
@@ -709,27 +850,27 @@ export default function DispatchView() {
     {
       field: "UpdatedBy",
       headerName: "Updated By",
-      flex: 0.8, 
-      minWidth: 100, 
-      valueGetter: (_value, row) => row.UpdatedBy || "-", 
+      flex: 0.8,
+      minWidth: 100,
+      valueGetter: (_value, row) => row.UpdatedBy || "-",
     },
     {
       field: "UpdatedDate",
       headerName: "Updated Date",
       flex: 1,
-      minWidth: 180, 
+      minWidth: 180,
       valueGetter: (_value, row) =>
-      row.UpdatedDate
-        ? new Date(row.UpdatedDate).toLocaleString('en-IN', { 
-            day: '2-digit',    
-            month: '2-digit',   
-            year: 'numeric',   
-            hour: '2-digit',   
-            minute: '2-digit', 
-            second: '2-digit', 
-            hour12: true       
-          })
-        : "-",
+        row.UpdatedDate
+          ? new Date(row.UpdatedDate).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: true,
+            })
+          : "-",
     },
     {
       field: "attachments",
@@ -756,281 +897,715 @@ export default function DispatchView() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-    <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        sx={{
+          px: 4,
+          pb: 2,
+          pt: 1.5,
+          bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#f9fafb",
+          height: "calc(100vh - 75px)",
+          overflow: "hidden",
+          color: theme.palette.text.primary,
+        }}
+      >
+        {/* Compact Full Width Filter Bar */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 1.5,
+            px: 3,
+            mb: 1,
+            width: "100%",
+            borderRadius: 2.5,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
+            border: "1px solid",
+            borderColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(0,0,0,0.06)",
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)"
+                : "0 2px 4px rgba(0,0,0,0.02)",
+          }}
+        >
+          <Box display="flex" gap={3} alignItems="center">
+            <Box>
+              <DatePicker
+                label="FROM"
+                value={startDate}
+                onChange={(val) => setStartDate(val)}
+                format="DD-MM-YYYY"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      width: 190,
+                      "& .MuiInputBase-input": {
+                        color: theme.palette.text.primary,
+                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "& fieldset": {
+                          borderColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.2)"
+                              : "rgba(0,0,0,0.15)",
+                        },
+                        "&:hover fieldset": {
+                          borderColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.3)"
+                              : "rgba(0,0,0,0.3)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: theme.palette.primary.main,
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#9CA3AF",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                      },
+                      "& .MuiIconButton-root": {
+                        color: theme.palette.text.secondary,
+                      },
+                    },
+                  },
+                }}
+              />
+            </Box>
+            <Box>
+              <DatePicker
+                label="TO"
+                value={endDate}
+                onChange={(val) => setEndDate(val)}
+                format="DD-MM-YYYY"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      width: 190,
+                      "& .MuiInputBase-input": {
+                        color: theme.palette.text.primary,
+                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "& fieldset": {
+                          borderColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.2)"
+                              : "rgba(0,0,0,0.15)",
+                        },
+                        "&:hover fieldset": {
+                          borderColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.3)"
+                              : "rgba(0,0,0,0.3)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: theme.palette.primary.main,
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#9CA3AF",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        textTransform: "uppercase",
+                      },
+                      "& .MuiIconButton-root": {
+                        color: theme.palette.text.secondary,
+                      },
+                    },
+                  },
+                }}
+              />
+            </Box>
+            <Tooltip title="Clear Filters">
+              <IconButton 
+                onClick={handleClearFilters}
+                size="small"
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+                    color: '#EF4444'
+                  }
+                }}
+              >
+                <X size={18} />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Box display="flex" gap={2} alignItems="center">
-             <DatePicker
-              label="From"
-              value={startDate}
-              onChange={(val) => setStartDate(val)}
-              format="DD-MM-YYYY"
-              slotProps={{ textField: { size: "small", sx: { width: 150, bgcolor: 'background.paper' } } }}
-            />
-            <DatePicker
-              label="To"
-              value={endDate}
-              onChange={(val) => setEndDate(val)}
-              format="DD-MM-YYYY"
-              slotProps={{ textField: { size: "small", sx: { width: 150, bgcolor: 'background.paper' } } }}
-            />
             <Button
-              onClick={handleClearFilters}
-              startIcon={<X size={18} />}
-              sx={buttonSx} // Using the style defined above
+              variant="contained"
+              sx={buttonSx}
+              onClick={handleCreateClick}
+              startIcon={<Plus size={18} />}
             >
-              CLEAR
+              Create
             </Button>
           </Box>
-          <Button sx={buttonSx} onClick={handleCreateClick}>
-            CREATE
-          </Button>
-        </Box>
+        </Paper>
 
-      <Box sx={{ display: "flex", gap: 4, mt: 3 }}>
-        <Box sx={{ width: "60%" }}>
-          <Paper elevation={3} sx={{ height: 600, width: "100%" }}>
-            <DataGrid
-              rows={dispatches}
-              columns={columns}
-              getRowId={(row) => row.id}
-              loading={loading}
-              onRowClick={(params) =>
-                setSelectedDispatch(params.row as Dispatch)
-              }
-              pageSizeOptions={[5, 10, 25, 50, 100]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10 },
-                },
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {/* Left Column: Dispatch Entries */}
+          <Box sx={{ flex: 1 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                height: "calc(100vh - 185px)",
+                width: "100%",
+                borderRadius: 4,
+                overflow: "hidden",
+                border: "1px solid",
+                borderColor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.06)",
+                bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
               }}
-              slots={{ toolbar: GridToolbar }}
-              slotProps={{
-                toolbar: {
-                  showQuickFilter: true,
-                },
-              }}
-            />
-          </Paper>
-        </Box>
-        <Box sx={{ width: "40%" }}>
-          <Paper
-            elevation={3}
-            sx={{ p: 2, height: 600, display: "flex", flexDirection: "column" }}
-          >
-            <Box display="flex" gap={1} my={2}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={
-                  selectedDispatch
-                    ? "Enter SO Number"
-                    : "Select a dispatch first"
+            >
+              <DataGrid
+                rows={dispatches}
+                columns={columns}
+                getRowId={(row) => row.id}
+                loading={loading}
+                onRowClick={(params) =>
+                  setSelectedDispatch(params.row as Dispatch)
                 }
-                value={soInput}
-                onChange={(e) => setSoInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddSO()}
-                disabled={!selectedDispatch || soLoading}
-                inputRef={soInputRef}
+                pageSizeOptions={[10, 25, 50]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 10 } },
+                }}
+                sx={{
+                  border: "none",
+                  color: theme.palette.text.primary,
+                  bgcolor: "transparent",
+                  "& .MuiDataGrid-columnHeaders": {
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#1F2933" : "#f8fafc",
+                    borderBottom: "1px solid",
+                    borderColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                  },
+                  "& .MuiDataGrid-columnHeaderTitle": {
+                    fontWeight: 700,
+                    fontSize: "0.75rem",
+                    textTransform: "uppercase",
+                    color: theme.palette.text.secondary,
+                    letterSpacing: 0.5,
+                  },
+                  "& .MuiDataGrid-cell": {
+                    fontSize: "0.875rem",
+                    color: theme.palette.text.primary,
+                    borderBottom: "1px solid",
+                    borderColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.05)",
+                  },
+                  "& .MuiDataGrid-main": {
+                    bgcolor: "transparent",
+                  },
+                  "& .MuiDataGrid-virtualScroller": {
+                    bgcolor: "transparent",
+                  },
+                  "& .MuiDataGrid-row:nth-of-type(even)": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? alpha(theme.palette.primary.main, 0.25)
+                        : alpha(theme.palette.primary.main, 0.02),
+                  },
+                  "& .MuiDataGrid-row:hover": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.03)"
+                        : "rgba(0,0,0,0.02)",
+                  },
+                  "& .MuiDataGrid-row.Mui-selected": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(0,0,0,0.04)",
+                    "&:hover": {
+                      bgcolor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.09)"
+                          : "rgba(0,0,0,0.06)",
+                    },
+                  },
+                  "& .MuiDataGrid-footerContainer": {
+                    bgcolor:
+                      theme.palette.mode === "dark" ? "#1F2933" : "transparent",
+                    color: theme.palette.text.secondary,
+                    borderTop: "1px solid",
+                    borderColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                  },
+                  "& .MuiTablePagination-root": {
+                    color: theme.palette.text.secondary,
+                  },
+                  "& .MuiIconButton-root": {
+                    color: theme.palette.text.secondary,
+                  },
+                }}
+                slots={{
+                  noRowsOverlay: () => (
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="100%"
+                      gap={2}
+                      bgcolor="transparent"
+                    >
+                      <Box
+                        sx={{
+                          p: 4,
+                          borderRadius: "50%",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.02)"
+                              : "rgba(0,0,0,0.02)",
+                        }}
+                      >
+                        <Package
+                          size={64}
+                          color={theme.palette.text.disabled}
+                        />
+                      </Box>
+                      <Typography
+                        variant="h6"
+                        fontWeight="700"
+                        color={theme.palette.text.primary}
+                      >
+                        No rows found
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color={theme.palette.text.secondary}
+                        textAlign="center"
+                      >
+                        There are no dispatch records matching the
+                        <br />
+                        selected date range. Try adjusting your search criteria.
+                      </Typography>
+                    </Box>
+                  ),
+                }}
               />
-              <Button
-                sx={buttonSx}
-                onClick={handleAddSO}
-                disabled={!selectedDispatch || soLoading}
+            </Paper>
+          </Box>
+
+          {/* Right Column: SO Selection */}
+          <Box sx={{ width: 400 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                height: "calc(100vh - 185px)",
+                borderRadius: 4,
+                display: "flex",
+                flexDirection: "column",
+                border: "1px solid",
+                borderColor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,180,0.1)",
+                bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
+                position: "relative",
+              }}
+            >
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="caption"
+                  fontWeight="700"
+                  color="#9CA3AF"
+                  sx={{ mb: 1, display: "block", textTransform: "uppercase" }}
+                >
+                  Search Sales Orders ({dispatchSOs.length})
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="medium"
+                  placeholder={
+                    selectedDispatch
+                      ? "Search by SO Number or Customer..."
+                      : "Select a dispatch first"
+                  }
+                  value={soInput}
+                  onChange={(e) => setSoInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddSO()}
+                  disabled={!selectedDispatch || soLoading}
+                  inputRef={soInputRef}
+                  InputProps={{
+                    startAdornment: (
+                      <Search
+                        size={18}
+                        color={theme.palette.text.secondary}
+                        style={{ marginRight: 8 }}
+                      />
+                    ),
+                    sx: {
+                      borderRadius: 2,
+                      bgcolor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.03)"
+                          : "rgba(0,0,0,0.02)",
+                      color: theme.palette.text.primary,
+                      fontSize: "0.875rem",
+                      "& fieldset": {
+                        borderColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.1)"
+                            : "rgba(0,0,0,0.1)",
+                      },
+                      "&:hover fieldset": {
+                        borderColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.2)"
+                            : "rgba(0,0,0,0.2)",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  "&::-webkit-scrollbar": { width: 6 },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                    borderRadius: 3,
+                  },
+                }}
               >
-                {soLoading ? <CircularProgress size={24} /> : "ADD SO"}
-              </Button>
-            </Box>
-            <Box flexGrow={1} overflow="auto" mt={2}>
-                <TableContainer>
-                  <Table stickyHeader size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>Sl.No</TableCell>
-                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>SO Number</TableCell>
-                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText' }}>Customer</TableCell>
-                        <TableCell sx={{ bgcolor: headerBg, fontWeight: 'bold', color: 'primary.contrastText', textAlign: 'center' }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {dispatchSOs.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">
-                            {selectedDispatch ? "No SOs added." : "Select a Dispatch first"}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        dispatchSOs.map((so, index) => (
-                          <TableRow 
-                            key={so.id}
-                            sx={{ 
-                              bgcolor: index % 2 === 0 ? 'inherit' : lightYellow 
-                            }}
+                {dispatchSOs.length === 0 ? (
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    height="100%"
+                    gap={1}
+                    p={4}
+                  >
+                    <Info size={32} color="#374151" />
+                    <Typography
+                      variant="body2"
+                      color="#6B7280"
+                      textAlign="center"
+                    >
+                      {selectedDispatch
+                        ? "No SOs added yet. Enter an SO number to begin."
+                        : "Select a Dispatch from the table to view and manage SOs."}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box display="flex" flexDirection="column" gap={1.5} sx={{ pr: 1 }}>
+                    {dispatchSOs.map((so) => (
+                      <Box
+                        key={so.id}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2.5,
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.02)"
+                              : "rgba(0,0,0,0.02)",
+                          border: "1px solid",
+                          borderColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.05)"
+                              : "rgba(0,0,0,0.05)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          transition: "all 0.2s",
+                          "&:hover": {
+                            borderColor:
+                              theme.palette.mode === "dark"
+                                ? "rgba(255,255,255,0.15)"
+                                : "rgba(0,0,0,0.15)",
+                            transform: "translateX(4px)",
+                            bgcolor:
+                              theme.palette.mode === "dark"
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(0,0,0,0.04)",
+                            boxShadow:
+                              theme.palette.mode === "dark"
+                                ? "0 4px 12px rgba(0,0,0,0.2)"
+                                : "0 4px 12px rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight="800"
+                            color={theme.palette.text.primary}
+                            sx={{ mb: 0.5 }}
                           >
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{so.saleOrderNumber}</TableCell>
-                            <TableCell>
-                              {so.salesOrder?.customerNameText || so.salesOrder?.customer?.name || "-"}
-                            </TableCell>
-                            <TableCell align="center">
-                              <IconButton size="small" onClick={() => handleDeleteSO(so.id)}>
-                                <Delete fontSize="small" color="error" />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                            {so.saleOrderNumber}
+                          </Typography>
+                          <Box display="flex" alignItems="center" gap={0.5}>
+                            <FileText
+                              size={12}
+                              color={theme.palette.text.secondary}
+                            />
+                            <Typography
+                              variant="caption"
+                              fontWeight="700"
+                              color={theme.palette.text.secondary}
+                            >
+                              {so.salesOrder?.customerNameText ||
+                                so.salesOrder?.customer?.name ||
+                                "Unknown Customer"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteSO(so.id)}
+                          sx={{
+                            color: "#EF4444",
+                            "&:hover": { bgcolor: "rgba(239, 68, 68, 0.1)" },
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
               </Box>
             </Paper>
           </Box>
         </Box>
 
-      <Dialog
-        open={createDialogOpen}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>
-          {editingId ? "EDIT DISPATCH" : "CREATE DISPATCH"}
-          <IconButton
-            onClick={handleDialogClose}
-            sx={{ position: "absolute", right: 8, top: 8 }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box component="form" sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                mb: 2,
-              }}
+        <Dialog
+          open={createDialogOpen}
+          onClose={handleDialogClose}
+          fullWidth
+          maxWidth="md"
+        >
+          <DialogTitle>
+            {editingId ? "EDIT DISPATCH" : "CREATE DISPATCH"}
+            <IconButton
+              onClick={handleDialogClose}
+              sx={{ position: "absolute", right: 8, top: 8 }}
             >
-              <Autocomplete
-                options={transporters}
-                getOptionLabel={(option) => option.name}
-                value={form.transporterId}
-                onChange={(_, value) => setForm(prev => ({...prev, transporterId: value}))}
-                renderInput={(params) => <TextField {...params} label="Transporter" />}
-              />
-              
-              <TextField
-                label="Vehicle Number"
-                required
-                value={form.vehicleNumber}
-                onChange={handleVehicleChange}
-                helperText="Alphanumeric only (e.g., KA01XY1234)"
-              />
-            </Box>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box
+              component="form"
+              sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 2,
+                  mb: 2,
+                }}
+              >
+                <Autocomplete
+                  options={transporters}
+                  getOptionLabel={(option) => option.name}
+                  value={form.transporterId}
+                  onChange={(_, value) =>
+                    setForm((prev) => ({ ...prev, transporterId: value }))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Transporter" />
+                  )}
+                />
 
-            <Typography variant="subtitle2" color="text.secondary">
-              Attachments
-            </Typography>
-            <Box
-              {...getRootProps()}
-              sx={{
-                p: 3,
-                mt: 1,
-                border: "2px dashed #ccc",
-                textAlign: "center",
-                cursor: "pointer",
-              }}
-            >
-              <input {...getInputProps()} />
-              <Typography>
-                Drop files here or <strong>browse</strong>
+                <TextField
+                  label="Vehicle Number"
+                  required
+                  value={form.vehicleNumber}
+                  onChange={handleVehicleChange}
+                  helperText="Alphanumeric only (e.g., KA01XY1234)"
+                />
+              </Box>
+
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{ fontWeight: 600, mt: 1 }}
+              >
+                Attachments
               </Typography>
-            </Box>
-            {attachments.length > 0 && (
-              <List>
-                {attachments.map((file, index) => (
-                  <ListItem
-                    key={index}
-                    dense
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        onClick={() =>
-                          setAttachments((prev) =>
-                            prev.filter((_, i) => i !== index)
-                          )
+              <Box
+                {...getRootProps()}
+                sx={{
+                  p: 4,
+                  my: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  border: "2px dashed",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  bgcolor: alpha(theme.palette.primary.main, 0.02),
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: theme.palette.primary.main,
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  },
+                }}
+              >
+                <input {...getInputProps()} />
+                <CloudUpload
+                  size={40}
+                  color={theme.palette.text.secondary}
+                  style={{ marginBottom: 8 }}
+                />
+                <Typography variant="body1" fontWeight="500">
+                  Drag 'n' drop files here
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  or click to select files
+                </Typography>
+              </Box>
+              {attachments.length > 0 && (
+                <Paper
+                  variant="outlined"
+                  sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}
+                >
+                  <List disablePadding>
+                    {attachments.map((file, index) => (
+                      <ListItem
+                        key={index}
+                        divider={index < attachments.length - 1}
+                        sx={{
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.action.hover, 0.04),
+                          },
+                        }}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={() =>
+                              setAttachments((prev) =>
+                                prev.filter((_, i) => i !== index),
+                              )
+                            }
+                            sx={{
+                              color: theme.palette.error.main,
+                              "&:hover": {
+                                bgcolor: alpha(theme.palette.error.main, 0.1),
+                              },
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
                         }
                       >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    }
-                  >
-                    <ListItemIcon sx={{ minWidth: "32px" }}>
-                      <FilePresent fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={file.name}
-                      secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button sx={buttonSx} onClick={handleDialogClose}>CANCEL</Button>
-          <Button sx={buttonSx} onClick={handleSave} disabled={loading}>
-            {loading ? (
-              <CircularProgress size={24} />
-            ) : editingId ? (
-              "UPDATE"
-            ) : (
-              "SAVE"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <FileIcon
+                            size={18}
+                            color={theme.palette.text.secondary}
+                          />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={file.name}
+                          secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                          primaryTypographyProps={{
+                            variant: "body2",
+                            fontWeight: 500,
+                          }}
+                          secondaryTypographyProps={{ variant: "caption" }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button sx={buttonSx} onClick={handleDialogClose}>
+              CANCEL
+            </Button>
+            <Button sx={buttonSx} onClick={handleSave} disabled={loading}>
+              {loading ? (
+                <CircularProgress size={24} />
+              ) : editingId ? (
+                "UPDATE"
+              ) : (
+                "SAVE"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <AttachmentDialog
-        open={attachmentDialogOpen}
-        onClose={() => setAttachmentDialogOpen(false)}
-        dispatch={currentDispatchForAttachments}
-        onUpdate={() => {
-          setAttachmentDialogOpen(false);
-          fetchDispatches();
-        }}
-        showSnackbar={showSnackbar}
-      />
+        <AttachmentDialog
+          open={attachmentDialogOpen}
+          onClose={() => setAttachmentDialogOpen(false)}
+          dispatch={currentDispatchForAttachments}
+          onUpdate={() => {
+            setAttachmentDialogOpen(false);
+            fetchDispatches();
+          }}
+          showSnackbar={showSnackbar}
+        />
 
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleEdit}>
-          <Edit sx={{ mr: 1 }} /> Edit
-        </MenuItem>
-        <MenuItem onClick={handleGeneratePdf}>
-          <PictureAsPdf sx={{ mr: 1 }} /> PDF
-        </MenuItem>
-      </Menu>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
+        <Menu
+          anchorEl={menuAnchor}
+          open={Boolean(menuAnchor)}
+          onClose={handleMenuClose}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <MenuItem onClick={handleEdit}>
+            <Edit sx={{ mr: 1 }} /> Edit
+          </MenuItem>
+          <MenuItem onClick={handleGeneratePdf}>
+            <PictureAsPdf sx={{ mr: 1 }} /> PDF
+          </MenuItem>
+        </Menu>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        >
+          <Alert
+            onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </LocalizationProvider>
   );
 }
