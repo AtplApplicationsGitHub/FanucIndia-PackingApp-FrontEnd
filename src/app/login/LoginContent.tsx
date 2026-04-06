@@ -1,6 +1,15 @@
 "use client";
 
-import { Box, Card, CardContent, Alert, AppBar, Toolbar, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Alert,
+  AppBar,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import CommonButton from "@/common/components/CommonButton";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -58,7 +67,7 @@ export default function LoginContent() {
 
   const handleLoggedOutSnackbarClose = (
     _e?: React.SyntheticEvent | Event,
-    reason?: string
+    reason?: string,
   ) => {
     if (reason === "clickaway") return;
     setLoggedOutSnackbar(false);
@@ -73,12 +82,13 @@ export default function LoginContent() {
     setSuccessMsg("");
 
     const payload = {
-      email: data.email.replace(/\s+/g, ''),
-      password: data.password.replace(/\s+/g, ''),
+      email: data.email.replace(/\s+/g, ""),
+      password: data.password.replace(/\s+/g, ""),
     };
 
     // [Step 1] Capture previous user from LocalStorage before overwriting
-    const prevUserStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const prevUserStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
     let prevEmail = "";
     if (prevUserStr) {
       try {
@@ -92,7 +102,7 @@ export default function LoginContent() {
     try {
       const res = await apiClient.post<LoginSuccessPayload>(
         API.AUTH.LOGIN,
-        payload
+        payload,
       );
       const { accessToken, user } = res.data;
 
@@ -158,7 +168,8 @@ export default function LoginContent() {
             minHeight: 20,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          {/* Logo & Version */}
+          <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
             <Image
               src="/Fanuc_India.png"
               alt="Fanuc India Logo"
@@ -166,8 +177,58 @@ export default function LoginContent() {
               height={21}
               priority
             />
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#000000",
+                opacity: 0.7,
+                fontWeight: 600,
+                fontSize: "0.65rem",
+                lineHeight: 1,
+                mb: "2px", 
+              }}
+            >
+              v{process.env.NEXT_PUBLIC_APP_VERSION}
+            </Typography>
+          </Box>
+
+          {/* App Download Links using CommonButton */}
+          <Box sx={{ display: 'flex', gap: 2, mr: 6 }}>
+             <CommonButton
+               component="a"
+               href={`${process.env.NEXT_PUBLIC_API_URL}/app-update/pick-pack/download`}
+               variant="contained"
+               sx={{ 
+                 borderColor: 'rgba(0,0,0,0.5)',
+                 color: '#000000',
+                 bgcolor: 'transparent',
+                 '&:hover': { 
+                   borderColor: '#000000',
+                   bgcolor: 'rgba(0,0,0,0.05)'
+                 } 
+               }}
+             >
+               Get Pick & Pack APK
+             </CommonButton>
+             <CommonButton
+               component="a"
+               href={`${process.env.NEXT_PUBLIC_API_URL}/app-update/dispatch/download`}
+               variant="contained"
+               sx={{ 
+                 borderColor: 'rgba(0,0,0,0.5)',
+                 color: '#000000',
+                 bgcolor: 'transparent',
+                 '&:hover': { 
+                   borderColor: '#000000',
+                   bgcolor: 'rgba(0,0,0,0.05)'
+                 } 
+               }}
+             >
+               Get Dispatch APK
+             </CommonButton>
           </Box>
         </Toolbar>
+        
         <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
           <UserMenu variant="minimal" />
         </Box>
@@ -180,7 +241,7 @@ export default function LoginContent() {
         justifyContent="center"
         px={2}
         sx={{
-          bgcolor: 'background.default' // This uses the theme color
+          bgcolor: "background.default", // This uses the theme color
         }}
       >
         <Card

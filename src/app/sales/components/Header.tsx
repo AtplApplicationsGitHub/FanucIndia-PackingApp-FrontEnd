@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AppBar, Toolbar, Box, useTheme, Button } from "@mui/material";
+import { AppBar, Toolbar, Box, useTheme, Button, Typography } from "@mui/material";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { ClipboardList, BarChart3, Search } from "lucide-react";
 import Image from "next/image";
@@ -61,7 +61,14 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
         }}
       >
         <Box
-          sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }}
+          sx={{ 
+            flexGrow: 1, 
+            mr: 3, 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "flex-end", 
+            gap: 1 
+          }}
           onClick={() => setView("home")}
         >
           <Image
@@ -71,6 +78,19 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
             height={21}
             priority
           />
+          <Typography
+            variant="caption"
+            sx={{
+              color: theme.palette.primary.contrastText,
+              opacity: 0.7,
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              lineHeight: 1,
+              mb: "2px", 
+            }}
+          >
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </Typography>
         </Box>
 
         <Box

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import { Box, useTheme, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import { Box, useTheme, Menu, MenuItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
 import {
   BarChart3,
   ClipboardList,
@@ -153,7 +153,14 @@ export default function AdminDashboardHeader({
         }}
       >
         <Box
-          sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }}
+          sx={{ 
+            flexGrow: 1, 
+            mr: 3, 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "flex-end", 
+            gap: 1 
+          }}
           onClick={() => setView("home")}
         >
           <Image
@@ -163,6 +170,19 @@ export default function AdminDashboardHeader({
             height={21}
             priority
           />
+          <Typography
+            variant="caption"
+            sx={{
+              color: theme.palette.primary.contrastText,
+              opacity: 0.7,
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              lineHeight: 1,
+              mb: "2px", 
+            }}
+          >
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </Typography>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>

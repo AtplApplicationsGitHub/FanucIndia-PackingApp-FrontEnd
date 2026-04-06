@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import {  Package, Truck, Grid, BarChart3 } from "lucide-react";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
-import { useTheme } from "@mui/material";
+import { useTheme, Typography } from "@mui/material";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 
@@ -65,7 +65,14 @@ export default function UserDashboardHeader({
         }}
       >
         <Box
-          sx={{ flexGrow: 1, mr: 3, cursor: "pointer" }}
+          sx={{ 
+            flexGrow: 1, 
+            mr: 3, 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "flex-end", 
+            gap: 1 
+          }}
           onClick={() => setView("home")}
         >
           <Image
@@ -75,6 +82,19 @@ export default function UserDashboardHeader({
             height={21}
             priority
           />
+          <Typography
+            variant="caption"
+            sx={{
+              color: theme.palette.primary.contrastText,
+              opacity: 0.7,
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              lineHeight: 1,
+              mb: "2px", 
+            }}
+          >
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </Typography>
         </Box>
 
         <Box
