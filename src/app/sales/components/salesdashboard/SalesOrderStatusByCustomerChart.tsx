@@ -71,8 +71,8 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
   }
 
   return (
-    <Box sx={{ bgcolor: "background.paper", borderRadius: 3, boxShadow: 1, p: 2, border: "1px solid", borderColor: "divider", height: "100%", display: "flex", flexDirection: "column", minHeight: 350 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0 }}>
+    <Box sx={{ bgcolor: "background.paper", borderRadius: 3, boxShadow: 1, p: 2, border: "1px solid", borderColor: "divider", height: "100%", display: "flex", flexDirection: "column", minHeight: viewMode === "chart" ? 350 : "auto" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
           <p className="text- uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Order Status by Customer ({displayDate})
@@ -112,7 +112,7 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, position: "relative", display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: 250 }}>
+      <Box sx={{ flex: 1, position: "relative", display: "flex", justifyContent: "center", alignItems: viewMode === "chart" ? "center" : "flex-start", width: "100%", minHeight: viewMode === "chart" ? 250 : "auto" }}>
         {viewMode === "chart" ? (
           <Box sx={{ width: "100%", height: 350 }}>
             <BarChart
@@ -132,7 +132,7 @@ export default function SalesOrderStatusByCustomerChart({ selectedDate, displayD
             />
           </Box>
         ) : (
-          <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <Box sx={{ width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
             <TableContainer component={Paper} elevation={1} sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
               <Table>
                 <TableHead>
