@@ -19,16 +19,15 @@ export default function OrderStatus({ selectedDate, displayDate }: { selectedDat
           const data = await res.json();
           const totalOrders = data.totalOrders || 0;
           setTotal(totalOrders);
-          
+
           // Map backend data to MUI PieChart format
           const rawData = [
-            { id: 0, value: data.toBeIssuedCount || 0, label: "To be Issued", color: "#6B7280" },
-            { id: 1, value: data.r105Count || 0, label: "R105", color: "#EAB308" },
-            { id: 2, value: data.w105Count || 0, label: "W105", color: "#A855F7" },
-            { id: 3, value: data.f105Count || 0, label: "F105", color: "#3B82F6" },
-            { id: 4, value: data.dispatchedCount || 0, label: "Dispatched", color: "#22C55E" },
+            { id: 0, value: data.toBeIssuedCount || 0, label: "To be Issued", color: "#FF6B6B" },
+            { id: 1, value: data.r105Count || 0, label: "Assigned (R105)", color: "#3B82F6" },
+            { id: 2, value: data.w105Count || 0, label: "Issued (W105)", color: "#D97706" },
+            { id: 3, value: data.f105Count || 0, label: "Packed (F105)", color: "#6C5CE7" },
+            { id: 4, value: data.dispatchedCount || 0, label: "Dispatched", color: "#00B894" },
           ];
-
           // FIX: Filter out 0 values so MUI PieChart renders properly
           setChartData(rawData.filter((item) => item.value > 0));
         }
@@ -45,10 +44,10 @@ export default function OrderStatus({ selectedDate, displayDate }: { selectedDat
 
   return (
     <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col min-h-[350px]">
-      <h3 className="text-base font-semibold text-[#D00000] dark:text-[#FF6B6B] uppercase mb-6">
+      <h3 className="text-base font-semibold text-[#D00000] tracking-wider dark:text-[#FF6B6B] uppercase">
         Order Status Distribution ({displayDate})
       </h3>
-      
+
       <div className="flex-1 min-h-[280px] w-full relative flex items-center justify-center">
         {loading ? (
           <CircularProgress size={30} />
@@ -73,12 +72,16 @@ export default function OrderStatus({ selectedDate, displayDate }: { selectedDat
                 cornerRadius: 0,
               },
             ]}
-            height={280}
+            height={400}
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
-            className="text-[#1F2933] dark:text-[#F7F7F7]"
-            sx={{
-              "& .MuiChartsLegend-label": {
-                fill: "currentColor !important",
+            slotProps={{
+              legend: {
+                position: { vertical: "middle", horizontal: "end" },
+                sx: {
+                  "& .MuiChartsLegend-label": {
+                    fill: "currentColor",
+                  },
+                },
               },
             }}
           />
