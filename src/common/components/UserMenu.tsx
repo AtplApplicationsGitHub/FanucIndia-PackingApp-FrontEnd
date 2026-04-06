@@ -111,7 +111,10 @@ export default function UserMenu({
             cursor: "pointer",
             p: "4px 4px",
             borderRadius: 1,
-            "&:hover": { bgcolor: "rgba(255,255,255,0.15)" },
+            // Use dark hover for minimal variant, light hover for full variant
+            "&:hover": { 
+              bgcolor: variant === "minimal" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.15)" 
+            },
           }}
         >
           {username?.trim() ? (
@@ -119,11 +122,11 @@ export default function UserMenu({
               sx={{
                 width: 34,
                 height: 34,
-                bgcolor: "rgba(0,0,0,0.25)",
-                color: "white",
+                bgcolor: variant === "minimal" ? "transparent" : "rgba(0,0,0,0.25)",
+                color: variant === "minimal" ? "#000000" : "white",
                 fontWeight: 700,
                 fontSize: 13,
-                border: "2px solid rgba(255,255,255,4.6)",
+                border: variant === "minimal" ? "2px solid rgba(0,0,0,0.6)" : "2px solid rgba(255,255,255,0.6)",
               }}
             >
               {username
@@ -135,9 +138,9 @@ export default function UserMenu({
                 .toUpperCase()}
             </Avatar>
           ) : (
-            <Settings size={22} color="white" />
+            <Settings size={22} color={variant === "minimal" ? "#000000" : "white"} />
           )}
-          <ChevronDown size={16} color="white" />
+          <ChevronDown size={16} color={variant === "minimal" ? "#000000" : "white"} />
         </Box>
       </Tooltip>
 

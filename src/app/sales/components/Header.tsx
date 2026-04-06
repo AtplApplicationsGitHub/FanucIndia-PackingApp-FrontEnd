@@ -7,6 +7,7 @@ import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboa
 import { ClipboardList, BarChart3, Search } from "lucide-react";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+import packageJson from "../../../../package.json";
 
 type Props = {
   userName: string;
@@ -90,7 +91,7 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
               mb: "2px",
             }}
           >
-            v{process.env.NEXT_PUBLIC_APP_VERSION}
+            v{packageJson.version}
           </Typography>
         </Box>
 

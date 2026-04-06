@@ -10,6 +10,7 @@ import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme, Typography } from "@mui/material";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+import packageJson from "../../../../package.json";
 
 type Props = {
   userName: string;
@@ -93,7 +94,7 @@ export default function UserDashboardHeader({
               mb: "2px", 
             }}
           >
-            v{process.env.NEXT_PUBLIC_APP_VERSION}
+            v{packageJson.version}
           </Typography>
         </Box>
 

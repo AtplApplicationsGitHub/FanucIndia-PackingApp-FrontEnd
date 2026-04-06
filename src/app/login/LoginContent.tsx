@@ -24,9 +24,10 @@ import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
 import apiClient from "@/common/lib/apiClient";
-import axios from "axios";
+import packageJson from "../../../package.json";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
+import { API_BASE_URL } from "@/common/lib/endpoints";
 
 interface ApkDetails {
   appName: string;
@@ -87,12 +88,12 @@ export default function LoginContent() {
 
   useEffect(() => {
     const fetchApkInfo = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-        const [dispatchRes, pickPackRes] = await Promise.all([
-          apiClient.get<ApkDetails>(`${baseUrl}/app-update/dispatch`).catch(() => null),
-          apiClient.get<ApkDetails>(`${baseUrl}/app-update/pick-pack`).catch(() => null),
-        ]);
+        try {
+          const baseUrl = API_BASE_URL;
+          const [dispatchRes, pickPackRes] = await Promise.all([
+            apiClient.get<ApkDetails>(`${baseUrl}/app-update/dispatch/latest-version`).catch(() => null),
+            apiClient.get<ApkDetails>(`${baseUrl}/app-update/pick-pack/latest-version`).catch(() => null),
+          ]);
 
         setApkInfo({
           dispatch: dispatchRes?.data || null,
@@ -238,7 +239,7 @@ export default function LoginContent() {
                 mb: "2px", 
               }}
             >
-              v{process.env.NEXT_PUBLIC_APP_VERSION}
+              v{packageJson.version}
             </Typography>
           </Box>
 

@@ -22,6 +22,7 @@ import {
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import packageJson from "../../../../../package.json";
 
 export type ViewType =
   | "home"
@@ -181,7 +182,7 @@ export default function AdminDashboardHeader({
               mb: "2px", 
             }}
           >
-            v{process.env.NEXT_PUBLIC_APP_VERSION}
+            v{packageJson.version}
           </Typography>
         </Box>
 
