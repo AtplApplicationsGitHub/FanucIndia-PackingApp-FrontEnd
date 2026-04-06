@@ -17,6 +17,7 @@ import SalesEntryDialog from "@/app/sales/components/forms/SalesEntryDialog";
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
 import AttachmentUploadDialog from "@/app/sales/components/AttachmentUploadDialog";
+import { motion } from "framer-motion";
 
 export default function SalesDashboard() {
   const theme = useTheme();
@@ -134,7 +135,15 @@ export default function SalesDashboard() {
         />
 
         {/* HOME VIEW - Beautiful Dashboard */}
-        {view === "home" && <HomeDashboard />}
+        {view === "home" &&
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <HomeDashboard />
+          </motion.div>}
 
         {(view === "orders" || view === "dispatched") && (
           <Box px={{ xs: 1.5, md: 2 }} py={1}>

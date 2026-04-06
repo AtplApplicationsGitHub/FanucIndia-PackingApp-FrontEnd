@@ -46,7 +46,7 @@ export default function OrderStatus({ selectedDate, displayDate }: { selectedDat
   return (
     <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col min-h-[350px]">
       <h3 className="text-base font-semibold text-[#D00000] dark:text-[#FF6B6B] uppercase mb-6">
-        Order Status Distribution <span className="text-sm font-normal text-gray-500 ml-1">({displayDate})</span>
+        Order Status Distribution ({displayDate})
       </h3>
       
       <div className="flex-1 min-h-[280px] w-full relative flex items-center justify-center">

@@ -33,7 +33,7 @@ export default function SalesEntryDialog({
       slotProps={{
         paper: {
           sx: {
-            minHeight: "80vh",
+            minHeight: "unset",
             maxHeight: "95vh",
             bgcolor: "background.paper",
             borderRadius: 0,

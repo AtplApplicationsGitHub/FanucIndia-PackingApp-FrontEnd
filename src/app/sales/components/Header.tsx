@@ -74,7 +74,7 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
         </Box>
 
         <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 3 }}
+          sx={{ display: "flex", justifyContent: "flex-end" }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
             {menuItems.map((item) => {

@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { CircularProgress } from "@mui/material";
+import {
+  Box, Typography, Button, CircularProgress,
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper
+} from "@mui/material";
 
 export default function PaymentMethodsChart({ selectedDate, displayDate }: { selectedDate: string, displayDate: string }) {
   const [chartData, setChartData] = useState<{ cleared: number; pending: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // FIX: Added state to handle view toggling, defaulting to 'table'
   const [viewType, setViewType] = useState<'table' | 'chart'>('table');
 
@@ -35,46 +39,108 @@ export default function PaymentMethodsChart({ selectedDate, displayDate }: { sel
   }, [selectedDate]);
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col min-h-[350px]">
-      
+    <Box
+      sx={{
+        bgcolor: "background.paper",
+        borderRadius: 3,
+        boxShadow: 1,
+        p: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 350,
+      }}
+    >
       {/* HEADER WITH TOGGLE BUTTONS */}
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-base font-semibold text-[#D00000] dark:text-[#FF6B6B] uppercase">
-          Payment Clearance <span className="text-sm font-normal text-gray-500 ml-1">({displayDate})</span>
-        </h3>
-        
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0 }}>
+        <Box>
+          <p className="text- uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+            Payment Clearance ({displayDate})
+          </p>
+        </Box>
+
         {/* Toggle Switch */}
-        <div className="flex items-center bg-[#F7F7F7] dark:bg-[#2C3540] rounded-lg p-1 border border-[#E5E7EB] dark:border-[#4B5563]">
-          <button
-            onClick={() => setViewType('table')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-              viewType === 'table'
-                ? "bg-white dark:bg-[#1F2933] text-[#D00000] dark:text-[#FF6B6B] shadow-sm"
-                : "text-[#4B5563] dark:text-[#E5E7EB] hover:text-[#1F2933] dark:hover:text-white"
-            }`}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "action.hover",
+            borderRadius: 2,
+            p: 0.5,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Button
+            onClick={() => setViewType("table")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor: viewType === "table" ? "background.paper" : "transparent",
+              color: viewType === "table" ? "#D00000" : "text.secondary",
+              boxShadow: viewType === "table" ? 1 : "none",
+              "&:hover": {
+                bgcolor: viewType === "table" ? "background.paper" : "transparent",
+                color: viewType === "table" ? "#D00000" : "text.primary",
+              },
+            }}
           >
             Table
-          </button>
-          <button
-            onClick={() => setViewType('chart')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-              viewType === 'chart'
-                ? "bg-white dark:bg-[#1F2933] text-[#D00000] dark:text-[#FF6B6B] shadow-sm"
-                : "text-[#4B5563] dark:text-[#E5E7EB] hover:text-[#1F2933] dark:hover:text-white"
-            }`}
+          </Button>
+          <Button
+            onClick={() => setViewType("chart")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor: viewType === "chart" ? "background.paper" : "transparent",
+              color: viewType === "chart" ? "#D00000" : "text.secondary",
+              boxShadow: viewType === "chart" ? 1 : "none",
+              "&:hover": {
+                bgcolor: viewType === "chart" ? "background.paper" : "transparent",
+                color: viewType === "chart" ? "#D00000" : "text.primary",
+              },
+            }}
           >
             Chart
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
 
       {/* CONTENT AREA */}
-      <div className="flex-1 relative flex justify-center items-center w-full min-h-[250px]">
+      <Box
+        sx={{
+          flex: 1,
+          position: "relative",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: 250,
+        }}
+      >
         {loading ? (
           <CircularProgress size={30} />
         ) : !chartData ? (
-          <span className="text-gray-500">No data available</span>
-        ) : viewType === 'chart' ? (
+          <Typography variant="body2" color="text.secondary">
+            No data available
+          </Typography>
+        ) : viewType === "chart" ? (
           <BarChart
             xAxis={[{ scaleType: "band", data: ["Payment Status"] }]}
             series={[
@@ -82,57 +148,58 @@ export default function PaymentMethodsChart({ selectedDate, displayDate }: { sel
               { data: [chartData.pending], label: "Pending", color: "#EF4444" },
             ]}
             slotProps={{
-              legend: {
-                position: { vertical: "bottom", horizontal: "center" },
-              },
+              legend: { position: { vertical: "bottom", horizontal: "center" } },
             }}
             margin={{ top: 10, bottom: 50, left: 40, right: 10 }}
           />
         ) : (
-          <div className="w-full h-full flex flex-col justify-center">
-            <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm">
-              <table className="min-w-full divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
-                <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4B5563] dark:text-[#9CA3AF] uppercase tracking-wider">
+          <Box sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <TableContainer
+              component={Paper}
+              elevation={1}
+              sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "action.hover" }}>
+                    <TableCell
+                      sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "text.secondary" }}
+                    >
                       Payment Status
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-[#4B5563] dark:text-[#9CA3AF] uppercase tracking-wider">
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "text.secondary" }}
+                    >
                       Count
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-[#1F2933] divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
-                  <tr className="hover:bg-gray-50 dark:hover:bg-[#2C3540]/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#22C55E]">
-                      Cleared
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-white font-bold">
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow sx={{ "&:hover": { bgcolor: "action.hover" }, transition: "background-color 0.2s" }}>
+                    <TableCell sx={{ fontWeight: 500, color: "#22C55E" }}>YES</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>
                       {chartData.cleared.toLocaleString()}
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 dark:hover:bg-[#2C3540]/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#EF4444]">
-                      Pending
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-white font-bold">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ "&:hover": { bgcolor: "action.hover" }, transition: "background-color 0.2s" }}>
+                    <TableCell sx={{ fontWeight: 500, color: "#EF4444" }}>NO</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>
                       {chartData.pending.toLocaleString()}
-                    </td>
-                  </tr>
-                  <tr className="bg-[#F7F7F7] dark:bg-[#2C3540]/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#1F2933] dark:text-[#E5E7EB]">
-                      Total Orders
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-[#E5E7EB] font-bold">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow sx={{ bgcolor: "action.hover" }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Total Orders</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>
                       {(chartData.cleared + chartData.pending).toLocaleString()}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

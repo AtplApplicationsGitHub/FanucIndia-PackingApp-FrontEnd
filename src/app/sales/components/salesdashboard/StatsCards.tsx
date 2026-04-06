@@ -21,7 +21,7 @@ const StatCard = ({ title, value, iconType, iconColor, hasDatePicker, selectedDa
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] flex flex-col justify-center min-h-[120px]">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all flex flex-col justify-center">
       <div className="flex items-start justify-between">
         <div className="flex-1 mr-3">
           <div className="flex items-center justify-between gap-3 w-full">
@@ -41,28 +41,28 @@ const StatCard = ({ title, value, iconType, iconColor, hasDatePicker, selectedDa
                     value={selectedDate ? dayjs(selectedDate) : null}
                     onChange={(newDate) => {
                       const dateString = newDate && dayjs.isDayjs(newDate) && newDate.isValid() ? newDate.format('YYYY-MM-DD') : '';
-                      if (dateString) onDateChange(dateString); 
+                      if (dateString) onDateChange(dateString);
                     }}
                     format="DD-MMM-YYYY"
-                    slotProps={{ 
-                      textField: { 
-                        sx: { 
-                          width: 0, 
-                          height: 0, 
-                          opacity: 0, 
-                          padding: 0, 
+                    slotProps={{
+                      textField: {
+                        sx: {
+                          width: 0,
+                          height: 0,
+                          opacity: 0,
+                          padding: 0,
                           margin: 0,
                           minWidth: 0,
                           pointerEvents: 'none' // Prevents accidental clicks
-                        } 
-                      } 
-                    }} 
+                        }
+                      }
+                    }}
                   />
                 </LocalizationProvider>
               </div>
             )}
           </div>
-          <p className="text-2xl font-bold text-[#1F2933] dark:text-white mt-2">
+          <p className="text-xl font-bold text-[#1F2933] dark:text-white mt-2">
             {loading ? <Skeleton width={60} height={40} /> : (value !== undefined ? value : 0)}
           </p>
         </div>
@@ -94,14 +94,14 @@ export default function StatsCards({ selectedDate, setSelectedDate }: { selected
   }, [selectedDate]);
 
   const cards = [
-    { title: "To Be Dispatched", value: data?.ordersToBeDispatched, iconType: "packageCheck", iconColor: "text-blue-500", loading },
-    { title: "Ready for Dispatch Today", value: data?.readyForDispatchToday, iconType: "clock", iconColor: "text-yellow-500", loading },
-    { title: "Dispatched Today", value: data?.ordersDispatchedToday, iconType: "send", iconColor: "text-green-500", hasDatePicker: true, selectedDate, onDateChange: setSelectedDate, loading },
+    { title: "To Be Dispatched", value: data?.ordersToBeDispatched, iconType: "packageCheck", iconColor: "text-blue-500 dark:text-blue-400", loading },
+    { title: "Ready for Dispatch Today", value: data?.readyForDispatchToday, iconType: "clock", iconColor: "text-yellow-500 dark:text-yellow-400", loading },
+    { title: "Dispatched Today", value: data?.ordersDispatchedToday, iconType: "send", iconColor: "text-green-500 dark:text-green-400", hasDatePicker: true, selectedDate, onDateChange: setSelectedDate, loading },
   ];
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xl text-[#1F2933] uppercase font-semibold">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xl text-[#1F2933] dark:text-[#F7F7F7] uppercase font-semibold">
         {cards.map((card, idx) => <StatCard key={idx} {...card} />)}
       </div>
     </div>
