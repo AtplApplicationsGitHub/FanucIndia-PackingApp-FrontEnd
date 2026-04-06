@@ -27,7 +27,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 
-const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105"];
 
 type Props = {
   view?: "home" | "orders" | "dispatched";

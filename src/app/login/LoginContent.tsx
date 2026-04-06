@@ -183,7 +183,7 @@ export default function LoginContent() {
                 color: "#000000",
                 opacity: 0.7,
                 fontWeight: 600,
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 lineHeight: 1,
                 mb: "2px", 
               }}
