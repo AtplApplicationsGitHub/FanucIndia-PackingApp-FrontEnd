@@ -11,6 +11,7 @@ import UserMenu from "@/common/components/UserMenu";
 type Props = {
   userName: string;
   view: SalesDashboardView;
+  salesZone: string;
   setView: (view: SalesDashboardView) => void;
 };
 
@@ -21,7 +22,7 @@ const menuItems = [
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 
-export default function SalesDashboardHeader({ userName, view, setView }: Props) {
+export default function SalesDashboardHeader({ userName, salesZone, view, setView }: Props) {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -61,13 +62,13 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
         }}
       >
         <Box
-          sx={{ 
-            flexGrow: 1, 
-            mr: 3, 
-            cursor: "pointer", 
-            display: "flex", 
-            alignItems: "flex-end", 
-            gap: 1 
+          sx={{
+            flexGrow: 1,
+            mr: 3,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 1
           }}
           onClick={() => setView("home")}
         >
@@ -86,7 +87,7 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
               fontWeight: 600,
               fontSize: "0.75rem",
               lineHeight: 1,
-              mb: "2px", 
+              mb: "2px",
             }}
           >
             v{process.env.NEXT_PUBLIC_APP_VERSION}
@@ -130,7 +131,21 @@ export default function SalesDashboardHeader({ userName, view, setView }: Props)
             })}
           </Box>
         </Box>
-        <Box sx={{ ml: 0 }}>
+        <Box sx={{ ml: 0, mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "white",
+              bgcolor: "tomato",
+              fontWeight: 700,
+              px: 1,
+              py: 0.7,
+              borderRadius: 1,
+              fontSize: "0.75rem",
+            }}
+          >
+            ZONE: {salesZone.toUpperCase()}
+          </Typography>
           <UserMenu username={userName} userRole="SALES" variant="full" />
         </Box>
       </Toolbar>

@@ -96,10 +96,12 @@ export default function MaterialDataPage() {
     id: number | null;
     role: string | null;
     name: string;
+    salesZone: string;
   }>({
     id: null,
     role: null,
     name: "",
+    salesZone: ""
   });
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function MaterialDataPage() {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setCurrentUser({ id: user.id, role: user.role, name: user.name || "" });
+        setCurrentUser({ id: user.id, role: user.role, name: user.name || "", salesZone: user.salesZone || "", });
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
       }
@@ -227,9 +229,9 @@ export default function MaterialDataPage() {
         prev.map((row) =>
           row.id === id
             ? {
-                ...row,
-                remarks: updatedMaterial ? updatedMaterial.Remarks : remarks,
-              }
+              ...row,
+              remarks: updatedMaterial ? updatedMaterial.Remarks : remarks,
+            }
             : row,
         ),
       );
@@ -366,6 +368,7 @@ export default function MaterialDataPage() {
         return (
           <SalesDashboardHeader
             userName={currentUser.name}
+            salesZone={currentUser.salesZone}
             view={"orders"}
             setView={handleSalesNav}
           />

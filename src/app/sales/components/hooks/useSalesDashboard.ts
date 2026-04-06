@@ -51,7 +51,7 @@ export function useSalesDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
+  const [salesZone, setSalesZone] = useState("");
   const [alert, setAlert] = useState<{
     severity: "success" | "error" | "info" | "warning";
     message: string;
@@ -87,7 +87,9 @@ export function useSalesDashboard() {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        setUserName(JSON.parse(storedUser).name || "");
+        const parsed = JSON.parse(storedUser);  
+        setUserName(parsed.name || "");
+        setSalesZone(parsed.salesZone || "");
       } catch { }
     }
   }, []);
@@ -131,7 +133,7 @@ export function useSalesDashboard() {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) parsedUser = JSON.parse(storedUser);
-    } catch (e) {}
+    } catch (e) { }
 
     setLookupsLoading(true);
     setError("");
@@ -521,6 +523,7 @@ export function useSalesDashboard() {
     setDeletingId,
     deleteLoading,
     deleteError,
+    salesZone,
     handleCreate,
     handleEdit,
     handleDelete,

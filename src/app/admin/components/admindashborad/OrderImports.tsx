@@ -1,6 +1,6 @@
 import React from "react";
 import { useOrderImports } from "../hooks/useOrderImports";
-import { RefreshCw , Calendar, AlertCircle } from "lucide-react";
+import { RefreshCw, Calendar, AlertCircle } from "lucide-react";
 
 export default function OrderImportsCard() {
   const { data: stats, loading, error, refetch } = useOrderImports();
@@ -85,25 +85,25 @@ export default function OrderImportsCard() {
                 key={s.date}
                 // All items use the yellow hover styles — default bg/border still differ for the first item
                 className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-sm hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] ${idx === 0
-                    ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700"
-                    : "bg-[#F7F7F7] dark:bg-[#2C3540]/30 border-[#E5E7EB] dark:border-[#4B5563]"
+                  ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700"
+                  : "bg-[#F7F7F7] dark:bg-[#2C3540]/30 border-[#E5E7EB] dark:border-[#4B5563]"
                   }`}
               >
                 <div className="flex items-center gap-4">
                   {/* Day indicator with different colors */}
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm ${idx === 0
-                      ? "bg-[#3B82F6] text-white"
-                      : idx === 1
-                        ? "bg-blue-100 dark:bg-blue-900/40 text-[#3B82F6] dark:text-[#3B82F6]"
-                        : "bg-gray-200 dark:bg-gray-700 text-[#4B5563] dark:text-[#E5E7EB]"
+                    ? "bg-[#3B82F6] text-white"
+                    : idx === 1
+                      ? "bg-blue-100 dark:bg-blue-900/40 text-[#3B82F6] dark:text-[#3B82F6]"
+                      : "bg-gray-200 dark:bg-gray-700 text-[#4B5563] dark:text-[#E5E7EB]"
                     }`}>
                     {s.dayLabel.substring(0, 3)}
                   </div>
 
                   <div>
                     <span className={`text-sm font-medium block ${idx === 0
-                        ? "text-[#3B82F6] dark:text-[#3B82F6]"
-                        : "text-[#1F2933] dark:text-[#E5E7EB]"
+                      ? "text-[#3B82F6] dark:text-[#3B82F6]"
+                      : "text-[#1F2933] dark:text-[#E5E7EB]"
                       }`}>
                       {s.dayLabel}
                     </span>
@@ -120,8 +120,8 @@ export default function OrderImportsCard() {
                   )}
                   <span
                     className={`text-lg font-bold tabular-nums ${idx === 0
-                        ? "text-[#3B82F6] dark:text-[#3B82F6]"
-                        : "text-[#1F2933] dark:text-[#E5E7EB]"
+                      ? "text-[#3B82F6] dark:text-[#3B82F6]"
+                      : "text-[#1F2933] dark:text-[#E5E7EB]"
                       }`}
                   >
                     {s.count.toLocaleString()}

@@ -170,6 +170,7 @@ export default function SoSearchPage() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentAttachments, setPaymentAttachments] = useState<PaymentAttachment[]>([]);
   const [paymentAttachmentsLoading, setPaymentAttachmentsLoading] = useState(false);
+  const [salesZone, setSalesZone] = useState("");
   const searchParams = useSearchParams();
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -309,6 +310,7 @@ export default function SoSearchPage() {
       const user = JSON.parse(storedUser);
       setUserName(user.name || "");
       setUserRole(user.role || null);
+      setSalesZone(user.salesZone || "");
     } catch {
       router.replace("/login");
     }
@@ -503,6 +505,7 @@ export default function SoSearchPage() {
           <SalesDashboardHeader
             userName={userName}
             view={"home"}
+            salesZone={salesZone}
             setView={(view) => {
               const newView = view as SalesDashboardView;
               sessionStorage.setItem("salesDashboardView", newView);

@@ -26,6 +26,7 @@ export default function SalesDashboard() {
     lookup,
     error,
     userName,
+    salesZone,
     view,
     setView,
     searchTerm,
@@ -130,6 +131,7 @@ export default function SalesDashboard() {
 
         <SalesDashboardHeader
           userName={userName}
+          salesZone={salesZone}
           view={view}
           setView={setView}
         />
