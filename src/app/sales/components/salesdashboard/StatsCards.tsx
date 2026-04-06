@@ -1,87 +1,108 @@
-// components/sales/salesdashboard/StatsCards.tsx
 "use client";
 
-import React from "react";
-import { ShoppingCart, Truck, AlertTriangle } from "lucide-react";
-import { useSalesDashboard } from "../../components/hooks/StatsCards";
+import React, { useState, useEffect } from "react";
+import { PackageCheck, Clock, Send } from "lucide-react";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
+import dayjs from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
+import IconButton from "@mui/material/IconButton";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { Skeleton } from "@mui/material";
 
-interface StatCardProps {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  iconBgColor?: string;
-  loading?: boolean;
-}
+const iconMap: Record<string, React.ReactNode> = {
+  packageCheck: <PackageCheck className="w-7 h-7" />,
+  clock: <Clock className="w-7 h-7" />,
+  send: <Send className="w-7 h-7" />,
+};
 
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  icon,
-  iconBgColor = "bg-white",
-  loading = false,
-}) => {
+const StatCard = ({ title, value, iconType, iconColor, hasDatePicker, selectedDate, onDateChange, loading }: any) => {
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   return (
-    <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
-      <div className="flex items-center justify-between gap-6">
-        <div className="flex-1">
-          <p 
-            className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]"
-          >
-            {title}
-          </p>
-          <p className="mt-2 text-4xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
-            {loading ? (
-              <Skeleton width={120} height={48} className="bg-gray-200 dark:bg-gray-700" />
-            ) : (
-              new Intl.NumberFormat().format(Number(value ?? 0))
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] flex flex-col justify-center min-h-[120px]">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 mr-3">
+          <div className="flex items-center justify-between gap-3 w-full">
+            <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">{title}</p>
+            {hasDatePicker && onDateChange && (
+              <div className="flex items-center gap-0.5">
+                <span className="text-sm font-medium text-[#4B5563] dark:text-[#E5E7EB] mr-1 mt-0.5">
+                  {dayjs(selectedDate).format('DD-MMM-YYYY')}
+                </span>
+                <IconButton onClick={() => setCalendarOpen(true)} size="small" sx={{ color: "text.secondary" }}>
+                  <CalendarMonthIcon fontSize="small" />
+                </IconButton>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DesktopDatePicker
+                    open={calendarOpen}
+                    onClose={() => setCalendarOpen(false)}
+                    value={selectedDate ? dayjs(selectedDate) : null}
+                    onChange={(newDate) => {
+                      const dateString = newDate && dayjs.isDayjs(newDate) && newDate.isValid() ? newDate.format('YYYY-MM-DD') : '';
+                      if (dateString) onDateChange(dateString); 
+                    }}
+                    format="DD-MMM-YYYY"
+                    slotProps={{ 
+                      textField: { 
+                        sx: { 
+                          width: 0, 
+                          height: 0, 
+                          opacity: 0, 
+                          padding: 0, 
+                          margin: 0,
+                          minWidth: 0,
+                          pointerEvents: 'none' // Prevents accidental clicks
+                        } 
+                      } 
+                    }} 
+                  />
+                </LocalizationProvider>
+              </div>
             )}
+          </div>
+          <p className="text-2xl font-bold text-[#1F2933] dark:text-white mt-2">
+            {loading ? <Skeleton width={60} height={40} /> : (value !== undefined ? value : 0)}
           </p>
         </div>
-
-        <div className={`flex-shrink-0 grid place-items-center h-14 w-14 rounded-lg ${iconBgColor}`}>
-          <div className="text-xl">{icon}</div>
+        <div className={`w-14 h-14 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] dark:bg-[#2C3540] ${iconColor}`}>
+          {iconMap[iconType]}
         </div>
       </div>
     </div>
   );
 };
 
-export default function StatsCards() {
-  const { data, loading } = useSalesDashboard();
+export default function StatsCards({ selectedDate, setSelectedDate }: { selectedDate: string, setSelectedDate: (date: string) => void }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const totalOrders = data?.totalSoCount ?? 0;
-  const dispatched = data?.dispatchedSoCount ?? 0;
-  // pending = awaiting dispatch
-  const pending = Math.max(0, totalOrders - dispatched);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchWithAuth(`${API.DASHBOARD.SALES_DISPATCH_SUMMARY}?date=${selectedDate}`);
+        if (res.ok) setData(await res.json());
+      } catch (err) {
+        console.error("Error fetching sales dispatch summary", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedDate]);
+
+  const cards = [
+    { title: "To Be Dispatched", value: data?.ordersToBeDispatched, iconType: "packageCheck", iconColor: "text-blue-500", loading },
+    { title: "Ready for Dispatch Today", value: data?.readyForDispatchToday, iconType: "clock", iconColor: "text-yellow-500", loading },
+    { title: "Dispatched Today", value: data?.ordersDispatchedToday, iconType: "send", iconColor: "text-green-500", hasDatePicker: true, selectedDate, onDateChange: setSelectedDate, loading },
+  ];
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard
-          title="Total Orders Created"
-          value={totalOrders}
-          icon={<ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
-          iconBgColor="bg-blue-50 dark:bg-blue-900/20"
-          loading={loading}
-        />
-
-        <StatCard
-          title="Awaiting for Dispatch"
-          value={pending}
-          icon={<AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
-          iconBgColor="bg-red-50 dark:bg-red-900/20"
-          loading={loading}
-        />
-
-        <StatCard
-          title="Dispatched Orders"
-          value={dispatched}
-          icon={<Truck className="h-6 w-6 text-green-600 dark:text-green-400" />}
-          iconBgColor="bg-green-50 dark:bg-green-900/20"
-          loading={loading}
-        />
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xl text-[#1F2933] uppercase font-semibold">
+        {cards.map((card, idx) => <StatCard key={idx} {...card} />)}
       </div>
     </div>
   );

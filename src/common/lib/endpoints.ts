@@ -223,6 +223,11 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
     SALES_ACTIVITY:          `${API_BASE_URL}/dashboard/sales-activity`,
     SALES_PAYMENT_CLEARANCE: `${API_BASE_URL}/dashboard/sales-payment-clearance`,
 
+    SALES_DISPATCH_SUMMARY:  `${API_BASE_URL}/dashboard/sales-dispatch-summary`,
+    SALES_NEW_IMPORTS:       `${API_BASE_URL}/dashboard/sales-new-imports`,
+    SALES_UPCOMING_ORDERS:   `${API_BASE_URL}/dashboard/sales-upcoming-orders`,
+    SALES_OVERALL_STATUS:    `${API_BASE_URL}/dashboard/sales-overall-status`,
+
     ADMIN_KPIS:              `${API_BASE_URL}/dashboard/admin-kpis`,
     ADMIN_NEW_IMPORTS:       `${API_BASE_URL}/dashboard/admin-new-imports`,
     ADMIN_DISPATCH_SUMMARY:  `${API_BASE_URL}/dashboard/admin-dispatch-summary`,

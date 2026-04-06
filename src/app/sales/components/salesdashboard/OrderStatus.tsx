@@ -1,90 +1,58 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { CircularProgress } from "@mui/material";
-import { useSalesKpis } from "../../components/hooks/OrderStatus";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 
-const COLORS = {
-  toBeIssued: "#FF6B6B", // Vibrant coral red
-  assigned: "#3B82F6", // Professional blue
-  issued: "#FFD93D", // Golden yellow
-  packed: "#6C5CE7", // Purple
-  dispatched: "#00B894", // Emerald green
-};
+export default function OrderStatus({ selectedDate, displayDate }: { selectedDate: string, displayDate: string }) {
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
 
-export default function OrderStatusChart() {
-  const { data, totalSoCount, loading } = useSalesKpis();
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchWithAuth(`${API.DASHBOARD.SALES_OVERALL_STATUS}?date=${selectedDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          const totalOrders = data.totalOrders || 0;
+          setTotal(totalOrders);
+          
+          // Map backend data to MUI PieChart format
+          const rawData = [
+            { id: 0, value: data.toBeIssuedCount || 0, label: "To be Issued", color: "#6B7280" },
+            { id: 1, value: data.r105Count || 0, label: "R105", color: "#EAB308" },
+            { id: 2, value: data.w105Count || 0, label: "W105", color: "#A855F7" },
+            { id: 3, value: data.f105Count || 0, label: "F105", color: "#3B82F6" },
+            { id: 4, value: data.dispatchedCount || 0, label: "Dispatched", color: "#22C55E" },
+          ];
 
-  const total = Number.isFinite(totalSoCount as number)
-    ? (totalSoCount as number)
-    : 0;
+          // FIX: Filter out 0 values so MUI PieChart renders properly
+          setChartData(rawData.filter((item) => item.value > 0));
+        }
+      } catch (error) {
+        console.error("Error loading order status", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedDate]);
 
-  if (loading) {
-    return (
-      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
-        <CircularProgress />
-        <span className="ml-3 text-gray-400 dark:text-gray-300">
-          Loading chart...
-        </span>
-      </div>
-    );
-  }
-
-  // Prepare data for MUI X Charts
-  const chartData = [
-    {
-      id: 0,
-      value: data?.toBeIssuedCount ?? 0,
-      label: "To be Issued",
-      color: COLORS.toBeIssued,
-    },
-    {
-      id: 1,
-      value: data?.r105Count ?? 0,
-      label: "Assigned (R105)",
-      color: COLORS.assigned,
-    },
-    {
-      id: 2,
-      value: data?.w105Count ?? 0,
-      label: "Issued (W105)",
-      color: COLORS.issued,
-    },
-    {
-      id: 3,
-      value: data?.f105Count ?? 0,
-      label: "Packed (F105)",
-      color: COLORS.packed,
-    },
-    {
-      id: 4,
-      value: data?.dispatchedSoCount ?? 0,
-      label: "Dispatched",
-      color: COLORS.dispatched,
-    },
-  ].filter((item) => item.value > 0); // Filter out zero values for a cleaner chart
-
-  const hasData = chartData.length > 0;
+  const hasData = total > 0;
 
   return (
-    <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans transition-all">
-      <div className="mb-5">
-        <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
-          Order Status Distribution
-        </p>
-
-        <p className="mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
-          Current status of all your sales orders (Total:{" "}
-          <span className="font-semibold text-[#1F2933] dark:text-white">
-            {total.toLocaleString()}
-          </span>
-          )
-        </p>
-      </div>
-
-      <div className="flex-1 min-h-[320px] w-full relative">
-        {hasData ? (
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col min-h-[350px]">
+      <h3 className="text-base font-semibold text-[#D00000] dark:text-[#FF6B6B] uppercase mb-6">
+        Order Status Distribution <span className="text-sm font-normal text-gray-500 ml-1">({displayDate})</span>
+      </h3>
+      
+      <div className="flex-1 min-h-[280px] w-full relative flex items-center justify-center">
+        {loading ? (
+          <CircularProgress size={30} />
+        ) : hasData && chartData.length > 0 ? (
           <PieChart
             series={[
               {
@@ -100,29 +68,27 @@ export default function OrderStatusChart() {
                   const percentage = total > 0 ? (value / total) * 100 : 0;
                   return `${value.toLocaleString()} orders (${percentage.toFixed(1)}%)`;
                 },
-
                 innerRadius: 0,
                 paddingAngle: 0,
                 cornerRadius: 0,
               },
             ]}
-            height={400}
+            height={280}
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
             className="text-[#1F2933] dark:text-[#F7F7F7]"
             sx={{
-              // Force legend text color to match the Tailwind text color using currentColor
               "& .MuiChartsLegend-label": {
                 fill: "currentColor !important",
               },
             }}
           />
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-            No data available
+          <div className="h-full flex flex-col items-center justify-center text-[#4B5563] dark:text-[#E5E7EB]">
+            <span className="text-lg font-medium">No Orders</span>
+            <span className="text-sm text-gray-400 mt-1">Found for {displayDate}</span>
           </div>
         )}
       </div>
-      {/* Custom legend removed – using built-in MUI legend */}
     </div>
   );
 }

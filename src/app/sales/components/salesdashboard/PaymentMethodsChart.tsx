@@ -1,226 +1,138 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 import { BarChart } from "@mui/x-charts/BarChart";
-import {
-  Box,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
-import { usePaymentClearance } from "../hooks/PaymentMethodsChart";
-import { Table, BarChart3 } from "lucide-react";
+import { CircularProgress } from "@mui/material";
 
-type ChartItem = {
-  zone: string;
-  cleared: number;
-  pending: number;
-};
+export default function PaymentMethodsChart({ selectedDate, displayDate }: { selectedDate: string, displayDate: string }) {
+  const [chartData, setChartData] = useState<{ cleared: number; pending: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // FIX: Added state to handle view toggling, defaulting to 'table'
+  const [viewType, setViewType] = useState<'table' | 'chart'>('table');
 
-export default function PaymentMethodsChart() {
-  const { data, loading, error } = usePaymentClearance();
-  const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
-
-  const chartData: ChartItem[] | undefined = useMemo(
-    () =>
-      data?.map((item) => ({
-        zone: item.zoneName?.replace?.(" Zone", "") ?? item.zoneName ?? "",
-        cleared: Number(item.paymentCleared ?? 0),
-        pending: Number(item.paymentPending ?? 0),
-      })),
-    [data]
-  );
-
-  const friendlyName = (key?: string | number | null) => {
-    if (key === undefined || key === null) return "";
-    const k = String(key);
-    if (k === "cleared") return "Yes";
-    if (k === "pending") return "No";
-    return k;
-  };
-
-  const formatNumber = (n: number | string) => {
-    const num = typeof n === "number" ? n : Number(n);
-    if (Number.isNaN(num)) return String(n);
-    return num.toLocaleString();
-  };
-
-  const seriesValueFormatter = (value: number | null) => formatNumber(value ?? 0);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchWithAuth(`${API.DASHBOARD.SALES_PAYMENT_CLEARANCE}?date=${selectedDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          const zoneData = data.length > 0 ? data[0] : { paymentCleared: 0, paymentPending: 0 };
+          setChartData({
+            cleared: zoneData.paymentCleared,
+            pending: zoneData.paymentPending,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading payment clearance", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedDate]);
 
   return (
-    <div
-      className="bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] w-full h-full flex flex-col font-sans transition-all"
-      aria-label="Payment clearance chart card"
-    >
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-        <div>
-          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
-            PAYMENT CLEARANCE BY SALES ZONE
-          </p>
-
-          <p className="mt-1 text-sm text-[#6B7280] dark:text-[#9CA3AF]">
-            Number of cleared vs pending payments across regions
-          </p>
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col min-h-[350px]">
+      
+      {/* HEADER WITH TOGGLE BUTTONS */}
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-base font-semibold text-[#D00000] dark:text-[#FF6B6B] uppercase">
+          Payment Clearance <span className="text-sm font-normal text-gray-500 ml-1">({displayDate})</span>
+        </h3>
+        
+        {/* Toggle Switch */}
+        <div className="flex items-center bg-[#F7F7F7] dark:bg-[#2C3540] rounded-lg p-1 border border-[#E5E7EB] dark:border-[#4B5563]">
+          <button
+            onClick={() => setViewType('table')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+              viewType === 'table'
+                ? "bg-white dark:bg-[#1F2933] text-[#D00000] dark:text-[#FF6B6B] shadow-sm"
+                : "text-[#4B5563] dark:text-[#E5E7EB] hover:text-[#1F2933] dark:hover:text-white"
+            }`}
+          >
+            Table
+          </button>
+          <button
+            onClick={() => setViewType('chart')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+              viewType === 'chart'
+                ? "bg-white dark:bg-[#1F2933] text-[#D00000] dark:text-[#FF6B6B] shadow-sm"
+                : "text-[#4B5563] dark:text-[#E5E7EB] hover:text-[#1F2933] dark:hover:text-white"
+            }`}
+          >
+            Chart
+          </button>
         </div>
-
-        {/* Toggle Button */}
-        <button
-          onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-100 dark:bg-[#2C3540] hover:bg-gray-200 dark:hover:bg-[#374151]
-            text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-all duration-200 focus:outline-none text-sm border border-transparent dark:border-[#4B5563]"
-        >
-          {viewMode === "chart" ? (
-            <>
-              <Table className="w-4 h-4" />
-              <span>Table View</span>
-            </>
-          ) : (
-            <>
-              <BarChart3 className="w-4 h-4" />
-              <span>Chart View</span>
-            </>
-          )}
-        </button>
       </div>
 
-      <Box sx={{ width: "100%", mt: 2 }} aria-live="polite">
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" height={350}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {!loading && !error && (!chartData || chartData.length === 0) && (
-          <div className="text-center mt-8 text-gray-500 dark:text-gray-400">
-            No payment data available.
+      {/* CONTENT AREA */}
+      <div className="flex-1 relative flex justify-center items-center w-full min-h-[250px]">
+        {loading ? (
+          <CircularProgress size={30} />
+        ) : !chartData ? (
+          <span className="text-gray-500">No data available</span>
+        ) : viewType === 'chart' ? (
+          <BarChart
+            xAxis={[{ scaleType: "band", data: ["Payment Status"] }]}
+            series={[
+              { data: [chartData.cleared], label: "Cleared", color: "#22C55E" },
+              { data: [chartData.pending], label: "Pending", color: "#EF4444" },
+            ]}
+            slotProps={{
+              legend: {
+                position: { vertical: "bottom", horizontal: "center" },
+              },
+            }}
+            margin={{ top: 10, bottom: 50, left: 40, right: 10 }}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col justify-center">
+            <div className="overflow-hidden rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm">
+              <table className="min-w-full divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
+                <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4B5563] dark:text-[#9CA3AF] uppercase tracking-wider">
+                      Payment Status
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-[#4B5563] dark:text-[#9CA3AF] uppercase tracking-wider">
+                      Count
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-[#1F2933] divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
+                  <tr className="hover:bg-gray-50 dark:hover:bg-[#2C3540]/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#22C55E]">
+                      Cleared
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-white font-bold">
+                      {chartData.cleared.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-gray-50 dark:hover:bg-[#2C3540]/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#EF4444]">
+                      Pending
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-white font-bold">
+                      {chartData.pending.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="bg-[#F7F7F7] dark:bg-[#2C3540]/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#1F2933] dark:text-[#E5E7EB]">
+                      Total Orders
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-[#1F2933] dark:text-[#E5E7EB] font-bold">
+                      {(chartData.cleared + chartData.pending).toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
-
-        {!loading && chartData && chartData.length > 0 && (
-          <>
-            {viewMode === "chart" ? (
-              <Box sx={{ height: 400 }}>
-                <BarChart
-                  aria-label="Bar chart showing cleared vs pending payments by zone"
-                  dataset={chartData}
-                  height={350}
-                  margin={{ top: 20, right: 20, bottom: 70, left: 50 }}
-                  className="text-[#1F2933] dark:text-[#F7F7F7]"
-                  sx={{
-                     // Apply currentColor to axis labels and ticks so they adapt to dark mode
-                    "& .MuiChartsAxis-tickLabel": {
-                      fill: "currentColor !important",
-                    },
-                    "& .MuiChartsAxis-label": {
-                      fill: "currentColor !important",
-                    },
-                    "& .MuiChartsLegend-label": {
-                      fill: "currentColor !important",
-                    },
-                     // Make grid lines subtler in dark mode if needed (optional)
-                    "& .MuiChartsGrid-line": {
-                      stroke: "rgba(128, 128, 128, 0.2)",
-                    }
-                  }}
-                  xAxis={[
-                    {
-                      dataKey: "zone",
-                      scaleType: "band",
-                    },
-                  ]}
-                  yAxis={[
-                    {
-                      valueFormatter: (v: number | null) => formatNumber(v ?? 0),
-                    },
-                  ]}
-                  series={[
-                    {
-                      dataKey: "cleared",
-                      label: friendlyName("cleared"),
-                      valueFormatter: (v: number | null) => seriesValueFormatter(v),
-                      color: "#10B981", // green (Yes)
-                    },
-                    {
-                      dataKey: "pending",
-                      label: friendlyName("pending"),
-                      valueFormatter: (v: number | null) => seriesValueFormatter(v),
-                      color: "#EF4444", // red (No)
-                    },
-                  ]}
-                  slotProps={{
-                    legend: {
-                      position: { vertical: "bottom", horizontal: "center" },
-                      sx: {
-                        mt: 2,
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                        "& .MuiChartsLegend-series tspan": {
-                          fontSize: 12,
-                        },
-                        "& .MuiChartsLegend-marker": {
-                          borderRadius: "50%",
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            ) : (
-              /* Table View */
-              <div className="overflow-x-auto mt-4 border-t border-gray-200 dark:border-gray-700">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-[#2C3540]">
-                    <tr>
-                      <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                        Zone
-                      </th>
-                      <th
-                        className="px-6 py-4 text-center font-semibold"
-                        style={{ color: "#10B981" }}
-                      >
-                        Yes
-                      </th>
-                      <th
-                        className="px-6 py-4 text-center font-semibold"
-                        style={{ color: "#EF4444" }}
-                      >
-                        No
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {chartData.map((row) => (
-                      <tr key={row.zone} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
-                          {row.zone}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-center font-bold"
-                          style={{ color: "#10B981" }}
-                        >
-                          {formatNumber(row.cleared)}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-center font-bold"
-                          style={{ color: "#EF4444" }}
-                        >
-                          {formatNumber(row.pending)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-      </Box>
+      </div>
     </div>
   );
 }

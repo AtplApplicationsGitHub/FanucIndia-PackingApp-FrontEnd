@@ -1,42 +1,60 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import StatsCards from "./salesdashboard/StatsCards";
-import RecentActivity from "./salesdashboard/RecentActivity";
-import OrderStatusChart from "./salesdashboard/OrderStatus";
-import ViewOrderDetails from "./salesdashboard/ViewOrder";
+import SalesOrderImports from "./salesdashboard/SalesOrderImports";
+import SalesUpcomingOrders from "./salesdashboard/SalesUpcomingOrders";
+import OrderStatus from "./salesdashboard/OrderStatus";
 import PaymentMethodsChart from "./salesdashboard/PaymentMethodsChart";
+// FIX: Restoring the RecentActivity component
+import RecentActivity from "./salesdashboard/RecentActivity";
 
 export default function SalesDashboard() {
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+
+  const displayDate = selectedDate
+    ? new Date(selectedDate).toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric",
+      })
+    : "All Time";
+
   return (
-    <div className="py-6 md:py-8">
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+    <div className="py-2 md:py-2">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Stats Cards */}
-          <StatsCards />
+          {/* Row 1: KPI Cards */}
+          <StatsCards selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
 
-          {/* 3-Column Responsive Grid */}
+          {/* Row 2: Imports, Upcoming, Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            <div className="h-full ">
-              <OrderStatusChart />
+            <div className="h-full">
+              <SalesOrderImports /> 
             </div>
             <div className="h-full">
-              <PaymentMethodsChart />
+              <SalesUpcomingOrders /> 
             </div>
             <div className="h-full">
-              <ViewOrderDetails />
+              <OrderStatus selectedDate={selectedDate} displayDate={displayDate} />
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="mt-8">
+          {/* Row 3: Payment Clearance (FIX: Now set to 100% width) */}
+          <div className="w-full mt-6">
+            <PaymentMethodsChart selectedDate={selectedDate} displayDate={displayDate} />
+          </div>
+
+          {/* Row 4: Recent Activity (FIX: Restored to bottom) */}
+          <div className="w-full mt-8">
             <RecentActivity />
           </div>
+
         </motion.div>
       </div>
     </div>
