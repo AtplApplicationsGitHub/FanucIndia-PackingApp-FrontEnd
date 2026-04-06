@@ -7,7 +7,7 @@ import SalesOrderImports from "./salesdashboard/SalesOrderImports";
 import SalesUpcomingOrders from "./salesdashboard/SalesUpcomingOrders";
 import OrderStatus from "./salesdashboard/OrderStatus";
 import PaymentMethodsChart from "./salesdashboard/PaymentMethodsChart";
-// FIX: Restoring the RecentActivity component
+import SalesOrderStatusByCustomerChart from "./salesdashboard/SalesOrderStatusByCustomerChart";
 import RecentActivity from "./salesdashboard/RecentActivity";
 
 export default function SalesDashboard() {
@@ -45,12 +45,17 @@ export default function SalesDashboard() {
             </div>
           </div>
 
-          {/* Row 3: Payment Clearance (FIX: Now set to 100% width) */}
+          {/* Row 3: Payment Clearance */}
           <div className="w-full mt-6">
             <PaymentMethodsChart selectedDate={selectedDate} displayDate={displayDate} />
           </div>
 
-          {/* Row 4: Recent Activity (FIX: Restored to bottom) */}
+          {/* Row 4: Order Status By Customer */}
+          <div className="w-full mt-6">
+            <SalesOrderStatusByCustomerChart selectedDate={selectedDate} displayDate={displayDate} />
+          </div>
+
+          {/* Row 5: Recent Activity */}
           <div className="w-full mt-8">
             <RecentActivity />
           </div>
