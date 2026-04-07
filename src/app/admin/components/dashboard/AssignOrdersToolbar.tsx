@@ -27,6 +27,7 @@ import {
   RadioGroup,
   FormControlLabel,
   FormLabel,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -50,6 +51,7 @@ import { LookupRow } from "@/app/admin/components/types/admin";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { TextField } from "@mui/material";
 import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
+import CommonButton from "@/common/components/CommonButton";
 
 const STATUS_OPTIONS = ["None", "R105", "W105"];
 
@@ -798,20 +800,63 @@ export default function AssignOrdersToolbar({
           maxWidth="sm"
           fullWidth
           PaperProps={{
-            sx: { p: 1 },
+            sx: {
+
+              bgcolor: "background.paper",
+              backgroundImage: "none",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: "8px",
+            }
           }}
         >
-          <DialogTitle sx={{ fontSize: "18px", fontWeight: 700, pb: 1 }}>
+          <DialogTitle sx={{
+            fontWeight: 700,
+            fontSize: 20,
+            textAlign: "center",
+            letterSpacing: 0,
+            color: "secondary.main",
+            p: 1.5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+          }}>
             BULK ACTIONS
+            <Typography
+              component="span"
+              sx={{ fontSize: 16, fontWeight: 400, color: "text.secondary", ml: 1 }}
+            >
+              · {selectedIds.length} orders
+            </Typography>
+            <IconButton
+              onClick={() => {
+                setAssignDialogOpen(false);
+                setTempIssueUser("placeholder");
+                setTempPackingUser("placeholder");
+                setTempSkipIssue("no");
+                setTempSkipPacking("no");
+                setAssignPriority("");
+              }}
+              size="small"
+              sx={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "text.secondary",
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </DialogTitle>
-          <DialogContent>
+          <Divider />
+          <DialogContent sx={{ bgcolor: "background.paper", pt: "16px !important" }}>
             <Box
               sx={{
                 display: "flex",
                 flexDirection: "column",
                 gap: 3,
-                pt: 1,
-                mt: 1,
               }}
             >
               <Box sx={{ display: "flex", gap: 2 }}>
@@ -824,9 +869,20 @@ export default function AssignOrdersToolbar({
                   onChange={(e) => setTempIssueUser(e.target.value)}
                   InputProps={{ sx: { fontSize: "14px" } }}
                   InputLabelProps={{ sx: { fontSize: "14px" } }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "4px",
+                      height: 48,
+                      "& fieldset": { borderColor: "divider" },
+                      "&:hover fieldset": { borderColor: "text.secondary" },
+                      "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                    },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    "& .MuiSelect-select": { fontSize: "14px" },
+                  }}
                 >
                   <MenuItem value="placeholder" disabled>
-                    <em>Select User</em>
+                    Select User
                   </MenuItem>
                   <MenuItem value="unassign">UNASSIGNED</MenuItem>
                   {assignableUsers.map((u: any) => (
@@ -845,9 +901,21 @@ export default function AssignOrdersToolbar({
                   onChange={(e) => setTempPackingUser(e.target.value)}
                   InputProps={{ sx: { fontSize: "14px" } }}
                   InputLabelProps={{ sx: { fontSize: "14px" } }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "4px",
+                      height: 48,
+                      "& fieldset": { borderColor: "divider" },
+                      "&:hover fieldset": { borderColor: "text.secondary" },
+                      "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                    },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    "& .MuiSelect-select": { fontSize: "14px" },
+                  }}
+
                 >
                   <MenuItem value="placeholder" disabled>
-                    <em>Select User</em>
+                    Select User
                   </MenuItem>
                   <MenuItem value="unassign">UNASSIGNED</MenuItem>
                   {assignableUsers.map((u: any) => (
@@ -859,80 +927,58 @@ export default function AssignOrdersToolbar({
               </Box>
 
               <Box sx={{ display: "flex", gap: 3 }}>
-                <FormControl component="fieldset" sx={{ flex: 1 }}>
-                  <FormLabel
-                    component="legend"
-                    sx={{
-                      fontSize: "13px",
-                      color: "text.secondary",
-                      mb: 0.5,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Skip Issue Stage
-                  </FormLabel>
-                  <RadioGroup
-                    row
-                    value={tempSkipIssue}
-                    onChange={(e) => setTempSkipIssue(e.target.value)}
-                  >
-                    <FormControlLabel
-                      value="yes"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: "14px" }}>Yes</Typography>
-                      }
-                      sx={{ mr: 2 }}
-                    />
-                    <FormControlLabel
-                      value="no"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: "14px" }}>No</Typography>
-                      }
-                    />
-                  </RadioGroup>
-                </FormControl>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Skip Issue Stage"
+                  value={tempSkipIssue}
+                  onChange={(e) => setTempSkipIssue(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "4px",
+                      height: 48,
+                      "& fieldset": { borderColor: "divider" },
+                      "&:hover fieldset": { borderColor: "text.secondary" },
+                      "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                    },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    "& .MuiSelect-select": { fontSize: "14px" },
+                  }}
+                >
+                  <MenuItem value="no">No</MenuItem>
+                  <MenuItem value="yes">Yes</MenuItem>
+                </TextField>
 
-                <FormControl component="fieldset" sx={{ flex: 1 }}>
-                  <FormLabel
-                    component="legend"
-                    sx={{
-                      fontSize: "13px",
-                      color: "text.secondary",
-                      mb: 0.5,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Skip Packing Stage
-                  </FormLabel>
-                  <RadioGroup
-                    row
-                    value={tempSkipPacking}
-                    onChange={(e) => setTempSkipPacking(e.target.value)}
-                  >
-                    <FormControlLabel
-                      value="yes"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: "14px" }}>Yes</Typography>
-                      }
-                      sx={{ mr: 2 }}
-                    />
-                    <FormControlLabel
-                      value="no"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: "14px" }}>No</Typography>
-                      }
-                    />
-                  </RadioGroup>
-                </FormControl>
+
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Skip Packing Stage"
+                  value={tempSkipPacking}
+                  onChange={(e) => setTempSkipPacking(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "4px",
+                      height: 48,
+                      "& fieldset": { borderColor: "divider" },
+                      "&:hover fieldset": { borderColor: "text.secondary" },
+                      "&.Mui-focused fieldset": { borderColor: "primary.main" },
+                    },
+                    "& .MuiInputLabel-root": { fontSize: "13px" },
+                    "& .MuiSelect-select": { fontSize: "14px" },
+                  }}
+                >
+                  <MenuItem value="no">No</MenuItem>
+                  <MenuItem value="yes">Yes</MenuItem>
+                </TextField>
+
               </Box>
 
               <TextField
                 fullWidth
-                size="small"
+                size="medium"
                 type="number"
                 label="Set Bulk Priority (Optional)"
                 placeholder="e.g. 1"
@@ -943,23 +989,9 @@ export default function AssignOrdersToolbar({
               />
             </Box>
           </DialogContent>
-
+          <Divider />
           <DialogActions sx={{ px: 3, pb: 2, pt: 2 }}>
-            <Button
-              onClick={() => {
-                setAssignDialogOpen(false);
-                setTempIssueUser("placeholder");
-                setTempPackingUser("placeholder");
-                setTempSkipIssue("no");
-                setTempSkipPacking("no");
-                setAssignPriority("");
-              }}
-              color="inherit"
-              sx={{ fontWeight: 600, px: 2 }}
-            >
-              CANCEL
-            </Button>
-            <Button
+            <CommonButton
               variant="contained"
               disableElevation
               onClick={async () => {
@@ -997,16 +1029,9 @@ export default function AssignOrdersToolbar({
                 setTempSkipPacking("no");
                 setAssignPriority("");
               }}
-              sx={{
-                bgcolor: "#facd02",
-                color: "#000",
-                fontWeight: 600,
-                px: 3,
-                "&:hover": { bgcolor: "#e5bb01" },
-              }}
             >
               SUBMIT
-            </Button>
+            </CommonButton>
           </DialogActions>
         </Dialog>
 
@@ -1024,6 +1049,6 @@ export default function AssignOrdersToolbar({
           </Alert>
         </Snackbar>
       </Box>
-    </LocalizationProvider>
+    </LocalizationProvider >
   );
 }
