@@ -22,6 +22,7 @@ import {
   IconButton,
   CircularProgress,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PrintIcon from "@mui/icons-material/Print";
@@ -30,6 +31,7 @@ import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadA
 import { MaterialRow } from "../types/material-row";
 import { getMaterialFilesBySaleOrder } from "@/common/services/materialFile.service";
 import CommonButton from "@/common/components/CommonButton";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface Props {
   onSubmit: (value: string) => void;
@@ -415,19 +417,26 @@ const InputBoxSection: FC<Props> = ({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={confirmAllOpen} onClose={() => setConfirmAllOpen(false)}>
-        <DialogTitle sx={{ color: theme.palette.warning.main, fontWeight: 700, textTransform: 'uppercase' }}>
-          ADMIN: Accept All Issue Stage?
+      <Dialog open={confirmAllOpen} onClose={() => setConfirmAllOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+        <DialogTitle sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}>
+          ADMIN: ACCEPT ALL ISSUE STAGE?
         </DialogTitle>
+        <Divider />
         <DialogContent>
           <DialogContentText>
             Are you sure you want to COMPLETE the Issue Stage for <strong>ALL ITEMS</strong> in this order?
-            <br /><br />
             This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <CommonButton onClick={() => setConfirmAllOpen(false)} >
+        <Divider />
+        <DialogActions sx={{ p: 2, gap: 0 }}>
+          <CommonButton onClick={() => setConfirmAllOpen(false)}>
             CANCEL
           </CommonButton>
           <CommonButton
@@ -463,7 +472,7 @@ const InputBoxSection: FC<Props> = ({
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <CommonButton onClick={() => setConfirmDeleteOpen(false)}  disabled={isDeleting}>
+          <CommonButton onClick={() => setConfirmDeleteOpen(false)} disabled={isDeleting}>
             CANCEL
           </CommonButton>
           <CommonButton
