@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   Button,
+  Tooltip,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -20,6 +21,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { LookupRow } from "@/app/admin/components/types/admin";
+import { CalendarCheck } from "lucide-react";
 
 const STATUS_OPTIONS = [
   "None",
@@ -272,34 +274,30 @@ export default function AdminOrdersToolbar({
 
           {/* Today Button */}
           {onTodayClick && (
-            <Button
-              variant="contained"
-              size="small"
-              onClick={onTodayClick}
-              sx={{
-                height: 40,
-                fontSize: "13px",
-                fontWeight: 700,
-                bgcolor: "#FFD100", // Fanuc Yellow
-                color: "#1B254B", // Dark Blue
-                px: 2.5,
-                minWidth: "100px",
-                whiteSpace: "nowrap",
-                borderRadius: 0,
-                clipPath:
-                  "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-                boxShadow: "none",
-                "&:hover": {
-                  bgcolor: "#FFC107",
-                  boxShadow: "none",
-                },
-                "& .MuiButton-startIcon": {
-                  color: "inherit",
+            <Tooltip
+              title="Today"
+              arrow
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: "#000000",
+                    color: "#ffffff",
+                    "& .MuiTooltip-arrow": {
+                      color: "#000000",
+                    },
+                  },
                 },
               }}
             >
-              TODAY
-            </Button>
+              <IconButton onClick={onTodayClick} sx={{
+                bgcolor: "#FFC107",
+                borderRadius: "90%",
+                "&:hover": { bgcolor: "#FFD100" },
+                color: "#000000",
+              }}>
+                <CalendarCheck size={16} />
+              </IconButton>
+            </Tooltip>
           )}
         </Paper>
 
