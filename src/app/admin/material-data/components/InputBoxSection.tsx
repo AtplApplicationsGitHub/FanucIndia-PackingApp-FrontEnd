@@ -29,6 +29,7 @@ import UploadErpMaterialFileButton from "@/app/admin/material-data/components/Up
 import UploadAttachmentDialog from "@/app/admin/material-data/components/UploadAttachmentDialog";
 import { MaterialRow } from "../types/material-row";
 import { getMaterialFilesBySaleOrder } from "@/common/services/materialFile.service";
+import CommonButton from "@/common/components/CommonButton";
 
 interface Props {
   onSubmit: (value: string) => void;
@@ -43,10 +44,10 @@ interface Props {
   selectedGroup?: string | null;
   onGroupChange?: (group: string | null) => void;
   onBulkAccept?: () => void;
-  showBulkButton?: boolean; 
-  showAll: boolean; 
-  onToggleShowAll: (val: boolean) => void; 
-  showAcceptAllIssueButton?: boolean; 
+  showBulkButton?: boolean;
+  showAll: boolean;
+  onToggleShowAll: (val: boolean) => void;
+  showAcceptAllIssueButton?: boolean;
   onAcceptAllIssue?: () => void;
   onDeleteErpData?: () => Promise<void> | void;
   showPrintButton?: boolean;
@@ -156,7 +157,7 @@ const InputBoxSection: FC<Props> = ({
       console.error("No delete handler provided");
       return;
     }
-    
+
     setIsDeleting(true);
     try {
       await onDeleteErpData();
@@ -169,33 +170,33 @@ const InputBoxSection: FC<Props> = ({
     }
   };
 
-  const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover, 
-    color: (theme: Theme) => theme.palette.text.primary,
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 112,
-    height: 40,
-    px: 3,
-    whiteSpace: "nowrap",
-    textTransform: "none" as const,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main, 
-      color: (theme: Theme) => theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-      "& .MuiSvgIcon-root, & svg": {
-        color: "#000",
-      },
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-  };
+  // const buttonSx = {
+  //   bgcolor: (theme: Theme) => theme.palette.action.hover, 
+  //   color: (theme: Theme) => theme.palette.text.primary,
+  //   borderRadius: 0,
+  //   clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+  //   fontWeight: 600,
+  //   fontSize: 15,
+  //   minWidth: 112,
+  //   height: 40,
+  //   px: 3,
+  //   whiteSpace: "nowrap",
+  //   textTransform: "none" as const,
+  //   boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+  //   transition: "all 0.2s ease-in-out",
+  //   "&:hover": {
+  //     bgcolor: (theme: Theme) => theme.palette.primary.main, 
+  //     color: (theme: Theme) => theme.palette.primary.contrastText,
+  //     boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
+  //     "& .MuiSvgIcon-root, & svg": {
+  //       color: "#000",
+  //     },
+  //   },
+  //   "&:disabled": {
+  //     opacity: 0.6,
+  //     cursor: "not-allowed",
+  //   },
+  // };
 
   return (
     <div className="w-full">
@@ -227,9 +228,9 @@ const InputBoxSection: FC<Props> = ({
                 onChange={(e) =>
                   onClassificationChange?.(e.target.value === "" ? null : e.target.value)
                 }
-                sx={{ 
+                sx={{
                   bgcolor: "background.paper",
-                  "& .MuiOutlinedInput-root": { borderRadius: 1 } 
+                  "& .MuiOutlinedInput-root": { borderRadius: 1 }
                 }}
               >
                 <MenuItem value="">
@@ -253,9 +254,9 @@ const InputBoxSection: FC<Props> = ({
                 onChange={(e) =>
                   onGroupChange?.(e.target.value === "" ? null : e.target.value)
                 }
-                sx={{ 
+                sx={{
                   bgcolor: "background.paper",
-                  "& .MuiOutlinedInput-root": { borderRadius: 1 } 
+                  "& .MuiOutlinedInput-root": { borderRadius: 1 }
                 }}
               >
                 <MenuItem value="">
@@ -282,30 +283,28 @@ const InputBoxSection: FC<Props> = ({
             sx={{ width: 350, "& .MuiOutlinedInput-root": { borderRadius: 1, bgcolor: 'background.paper' } }}
           />
 
-          <Button type="submit" sx={buttonSx} disabled={disabled}>
+          <CommonButton type="submit" disabled={disabled}>
             SUBMIT
-          </Button>
+          </CommonButton>
 
           {showBulkButton && (
-            <Button
+            <CommonButton
               variant="contained"
               onClick={() => setConfirmOpen(true)}
-              sx={buttonSx}
               disabled={disabled}
             >
               ACCEPT GROUP ITEMS
-            </Button>
+            </CommonButton>
           )}
 
           {showAcceptAllIssueButton && (
-            <Button
+            <CommonButton
               variant="contained"
               onClick={() => setConfirmAllOpen(true)}
-              sx={buttonSx}
               disabled={disabled}
             >
               ACCEPT ALL
-            </Button>
+            </CommonButton>
           )}
 
           <UploadErpMaterialFileButton
@@ -316,10 +315,10 @@ const InputBoxSection: FC<Props> = ({
           />
 
           <Tooltip title="Delete ERP Data / Reset Order">
-            <IconButton 
+            <IconButton
               onClick={() => setConfirmDeleteOpen(true)}
               disabled={disabled}
-              sx={{ 
+              sx={{
                 color: theme.palette.error.main,
                 "&:hover": { bgcolor: "rgba(211, 47, 47, 0.04)" }
               }}
@@ -329,19 +328,19 @@ const InputBoxSection: FC<Props> = ({
           </Tooltip>
 
           {showPrintButton && (
-              <Tooltip title="Print Order Labels">
-                <IconButton
-                  onClick={onPrintClick}
-                  // color="primary"
-                  sx={{
-                    ml: 1,
-                    "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
-                  }}
-                >
-                  <PrintIcon />
-                </IconButton>
-              </Tooltip>
-            )}
+            <Tooltip title="Print Order Labels">
+              <IconButton
+                onClick={onPrintClick}
+                // color="primary"
+                sx={{
+                  ml: 1,
+                  "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
+                }}
+              >
+                <PrintIcon />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Box display="flex" alignItems="center" gap={1}>
             <Typography
@@ -398,23 +397,21 @@ const InputBoxSection: FC<Props> = ({
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button 
-            onClick={() => setConfirmOpen(false)} 
-            sx={buttonSx} 
+          <CommonButton
+            onClick={() => setConfirmOpen(false)}
           >
             NO
-          </Button>
-          
-          <Button
+          </CommonButton>
+
+          <CommonButton
             onClick={() => {
               setConfirmOpen(false);
               onBulkAccept?.();
             }}
-            sx={buttonSx}
             autoFocus
           >
             YES, ACCEPT ALL
-          </Button>
+          </CommonButton>
         </DialogActions>
       </Dialog>
 
@@ -430,19 +427,18 @@ const InputBoxSection: FC<Props> = ({
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setConfirmAllOpen(false)} sx={buttonSx}>
+          <CommonButton onClick={() => setConfirmAllOpen(false)} >
             CANCEL
-          </Button>
-          <Button
+          </CommonButton>
+          <CommonButton
             onClick={() => {
               setConfirmAllOpen(false);
               onAcceptAllIssue?.();
             }}
-            sx={buttonSx}
             autoFocus
           >
             YES, ACCEPT ALL
-          </Button>
+          </CommonButton>
         </DialogActions>
       </Dialog>
 
@@ -453,7 +449,7 @@ const InputBoxSection: FC<Props> = ({
         onUploaded={handleFileChange}
       />
 
-      <Dialog open={confirmDeleteOpen} onClose={() => { if(!isDeleting) setConfirmDeleteOpen(false); }}>
+      <Dialog open={confirmDeleteOpen} onClose={() => { if (!isDeleting) setConfirmDeleteOpen(false); }}>
         <DialogTitle sx={{ color: theme.palette.error.main, fontWeight: 700, textTransform: 'uppercase' }}>
           Delete ERP Data?
         </DialogTitle>
@@ -467,29 +463,17 @@ const InputBoxSection: FC<Props> = ({
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setConfirmDeleteOpen(false)} sx={buttonSx} disabled={isDeleting}>
+          <CommonButton onClick={() => setConfirmDeleteOpen(false)}  disabled={isDeleting}>
             CANCEL
-          </Button>
-          <Button
+          </CommonButton>
+          <CommonButton
             onClick={handleDelete}
             type="button"
-            sx={{
-              ...buttonSx,
-              bgcolor: theme.palette.error.main,
-              "&:hover": {
-                bgcolor: theme.palette.error.dark,
-                boxShadow: "0 4px 8px rgba(211,0,0,0.3)",
-              },
-              "&:disabled": {
-                bgcolor: "rgba(211, 47, 47, 0.5)",
-                color: "#fff",
-              }
-            }}
             disabled={isDeleting}
             autoFocus
           >
             {isDeleting ? <CircularProgress size={24} color="inherit" /> : "YES, DELETE DATA"}
-          </Button>
+          </CommonButton>
         </DialogActions>
       </Dialog>
     </div>

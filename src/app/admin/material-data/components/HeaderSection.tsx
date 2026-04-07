@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Box, Typography, useTheme, Button, Tooltip } from '@mui/material';
 import { ArrowLeft } from 'lucide-react';
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
+import CommonButton from '@/common/components/CommonButton';
 
 interface HeaderProps {
   so: string;
@@ -115,35 +116,13 @@ const HeaderSection: FC<HeaderProps> = ({
   return (
     <Box position="relative" width="100%" py={3} sx={{ backgroundColor: theme.palette.background.paper }}>
       <Box position="absolute" top={16} left={16}>
-        <Button
+        <CommonButton
           variant="text" 
           startIcon={<ArrowLeft size={16} />}
           onClick={handleGoBack}
-          sx={{
-            bgcolor: (theme) => theme.palette.action.hover,
-            color: (theme) => theme.palette.text.primary,
-            borderRadius: 0,
-            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-            fontWeight: 600,
-            fontSize: 15,
-            minWidth: 120,
-            height: 40,
-            px: 3,
-            textTransform: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              bgcolor: (theme) => theme.palette.primary.main,
-              color: (theme) => theme.palette.primary.contrastText,
-              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-              "& .MuiSvgIcon-root, & svg": {
-                color: "#000",
-              },
-            },
-          }}
         >
           BACK
-        </Button>
+        </CommonButton>
       </Box>
 
       <Box

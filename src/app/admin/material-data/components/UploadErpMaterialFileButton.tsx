@@ -4,6 +4,7 @@ import { FC, useRef } from "react";
 import { Button, ButtonProps } from "@mui/material";
 import { SxProps, Theme } from "@mui/material/styles";
 import { UploadCloud } from "lucide-react";
+import CommonButton from "@/common/components/CommonButton";
 
 export interface UploadErpMaterialFileButtonProps {
   saleOrderNumber: string;
@@ -70,16 +71,15 @@ const UploadErpMaterialFileButton: FC<UploadErpMaterialFileButtonProps> = ({
   return (
     <>
       <input ref={inputRef} type="file" hidden onChange={onFileChange} />
-      <Button
+      <CommonButton
         type="button"
         onClick={openPicker}
         startIcon={<UploadCloud size={18} />}
         disableElevation
         {...buttonProps}
-        sx={mergedSx}
       >
         UPLOAD
-      </Button>
+      </CommonButton>
     </>
   );
 };
