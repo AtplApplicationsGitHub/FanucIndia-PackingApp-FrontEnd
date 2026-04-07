@@ -26,6 +26,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import FlagIcon from "@mui/icons-material/Flag";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -46,7 +47,9 @@ type InlineEdit = {
 
 export default function AssignSO() {
   const theme = useTheme();
+  const router = useRouter();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
+
 
   const {
     orders,
@@ -1264,13 +1267,17 @@ export default function AssignSO() {
                             >
                               {row.hasMaterialData ? (
                                 <CheckCircleOutlineIcon
+                                  onClick={() => router.push(`/orders/${row.id}`)}
                                   sx={{
                                     color: theme.palette.success.main,
                                     ml: 1,
+                                    cursor: "pointer",
+                                    "&:hover": { opacity: 0.7 },
                                   }}
                                   fontSize="small"
                                 />
                               ) : (
+
                                 <ErrorOutlineIcon
                                   onClick={() =>
                                     handleOpenErpDialog(
