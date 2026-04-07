@@ -50,7 +50,7 @@ export default function SalesEntryDialog({
           position: "relative",
           bgcolor: "background.paper",
           px: 3,
-          py: 1.2,
+          py: 1.5,
         }}
       >
         <Box
@@ -62,6 +62,7 @@ export default function SalesEntryDialog({
             textAlign: "center",
             letterSpacing: 0,
             color: "secondary.main",
+            p:1
           }}
         >
           {initialData ? "EDIT ORDER" : "CREATE ORDER"}

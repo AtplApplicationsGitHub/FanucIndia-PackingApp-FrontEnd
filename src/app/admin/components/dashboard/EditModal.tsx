@@ -17,6 +17,8 @@ import Alert from "@mui/material/Alert";
 import { API } from "@/common/lib/endpoints";
 import { SalesOrder, Lookup } from "@/app/admin/components/types/admin";
 import SearchableSelect from "@/app/admin/components/dashboard/SearchableSelect";
+import { Divider } from "@mui/material";
+import CommonButton from "@/common/components/CommonButton";
 
 type OptionItem = {
   id: string | number;
@@ -56,74 +58,74 @@ const FIELDS: {
   colSpan?: number;
   maxLength?: number;
 }[] = [
-  { key: "productId", label: "Product", type: "select", options: "products" },
-  { key: "saleOrderNumber", label: "Sale Order Number" },
-  { key: "outboundDelivery", label: "Out Bound Delivery" },
-  { key: "transferOrder", label: "Transfer Order" },
-  { key: "deliveryDate", label: "Required Date of Delivery", type: "date" },
-  {
-    key: "transporterId",
-    label: "Transporter",
-    type: "select",
-    options: "transporters",
-  },
-  {
-    key: "plantCode",
-    label: "Delivery Plant Code",
-  },
-  {
-    key: "paymentClearance",
-    label: "Payment Clearance",
-    type: "select",
-    options: [
-      { id: "true", name: "Yes" },
-      { id: "false", name: "No" },
-    ],
-  },
-  {
-    key: "salesZoneId",
-    label: "Sales Zone",
-    type: "select",
-    options: "salesZones",
-  },
-  {
-    key: "packConfigId",
-    label: "Packing Configuration",
-    type: "select",
-    options: "packConfigs",
-  },
-  {
-    key: "customerId",
-    label: "Customer",
-    type: "select",
-    options: "customers",
-  },
-  { key: "address", label: "Address" },
-  { key: "priority", label: "Priority", type: "number" },
-  // {
-  //   key: "assignedUserId",
-  //   label: "Assigned User",
-  //   type: "select",
-  //   options: "assignableUsers",
-  // },
-  {
-  key: "issueUserId",
-  label: "Issue Assigned User",
-  type: "select",
-  options: "assignableUsers",
-},
-{
-  key: "packingUserId",
-  label: "Pack Assigned User",
-  type: "select",
-  options: "assignableUsers",
-},
-  { key: "status", label: "Status", disabled: true },
-  { key: "fgLocation", label: "FG Location" },
-  { key: "specialRemarks", label: "Special Remarks" },
-  { key: "additionalRemarks", label: "Additional Remarks" },
-  { key: "labelRemarks", label: "Label Remarks", maxLength: 15 },
-];
+    { key: "productId", label: "Product", type: "select", options: "products" },
+    { key: "saleOrderNumber", label: "Sale Order Number" },
+    { key: "outboundDelivery", label: "Out Bound Delivery" },
+    { key: "transferOrder", label: "Transfer Order" },
+    { key: "deliveryDate", label: "Required Date of Delivery", type: "date" },
+    {
+      key: "transporterId",
+      label: "Transporter",
+      type: "select",
+      options: "transporters",
+    },
+    {
+      key: "plantCode",
+      label: "Delivery Plant Code",
+    },
+    {
+      key: "paymentClearance",
+      label: "Payment Clearance",
+      type: "select",
+      options: [
+        { id: "true", name: "Yes" },
+        { id: "false", name: "No" },
+      ],
+    },
+    {
+      key: "salesZoneId",
+      label: "Sales Zone",
+      type: "select",
+      options: "salesZones",
+    },
+    {
+      key: "packConfigId",
+      label: "Packing Configuration",
+      type: "select",
+      options: "packConfigs",
+    },
+    {
+      key: "customerId",
+      label: "Customer",
+      type: "select",
+      options: "customers",
+    },
+    { key: "address", label: "Address" },
+    { key: "priority", label: "Priority", type: "number" },
+    // {
+    //   key: "assignedUserId",
+    //   label: "Assigned User",
+    //   type: "select",
+    //   options: "assignableUsers",
+    // },
+    {
+      key: "issueUserId",
+      label: "Issue Assigned User",
+      type: "select",
+      options: "assignableUsers",
+    },
+    {
+      key: "packingUserId",
+      label: "Pack Assigned User",
+      type: "select",
+      options: "assignableUsers",
+    },
+    { key: "status", label: "Status", disabled: true },
+    { key: "fgLocation", label: "FG Location" },
+    { key: "specialRemarks", label: "Special Remarks" },
+    { key: "additionalRemarks", label: "Additional Remarks" },
+    { key: "labelRemarks", label: "Label Remarks", maxLength: 15 },
+  ];
 
 const PATCHABLE_KEYS = [
   "productId",
@@ -254,7 +256,7 @@ export default function AdminOrderEditModal({
         case "packingUserId":
           if (typeof v === "string" && v.trim() !== "") {
             const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
-            (patch as any)[backendKey] = Number(v); 
+            (patch as any)[backendKey] = Number(v);
           } else if (typeof v === "number") {
             const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
             (patch as any)[backendKey] = v;
@@ -395,19 +397,20 @@ export default function AdminOrderEditModal({
           position: "relative",
           bgcolor: theme.palette.background.paper,
           px: 3,
-          py: 2,
+          py: 1.5,
         })}
       >
         <Box
           component="span"
-          sx={(theme) => ({
+          sx={{
             fontWeight: 700,
-            fontSize: 22,
+            fontSize: 20,
             flexGrow: 1,
             textAlign: "center",
-            color: theme.palette.secondary.main,
+            color: "secondary.main",
             letterSpacing: 0,
-          })}
+
+          }}
         >
           EDIT ORDER
         </Box>
@@ -417,13 +420,14 @@ export default function AdminOrderEditModal({
           sx={(theme) => ({
             position: "absolute",
             right: 16,
-            top: 10,
+            top: 12,
             color: theme.palette.text.primary,
           })}
         >
           <CloseIcon />
         </IconButton>
       </Box>
+      <Divider />
 
       <DialogContent
         sx={(theme) => ({
@@ -433,6 +437,7 @@ export default function AdminOrderEditModal({
         })}
       >
         <form
+          id="edit-order-form"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
@@ -526,7 +531,7 @@ export default function AdminOrderEditModal({
                   const value: CustomerValue =
                     selected ??
                     (form.customerNameText &&
-                    String(form.customerNameText).trim() !== ""
+                      String(form.customerNameText).trim() !== ""
                       ? String(form.customerNameText)
                       : null);
                   return (
@@ -653,25 +658,27 @@ export default function AdminOrderEditModal({
               );
             })}
           </Box>
-
-          <DialogActions sx={{ mt: 2, px: 0 }}>
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="text"
-              sx={{
-                color: "inherit",
-                "&:hover": {
-                  backgroundColor: "action.hover",
-                },
-                borderRadius: 0,
-              }}
-            >
-              {loading ? <CircularProgress size={22} /> : "UPDATE"}
-            </Button>
-          </DialogActions>
         </form>
       </DialogContent>
-    </Dialog>
+      <Divider />
+      <DialogActions sx={{ px: 3, py: 1,  bgcolor: "background.paper" }}>
+        <CommonButton
+          type="submit"
+          disabled={loading}
+          variant="text"
+          sx={{
+            color: "inherit",
+            "&:hover": {
+              backgroundColor: "action.hover",
+            },
+            borderRadius: 0,
+          }}
+        >
+          {loading ? <CircularProgress size={22} /> : "UPDATE"}
+        </CommonButton>
+      </DialogActions>
+
+
+    </Dialog >
   );
 }

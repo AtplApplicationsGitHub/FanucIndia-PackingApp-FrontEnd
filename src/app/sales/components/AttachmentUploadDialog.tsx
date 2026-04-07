@@ -9,8 +9,10 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CommonButton from "@/common/components/CommonButton";
+import { UploadCloud } from "lucide-react";
+import { useTheme } from "@mui/material/styles";
+import { isDragging } from "framer-motion";
 
 type Props = {
   open: boolean;
@@ -23,6 +25,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const theme = useTheme();
 
   const addFiles = (incoming: FileList | null) => {
     if (!incoming) return;
@@ -80,25 +83,29 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
           sx={{
-            border: "1.5px dashed",
-            borderColor: dragging ? "#FFD600" : "grey.300",
+            border: (theme) => `2px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
+            borderColor: dragging ? theme.palette.primary.main : "grey.300",
             borderRadius: 2,
-            py: 4,
-            px: 2,
+            p: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
             textAlign: "center",
             cursor: "pointer",
             bgcolor: dragging ? "action.hover" : "transparent",
-            transition: "all 0.2s",
-            mb: 2,
-            "&:hover": { borderColor: "grey.500" },
-            "&:active": { borderColor: "#FFD600" },
+            transition: 'background-color 0.2s, border-color 0.2s',
+            mt: 1,
+            '&:hover': {
+              borderColor: 'primary.main',
+            }
           }}
         >
-          <CloudUploadOutlinedIcon sx={{ fontSize: 44, color: "grey.400", mb: 1 }} />
-          <Typography fontSize={15} fontWeight={500} color="text.primary">
+          <UploadCloud size={30} color="#9e9e9e" style={{ marginBottom: 4 }} />
+          <Typography fontSize={17} fontWeight={500} color="text.primary">
             Click or drag to upload
           </Typography>
-          <Typography fontSize={12} color="text.secondary" mt={0.5}>
+          <Typography fontSize={15} color="text.secondary" >
             Supports all file types
           </Typography>
           <input
@@ -114,7 +121,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
         {files.length > 0 && (
           <>
             <Typography fontSize={13} fontWeight={600} sx={{ mb: 0.5 }}>
-              New Files to Upload:
+              Uploaded Files
             </Typography>
             <List dense disablePadding>
               {files.map((file) => (
@@ -141,8 +148,8 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
           </>
         )}
       </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2, gap: 1, borderTop: "1px solid", borderColor: "divider" }}>
+      <Divider />
+      <DialogActions sx={{ px: 3, pb: 2, gap: 1, }}>
         <CommonButton
           disabled={files.length === 0 || uploading}
           onClick={handleUpload}
