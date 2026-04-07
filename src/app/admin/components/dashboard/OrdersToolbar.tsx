@@ -53,6 +53,7 @@ type Props = {
   onBulkUpdate?: (userId: string | number) => Promise<void>;
   onBulkSkipIssue?: (status: boolean) => Promise<void>;
   assignableUsers?: { id: number; name: string }[];
+  isArchiveView?: boolean;
 };
 
 export default function AdminOrdersToolbar({
@@ -76,6 +77,7 @@ export default function AdminOrdersToolbar({
   onBulkUpdate,
   onBulkSkipIssue,
   assignableUsers = [],
+  isArchiveView = false,
 }: Props) {
   const [localSearch, setLocalSearch] = useState(searchInput);
   useEffect(() => {
@@ -215,6 +217,7 @@ export default function AdminOrdersToolbar({
             value={startDate ? dayjs(startDate) : null}
             onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
+            minDate={isArchiveView ? undefined : dayjs().subtract(3, 'day')}
             slotProps={{
               field: {
                 clearable: true,
@@ -237,7 +240,7 @@ export default function AdminOrdersToolbar({
             value={endDate ? dayjs(endDate) : null}
             onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
-            minDate={startDate ? dayjs(startDate) : undefined}
+            minDate={startDate ? dayjs(startDate) : (isArchiveView ? undefined : dayjs().subtract(3, 'day'))}
             slotProps={{
               field: { clearable: true, onClear: () => onEndDateChange(null) },
               textField: {

@@ -99,7 +99,7 @@ export default function SalesEntryDialog({
       <Divider />
       <Box sx={{ px: 3, py: 1, display: "flex", justifyContent: "flex-end", bgcolor: "background.paper" }}>
         <CommonButton type="submit" form="sales-entry-form">
-          {initialData ? "Update" : "Save"}
+          {initialData ? "UPDATE" : "SAVE"}
         </CommonButton>
       </Box>
     </Dialog>

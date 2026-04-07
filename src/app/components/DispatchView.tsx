@@ -864,6 +864,7 @@ export default function DispatchView() {
                 value={startDate}
                 onChange={(val) => setStartDate(val)}
                 format="DD-MM-YYYY"
+                minDate={dayjs().subtract(3, 'day')}
                 slotProps={{
                   textField: {
                     size: "small",
@@ -912,6 +913,7 @@ export default function DispatchView() {
                 value={endDate}
                 onChange={(val) => setEndDate(val)}
                 format="DD-MM-YYYY"
+                minDate={startDate ? startDate : dayjs().subtract(3, 'day')}
                 slotProps={{
                   textField: {
                     size: "small",

@@ -21,6 +21,7 @@ import ListIcon from "@mui/icons-material/List";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import { Plus } from "lucide-react";
+import CommonButton from "@/common/components/CommonButton";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -137,7 +138,8 @@ export default function SalesDashboardToolbar({
               borderColor: (theme) =>
                 theme.palette.mode === "dark"
                   ? "rgba(255, 255, 255, 0.23)"
-                  : "#e0e0e0", borderRadius: "4px",
+                  : "#e0e0e0",
+              borderRadius: "4px",
               height: 40,
               bgcolor: "background.paper",
               flexShrink: 1,
@@ -238,7 +240,11 @@ export default function SalesDashboardToolbar({
                   STATUS
                 </MenuItem>
                 {STATUS_OPTIONS.map((status) => (
-                  <MenuItem key={status} value={status} sx={{ fontSize: "13px" }}>
+                  <MenuItem
+                    key={status}
+                    value={status}
+                    sx={{ fontSize: "13px" }}
+                  >
                     {status}
                   </MenuItem>
                 ))}
@@ -295,24 +301,19 @@ export default function SalesDashboardToolbar({
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {view !== "dispatched" && (
               <>
-                <Button
-                  variant="contained"
-                  disableElevation
+                <CommonButton
                   onClick={onCreate}
-                  startIcon={<Plus size={18} />}
+                  startIcon={<Plus size={20} />}
                   sx={{
-                    bgcolor: "#facd02",
-                    color: "#000",
-                    fontWeight: 600,
-                    fontSize: "12px",
-                    height: 40,
                     whiteSpace: "nowrap",
-                    px: { xs: 1.5, md: 2 },
-                    "&:hover": { bgcolor: "#e5bb01" },
+                    px: 3,
+                    "& .MuiButton-startIcon": {
+                      marginRight: "6px",
+                    },
                   }}
                 >
                   CREATE ORDER
-                </Button>
+                </CommonButton>
               </>
             )}
           </Box>
@@ -341,7 +342,6 @@ export default function SalesDashboardToolbar({
             </ListItemIcon>
             <ListItemText primary="BLANK TEMPLATE" />
           </MenuItem>
-
 
           <MenuItem
             onClick={() => {
@@ -378,10 +378,7 @@ export default function SalesDashboardToolbar({
             }}
           >
             <ListItemIcon>
-              <AttachFileIcon
-                fontSize="small"
-                sx={{ color: "#7c3aed" }}
-              />
+              <AttachFileIcon fontSize="small" sx={{ color: "#7c3aed" }} />
             </ListItemIcon>
             <ListItemText primary="UPLOAD ATTACHMENT" />
           </MenuItem>

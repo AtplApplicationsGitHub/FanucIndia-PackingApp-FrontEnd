@@ -389,6 +389,7 @@ export default function AssignOrdersToolbar({
               value={startDate ? dayjs(startDate) : null}
               onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
               format="DD-MM-YYYY"
+              minDate={dayjs().subtract(3, 'day')}
               slotProps={{
                 field: {
                   clearable: true,
@@ -418,7 +419,7 @@ export default function AssignOrdersToolbar({
               value={endDate ? dayjs(endDate) : null}
               onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
               format="DD-MM-YYYY"
-              minDate={startDate ? dayjs(startDate) : undefined}
+              minDate={startDate ? dayjs(startDate) : dayjs().subtract(3, 'day')}
               slotProps={{
                 field: {
                   clearable: true,

@@ -90,6 +90,7 @@ export default function ArchivedOrdersTable() {
         endDate={filters.endDate}
         onEndDateChange={setEndDate}
         onClear={clearFilters}
+        isArchiveView={true}
       />
 
 
@@ -135,7 +136,7 @@ export default function ArchivedOrdersTable() {
                       fontSize: "0.75rem", fontWeight: 600,
                       borderColor: alpha(row.payment ? theme.palette.success.main : theme.palette.error.main, 0.5),
                       backgroundColor: alpha(row.payment ? theme.palette.success.main : theme.palette.error.main, 0.1),
-                      color: row.payment ? theme.palette.success.dark : theme.palette.error.main,
+                      color: theme.palette.mode === "dark" ? "#ffffff" : (row.payment ? theme.palette.success.dark : theme.palette.error.main),
                     }}>
                       {row.payment ? "Yes" : "No"}
                     </Box>
@@ -152,7 +153,7 @@ export default function ArchivedOrdersTable() {
                           display: "inline-flex", alignItems: "center", justifyContent: "center",
                           padding: "3px 10px", borderRadius: "16px", border: "1px solid",
                           borderColor: alpha(colorMain, 0.5), backgroundColor: alpha(colorMain, 0.1),
-                          color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                          color: theme.palette.mode === "dark" ? "#ffffff" : (colorMain === "#eab308" ? "#b45309" : colorMain),
                           fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
                         }}>
                           {row.status}

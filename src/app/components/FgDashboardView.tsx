@@ -474,6 +474,7 @@ export default function FgDashboardView() {
                 setPage(0);
               }}
               format="DD-MM-YYYY"
+              minDate={dayjs().subtract(3, 'day')}
               slotProps={{
                 field: {
                   clearable: true,

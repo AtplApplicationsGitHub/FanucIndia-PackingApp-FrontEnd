@@ -288,6 +288,7 @@ export default function ReportPage() {
                 value={startDate ? dayjs(startDate) : null}
                 onChange={(val) => { setStartDate(val ? val.toDate() : null); setCurrentPage(0); }}
                 format="DD-MM-YYYY"
+                minDate={dayjs().subtract(3, 'day')}
                 slotProps={{
                   field: { clearable: true, onClear: () => setStartDate(null) },
                   textField: { size: "small", variant: "outlined", sx: { minWidth: 140, bgcolor: "background.paper", "& .MuiInputBase-root": { height: 40, fontSize: "14px" } } },
@@ -397,7 +398,7 @@ export default function ReportPage() {
                                   padding: "3px 10px", borderRadius: "16px", border: "1px solid",
                                   borderColor: alpha(theme.palette.success.main, 0.5),
                                   backgroundColor: alpha(theme.palette.success.main, 0.1),
-                                  color: theme.palette.success.dark,
+                                  color: theme.palette.mode === "dark" ? "#ffffff" : theme.palette.success.dark,
                                   fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
                                 }}>Yes</Box>
                               ) : (
@@ -406,7 +407,7 @@ export default function ReportPage() {
                                   padding: "3px 10px", borderRadius: "16px", border: "1px solid",
                                   borderColor: alpha(theme.palette.error.main, 0.5),
                                   backgroundColor: alpha(theme.palette.error.main, 0.1),
-                                  color: theme.palette.error.main,
+                                  color: theme.palette.mode === "dark" ? "#ffffff" : theme.palette.error.main,
                                   fontSize: "0.75rem", fontWeight: 600, minWidth: "50px",
                                 }}>No</Box>
                               )}

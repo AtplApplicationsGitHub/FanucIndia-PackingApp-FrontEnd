@@ -403,16 +403,27 @@ export function useSalesDashboard() {
       let message = "Bulk import failed. Check your file and try again.";
 
       if (axios.isAxiosError(err) && err.response?.data) {
-        const errorData = err.response.data as {
-          message?: string;
-          errors?: { row: number; errors: string[] }[];
-        };
+        // The backend wraps the actual errors inside a 'message' object sometimes
+        const responseData = err.response.data;
+        const errorData = (responseData.message && responseData.message.errors) 
+                          ? responseData.message 
+                          : responseData;
 
-        if (errorData.errors && errorData.errors.length > 0) {
+        if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+          // If there are many errors, show the first 3 to prevent a massive popup, then indicate there are more
+          const maxErrorsToShow = 3;
           const detailedErrors = errorData.errors
-            .map((e) => `Row ${e.row}: ${e.errors.join(", ")}`)
-            .join("\n");
-          message = `Import failed. Please correct the following errors:\n${detailedErrors}`;
+            .slice(0, maxErrorsToShow)
+            .map((e: any) => `Row ${e.row}: ${e.errors.join(", ")}`)
+            .join(" | "); // Use a pipe or separator since Snackbar doesn't handle \n well
+          
+          const extraErrors = errorData.errors.length > maxErrorsToShow 
+                              ? ` (+${errorData.errors.length - maxErrorsToShow} more errors)` 
+                              : "";
+                              
+          message = `Import failed: ${detailedErrors}${extraErrors}`;
+        } else if (typeof responseData.message === 'string') {
+          message = responseData.message;
         } else if (errorData.message) {
           message = errorData.message;
         }
