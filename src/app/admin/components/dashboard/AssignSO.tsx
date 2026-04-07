@@ -50,7 +50,6 @@ export default function AssignSO() {
   const router = useRouter();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
-
   const {
     orders,
     lookup,
@@ -157,7 +156,6 @@ export default function AssignSO() {
   );
   const [showSambaView, setShowSambaView] = React.useState(false);
 
-
   const handleOpenErpDialog = (soNumber: string) => {
     if (!soNumber) return;
     setSelectedSoForErp(soNumber);
@@ -196,7 +194,6 @@ export default function AssignSO() {
   };
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
 
   const handleExcelImportSelect = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -489,10 +486,14 @@ export default function AssignSO() {
         ""
       ).toLowerCase();
       const assignedUserName = (
-  (findName(lookup.assignableUsers, order.issueUserId ?? 0) || order.issueUser?.name || "") +
-  " " +
-  (findName(lookup.assignableUsers, order.packingUserId ?? 0) || order.packingUser?.name || "")
-).toLowerCase();
+        (findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
+          order.issueUser?.name ||
+          "") +
+        " " +
+        (findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
+          order.packingUser?.name ||
+          "")
+      ).toLowerCase();
       const paymentString = order.paymentClearance ? "yes" : "no";
 
       const matchesSearch =
@@ -595,10 +596,14 @@ export default function AssignSO() {
         ""
       ).toLowerCase();
       const assignedUserName = (
-  (findName(lookup.assignableUsers, order.issueUserId ?? 0) || order.issueUser?.name || "") +
-  " " +
-  (findName(lookup.assignableUsers, order.packingUserId ?? 0) || order.packingUser?.name || "")
-).toLowerCase();
+        (findName(lookup.assignableUsers, order.issueUserId ?? 0) ||
+          order.issueUser?.name ||
+          "") +
+        " " +
+        (findName(lookup.assignableUsers, order.packingUserId ?? 0) ||
+          order.packingUser?.name ||
+          "")
+      ).toLowerCase();
 
       const paymentString = order.paymentClearance ? "yes" : "no";
 
@@ -754,8 +759,14 @@ export default function AssignSO() {
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
         priority: row.priority ?? "",
-        issueUser: clearHyphen(findName(lookup.assignableUsers, row.issueUserId ?? 0) || row.issueUser?.name),
-        packingUser: clearHyphen(findName(lookup.assignableUsers, row.packingUserId ?? 0) || row.packingUser?.name),
+        issueUser: clearHyphen(
+          findName(lookup.assignableUsers, row.issueUserId ?? 0) ||
+            row.issueUser?.name,
+        ),
+        packingUser: clearHyphen(
+          findName(lookup.assignableUsers, row.packingUserId ?? 0) ||
+            row.packingUser?.name,
+        ),
         skipIssueStage: isIssueSkipped,
         skipPackingStage: isPackingSkipped,
       });
@@ -767,13 +778,13 @@ export default function AssignSO() {
       lookup.packConfigs?.map((p: any) => p.configName).join(",") || "Default";
     // NEW: Extract customer names for the dropdown
     const customerNames =
-  Array.from(
-    new Set(
-      (lookup.customers || [])
-        .map((c: any) => (c.name || "").trim())
-        .filter(Boolean),
-    ),
-  ).join(",") || "";
+      Array.from(
+        new Set(
+          (lookup.customers || [])
+            .map((c: any) => (c.name || "").trim())
+            .filter(Boolean),
+        ),
+      ).join(",") || "";
 
     for (let i = 2; i <= exportRows.length + 1; i++) {
       // NEW: Customer Name Validation (Column G)
@@ -1094,62 +1105,62 @@ export default function AssignSO() {
       ) : (
         <>
           <Box sx={{ mb: 1 }}>
-          <AssignOrdersToolbar
-            searchInput={searchInput}
-            onSearchInputChange={(val: string) => {
-              setSearchInput(val);
-              setCurrentPage(1);
-            }}
-            paymentFilter={paymentFilter}
-            onPaymentFilterChange={(val: string) => {
-              setPaymentFilter(val);
-              setCurrentPage(1);
-            }}
-            zoneFilter={zoneFilter}
-            onZoneFilterChange={(val: string) => {
-              setZoneFilter(val);
-              setCurrentPage(1);
-            }}
-            statusFilter={statusFilter}
-            onStatusFilterChange={(val: string) => {
-              setStatusFilter(val);
-              setCurrentPage(1);
-            }}
-            salesZones={lookup.salesZones}
-            startDate={startDate}
-            onStartDateChange={(val: Date | null) => {
-              setStartDate(val);
-              setCurrentPage(1);
-            }}
-            endDate={endDate}
-            onEndDateChange={(val: Date | null) => {
-              setEndDate(val);
-              setCurrentPage(1);
-            }}
-            onClear={onClear}
-            onTodayClick={onToday}
-            selectedIds={selectedIds}
-            assignableUsers={lookup.assignableUsers}
-            onAssignUser={handleAssignUser}
-            onSkipStage={handleSkipStage}
-            onImportERPData={handleImportERPData}
-            onDownloadErpData={handleDownloadErpData}
-            onExcelExport={handleExcelExport}
-            onExcelImport={() => fileInputRef.current?.click()}
-            statusCounts={dynamicCounts}
-            pendingImportFilter={pendingImportFilter}
-            onPendingImportClick={() => {
-              setPendingImportFilter(!pendingImportFilter);
-              setCurrentPage(1);
-            }}
-            customerFilter={customerFilter}
-            onCustomerFilterChange={(val: string) => {
-              setCustomerFilter(val);
-              setCurrentPage(1);
-            }}
-            customers={availableCustomers}
-            onOpenSambaView={() => setShowSambaView(true)}
-          />
+            <AssignOrdersToolbar
+              searchInput={searchInput}
+              onSearchInputChange={(val: string) => {
+                setSearchInput(val);
+                setCurrentPage(1);
+              }}
+              paymentFilter={paymentFilter}
+              onPaymentFilterChange={(val: string) => {
+                setPaymentFilter(val);
+                setCurrentPage(1);
+              }}
+              zoneFilter={zoneFilter}
+              onZoneFilterChange={(val: string) => {
+                setZoneFilter(val);
+                setCurrentPage(1);
+              }}
+              statusFilter={statusFilter}
+              onStatusFilterChange={(val: string) => {
+                setStatusFilter(val);
+                setCurrentPage(1);
+              }}
+              salesZones={lookup.salesZones}
+              startDate={startDate}
+              onStartDateChange={(val: Date | null) => {
+                setStartDate(val);
+                setCurrentPage(1);
+              }}
+              endDate={endDate}
+              onEndDateChange={(val: Date | null) => {
+                setEndDate(val);
+                setCurrentPage(1);
+              }}
+              onClear={onClear}
+              onTodayClick={onToday}
+              selectedIds={selectedIds}
+              assignableUsers={lookup.assignableUsers}
+              onAssignUser={handleAssignUser}
+              onSkipStage={handleSkipStage}
+              onImportERPData={handleImportERPData}
+              onDownloadErpData={handleDownloadErpData}
+              onExcelExport={handleExcelExport}
+              onExcelImport={() => fileInputRef.current?.click()}
+              statusCounts={dynamicCounts}
+              pendingImportFilter={pendingImportFilter}
+              onPendingImportClick={() => {
+                setPendingImportFilter(!pendingImportFilter);
+                setCurrentPage(1);
+              }}
+              customerFilter={customerFilter}
+              onCustomerFilterChange={(val: string) => {
+                setCustomerFilter(val);
+                setCurrentPage(1);
+              }}
+              customers={availableCustomers}
+              onOpenSambaView={() => setShowSambaView(true)}
+            />
           </Box>
 
           <TableContainer
@@ -1267,7 +1278,9 @@ export default function AssignSO() {
                             >
                               {row.hasMaterialData ? (
                                 <CheckCircleOutlineIcon
-                                  onClick={() => router.push(`/orders/${row.id}`)}
+                                  onClick={() =>
+                                    router.push(`/orders/${row.id}`)
+                                  }
                                   sx={{
                                     color: theme.palette.success.main,
                                     ml: 1,
@@ -1277,7 +1290,6 @@ export default function AssignSO() {
                                   fontSize="small"
                                 />
                               ) : (
-
                                 <ErrorOutlineIcon
                                   onClick={() =>
                                     handleOpenErpDialog(
@@ -1372,7 +1384,10 @@ export default function AssignSO() {
                                   theme.palette.success.main,
                                   0.1,
                                 ),
-                                color: theme.palette.success.dark,
+                                color:
+                                  theme.palette.mode === "dark"
+                                    ? "#ffffff"
+                                    : theme.palette.success.dark,
                                 fontSize: "0.75rem",
                                 fontWeight: 600,
                                 minWidth: "50px",
@@ -1397,7 +1412,10 @@ export default function AssignSO() {
                                   theme.palette.error.main,
                                   0.1,
                                 ),
-                                color: theme.palette.error.main,
+                                color:
+                                  theme.palette.mode === "dark"
+                                    ? "#ffffff"
+                                    : theme.palette.error.main,
                                 fontSize: "0.75rem",
                                 fontWeight: 600,
                                 minWidth: "50px",
@@ -1444,9 +1462,11 @@ export default function AssignSO() {
                                   borderColor: alpha(colorMain, 0.5),
                                   backgroundColor: alpha(colorMain, 0.1),
                                   color:
-                                    colorMain === "#eab308"
-                                      ? "#b45309"
-                                      : colorMain,
+                                    theme.palette.mode === "dark"
+                                      ? "#ffffff"
+                                      : colorMain === "#eab308"
+                                        ? "#b45309"
+                                        : colorMain,
                                   fontSize: "0.75rem",
                                   fontWeight: 600,
                                   minWidth: "50px",
@@ -1528,9 +1548,9 @@ export default function AssignSO() {
                               }
                             >
                               {findName(
-                                  lookup.assignableUsers,
-                                  row.issueUserId ?? 0,
-                                ) ||
+                                lookup.assignableUsers,
+                                row.issueUserId ?? 0,
+                              ) ||
                                 row.issueUser?.name ||
                                 "-"}
                             </Box>
@@ -1567,9 +1587,9 @@ export default function AssignSO() {
                               }
                             >
                               {findName(
-                                  lookup.assignableUsers,
-                                  row.packingUserId ?? 0,
-                                ) ||
+                                lookup.assignableUsers,
+                                row.packingUserId ?? 0,
+                              ) ||
                                 row.packingUser?.name ||
                                 "-"}
                             </Box>
