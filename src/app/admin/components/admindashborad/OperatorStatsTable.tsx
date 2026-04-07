@@ -53,14 +53,9 @@ export default function OperatorStatsTable({
     <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
       <CardContent sx={{ height: "100%", p: 0 }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-          <Typography
-            variant="h6"
-            fontWeight="600"
-            color="#D00000"
-            textTransform="uppercase"
-          >
+          <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Operator Productivity
-          </Typography>
+          </h2>
         </Box>
 
         {loading ? (
@@ -99,8 +94,9 @@ export default function OperatorStatsTable({
                       textTransform: "uppercase",
                       fontSize: "0.85rem",
                       letterSpacing: 0.5,
+                      color: (theme) =>
+                        theme.palette.mode === "dark" ? "#FF6B6B" : "#1F2933",
                     }}
-                    className="text-[#D00000] dark:text-[#FF6B6B]"
                   >
                     Operators
                   </TableCell>
