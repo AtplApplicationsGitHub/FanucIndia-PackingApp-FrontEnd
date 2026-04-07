@@ -29,15 +29,9 @@ import {
   TableHead,
   TableRow,
   Tooltip,
+  TablePagination,
 } from "@mui/material";
 
-
-import {
-  DataGrid,
-  GridColDef,
-  GridToolbar,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
 import {
   MoreVert,
   Edit,
@@ -71,6 +65,7 @@ import {
   Truck,
   Package,
   Info,
+  Paperclip,
 } from "lucide-react";
 
 const buttonSx = {
@@ -98,7 +93,6 @@ const buttonSx = {
     color: "rgba(27, 37, 75, 0.4)",
   },
 };
-
 
 interface Transporter {
   id: number;
@@ -333,7 +327,7 @@ const AttachmentDialog = ({
                 fontWeight="600"
                 sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
-                <FileText size={20} /> New Files to Upload:
+                <Paperclip size={20} color="#7C3AED" /> New Files to Upload:
               </Typography>
               <Button
                 onClick={handleUpload}
@@ -356,55 +350,56 @@ const AttachmentDialog = ({
                 {loading ? "Uploading..." : `Upload ${files.length} File(s)`}
               </Button>
             </Box>
-            <Paper
-              variant="outlined"
-              sx={{ borderRadius: 2, overflow: "hidden" }}
+            <Box
+              sx={{
+                mt: 1,
+                overflow: "hidden",
+              }}
             >
-              <List disablePadding>
-                {files.map((file, index) => (
-                  <ListItem
-                    key={index}
-                    divider={index < files.length - 1}
+              {files.map((file, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.2,
+                    px: 1,
+                    transition: "background-color 0.2s",
+                    "&:hover": {
+                      bgcolor: alpha(theme.palette.action.hover, 0.04),
+                    },
+                    borderRadius: 1,
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Paperclip
+                      size={20}
+                      color="#7C3AED" // Vibrant Purple/Violet
+                    />
+                    <Typography
+                      variant="body2"
+                      fontWeight="500"
+                      color="textPrimary"
+                    >
+                      {file.name}
+                    </Typography>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={() => removeFile(index)}
                     sx={{
+                      color: "#EF4444",
                       "&:hover": {
-                        bgcolor: alpha(theme.palette.action.hover, 0.04),
+                        bgcolor: alpha("#EF4444", 0.1),
                       },
                     }}
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        size="small"
-                        onClick={() => removeFile(index)}
-                        sx={{
-                          color: theme.palette.error.main,
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.error.main, 0.1),
-                          },
-                        }}
-                      >
-                        <Trash2 size={18} />
-                      </IconButton>
-                    }
                   >
-                    <ListItemIcon sx={{ minWidth: 40 }}>
-                      <FileIcon
-                        size={20}
-                        color={theme.palette.text.secondary}
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={file.name}
-                      secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                      primaryTypographyProps={{
-                        variant: "body2",
-                        fontWeight: 500,
-                      }}
-                      secondaryTypographyProps={{ variant: "caption" }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
+                    <Delete sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Box>
+              ))}
+            </Box>
           </Box>
         )}
         <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
@@ -457,7 +452,12 @@ const AttachmentDialog = ({
               {dispatch?.attachments?.map((att, index) => (
                 <TableRow key={index}>
                   <TableCell align="center">{index + 1}</TableCell>
-                  <TableCell align="left">{att.fileName}</TableCell>
+                  <TableCell align="left">
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <Paperclip size={18} color="#7C3AED" />
+                      {att.fileName}
+                    </Box>
+                  </TableCell>
                   <TableCell align="center">
                     <Box display="flex" justifyContent="center" gap={0.5}>
                       <Tooltip title="View Attachment">
@@ -495,7 +495,7 @@ const AttachmentDialog = ({
                             },
                           }}
                         >
-                          <Trash2 size={20} />
+                          <Delete sx={{ fontSize: 20 }} />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -536,6 +536,8 @@ export default function DispatchView() {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [soLoading, setSoLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -605,8 +607,6 @@ export default function DispatchView() {
 
   const headerBg = theme.palette.primary.main;
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
-
-
 
   const fetchDispatchSOs = useCallback(async (dispatchId: number) => {
     setSoLoading(true);
@@ -811,82 +811,6 @@ export default function DispatchView() {
     },
   });
 
-  const columns: GridColDef<Dispatch>[] = [
-    {
-      field: "actions",
-      headerName: "Action",
-      width: 80,
-      sortable: false,
-      renderCell: (params: GridRenderCellParams<Dispatch>) => (
-        <IconButton onClick={(e) => handleMenuClick(e, params.row.id)}>
-          <MoreVert />
-        </IconButton>
-      ),
-    },
-    {
-      field: "siNo",
-      headerName: "Sl.No",
-      width: 70,
-      valueGetter: (value, row) =>
-        dispatches.findIndex((d) => d.id === row.id) + 1,
-    },
-    {
-      field: "soCount",
-      headerName: "SO Count",
-      width: 100,
-    },
-    {
-      field: "transporterName",
-      headerName: "Transporter",
-      flex: 1,
-      valueGetter: (value, row) =>
-        row.transporterName || row.transporter?.name || "-",
-    },
-    {
-      field: "vehicleNumber",
-      headerName: "Vehicle Number",
-      flex: 1,
-    },
-    {
-      field: "UpdatedBy",
-      headerName: "Updated By",
-      flex: 0.8,
-      minWidth: 100,
-      valueGetter: (_value, row) => row.UpdatedBy || "-",
-    },
-    {
-      field: "UpdatedDate",
-      headerName: "Updated Date",
-      flex: 1,
-      minWidth: 180,
-      valueGetter: (_value, row) =>
-        row.UpdatedDate
-          ? new Date(row.UpdatedDate).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            })
-          : "-",
-    },
-    {
-      field: "attachments",
-      headerName: "Attachments",
-      width: 120,
-      sortable: false,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params: GridRenderCellParams<Dispatch>) => (
-        <IconButton onClick={() => handleOpenAttachmentDialog(params.row)}>
-          <VisibilityIcon />
-        </IconButton>
-      ),
-    },
-  ];
-
   useEffect(() => {
     if (selectedDispatch && soInputRef.current) {
       setTimeout(() => {
@@ -913,13 +837,14 @@ export default function DispatchView() {
           elevation={0}
           sx={{
             p: 1.5,
-            px: 3,
-            mb: 1,
-            width: "100%",
-            borderRadius: 2.5,
+            px: 4,
+            mb: 1.5,
+            width: "fit-content",
+            mx: "auto",
+            borderRadius: 3.5,
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
+            gap: 4,
             bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
             border: "1px solid",
             borderColor:
@@ -929,7 +854,7 @@ export default function DispatchView() {
             boxShadow:
               theme.palette.mode === "dark"
                 ? "0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)"
-                : "0 2px 4px rgba(0,0,0,0.02)",
+                : "0 4px 12px rgba(0,0,0,0.05)",
           }}
         >
           <Box display="flex" gap={3} alignItems="center">
@@ -1030,17 +955,23 @@ export default function DispatchView() {
               />
             </Box>
             <Tooltip title="Clear Filters">
-              <IconButton 
+              <IconButton
                 onClick={handleClearFilters}
                 size="small"
-                sx={{ 
+                sx={{
                   color: theme.palette.text.secondary,
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-                    color: '#EF4444'
-                  }
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? ""
+                      : "",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.08)",
+                    color: "#EF4444",
+                  },
                 }}
               >
                 <X size={18} />
@@ -1075,140 +1006,102 @@ export default function DispatchView() {
                     ? "rgba(255,255,255,0.1)"
                     : "rgba(0,0,0,0.06)",
                 bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
-              <DataGrid
-                rows={dispatches}
-                columns={columns}
-                getRowId={(row) => row.id}
-                loading={loading}
-                onRowClick={(params) =>
-                  setSelectedDispatch(params.row as Dispatch)
-                }
-                pageSizeOptions={[10, 25, 50]}
-                initialState={{
-                  pagination: { paginationModel: { pageSize: 10 } },
+              <TableContainer
+                sx={{
+                  flexGrow: 1,
+                  overflow: "auto",
+                  "&::-webkit-scrollbar": { width: 6 },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                    borderRadius: 3,
+                  },
+                }}
+              >
+                <Table stickyHeader size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2, }} >ACTION</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>SL.NO</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>SO COUNT</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>TRANSPORTER</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>VEHICLE NUMBER</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>UPDATED BY</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>UPDATED DATE</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }} align="center">ATTACHMENTS</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow><TableCell colSpan={8} align="center" sx={{ py: 10 }}><CircularProgress /></TableCell></TableRow>
+                    ) : dispatches.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                          <Box
+                            display="flex"
+                            flexDirection="column"
+                            alignItems="center"
+                            gap={2}
+                          >
+                            <Package
+                              size={64}
+                              color={theme.palette.text.disabled}
+                            />
+                            <Typography variant="h6" fontWeight="700">
+                              No rows found
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              There are no dispatch records matching the
+                              criteria.
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      dispatches
+                        .slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage,
+                        )
+                        .map((row, index) => (
+                          <TableRow key={row.id} hover onClick={() => setSelectedDispatch(row)} selected={selectedDispatch?.id === row.id} sx={{ cursor: "pointer", bgcolor: theme.palette.mode === "dark" ? (index % 2 === 0 ? "#45451B" : "#1A1F26") : (index % 2 === 0 ? "#FFF2AF" : "#FFFFFF"), "&.Mui-selected": { bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)", "&:hover": { bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.08)" } } }}>
+                            <TableCell><IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMenuClick(e, row.id); }}><MoreVert /></IconButton></TableCell>
+                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                            <TableCell>{row.soCount}</TableCell>
+                            <TableCell>{row.transporterName || row.transporter?.name || "-"}</TableCell>
+                            <TableCell>{row.vehicleNumber}</TableCell>
+                            <TableCell>{row.UpdatedBy || "-"}</TableCell>
+                            <TableCell><Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>{row.UpdatedDate ? new Date(row.UpdatedDate).toLocaleString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : "-"}</Typography></TableCell>
+                            <TableCell align="center"><IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenAttachmentDialog(row); }}><VisibilityIcon /></IconButton></TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50]}
+                component="div"
+                count={dispatches.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(_, newPage) => setPage(newPage)}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value, 10));
+                  setPage(0);
                 }}
                 sx={{
-                  border: "none",
-                  color: theme.palette.text.primary,
-                  bgcolor: "transparent",
-                  "& .MuiDataGrid-columnHeaders": {
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#1F2933" : "#f8fafc",
-                    borderBottom: "1px solid",
-                    borderColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.1)"
-                        : "rgba(0,0,0,0.1)",
-                  },
-                  "& .MuiDataGrid-columnHeaderTitle": {
-                    fontWeight: 700,
-                    fontSize: "0.75rem",
-                    textTransform: "uppercase",
-                    color: theme.palette.text.secondary,
-                    letterSpacing: 0.5,
-                  },
-                  "& .MuiDataGrid-cell": {
-                    fontSize: "0.875rem",
-                    color: theme.palette.text.primary,
-                    borderBottom: "1px solid",
-                    borderColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(0,0,0,0.05)",
-                  },
-                  "& .MuiDataGrid-main": {
-                    bgcolor: "transparent",
-                  },
-                  "& .MuiDataGrid-virtualScroller": {
-                    bgcolor: "transparent",
-                  },
-                  "& .MuiDataGrid-row:nth-of-type(even)": {
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? alpha(theme.palette.primary.main, 0.25)
-                        : alpha(theme.palette.primary.main, 0.02),
-                  },
-                  "& .MuiDataGrid-row:hover": {
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.03)"
-                        : "rgba(0,0,0,0.02)",
-                  },
-                  "& .MuiDataGrid-row.Mui-selected": {
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(0,0,0,0.04)",
-                    "&:hover": {
-                      bgcolor:
-                        theme.palette.mode === "dark"
-                          ? "rgba(255,255,255,0.09)"
-                          : "rgba(0,0,0,0.06)",
-                    },
-                  },
-                  "& .MuiDataGrid-footerContainer": {
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#1F2933" : "transparent",
-                    color: theme.palette.text.secondary,
-                    borderTop: "1px solid",
-                    borderColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.1)"
-                        : "rgba(0,0,0,0.1)",
-                  },
-                  "& .MuiTablePagination-root": {
-                    color: theme.palette.text.secondary,
-                  },
-                  "& .MuiIconButton-root": {
-                    color: theme.palette.text.secondary,
-                  },
-                }}
-                slots={{
-                  noRowsOverlay: () => (
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                      gap={2}
-                      bgcolor="transparent"
-                    >
-                      <Box
-                        sx={{
-                          p: 4,
-                          borderRadius: "50%",
-                          bgcolor:
-                            theme.palette.mode === "dark"
-                              ? "rgba(255,255,255,0.02)"
-                              : "rgba(0,0,0,0.02)",
-                        }}
-                      >
-                        <Package
-                          size={64}
-                          color={theme.palette.text.disabled}
-                        />
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        fontWeight="700"
-                        color={theme.palette.text.primary}
-                      >
-                        No rows found
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color={theme.palette.text.secondary}
-                        textAlign="center"
-                      >
-                        There are no dispatch records matching the
-                        <br />
-                        selected date range. Try adjusting your search criteria.
-                      </Typography>
-                    </Box>
-                  ),
+                  borderTop: "1px solid",
+                  borderColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255,255,255,0.1)"
+                      : "rgba(0,0,0,0.1)",
                 }}
               />
             </Paper>
@@ -1262,6 +1155,31 @@ export default function DispatchView() {
                         color={theme.palette.text.secondary}
                         style={{ marginRight: 8 }}
                       />
+                    ),
+                    endAdornment: (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleAddSO}
+                        disabled={
+                          !selectedDispatch || !soInput.trim() || soLoading
+                        }
+                        sx={{
+                          ...buttonSx,
+                          height: 32,
+                          minWidth: "80px",
+                          px: 1.5,
+                          fontSize: "0.75rem",
+                          ml: 1,
+                          display: selectedDispatch ? "flex" : "none",
+                        }}
+                      >
+                        {soLoading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          "ADD SO"
+                        )}
+                      </Button>
                     ),
                     sx: {
                       borderRadius: 2,
@@ -1325,7 +1243,12 @@ export default function DispatchView() {
                     </Typography>
                   </Box>
                 ) : (
-                  <Box display="flex" flexDirection="column" gap={1.5} sx={{ pr: 1 }}>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap={1.5}
+                    sx={{ pr: 1 }}
+                  >
                     {dispatchSOs.map((so) => (
                       <Box
                         key={so.id}
@@ -1395,7 +1318,7 @@ export default function DispatchView() {
                             "&:hover": { bgcolor: "rgba(239, 68, 68, 0.1)" },
                           }}
                         >
-                          <Trash2 size={16} />
+                          <Delete sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Box>
                     ))}
@@ -1496,59 +1419,60 @@ export default function DispatchView() {
                 </Typography>
               </Box>
               {attachments.length > 0 && (
-                <Paper
-                  variant="outlined"
-                  sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}
+                <Box
+                  sx={{
+                    mt: 1,
+                    overflow: "hidden",
+                  }}
                 >
-                  <List disablePadding>
-                    {attachments.map((file, index) => (
-                      <ListItem
-                        key={index}
-                        divider={index < attachments.length - 1}
+                  {attachments.map((file, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1,
+                        px: 1,
+                        transition: "background-color 0.2s",
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.action.hover, 0.04),
+                        },
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Paperclip
+                          size={18}
+                          color="#7C3AED" // Vibrant Purple/Violet
+                        />
+                        <Typography
+                          variant="body2"
+                          fontWeight="500"
+                          color="textPrimary"
+                        >
+                          {file.name}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setAttachments((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          )
+                        }
                         sx={{
+                          color: "#EF4444",
                           "&:hover": {
-                            bgcolor: alpha(theme.palette.action.hover, 0.04),
+                            bgcolor: alpha("#EF4444", 0.1),
                           },
                         }}
-                        secondaryAction={
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            onClick={() =>
-                              setAttachments((prev) =>
-                                prev.filter((_, i) => i !== index),
-                              )
-                            }
-                            sx={{
-                              color: theme.palette.error.main,
-                              "&:hover": {
-                                bgcolor: alpha(theme.palette.error.main, 0.1),
-                              },
-                            }}
-                          >
-                            <Trash2 size={18} />
-                          </IconButton>
-                        }
                       >
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                          <FileIcon
-                            size={18}
-                            color={theme.palette.text.secondary}
-                          />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={file.name}
-                          secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                          primaryTypographyProps={{
-                            variant: "body2",
-                            fontWeight: 500,
-                          }}
-                          secondaryTypographyProps={{ variant: "caption" }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
+                        <Delete sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
               )}
             </Box>
           </DialogContent>
