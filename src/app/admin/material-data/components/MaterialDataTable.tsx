@@ -140,8 +140,8 @@ const EditableCell = ({
           px: 1,
           py: 0.5,
           '&.Mui-focused': {
-             backgroundColor: 'white',
-             boxShadow: 1
+             backgroundColor: (theme) => theme.palette.background.paper,
+             boxShadow: (theme) => theme.shadows[1]
           }
         }
       }}
@@ -424,11 +424,11 @@ export default function MaterialDataTable({
                             sx={{
                                 fontWeight: 'bold',
                                 textDecoration: 'none',
-                                color: '#1976d2',      
+                                color: 'primary.main',      
                                 cursor: 'pointer',
                                 '&:hover': {
-                                    textDecoration: 'none',
-                                    color: '#1565c0',  
+                                    textDecoration: 'underline',
+                                    color: 'primary.dark',  
                                 }
                             }}
                         >
@@ -449,10 +449,10 @@ export default function MaterialDataTable({
                           textAlign: 'left', 
                           fontWeight: 'bold',
                           textDecoration: 'none',
-                          color: '#1565c0',
+                          color: 'primary.main',
                           "&:hover": {
-                            textDecoration: 'none',
-                            color: '#0d47a1',  
+                            textDecoration: 'underline',
+                            color: 'primary.dark',  
                           }
                         }}
                       >

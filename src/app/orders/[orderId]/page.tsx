@@ -661,7 +661,8 @@ export default function MaterialDataPage() {
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        bgcolor: "#f5f5f5",
+        bgcolor: "background.default",
+        color: "text.primary",
       }}
     >
       {renderHeader()}
@@ -671,12 +672,14 @@ export default function MaterialDataPage() {
         sx={{ flexGrow: 1, py: 0, px: 0 }}
       >
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
             borderRadius: 0,
             overflow: "hidden",
-            borderTop: "1px solid #e0e0e0",
-            borderBottom: "1px solid #e0e0e0",
+            borderTop: 1,
+            borderBottom: 1,
+            borderColor: "divider",
+            bgcolor: "background.paper",
           }}
         >
           <HeaderSection
