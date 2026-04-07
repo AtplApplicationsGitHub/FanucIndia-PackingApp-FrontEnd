@@ -1,12 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
 import { ShoppingCart, Truck, AlertTriangle, PackageCheck, Clock, Send } from "lucide-react";
 import { useDispatchSummary } from "../hooks/useDispatchSummary";
 import type { StatusCardData } from "../types/admin";
+import { IconButton } from "@mui/material";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs from "dayjs";
 
-// extend iconMap to include dispatch icons 
 const iconMap: Record<string, React.ReactNode> = {
   cart: <ShoppingCart className="w-7 h-7" />,
   truck: <Truck className="w-7 h-7" />,
@@ -16,11 +21,13 @@ const iconMap: Record<string, React.ReactNode> = {
   send: <Send className="w-7 h-7" />,
 };
 
-// percentage & isPositive are now optional
 interface StatCardProps extends Omit<StatusCardData, "percentage" | "isPositive"> {
   percentage?: string;
   isPositive?: boolean;
-  dateText?: string; // <-- Added to display static date text
+  dateText?: string;
+  showDatePicker?: boolean;
+  selectedDate?: string;
+  onDateChange?: (newDate: string) => void;
 }
 
 const StatCard = ({
@@ -31,21 +38,58 @@ const StatCard = ({
   iconType,
   iconColor,
   dateText,
+  showDatePicker,
+  selectedDate,
+  onDateChange,
 }: StatCardProps) => {
+  const [openPicker, setOpenPicker] = useState(false);
+
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all flex flex-col justify-center">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all flex flex-col justify-center relative overflow-hidden">
       <div className="flex items-start justify-between">
         <div className="flex-1 mr-3">
-          {/* --- TITLE & STATIC DATE ROW --- */}
           <div className="flex items-center justify-between gap-3 w-full">
             <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               {title}
             </p>
-            {/* Renders the date string if it is passed in */}
-            {dateText && (
-              <span className="text-sm font-medium text-[#4B5563] dark:text-[#E5E7EB]">
-                {dateText}
-              </span>
+            
+            {/* Date Display and Optional DatePicker Icon */}
+            {(dateText || showDatePicker) && (
+              <div className="flex items-center gap-1">
+                {dateText && (
+                  <span className="text-sm font-medium text-[#4B5563] dark:text-[#E5E7EB]">
+                    {dateText}
+                  </span>
+                )}
+                {showDatePicker && (
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => setOpenPicker(true)}
+                      sx={{ color: "text.secondary", padding: "4px" }}
+                    >
+                      <CalendarMonthIcon fontSize="small" />
+                    </IconButton>
+                    <div className="absolute top-0 right-0 opacity-0 pointer-events-none w-0 h-0">
+                      <DatePicker
+                        open={openPicker}
+                        onClose={() => setOpenPicker(false)}
+                        value={selectedDate ? dayjs(selectedDate) : null}
+                        onChange={(newValue) => {
+                          if (newValue && onDateChange) {
+                            // Format back to YYYY-MM-DD for the parent component/backend
+                            onDateChange(newValue.format("YYYY-MM-DD"));
+                          }
+                          setOpenPicker(false);
+                        }}
+                        // Strict restriction: exactly like the other pages (no older than 3 days)
+                        minDate={dayjs().subtract(3, 'day')}
+                        format="DD-MMM-YYYY"
+                      />
+                    </div>
+                  </LocalizationProvider>
+                )}
+              </div>
             )}
           </div>
 
@@ -104,7 +148,6 @@ const ErrorBanner = ({ message }: { message: string }) => (
   </div>
 );
 
-// Helper to format "YYYY-MM-DD" to "DD-MMM-YYYY" without needing dayjs
 const formatDate = (dateStr: string) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -114,9 +157,9 @@ const formatDate = (dateStr: string) => {
   return `${day}-${month}-${year}`;
 };
 
-// Main component 
 const StatusCards = ({ selectedDate, setSelectedDate }: { selectedDate: string, setSelectedDate: (date: string) => void }) => {
-  const { data: dispatch, loading: dispatchLoading, error: dispatchError } = useDispatchSummary();
+  // Pass the selectedDate down to the hook so it fetches data for the newly picked date
+  const { data: dispatch, loading: dispatchLoading, error: dispatchError } = useDispatchSummary(selectedDate);
 
   const dispatchCards: StatCardProps[] = dispatch
     ? [
@@ -137,7 +180,10 @@ const StatusCards = ({ selectedDate, setSelectedDate }: { selectedDate: string, 
           value: dispatch.ordersDispatchedToday,
           iconType: "send",
           iconColor: "text-green-500 dark:text-green-400",
-          dateText: formatDate(selectedDate), // <-- Pass the formatted static date string here
+          dateText: formatDate(selectedDate),
+          showDatePicker: true, // Enables the calendar icon for this specific card
+          selectedDate: selectedDate,
+          onDateChange: setSelectedDate, // Updates the state in AdminDashboard
         },
       ]
     : [];

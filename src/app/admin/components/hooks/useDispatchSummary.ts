@@ -1,4 +1,3 @@
-// app/admin/components/admindashboard/hooks/useDispatchSummary.ts
 import { useEffect, useState } from "react";
 import { API } from "../../../../common/lib/endpoints";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
@@ -16,7 +15,8 @@ interface UseDispatchSummaryReturn {
   refetch: () => void;
 }
 
-export const useDispatchSummary = (): UseDispatchSummaryReturn => {
+// Update the hook to accept an optional date parameter
+export const useDispatchSummary = (date?: string): UseDispatchSummaryReturn => {
   const [data, setData] = useState<DispatchSummaryData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,13 @@ export const useDispatchSummary = (): UseDispatchSummaryReturn => {
       setLoading(true);
       setError(null);
 
-      const response = await fetchWithAuth(API.DASHBOARD.ADMIN_DISPATCH_SUMMARY);
+      // Append the date query parameter if provided
+      const url = new URL(API.DASHBOARD.ADMIN_DISPATCH_SUMMARY, window.location.origin);
+      if (date) {
+        url.searchParams.append("date", date);
+      }
+
+      const response = await fetchWithAuth(url.toString());
 
       if (!response.ok) {
         throw new Error(`Failed to fetch dispatch summary: ${response.status}`);
@@ -44,7 +50,7 @@ export const useDispatchSummary = (): UseDispatchSummaryReturn => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [date]); // Add date as a dependency so it refetches when the date changes
 
   return { data, loading, error, refetch: fetchData };
 };
