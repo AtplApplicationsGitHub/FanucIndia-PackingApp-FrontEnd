@@ -60,7 +60,7 @@ export default function MaterialDetails({
   onViewAttachments,
 }: Props) {
   const theme = useTheme();
-  const lightYellow = alpha(theme.palette.primary.main, 0.25);
+  const lightYellow = alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.1 : 0.25);
 
   // [NEW] Group Filter State
   const [groupFilter, setGroupFilter] = useState<string>("All");
@@ -164,15 +164,53 @@ export default function MaterialDetails({
             MATERIALS
           </Typography>
           {issueDuration && (
-            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
-              Issue Duration: <span style={{ color: "#d32f2f" }}>{issueDuration}</span>
-              {issueUpdatedBy && <span style={{ color: "#666", marginLeft: "4px" }}>({issueUpdatedBy})</span>}
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.primary",
+                fontWeight: 600,
+                bgcolor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "#f5f5f5",
+                px: 1.5,
+                py: 0.8,
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "#e0e0e0",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5
+              }}
+            >
+              Issue Duration: <span style={{ color: theme.palette.error.main }}>{issueDuration}</span>
+              {issueUpdatedBy && (
+                <Typography component="span" variant="caption" sx={{ color: "text.secondary", ml: 0.5, fontWeight: 500 }}>
+                  ({issueUpdatedBy})
+                </Typography>
+              )}
             </Typography>
           )}
           {packingDuration && (
-            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600, bgcolor: "#f5f5f5", px: 1, py: 0.5, borderRadius: 1 }}>
-              Packing Duration: <span style={{ color: "#1976d2" }}>{packingDuration}</span>
-              {packingUpdatedBy && <span style={{ color: "#666", marginLeft: "4px" }}>({packingUpdatedBy})</span>}
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.primary",
+                fontWeight: 600,
+                bgcolor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "#f5f5f5",
+                px: 1.5,
+                py: 0.8,
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "#e0e0e0",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5
+              }}
+            >
+              Packing Duration: <span style={{ color: theme.palette.info.main }}>{packingDuration}</span>
+              {packingUpdatedBy && (
+                <Typography component="span" variant="caption" sx={{ color: "text.secondary", ml: 0.5, fontWeight: 500 }}>
+                  ({packingUpdatedBy})
+                </Typography>
+              )}
             </Typography>
           )}
         </Box>
@@ -283,9 +321,9 @@ export default function MaterialDetails({
                         textDecoration: "none",
                         cursor: "pointer",
                         fontWeight: "bold",
-                        color: "#0000FF",
+                        color: theme.palette.mode === "dark" ? theme.palette.primary.main : "#0000FF",
                         fontSize: "inherit",
-                        "&:hover": { color: "#00008B", textDecoration: "none" },
+                        "&:hover": { color: theme.palette.mode === "dark" ? theme.palette.primary.light : "#00008B", textDecoration: "none" },
                       }}
                     >
                       {m.Material_Code}
@@ -345,8 +383,8 @@ export default function MaterialDetails({
             alignItems: "center",
             textTransform: "uppercase",
             fontWeight: "bold",
-            color: "#CE0000",
-            borderBottom: "1px solid #e0e0e0",
+            color: theme.palette.mode === "dark" ? theme.palette.error.light : "#CE0000",
+            borderBottom: `1px solid ${theme.palette.divider}`,
           }}
         >
           Remarks
