@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { Close, FilePresent, Visibility, Download } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
+import { X as CloseIcon } from 'lucide-react';
 
 interface Attachment {
   fileName: string;
@@ -34,7 +35,7 @@ interface DispatchInfo {
 
 interface VehicleAttachment {
   fileName: string;
-  [key: string]: unknown; 
+  [key: string]: unknown;
 }
 
 interface Props {
@@ -106,9 +107,9 @@ export default function AttachmentDialogs({
                   backgroundColor: lightYellow,
                 },
                 "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
-                  {
-                    borderBottom: 0,
-                  },
+                {
+                  borderBottom: 0,
+                },
               }}
             >
               <TableHead sx={{ bgcolor: "primary.main" }}>
@@ -193,15 +194,21 @@ export default function AttachmentDialogs({
         open={materialDialogOpen}
         onClose={onMaterialDialogClose}
         fullWidth
-        maxWidth="lg"
+        maxWidth="md"
       >
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
+        <DialogTitle sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}>
           MATERIAL ATTACHMENTS
           <IconButton
             onClick={onMaterialDialogClose}
-            sx={{ position: "absolute", right: 8, top: 8 }}
+            sx={{ position: "absolute", right: 12 }}
           >
-            <Close />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
@@ -212,13 +219,23 @@ export default function AttachmentDialogs({
                   backgroundColor: lightYellow,
                 },
                 "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
-                  {
-                    borderBottom: 0,
-                  },
+                {
+                  borderBottom: 0,
+                },
               }}
             >
               <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "5%",
+                    }}
+                  >
+                    S.NO
+                  </TableCell>
                   <TableCell
                     align="center"
                     sx={{
@@ -250,45 +267,55 @@ export default function AttachmentDialogs({
               <TableBody>
                 {materialAttachments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center">
+                    <TableCell colSpan={4} align="center">
                       <Typography color="text.secondary" p={3}>
                         No attachments found.
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  materialAttachments.map((att) => (
+                  materialAttachments.map((att, index) => (
                     <TableRow key={att.ID}>
+                      <TableCell align="center">
+                        {index + 1}
+                      </TableCell>
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
                           <FilePresent color="action" />
                           <Typography variant="body2">
-                            {att.fileName}
+                            {decodeURIComponent(att.fileName)}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell
-                        sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                        align="center"
+                        sx={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
                       >
                         {att.description || "—"}
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title="View">
-                          <IconButton
-                            size="small"
-                            onClick={() => onMaterialAttachmentView(att.ID)}
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Download">
-                          <IconButton
-                            size="small"
-                            onClick={() => onMaterialAttachmentDownload(att.ID)}
-                          >
-                            <Download />
-                          </IconButton>
-                        </Tooltip>
+                        <Box display="flex" justifyContent="center" gap={1}>
+                          <Tooltip title="View">
+                            <IconButton
+                              size="small"
+                              onClick={() => onMaterialAttachmentView(att.ID)}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+
+                          <Tooltip title="Download">
+                            <IconButton
+                              size="small"
+                              onClick={() => onMaterialAttachmentDownload(att.ID)}
+                            >
+                              <Download fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))
