@@ -666,6 +666,7 @@ export default function AdminOrderEditModal({
           type="submit"
           disabled={loading}
           variant="text"
+          onClick={handleSave}
           sx={{
             color: "inherit",
             "&:hover": {
