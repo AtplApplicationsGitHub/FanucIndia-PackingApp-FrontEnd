@@ -1,7 +1,8 @@
 // src/app/sales/dashboard/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -21,6 +22,8 @@ import { motion } from "framer-motion";
 
 export default function SalesDashboard() {
   const theme = useTheme();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     orders,
     lookup,
@@ -79,6 +82,28 @@ export default function SalesDashboard() {
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
   const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
 
+  React.useEffect(() => {
+    const urlView = searchParams.get("view") as any;
+    if (urlView) {
+      if (urlView !== view) {
+        setView(urlView);
+        sessionStorage.setItem("salesDashboardView", urlView);
+      }
+    } else {
+      if (view !== "home") {
+        setView("home");
+        sessionStorage.setItem("salesDashboardView", "home");
+      }
+    }
+  }, [searchParams]);
+
+  // NEW: Custom function to update the tab AND the browser history URL
+  const handleViewChange = (newView: any) => {
+    setView(newView);
+    sessionStorage.setItem("salesDashboardView", newView);
+    router.push(`/sales/dashboard?view=${newView}`);
+  };
+
   const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
     setChatOrderId(orderId);
@@ -133,7 +158,8 @@ export default function SalesDashboard() {
           userName={userName}
           salesZone={salesZone}
           view={view}
-          setView={setView}
+          setView={handleViewChange}
+          showBackButton={view !== "home"}
         />
 
         {/* HOME VIEW - Beautiful Dashboard */}

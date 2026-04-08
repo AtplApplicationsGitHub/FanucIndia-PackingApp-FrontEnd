@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AppBar, Toolbar, Box, useTheme, Button, Typography } from "@mui/material";
+import { AppBar, Toolbar, Box, useTheme, Button, Typography, IconButton } from "@mui/material";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
-import { ClipboardList, BarChart3, Search } from "lucide-react";
+import { ClipboardList, BarChart3, Search, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 import packageJson from "../../../../package.json";
@@ -14,6 +14,7 @@ type Props = {
   view: SalesDashboardView;
   salesZone: string;
   setView: (view: SalesDashboardView) => void;
+  showBackButton?: boolean;
 };
 
 const menuItems = [
@@ -23,7 +24,7 @@ const menuItems = [
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 
-export default function SalesDashboardHeader({ userName, salesZone, view, setView }: Props) {
+export default function SalesDashboardHeader({ userName, salesZone, view, setView, showBackButton }: Props) {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -62,6 +63,18 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
           minHeight: 20,
         }}
       >
+        {showBackButton && (
+          <IconButton
+            onClick={() => router.back()}
+            sx={{
+              mr: 2,
+              color: theme.palette.primary.contrastText,
+              "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
+            }}
+          >
+            <ArrowLeft size={24} />
+          </IconButton>
+        )}
         <Box
           sx={{
             flexGrow: 1,

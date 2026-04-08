@@ -35,6 +35,7 @@ import { useSearchParams } from "next/navigation";
 import { useTheme, alpha, TableContainer, Tooltip } from "@mui/material";
 import { FilePresent } from "@mui/icons-material";
 import CommonButton from "@/common/components/CommonButton";
+import BackButton from "@/common/components/BackButton";
 
 interface SalesOrder {
   id: number;
@@ -148,7 +149,7 @@ export default function SoSearchPage() {
   const [multipleDialogOpen, setMultipleDialogOpen] = useState(false);
 
   const [dispatchAttachments, setDispatchAttachments] = useState<
-    { fileName: string }[]
+    { fileName: string; dispatchId: number }[]
   >([]);
   const [materialAttachments, setMaterialAttachments] = useState<
     MaterialAttachment[]
@@ -380,7 +381,10 @@ export default function SoSearchPage() {
   const handleOpenDispatchAttachments = () => {
     if (data?.dispatchInfo) {
       const allAttachments = data.dispatchInfo.flatMap(
-        (d) => d.attachments || []
+        (d) => (d.attachments || []).map((att: any) => ({
+          fileName: att.fileName,
+          dispatchId: d.id,
+        }))
       );
       setDispatchAttachments(allAttachments);
       setDispatchDialogOpen(true);
@@ -482,10 +486,11 @@ export default function SoSearchPage() {
           <AdminDashboardHeader
             userName={userName}
             view={"home"}
+            showBackButton={true}
             setView={(view) => {
               const newView = typeof view === "function" ? view("home") : view;
               sessionStorage.setItem("adminView", newView);
-              router.push("/admin/dashboard");
+              router.push(`/admin/dashboard?view=${newView}`);
             }}
           />
         );
@@ -494,9 +499,10 @@ export default function SoSearchPage() {
           <UserDashboardHeader
             userName={userName}
             view={"home"}
+            showBackButton={true}
             setView={(view) => {
               sessionStorage.setItem("userDashboardView", view);
-              router.push("/user/dashboard");
+              router.push(`/user/dashboard?view=${view}`);
             }}
           />
         );
@@ -506,10 +512,11 @@ export default function SoSearchPage() {
             userName={userName}
             view={"home"}
             salesZone={salesZone}
+            showBackButton={true}
             setView={(view) => {
               const newView = view as SalesDashboardView;
               sessionStorage.setItem("salesDashboardView", newView);
-              router.push("/sales/dashboard");
+              router.push(`/sales/dashboard?view=${newView}`);
             }}
           />
         );

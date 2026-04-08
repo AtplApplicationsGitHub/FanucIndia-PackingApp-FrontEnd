@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import { Box, useTheme, Menu, MenuItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { Box, useTheme, Menu, MenuItem, ListItemIcon, ListItemText, Typography, IconButton } from "@mui/material";
 import {
   BarChart3,
   ClipboardList,
@@ -17,7 +17,8 @@ import {
   FileBarChart,
   Activity,
   Boxes,
-  ArchiveIcon
+  ArchiveIcon,
+  ArrowLeft
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -41,6 +42,7 @@ type Props = {
   userName: string;
   view: ViewType;
   setView: React.Dispatch<React.SetStateAction<ViewType>>;
+  showBackButton?: boolean;
 };
 
 const allMenuItems = [
@@ -89,6 +91,7 @@ export default function AdminDashboardHeader({
   userName,
   view,
   setView,
+  showBackButton,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -153,6 +156,18 @@ export default function AdminDashboardHeader({
           minHeight: 20,
         }}
       >
+        {showBackButton && (
+          <IconButton
+            onClick={() => router.back()}
+            sx={{
+              mr: 2,
+              color: theme.palette.primary.contrastText,
+              "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
+            }}
+          >
+            <ArrowLeft size={24} />
+          </IconButton>
+        )}
         <Box
           sx={{ 
             flexGrow: 1, 

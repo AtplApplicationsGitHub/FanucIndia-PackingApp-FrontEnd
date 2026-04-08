@@ -23,6 +23,10 @@ interface Attachment {
   fileName: string;
 }
 
+interface DispatchAttachment extends Attachment {
+  dispatchId: number;
+}
+
 interface MaterialAttachment extends Attachment {
   ID: number;
   description: string | null;
@@ -41,7 +45,7 @@ interface VehicleAttachment {
 interface Props {
   dispatchDialogOpen: boolean;
   onDispatchDialogClose: () => void;
-  dispatchAttachments: Attachment[];
+  dispatchAttachments: DispatchAttachment[];
   onDispatchAttachmentAction: (
     dispatchId: number,
     fileName: string,
@@ -174,7 +178,7 @@ export default function AttachmentDialogs({
                               size="small"
                               onClick={() =>
                                 onDispatchAttachmentAction(
-                                  dispatchInfo[0].id,
+                                  att.dispatchId, // Use the specific dispatch ID
                                   att.fileName,
                                   "view"
                                 )
@@ -188,7 +192,7 @@ export default function AttachmentDialogs({
                               size="small"
                               onClick={() =>
                                 onDispatchAttachmentAction(
-                                  dispatchInfo[0].id,
+                                  att.dispatchId, // Use the specific dispatch ID
                                   att.fileName,
                                   "download"
                                 )

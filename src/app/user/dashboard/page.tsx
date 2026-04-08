@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Box, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import UserDashboardHeader from "@/app/user/components/Header";
@@ -17,8 +17,10 @@ import UserDashboardMain from "@/app/user/components/UserdashboradMain";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useTheme } from "@mui/material";
 
+
 export default function UserDashboard() {
   const theme = useTheme();
+  const searchParams = useSearchParams();
   const {
     view,
     setView,
@@ -37,7 +39,29 @@ export default function UserDashboard() {
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
   
-  const router = useRouter(); 
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const urlView = searchParams.get("view") as any;
+    if (urlView) {
+      if (urlView !== view) {
+        setView(urlView);
+        sessionStorage.setItem("userDashboardView", urlView);
+      }
+    } else {
+      if (view !== "home") {
+        setView("home");
+        sessionStorage.setItem("userDashboardView", "home");
+      }
+    }
+  }, [searchParams]);
+
+  // NEW: Custom function to update the tab AND the browser history URL
+  const handleViewChange = (newView: any) => {
+    setView(newView);
+    sessionStorage.setItem("userDashboardView", newView);
+    router.push(`/user/dashboard?view=${newView}`);
+  };
 
   const handleOpenChat = async (soNumber: string, orderId: number) => {
     setChatSoNumber(soNumber);
@@ -128,7 +152,8 @@ export default function UserDashboard() {
         <UserDashboardHeader
           userName={userName}
           view={view}
-          setView={setView}
+          setView={handleViewChange}
+          showBackButton={view !== "home"}
         />
 
         {view === "home" && (

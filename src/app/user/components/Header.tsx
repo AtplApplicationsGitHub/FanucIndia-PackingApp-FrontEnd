@@ -5,17 +5,20 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import {  Package, Truck, Grid, BarChart3 } from "lucide-react";
+import { IconButton } from "@mui/material";
+import {  Package, Truck, Grid, BarChart3, ArrowLeft } from "lucide-react";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme, Typography } from "@mui/material";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 import packageJson from "../../../../package.json";
+import { useRouter } from "next/navigation";
 
 type Props = {
   userName: string;
   view: UserDashboardView;
   setView: (view: UserDashboardView) => void;
+  showBackButton?: boolean;
 };
 
 const menuItems = [
@@ -41,8 +44,10 @@ export default function UserDashboardHeader({
   userName,
   view,
   setView,
+  showBackButton,
 }: Props) {
   const theme = useTheme();
+  const router = useRouter();
 
   return (
     <AppBar
@@ -65,6 +70,18 @@ export default function UserDashboardHeader({
           minHeight: 20,
         }}
       >
+        {showBackButton && (
+          <IconButton
+            onClick={() => router.back()}
+            sx={{
+              mr: 2,
+              color: theme.palette.primary.contrastText,
+              "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
+            }}
+          >
+            <ArrowLeft size={24} />
+          </IconButton>
+        )}
         <Box
           sx={{ 
             flexGrow: 1, 

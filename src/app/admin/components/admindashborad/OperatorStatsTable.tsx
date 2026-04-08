@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import {
   TextField,
   IconButton,
   Button,
+  TablePagination, // <-- Added TablePagination
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -30,11 +31,29 @@ export default function OperatorStatsTable({
 }) {
   const { data: stats = [], loading } = useOperatorStats(selectedDate);
 
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   // Dialog State
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogData, setDialogData] = useState<OrderDetail[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Reset to first page when date/data changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedDate]);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const handleOpenDialog = (title: string, data: OrderDetail[]) => {
     setDialogTitle(title);
@@ -181,7 +200,9 @@ export default function OperatorStatsTable({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {stats.map((row) => (
+                {stats
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
                   <TableRow key={row.operatorEmail} hover>
                     <TableCell sx={{ fontWeight: 500 }}>
                       {row.operatorEmail}
@@ -281,6 +302,21 @@ export default function OperatorStatsTable({
               </TableBody>
             </Table>
           </Box>
+        )}
+        {!loading && stats.length > 0 && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={stats.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{
+              borderTop: 1,
+              borderColor: "divider",
+            }}
+          />
         )}
       </CardContent>
 

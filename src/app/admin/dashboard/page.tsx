@@ -14,7 +14,7 @@ import { useAdminDashboard } from "@/app/admin/components/hooks/useAdminDashboar
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
 import { SalesOrder, EditableField } from "@/app/admin/components/types/admin";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
@@ -24,7 +24,6 @@ import ReportPanel from "../components/dashboard/PlanvsActual";
 import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
-
 
 export default function AdminDashboard() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -61,10 +60,35 @@ export default function AdminDashboard() {
     }
   };
 
+  const searchParams = useSearchParams();
   const admin = useAdminDashboard();
   const router = useRouter();
   const { snackbar: adminSnackbar, onSnackbarClose: handleAdminSnackbarClose } =
     admin;
+  
+  React.useEffect(() => {
+    const urlView = searchParams.get("view") as any;
+    if (urlView) {
+      if (urlView !== admin.view) {
+        admin.setView(urlView);
+        sessionStorage.setItem("adminView", urlView);
+      }
+    } else {
+      // If there is no ?view= in the URL, default back to home
+      if (admin.view !== "home") {
+        admin.setView("home");
+        sessionStorage.setItem("adminView", "home");
+      }
+    }
+  }, [searchParams]);
+
+  // NEW: Custom function to update the tab AND the browser history URL
+  const handleViewChange = (viewInput: any) => {
+    const newView = typeof viewInput === "function" ? viewInput(admin.view) : viewInput;
+    admin.setView(newView);
+    sessionStorage.setItem("adminView", newView);
+    router.push(`/admin/dashboard?view=${newView}`); // This adds it to the back button history!
+  };
 
   const showSnackbar = (
     message: string,
@@ -176,7 +200,8 @@ export default function AdminDashboard() {
           <AdminDashboardHeader
             userName={admin.userName}
             view={admin.view}
-            setView={admin.setView}
+            setView={handleViewChange}
+            showBackButton={admin.view !== "home"}
           />
 
           {/* HOME VIEW */}
