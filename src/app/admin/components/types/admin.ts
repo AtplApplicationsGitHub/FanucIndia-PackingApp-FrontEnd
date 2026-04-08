@@ -103,7 +103,7 @@ export interface User {
   accessContentAccuracy?: boolean;
   accessPutAway?: boolean;
   accessErpBarcode?: boolean;
-
+  accessAttachment?: boolean;
 }
 
 export interface AdminKpisResponse {

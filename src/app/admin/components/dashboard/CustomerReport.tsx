@@ -376,7 +376,7 @@ function TabACards() {
                                 {card.value}
                             </Typography>
 
-                            {card.percentage !== undefined && (
+                            {/* {card.percentage !== undefined && (
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
                                     <Typography
                                         sx={{
@@ -399,7 +399,7 @@ function TabACards() {
                                         {card.isPositive ? "↑" : "↓"} {card.percentage}
                                     </Typography>
                                 </Box>
-                            )}
+                            )} */}
                         </Box>
 
                         {/* Right: icon box */}

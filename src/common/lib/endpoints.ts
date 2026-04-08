@@ -176,6 +176,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
   DISPATCH: { 
     BASE:                                         `${API_BASE_URL}/dispatch`,
     BY_ID: (id: number) =>                        `${API_BASE_URL}/dispatch/${id}`,
+    SEARCH_SO: (soNumber: string) =>              `${API_BASE_URL}/dispatch/search-so/${encodeURIComponent(soNumber)}`,
     LIST_ATTACHMENTS: (id: number) =>             `${API_BASE_URL}/dispatch/${id}/attachments`,
     SO: (id: number) =>                           `${API_BASE_URL}/dispatch/${id}/so`,
     DELETE_SO: (soId: number) =>                  `${API_BASE_URL}/dispatch/so/${soId}`,

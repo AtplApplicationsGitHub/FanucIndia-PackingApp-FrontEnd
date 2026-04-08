@@ -45,6 +45,7 @@ export interface UserSubmitData {
   accessContentAccuracy?: boolean;
   accessPutAway?: boolean;
   accessErpBarcode?: boolean;
+  accessAttachment?: boolean;
 }
 
 interface Props {
@@ -64,6 +65,7 @@ const MOBILE_MODULES = [
   { label: "Content Accuracy", key: "accessContentAccuracy" },
   { label: "Put Away", key: "accessPutAway" },
   { label: "ERP Barcode", key: "accessErpBarcode" },
+  { label: "Attachment", key: "accessAttachment" },
 ];
 
 const ITEM_HEIGHT = 48;
@@ -231,6 +233,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       if (editingUser.accessContentAccuracy) currentAccess.push("accessContentAccuracy");
       if (editingUser.accessPutAway) currentAccess.push("accessPutAway");
       if (editingUser.accessErpBarcode) currentAccess.push("accessErpBarcode");
+      if (editingUser.accessAttachment) currentAccess.push("accessAttachment");
       setSelectedModules(currentAccess);
     } else {
       reset();
@@ -266,6 +269,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       accessContentAccuracy: false,
       accessPutAway: false,
       accessErpBarcode: false,
+      accessAttachment: false,
     };
 
     if (role === "SALES" && data.zone) {
@@ -285,6 +289,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       payload.accessContentAccuracy = selectedModules.includes("accessContentAccuracy");
       payload.accessPutAway = selectedModules.includes("accessPutAway");
       payload.accessErpBarcode = selectedModules.includes("accessErpBarcode");
+      payload.accessAttachment = selectedModules.includes("accessAttachment");
     }
 
     if (editingUser) {

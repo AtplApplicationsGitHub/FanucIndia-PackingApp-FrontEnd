@@ -1613,7 +1613,7 @@ export default function AssignSO() {
               setPageSize(parseInt(e.target.value, 10));
               setCurrentPage(1);
             }}
-            rowsPerPageOptions={[10, 20, 50]}
+            rowsPerPageOptions={[10, 20, 50, 100]}
             sx={{
               borderTop: "1px solid",
               borderColor: "divider",

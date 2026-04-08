@@ -534,6 +534,8 @@ export default function DispatchView() {
   );
   const [dispatchSOs, setDispatchSOs] = useState<DispatchSO[]>([]);
   const [soInput, setSoInput] = useState("");
+  const [multipleSoOptions, setMultipleSoOptions] = useState<{id: number, saleOrderNumber: string, outboundDelivery: string | null}[]>([]);
+  const [soSelectionDialogOpen, setSoSelectionDialogOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -706,35 +708,65 @@ export default function DispatchView() {
     }
   };
 
-  const handleAddSO = async () => {
-    if (!selectedDispatch || !soInput.trim()) return;
+  const handleAddSO = async (specificSalesOrderId?: number) => {
+    // Prevent action if no dispatch is selected, or if both input and specific ID are missing
+    if (!selectedDispatch) return;
+    if (!specificSalesOrderId && !soInput.trim()) return;
 
     setSoLoading(true);
 
     try {
       const token = localStorage.getItem("token");
+      let finalSalesOrderId = specificSalesOrderId;
+
+      // STEP 1: If no specific order ID was passed, hit the GET API to check for duplicates
+      if (!finalSalesOrderId) {
+        const searchRes = await axios.get(
+          API.DISPATCH.SEARCH_SO(soInput.trim()),
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const orders = searchRes.data;
+
+        if (orders.length > 1) {
+          // Multiple orders found! Open the dialog and stop execution here.
+          setMultipleSoOptions(orders);
+          setSoSelectionDialogOpen(true);
+          setSoLoading(false);
+          return; 
+        } else if (orders.length === 1) {
+          // Exactly one order found, grab its ID and proceed to POST
+          finalSalesOrderId = orders[0].id;
+        }
+      }
+
+      // STEP 2: Hit the POST API with the specific Order ID to map it to the Dispatch
       await axios.post(
         API.DISPATCH.SO(selectedDispatch.id),
-        { saleOrderNumber: soInput.trim() },
-        { headers: { Authorization: `Bearer ${token}` } },
+        { 
+          saleOrderNumber: soInput.trim(), 
+          salesOrderId: finalSalesOrderId 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // On success, close dialog and clear inputs
       setSoInput("");
+      setSoSelectionDialogOpen(false);
+      setMultipleSoOptions([]);
+      
       fetchDispatchSOs(selectedDispatch.id);
       fetchDispatches();
-    } catch (error: unknown) {
+      
+      setTimeout(() => { soInputRef.current?.focus(); }, 100);
+    } catch (error: any) {
+      // Handle errors (e.g., 404 Not Found from the GET API)
       setSoInput("");
-      if (axios.isAxiosError(error)) {
-        const errMsg =
-          error.response?.data?.message || `Failed to add SO number`;
-        showSnackbar(errMsg, "error");
-      } else {
-        showSnackbar("Unexpected error occurred", "error");
-      }
+      const errMsg = error.response?.data?.message || `Failed to process SO number`;
+      showSnackbar(errMsg, "error");
+      setTimeout(() => { soInputRef.current?.focus(); }, 100);
     } finally {
       setSoLoading(false);
-      setTimeout(() => {
-        soInputRef.current?.focus();
-      }, 100);
     }
   };
 
@@ -1162,7 +1194,7 @@ export default function DispatchView() {
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={handleAddSO}
+                        onClick={() => handleAddSO()}
                         disabled={
                           !selectedDispatch || !soInput.trim() || soLoading
                         }
@@ -1492,6 +1524,54 @@ export default function DispatchView() {
               )}
             </Button>
           </DialogActions>
+        </Dialog>
+
+        {/* Specific SO Selection Dialog */}
+        <Dialog open={soSelectionDialogOpen} onClose={() => setSoSelectionDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            Select Specific Order
+            <IconButton onClick={() => setSoSelectionDialogOpen(false)} sx={{ position: "absolute", right: 8, top: 8 }}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Multiple orders found for <Typography component="span" fontWeight="bold" color="text.primary">{soInput}</Typography>. Please select the correct Outbound Delivery (OBD):
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {multipleSoOptions.map((option) => (
+                <Box
+                  key={option.id}
+                  onClick={() => handleAddSO(option.id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: theme.palette.primary.main,
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    }
+                  }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="700">{option.saleOrderNumber}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      OBD: {option.outboundDelivery || 'N/A'}
+                    </Typography>
+                  </Box>
+                  <Button variant="contained" size="small" onClick={(e) => { e.stopPropagation(); handleAddSO(option.id); }} sx={{ ...buttonSx, minWidth: '80px', height: 32 }}>
+                    SELECT
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          </DialogContent>
         </Dialog>
 
         <AttachmentDialog

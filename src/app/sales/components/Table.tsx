@@ -169,10 +169,8 @@ export default function SalesOrdersTable({
           <TableBody>
             {orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
-                  {view === "dispatched"
-                    ? "No dispatched orders found."
-                    : "No orders found. Create your first order!"}
+                <TableCell colSpan={12} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                  No records found.
                 </TableCell>
               </TableRow>
             ) : (
@@ -270,7 +268,7 @@ export default function SalesOrdersTable({
                           border: "1px solid",
                           borderColor: alpha(theme.palette.success.main, 0.5),
                           backgroundColor: alpha(theme.palette.success.main, 0.1),
-                          color: theme.palette.success.dark,
+                          color: theme.palette.mode === "dark" ? "#FFFFFF" : theme.palette.success.dark,
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           minWidth: "50px",
@@ -289,7 +287,7 @@ export default function SalesOrdersTable({
                           border: "1px solid",
                           borderColor: alpha(theme.palette.error.main, 0.5),
                           backgroundColor: alpha(theme.palette.error.main, 0.1),
-                          color: theme.palette.error.main,
+                          color: theme.palette.mode === "dark" ? "#FFFFFF" : theme.palette.error.main,
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           minWidth: "50px",
@@ -351,7 +349,7 @@ export default function SalesOrdersTable({
                             border: "1px solid",
                             borderColor: alpha(colorMain, 0.5),
                             backgroundColor: alpha(colorMain, 0.1),
-                            color: colorMain === "#eab308" ? "#b45309" : colorMain,
+                            color: theme.palette.mode === "dark" ? "#FFFFFF" : (colorMain === "#eab308" ? "#b45309" : colorMain),
                             fontSize: "0.75rem",
                             fontWeight: 600,
                             minWidth: "50px",

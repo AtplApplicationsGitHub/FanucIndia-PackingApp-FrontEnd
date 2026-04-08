@@ -720,9 +720,9 @@ export default function FgDashboardView() {
                               backgroundColor: row.payment
                                 ? alpha(theme.palette.success.main, 0.1)
                                 : alpha(theme.palette.error.main, 0.1),
-                              color: row.payment
-                                ? theme.palette.success.dark
-                                : theme.palette.error.main,
+                              color: theme.palette.mode === "dark" 
+                                ? "#FFFFFF" 
+                                : (row.payment ? theme.palette.success.dark : theme.palette.error.main),
                               fontSize: "0.75rem",
                               fontWeight: 600,
                               minWidth: "50px",

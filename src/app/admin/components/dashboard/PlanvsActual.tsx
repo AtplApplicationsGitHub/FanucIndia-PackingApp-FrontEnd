@@ -202,7 +202,7 @@ export default function ReportPage() {
           <Paper
             elevation={2}
             sx={{
-              maxWidth: 1050,
+              maxWidth: 1080,
               borderRadius: 2, bgcolor: "background.paper", width: "100%",
               display: "flex", flexDirection: { xs: "column", lg: "row" },
               alignItems: { xs: "stretch", lg: "center" },

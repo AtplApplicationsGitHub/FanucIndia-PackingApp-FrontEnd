@@ -180,33 +180,23 @@ export default function SalesDashboard() {
               selectedIds={selectedIds}
             />
 
-            {orders.length === 0 ? (
-              <Box display="flex" justifyContent="center" mt={4}>
-                <Alert severity="info">
-                  {view === "dispatched"
-                    ? "No dispatched orders found."
-                    : "No orders found. Create your first order!"}
-                </Alert>
-              </Box>
-            ) : (
-              <SalesOrdersTable
-                view={view}
-                orders={orders}
-                lookup={lookup}
-                totalOrders={totalOrders}
-                onEdit={handleEdit}
-                onOpenChat={handleOpenChat}
-                onDelete={setDeletingId}
-                paginationModel={{ page: currentPage - 1, pageSize }}
-                onPaginationModelChange={({ page, pageSize }) => {
-                  setCurrentPage(page + 1);
-                  setPageSize(pageSize);
-                  fetchOrders(page + 1, pageSize);
-                }}
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
-              />
-            )}
+            <SalesOrdersTable
+              view={view}
+              orders={orders}
+              lookup={lookup}
+              totalOrders={totalOrders}
+              onEdit={handleEdit}
+              onOpenChat={handleOpenChat}
+              onDelete={setDeletingId}
+              paginationModel={{ page: currentPage - 1, pageSize }}
+              onPaginationModelChange={({ page, pageSize }) => {
+                setCurrentPage(page + 1);
+                setPageSize(pageSize);
+                fetchOrders(page + 1, pageSize);
+              }}
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
+            />
           </Box>
         )}
 
