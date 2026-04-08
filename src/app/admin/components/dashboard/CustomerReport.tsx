@@ -35,6 +35,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useStatusCards } from "@/app/admin/components/hooks/useStatuscards";
+import CommonButton from "@/common/components/CommonButton";
 
 // Chart - Table toggle button
 function ViewToggleButton({
@@ -621,9 +622,9 @@ function MaterialSOCountTab() {
                                 <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                             </IconButton>
                         </Paper>
-                        <Button onClick={handleSearch} disabled={!inputValue.trim()} sx={getButtonSx(theme)}>
+                        <CommonButton onClick={handleSearch} disabled={!inputValue.trim()} sx={getButtonSx(theme)}>
                             Search
-                        </Button>
+                        </CommonButton>
                     </Box>
 
                     {/* Toggle pinned to right */}

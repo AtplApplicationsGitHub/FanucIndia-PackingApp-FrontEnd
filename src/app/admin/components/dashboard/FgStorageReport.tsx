@@ -14,9 +14,9 @@ import {
     Typography,
     alpha,
     useTheme,
-    TextField,
     InputAdornment,
     IconButton,
+    InputBase,
     Link as MuiLink
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
@@ -27,7 +27,7 @@ import { format } from "date-fns";
 import { useEffect } from "react";
 
 function formatDate(iso: string) {
-    if (!iso || iso === "-") return "-"; 
+    if (!iso || iso === "-") return "-";
     try {
         return format(new Date(iso), "dd-MMM-yyyy HH:mm");
     } catch {
@@ -64,50 +64,52 @@ export default function FgStorageReportPanel() {
 
     return (
         <Box sx={{ width: "100%", minWidth: 0, pt: 1, pb: 4, px: { xs: 2, md: 4 } }}>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                <TextField
-                    size="small"
-                    placeholder="Search"
-                    value={searchInput}
-                    
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        setSearchInput(val);
-                        if (val === "") {
-                            setSearch("");
-                        }
-                    }}
 
-                    onKeyDown={handleSearchKeyDown}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon fontSize="small" color="action" />
-                            </InputAdornment>
-                        ),
-                        endAdornment: searchInput ? (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    aria-label="clear search"
-                                    onClick={handleClearSearch}
-                                    edge="end"
-                                    size="small"
-                                >
-                                    <ClearIcon fontSize="small" />
-                                </IconButton>
-                            </InputAdornment>
-                        ) : null,
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                <Box
+                    component="form"
+                    onSubmit={(e: React.FormEvent) => {
+                        e.preventDefault();
+                        setSearch(searchInput);
                     }}
-                    sx={{ 
-                        width: { xs: '100%', sm: '400px' }, 
-                        bgcolor: 'background.paper', 
-                        borderRadius: '8px',
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                        }
+                    sx={{
+                        p: "2px 4px",
+                        display: "flex",
+                        alignItems: "center",
+                        width: { xs: "100%", sm: 400 },
+                        border: 1,
+                        borderColor: (theme) =>
+                            theme.palette.mode === "dark" ? "rgba(255,255,255,0.23)" : "#e0e0e0",
+                        borderRadius: "4px",
+                        height: 40,
+                        bgcolor: "background.paper",
                     }}
-                />
+                >
+                    <InputBase
+                        sx={{ ml: 1, flex: 1, fontSize: "14px" }}
+                        placeholder="Search"
+                        inputProps={{ "aria-label": "search" }}
+                        value={searchInput}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setSearchInput(val);
+                            if (val === "") setSearch("");
+                        }}
+                        onKeyDown={handleSearchKeyDown}
+                    />
+                    {searchInput && (
+                        <IconButton
+                            sx={{ p: "5px" }}
+                            aria-label="clear"
+                            onClick={handleClearSearch}
+                        >
+                            <ClearIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                    )}
+                    <IconButton type="submit" sx={{ p: "5px" }} aria-label="search">
+                        <SearchIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                </Box>
             </Box>
 
             <Paper
@@ -158,7 +160,7 @@ export default function FgStorageReportPanel() {
                                     "OUT BOUND DELIVERY",
                                     "LAST UPDATED BY",
                                     "DATE & TIME",
-                                    "DURATION" 
+                                    "DURATION"
                                 ].map((head) => (
                                     <TableCell
                                         key={head}
@@ -222,9 +224,9 @@ export default function FgStorageReportPanel() {
                                         </TableCell>
 
                                         {/* DURATION */}
-                                        <TableCell sx={{ 
-                                            fontWeight: 600, 
-                                            color: (t) => t.palette.mode === 'dark' ? '#60a5fa' : '#2563eb' 
+                                        <TableCell sx={{
+                                            fontWeight: 600,
+                                            color: (t) => t.palette.mode === 'dark' ? '#60a5fa' : '#2563eb'
                                         }}>
                                             {row.durationText}
                                         </TableCell>
