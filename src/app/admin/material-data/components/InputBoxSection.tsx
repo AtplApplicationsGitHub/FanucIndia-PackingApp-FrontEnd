@@ -553,9 +553,8 @@ const InputBoxSection: FC<Props> = ({
         <DialogContent>
           <DialogContentText>
             Delete the imported ERP data for this order? <br />
-            This will reset status, priority, and assigned user.
-            <div> This action cannot be undone.</div>
-
+            This will reset status, priority, and assigned user. <br />
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <Divider />
