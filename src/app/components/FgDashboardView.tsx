@@ -664,7 +664,7 @@ export default function FgDashboardView() {
                                   <Typography
                                     variant="caption"
                                     sx={{
-                                      color: "#000",
+                                      color: "text.primary",
                                       fontSize: "0.75rem",
                                       whiteSpace: "nowrap",
                                       fontWeight: 500,

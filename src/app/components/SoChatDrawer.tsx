@@ -25,15 +25,16 @@ import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
+import CommonButton from "@/common/components/CommonButton";
 
-type MentionUser = { id: number; name: string; role: string };
+type MentionUser = { id: number; name: string; role: string; email: string };
 
 type ChatMessage = {
   id: number;
   message: string;
   createdAt: string;
-  fromUser: { id: number; name: string; role: string };
-  toUser: { id: number; name: string; role: string };
+  fromUser: { id: number; name: string; role: string; email: string };
+  toUser: { id: number; name: string; role: string; email: string };
 };
 
 export default function SoChatDrawer({
@@ -113,7 +114,7 @@ export default function SoChatDrawer({
   const filteredUsers = useMemo(() => {
     const q = mentionQuery.trim().toLowerCase();
     if (!q) return users; // show all right after "@"
-    return users.filter((u) => u.name.toLowerCase().includes(q));
+    return users.filter((u) => u.email.toLowerCase().includes(q));
   }, [users, mentionQuery]);
 
   const updateMentionStateFromText = (val: string) => {
@@ -136,9 +137,9 @@ export default function SoChatDrawer({
     const last = parts[parts.length - 1] || "";
 
     if (last.startsWith("@")) {
-      parts[parts.length - 1] = `@${u.name}`;
+      parts[parts.length - 1] = `@${u.email}`; 
     } else {
-      parts.push(`@${u.name}`);
+      parts.push(`@${u.email}`);
     }
 
     const next = parts.join(" ") + " ";
@@ -240,24 +241,46 @@ export default function SoChatDrawer({
                   <ListItem sx={{ px: 0, alignItems: "flex-start" }}>
                     <ListItemText
                       primary={
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          alignItems="baseline"
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            flexWrap: 'wrap', 
+                            gap: 1, 
+                            alignItems: 'baseline',
+                            mb: 0.5 
+                          }}
                         >
-                          <Typography fontWeight={700}>
-                            {m.fromUser.name}
+                          <Typography 
+                            fontWeight={700} 
+                            sx={{ wordBreak: 'break-all' }}
+                          >
+                            {m.fromUser.email}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            → @{m.toUser.name}
+                          
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary" 
+                            sx={{ wordBreak: 'break-all' }}
+                          >
+                            → @{m.toUser.email}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary" 
+                            sx={{ whiteSpace: 'nowrap' }}
+                          >
                             {new Date(m.createdAt).toLocaleString()}
                           </Typography>
-                        </Stack>
+                        </Box>
                       }
                       secondary={
-                        <Typography variant="body2">{m.message}</Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ wordBreak: 'break-word', mt: 0.5 }}
+                        >
+                          {m.message}
+                        </Typography>
                       }
                     />
                   </ListItem>
@@ -319,7 +342,7 @@ export default function SoChatDrawer({
                           onClick={() => insertMention(u)}
                         >
                           <ListItemText
-                            primary={`@${u.name}`}
+                            primary={`@${u.email}`}
                             secondary={u.role}
                           />
                         </ListItemButton>
@@ -338,7 +361,7 @@ export default function SoChatDrawer({
                 mt: 1,
               }}
             >
-              <Button
+              <CommonButton
                 variant="contained"
                 startIcon={
                   sending ? (
@@ -349,10 +372,9 @@ export default function SoChatDrawer({
                 }
                 onClick={handleSend}
                 disabled={sending || !taggedUser || !text.trim()}
-                sx={buttonSx}
               >
                 SEND
-              </Button>
+              </CommonButton>
             </Box>
           </Box>
         )}

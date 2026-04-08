@@ -23,6 +23,9 @@ import {
   CircularProgress,
   Tooltip,
   Divider,
+  Menu,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PrintIcon from "@mui/icons-material/Print";
@@ -32,6 +35,9 @@ import { MaterialRow } from "../types/material-row";
 import { getMaterialFilesBySaleOrder } from "@/common/services/materialFile.service";
 import CommonButton from "@/common/components/CommonButton";
 import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 interface Props {
   onSubmit: (value: string) => void;
@@ -117,6 +123,17 @@ const InputBoxSection: FC<Props> = ({
   const [confirmAllOpen, setConfirmAllOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(menuAnchorEl);
+  
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+  
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -289,7 +306,7 @@ const InputBoxSection: FC<Props> = ({
             SUBMIT
           </CommonButton>
 
-          {showBulkButton && (
+          {/* {showBulkButton && (
             <CommonButton
               variant="contained"
               onClick={() => setConfirmOpen(true)}
@@ -342,7 +359,71 @@ const InputBoxSection: FC<Props> = ({
                 <PrintIcon />
               </IconButton>
             </Tooltip>
-          )}
+          )} */}
+
+          <Tooltip title="More Actions">
+            <IconButton 
+              onClick={handleMenuClick} 
+              disabled={disabled}
+              sx={{
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                ml: 1,
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={openMenu}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            PaperProps={{
+              sx: { mt: 1, minWidth: 180, boxShadow: theme.shadows[4] }
+            }}
+          >
+            {showBulkButton && (
+              <MenuItem onClick={() => { handleMenuClose(); setConfirmOpen(true); }}>
+                <ListItemIcon><DoneAllIcon fontSize="small" /></ListItemIcon>
+                <ListItemText>Accept Group Items</ListItemText>
+              </MenuItem>
+            )}
+
+            {showAcceptAllIssueButton && (
+              <MenuItem onClick={() => { handleMenuClose(); setConfirmAllOpen(true); }}>
+                <ListItemIcon><DoneAllIcon fontSize="small" /></ListItemIcon>
+                <ListItemText>Accept All</ListItemText>
+              </MenuItem>
+            )}
+
+            <MenuItem onClick={() => { handleMenuClose(); setOpenUploadDialog(true); }}>
+              <ListItemIcon><CloudUploadIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>Upload File</ListItemText>
+            </MenuItem>
+
+            {showPrintButton && (
+              <MenuItem onClick={() => { handleMenuClose(); onPrintClick?.(); }}>
+                <ListItemIcon><PrintIcon fontSize="small" /></ListItemIcon>
+                <ListItemText>Print Labels</ListItemText>
+              </MenuItem>
+            )}
+
+            <Divider />
+
+            <MenuItem 
+              onClick={() => { handleMenuClose(); setConfirmDeleteOpen(true); }} 
+              sx={{ color: theme.palette.error.main }}
+            >
+              <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+              <ListItemText>Delete ERP Data</ListItemText>
+            </MenuItem>
+          </Menu>
 
           <Box display="flex" alignItems="center" gap={1}>
             <Typography

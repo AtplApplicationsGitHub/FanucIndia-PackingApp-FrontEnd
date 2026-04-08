@@ -2,7 +2,7 @@
 
 import { Stack, Step, StepLabel, Stepper, StepConnector, stepConnectorClasses, styled, Typography, Box } from "@mui/material";
 import { StepIconProps } from "@mui/material/StepIcon";
-import { differenceInSeconds, format } from 'date-fns'; // Added format
+import { differenceInSeconds, format } from 'date-fns'; 
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
@@ -131,9 +131,18 @@ function calculateTimeTaken(start: string | null, end: string | null): string | 
     const startDate = new Date(start);
     const endDate = new Date(end);
     
-    const totalSeconds = differenceInSeconds(endDate, startDate);
+    let totalSeconds = differenceInSeconds(endDate, startDate);
     
-    if (totalSeconds < 0) return "Invalid Time";
+    // FIX 1: Handle concurrent database inserts when stages are "skipped"
+    if (totalSeconds < 0) {
+      // If the difference is extremely small (e.g. within 60 seconds of each other)
+      // it means they were processed together asynchronously. Just count it as instant (0s).
+      if (totalSeconds >= -60) {
+        totalSeconds = 0;
+      } else {
+        return "Invalid Time";
+      }
+    }
 
     return formatTimeTaken(totalSeconds);
 
@@ -168,8 +177,16 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
           let timeTaken = null;
           if (index > 0) {
             const currentStepTime = step.createdDateTime;
-            const prevStep = sortedSteps[index - 1];
-            const prevStepTime = prevStep?.createdDateTime || null;
+            
+            // FIX 2: Look backwards to find the last step that ACTUALLY HAS a timestamp.
+            // This prevents the calculation from breaking if the immediate step was skipped.
+            let prevStepTime: string | null = null;
+            for (let j = index - 1; j >= 0; j--) {
+              if (sortedSteps[j].createdDateTime) {
+                prevStepTime = sortedSteps[j].createdDateTime;
+                break;
+              }
+            }
             
             timeTaken = calculateTimeTaken(prevStepTime, currentStepTime);
           }
