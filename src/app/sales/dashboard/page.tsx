@@ -1,7 +1,7 @@
 // src/app/sales/dashboard/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
@@ -20,7 +20,7 @@ import { API } from "@/common/lib/endpoints";
 import AttachmentUploadDialog from "@/app/sales/components/AttachmentUploadDialog";
 import { motion } from "framer-motion";
 
-export default function SalesDashboard() {
+function SalesDashboardContent() {
   const theme = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -284,5 +284,13 @@ export default function SalesDashboard() {
         />
       </Box>
     </>
+  );
+}
+
+export default function SalesDashboard() {
+  return (
+    <Suspense fallback={<Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center">Loading...</Box>}>
+      <SalesDashboardContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { useState, Suspense } from "react";
 import { Box, Typography, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
@@ -25,7 +25,7 @@ import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState<{
@@ -454,5 +454,17 @@ export default function AdminDashboard() {
         />
       </Box>
     </>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        Loading...
+      </Box>
+    }>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

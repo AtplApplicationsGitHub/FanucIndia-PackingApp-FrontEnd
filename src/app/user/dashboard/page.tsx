@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Box, Paper, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
@@ -18,7 +18,7 @@ import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useTheme } from "@mui/material";
 
 
-export default function UserDashboard() {
+function UserDashboardContent() {
   const theme = useTheme();
   const searchParams = useSearchParams();
   const {
@@ -230,5 +230,13 @@ export default function UserDashboard() {
           }}
         />
     </>
+  );
+}
+
+export default function UserDashboard() {
+  return (
+    <Suspense fallback={<Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center">Loading...</Box>}>
+      <UserDashboardContent />
+    </Suspense>
   );
 }
