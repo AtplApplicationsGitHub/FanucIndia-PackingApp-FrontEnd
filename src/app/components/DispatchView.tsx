@@ -30,6 +30,7 @@ import {
   TableRow,
   Tooltip,
   TablePagination,
+  Divider,
 } from "@mui/material";
 
 import {
@@ -66,6 +67,7 @@ import {
   Package,
   Info,
   Paperclip,
+  UploadCloud,
 } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
 
@@ -534,7 +536,7 @@ export default function DispatchView() {
   );
   const [dispatchSOs, setDispatchSOs] = useState<DispatchSO[]>([]);
   const [soInput, setSoInput] = useState("");
-  const [multipleSoOptions, setMultipleSoOptions] = useState<{id: number, saleOrderNumber: string, outboundDelivery: string | null}[]>([]);
+  const [multipleSoOptions, setMultipleSoOptions] = useState<{ id: number, saleOrderNumber: string, outboundDelivery: string | null }[]>([]);
   const [soSelectionDialogOpen, setSoSelectionDialogOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -738,7 +740,7 @@ export default function DispatchView() {
           setMultipleSoOptions(orders);
           setSoSelectionDialogOpen(true);
           setSoLoading(false);
-          return; 
+          return;
         } else if (orders.length === 1) {
           finalSalesOrderId = orders[0].id;
           finalSaleOrderNumber = orders[0].saleOrderNumber;
@@ -747,20 +749,20 @@ export default function DispatchView() {
 
       await axios.post(
         API.DISPATCH.SO(selectedDispatch.id),
-        { 
-          saleOrderNumber: finalSaleOrderNumber, 
-          salesOrderId: finalSalesOrderId 
+        {
+          saleOrderNumber: finalSaleOrderNumber,
+          salesOrderId: finalSalesOrderId
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setSoInput("");
       setSoSelectionDialogOpen(false);
       setMultipleSoOptions([]);
-      
+
       fetchDispatchSOs(selectedDispatch.id);
       fetchDispatches();
-      
+
       setTimeout(() => { soInputRef.current?.focus(); }, 100);
     } catch (error: any) {
       const errMsg = error.response?.data?.message || `Failed to process SO number`;
@@ -1370,15 +1372,22 @@ export default function DispatchView() {
           fullWidth
           maxWidth="md"
         >
-          <DialogTitle>
+          <DialogTitle sx={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}>
             {editingId ? "EDIT DISPATCH" : "CREATE DISPATCH"}
             <IconButton
               onClick={handleDialogClose}
-              sx={{ position: "absolute", right: 8, top: 8 }}
+              sx={{ position: "absolute", right: 12 }}
             >
               <Close />
             </IconButton>
           </DialogTitle>
+          <Divider />
           <DialogContent>
             <Box
               component="form"
@@ -1416,14 +1425,14 @@ export default function DispatchView() {
               <Typography
                 variant="subtitle2"
                 color="text.secondary"
-                sx={{ fontWeight: 600, mt: 1 }}
+                sx={{ fontWeight: 600 }}
               >
                 Attachments
               </Typography>
               <Box
                 {...getRootProps()}
                 sx={{
-                  p: 4,
+                  p: 6,
                   my: 1,
                   display: "flex",
                   flexDirection: "column",
@@ -1434,22 +1443,16 @@ export default function DispatchView() {
                   cursor: "pointer",
                   bgcolor: alpha(theme.palette.primary.main, 0.02),
                   transition: "all 0.2s ease",
-                  "&:hover": {
-                    borderColor: theme.palette.primary.main,
-                    bgcolor: alpha(theme.palette.primary.main, 0.05),
-                  },
+                  '&:hover': { borderColor: 'primary.main' },
+
                 }}
               >
                 <input {...getInputProps()} />
-                <CloudUpload
-                  size={40}
-                  color={theme.palette.text.secondary}
-                  style={{ marginBottom: 8 }}
-                />
-                <Typography variant="body1" fontWeight="500">
+                <UploadCloud size={30} color="grey" />
+                <Typography variant="body1" fontWeight="500" fontSize={17} >
                   Drag 'n' drop files here
                 </Typography>
-                <Typography variant="caption" color="textSecondary">
+                <Typography fontSize={15} color="textSecondary">
                   or click to select files
                 </Typography>
               </Box>
@@ -1511,11 +1514,12 @@ export default function DispatchView() {
               )}
             </Box>
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button sx={buttonSx} onClick={handleDialogClose}>
+          <Divider />
+          <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+            <CommonButton onClick={handleDialogClose}>
               CANCEL
-            </Button>
-            <Button sx={buttonSx} onClick={handleSave} disabled={loading}>
+            </CommonButton>
+            <CommonButton onClick={handleSave} disabled={loading}>
               {loading ? (
                 <CircularProgress size={24} />
               ) : editingId ? (
@@ -1523,7 +1527,7 @@ export default function DispatchView() {
               ) : (
                 "SAVE"
               )}
-            </Button>
+            </CommonButton>
           </DialogActions>
         </Dialog>
 

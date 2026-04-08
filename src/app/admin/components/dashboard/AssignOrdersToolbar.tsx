@@ -825,7 +825,7 @@ export default function AssignOrdersToolbar({
               component="span"
               sx={{ fontSize: 16, fontWeight: 400, color: "text.secondary", ml: 1 }}
             >
-              · {selectedIds.length} orders
+              · {selectedIds.length} {selectedIds.length === 1 ? "order" : "orders"}
             </Typography>
             <IconButton
               onClick={() => {
@@ -988,7 +988,7 @@ export default function AssignOrdersToolbar({
             </Box>
           </DialogContent>
           <Divider />
-          <DialogActions sx={{ px: 3, pb: 2, pt: 2 }}>
+          <DialogActions sx={{ px: 3, pb: 2}}>
             <CommonButton
               variant="contained"
               disableElevation

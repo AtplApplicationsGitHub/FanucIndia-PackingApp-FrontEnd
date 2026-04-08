@@ -667,13 +667,6 @@ export default function AdminOrderEditModal({
           disabled={loading}
           variant="text"
           onClick={handleSave}
-          sx={{
-            color: "inherit",
-            "&:hover": {
-              backgroundColor: "action.hover",
-            },
-            borderRadius: 0,
-          }}
         >
           {loading ? <CircularProgress size={22} /> : "UPDATE"}
         </CommonButton>
