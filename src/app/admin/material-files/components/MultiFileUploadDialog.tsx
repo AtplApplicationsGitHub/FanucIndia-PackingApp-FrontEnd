@@ -175,7 +175,7 @@ export default function MultiFileUploadDialog({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Sl. No</TableCell>
+              <TableCell>S.No</TableCell>
               <TableCell>File Name</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="center">Actions</TableCell>

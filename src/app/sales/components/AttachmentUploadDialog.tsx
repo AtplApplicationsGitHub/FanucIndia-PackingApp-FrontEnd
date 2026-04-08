@@ -120,7 +120,7 @@ export default function AttachmentUploadDialog({ open, onClose, onUpload }: Prop
         {/* File List */}
         {files.length > 0 && (
           <>
-            <Typography fontSize={13} fontWeight={600} sx={{ mb: 0.5 }}>
+            <Typography fontSize={13} fontWeight={600} sx={{ mb: 0.5, mt: 2 }} >
               Uploaded Files
             </Typography>
             <List dense disablePadding>

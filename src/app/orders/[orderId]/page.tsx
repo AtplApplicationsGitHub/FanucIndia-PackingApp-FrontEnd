@@ -21,6 +21,7 @@ import {
   InputLabel,
   FormControl,
   TextField,
+  IconButton,
 } from "@mui/material";
 import HeaderSection from "@/app/admin/material-data/components/HeaderSection";
 import InputBoxSection from "@/app/admin/material-data/components/InputBoxSection";
@@ -44,6 +45,7 @@ import {
 } from "@/common/services/erp.service";
 import type { MaterialRow } from "@/app/admin/material-data/types/material-row";
 import axios from "axios";
+import CloseIcon from "@mui/icons-material/Close";
 
 import AdminDashboardHeader, {
   ViewType,
@@ -53,6 +55,7 @@ import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import SalesDashboardHeader from "@/app/sales/components/Header";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
 import { API } from "@/common/lib/endpoints";
+import CommonButton from "@/common/components/CommonButton";
 
 type UpdateResponse = {
   issueStageCompleted?: boolean;
@@ -784,8 +787,17 @@ export default function MaterialDataPage() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{ fontWeight: "bold" }}>
-            Print Order Labels
+          <DialogTitle sx={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}>
+            PRINT ORDER LABEL
+            <IconButton onClick={() => setPrintDialogOpen(false)} size="small" disabled={isPrinting} sx={{ position: "absolute", right: 12 }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </DialogTitle>
           <DialogContent
             dividers
@@ -827,21 +839,13 @@ export default function MaterialDataPage() {
               fullWidth
             />
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button
-              onClick={() => setPrintDialogOpen(false)}
-              disabled={isPrinting}
-              color="inherit"
-            >
-              CANCEL
-            </Button>
-            <Button
+          <DialogActions sx={{  px: 3, pb: 2, }}>
+            <CommonButton
               onClick={handlePrintSubmit}
-              variant="contained"
               disabled={isPrinting}
             >
               {isPrinting ? "PRINTING..." : "PRINT"}
-            </Button>
+            </CommonButton>
           </DialogActions>
         </Dialog>
       </Container>

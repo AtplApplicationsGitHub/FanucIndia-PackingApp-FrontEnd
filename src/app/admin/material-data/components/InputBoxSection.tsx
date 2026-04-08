@@ -126,11 +126,11 @@ const InputBoxSection: FC<Props> = ({
 
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(menuAnchorEl);
-  
+
   const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setMenuAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
   };
@@ -362,8 +362,8 @@ const InputBoxSection: FC<Props> = ({
           )} */}
 
           <Tooltip title="More Actions">
-            <IconButton 
-              onClick={handleMenuClick} 
+            <IconButton
+              onClick={handleMenuClick}
               disabled={disabled}
               sx={{
                 bgcolor: 'background.paper',
@@ -416,8 +416,8 @@ const InputBoxSection: FC<Props> = ({
 
             <Divider />
 
-            <MenuItem 
-              onClick={() => { handleMenuClose(); setConfirmDeleteOpen(true); }} 
+            <MenuItem
+              onClick={() => { handleMenuClose(); setConfirmDeleteOpen(true); }}
               sx={{ color: theme.palette.error.main }}
             >
               <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
@@ -498,7 +498,7 @@ const InputBoxSection: FC<Props> = ({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={confirmAllOpen} onClose={() => setConfirmAllOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+      <Dialog open={confirmAllOpen} onClose={() => setConfirmAllOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
         <DialogTitle sx={{
           display: "flex", justifyContent: "center", alignItems: "center",
           fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
@@ -511,8 +511,7 @@ const InputBoxSection: FC<Props> = ({
         <Divider />
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to COMPLETE the Issue Stage for <strong>ALL ITEMS</strong> in this order?
-            This action cannot be undone.
+            Complete the Issue Stage for all items in this order? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <Divider />
@@ -539,20 +538,28 @@ const InputBoxSection: FC<Props> = ({
         onUploaded={handleFileChange}
       />
 
-      <Dialog open={confirmDeleteOpen} onClose={() => { if (!isDeleting) setConfirmDeleteOpen(false); }}>
-        <DialogTitle sx={{ color: theme.palette.error.main, fontWeight: 700, textTransform: 'uppercase' }}>
-          Delete ERP Data?
+      <Dialog open={confirmDeleteOpen} onClose={() => { if (!isDeleting) setConfirmDeleteOpen(false); }} maxWidth="xs" fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}>
+        <DialogTitle sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}>
+          DELETE ERP DATA
         </DialogTitle>
+        <Divider />
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to <strong>DELETE</strong> the imported ERP data for this order?
-            <br /><br />
-            This will reset the status, priority, and assigned user, and allow you to re-import the data.
-            <br /><br />
-            <strong>THIS ACTION CANNOT BE UNDONE.</strong>
+            Delete the imported ERP data for this order? <br />
+            This will reset status, priority, and assigned user.
+            <div> This action cannot be undone.</div>
+
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Divider />
+        <DialogActions sx={{ px: 3, pb: 2, gap: 0 }}>
           <CommonButton onClick={() => setConfirmDeleteOpen(false)} disabled={isDeleting}>
             CANCEL
           </CommonButton>

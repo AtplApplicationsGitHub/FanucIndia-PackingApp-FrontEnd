@@ -17,9 +17,10 @@ import {
   Tooltip,
   TextField,
   CircularProgress,
-  TableContainer, 
-  useTheme,       
-  alpha,          
+  TableContainer,
+  useTheme,
+  alpha,
+  Divider,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -33,6 +34,7 @@ import {
   updateMaterialFile,
 } from "@/common/services/materialFile.service";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import { UploadCloud } from "lucide-react";
 
 type Row = {
   id: number;
@@ -62,7 +64,7 @@ export default function UploadAttachmentDialog({
   onUploaded?: () => void;
   onAttachedCountChange?: (count: number) => void;
 }) {
-  const theme = useTheme(); 
+  const theme = useTheme();
   const [rows, setRows] = useState<Row[]>([]);
   const [loadingList, setLoadingList] = useState(false);
 
@@ -265,58 +267,61 @@ export default function UploadAttachmentDialog({
     }
   };
 
-  const headerBg = theme.palette.primary.main; 
-  const headerText = theme.palette.primary.contrastText; 
-  const titleColor = theme.palette.secondary.main; 
+  const headerBg = theme.palette.primary.main;
+  const headerText = theme.palette.primary.contrastText;
+  const titleColor = theme.palette.secondary.main;
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 2 } }}>
       <DialogTitle
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          color: titleColor, 
-          fontWeight: 600,
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
         }}
       >
-        ATTACHMENT
-        <IconButton size="small" onClick={onClose} aria-label="close">
+        ATTACHMENTS
+        <IconButton size="small" onClick={onClose} sx={{ position: "absolute", right: 12 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-
+      <Divider />
       <DialogContent>
-        <Paper
-          variant="outlined"
+        <Box
           {...getRootProps()}
           sx={{
-            mt: 1,
             mb: 2,
-            p: 3,
-            borderStyle: "dashed",
-            textAlign: "center",
-            bgcolor: isDragActive ? "action.hover" : "background.paper",
-            cursor: "pointer",
+            p: 8,
+            border: (theme) => `2px dashed ${isDragActive ? theme.palette.primary.main : theme.palette.divider}`,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            cursor: 'pointer',
+            bgcolor: isDragActive ? 'action.hover' : 'transparent',
+            transition: 'background-color 0.2s, border-color 0.2s',
+            '&:hover': { borderColor: 'primary.main' },
           }}
         >
           <input {...getInputProps()} />
-          <CloudUploadIcon />
-          <Typography sx={{ mt: 1, fontWeight: 600 }}>
-            Drag your files here or click this area.
+          <UploadCloud size={30} color="grey" />
+          <Typography fontSize={17} fontWeight={500} color="text.primary">
+            Click or drag to upload
           </Typography>
-          {!hasFiles && !loadingList && (
-            <Typography variant="body2" color="text.secondary">
-              Files start uploading automatically.
-            </Typography>
-          )}
+          <Typography fontSize={15} color="text.secondary">
+            Supports all file types
+          </Typography>
           {loadingList && (
-            <Box sx={{ mt: 1 }}>
+            <Box sx={{ mt: 1, width: '100%' }}>
               <LinearProgress />
             </Box>
           )}
-        </Paper>
+        </Box>
 
         <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: 1 }}>
           <Table
@@ -329,7 +334,7 @@ export default function UploadAttachmentDialog({
           >
             <TableHead sx={{ bgcolor: headerBg }}>
               <TableRow>
-                <TableCell sx={{ color: headerText, fontWeight: "bold" }}>Sl. No</TableCell>
+                <TableCell sx={{ color: headerText, fontWeight: "bold" }}>S.No</TableCell>
                 <TableCell sx={{ color: headerText, fontWeight: "bold" }}>File Name</TableCell>
                 <TableCell sx={{ color: headerText, fontWeight: "bold" }}>Description</TableCell>
                 <TableCell sx={{ color: headerText, fontWeight: "bold" }}>Status</TableCell>
