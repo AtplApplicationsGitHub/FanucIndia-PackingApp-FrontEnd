@@ -39,28 +39,44 @@ import { useStatusCards } from "@/app/admin/components/hooks/useStatuscards";
 // Chart - Table toggle button
 function ViewToggleButton({
     viewMode,
-    onToggle,
+    setViewMode,
 }: {
     viewMode: "chart" | "table";
-    onToggle: () => void;
+    setViewMode: (mode: "chart" | "table") => void;
 }) {
     return (
-        <Button
-            onClick={onToggle}
-            variant="outlined"
+        <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
+          <Button
+            onClick={() => setViewMode("table")}
+            disableRipple
             size="small"
-            startIcon={viewMode === "chart" ? <TableRowsIcon /> : <BarChartIcon />}
             sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                borderRadius: 2,
-                borderColor: "divider",
-                color: "text.primary",
-                "&:hover": { borderColor: "text.secondary" },
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+              color: viewMode === "table" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "table" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
             }}
-        >
-            {viewMode === "chart" ? "Table View" : "Chart View"}
-        </Button>
+          >
+            Table
+          </Button>
+          <Button
+            onClick={() => setViewMode("chart")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+              color: viewMode === "chart" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "chart" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
+            }}
+          >
+            Chart
+          </Button>
+        </Box>
     );
 }
 
@@ -470,7 +486,7 @@ function CustomerSOCountTab() {
                     {/* Toggle*/}
                     <ViewToggleButton
                         viewMode={viewMode}
-                        onToggle={() => setViewMode(v => v === "chart" ? "table" : "chart")}
+                        setViewMode={setViewMode}
                     />
                 </Box>
             </LocalizationProvider>
@@ -613,7 +629,7 @@ function MaterialSOCountTab() {
                     {/* Toggle pinned to right */}
                     <ViewToggleButton
                         viewMode={viewMode}
-                        onToggle={() => setViewMode(v => v === "chart" ? "table" : "chart")}
+                        setViewMode={setViewMode}
                     />
                 </Box>
                 {committedCode && loading && (

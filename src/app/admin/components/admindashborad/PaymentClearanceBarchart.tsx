@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
 import { Table, BarChart3 } from "lucide-react";
+import { Box, Button } from "@mui/material";
 
 type ChartDatum = {
   zone: string;
@@ -72,24 +73,38 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
           </p>
         </div>
 
-        {/* Toggle Button */}
-        <button
-          onClick={() => setViewMode(viewMode === "chart" ? "table" : "chart")}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F7F7F7] dark:bg-[#2C3540] hover:bg-gray-200 dark:hover:bg-gray-600 
-            text-[#1F2933] dark:text-[#F7F7F7] font-medium rounded-lg transition-all duration-200 focus:outline-none border border-[#E5E7EB] dark:border-[#4B5563]"
-        >
-          {viewMode === "chart" ? (
-            <>
-              <Table className="w-5 h-5" />
-              <span>Table View</span>
-            </>
-          ) : (
-            <>
-              <BarChart3 className="w-5 h-5" />
-              <span>Chart View</span>
-            </>
-          )}
-        </button>
+        <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
+          <Button
+            onClick={() => setViewMode("table")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+              color: viewMode === "table" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "table" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
+            }}
+          >
+            Table
+          </Button>
+          <Button
+            onClick={() => setViewMode("chart")}
+            disableRipple
+            size="small"
+            sx={{
+              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+              textTransform: "none", minWidth: "unset",
+              bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+              color: viewMode === "chart" ? "#D00000" : "text.secondary",
+              boxShadow: viewMode === "chart" ? 1 : "none",
+              "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
+            }}
+          >
+            Chart
+          </Button>
+        </Box>
       </div>
 
       {/* Content */}
