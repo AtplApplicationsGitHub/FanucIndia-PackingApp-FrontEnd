@@ -87,11 +87,17 @@ export default function AttachmentDialogs({
         fullWidth
         maxWidth="md"
       >
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+        <DialogTitle sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}>
           DISPATCH ATTACHMENTS
           <IconButton
             onClick={onDispatchDialogClose}
-            sx={{ position: "absolute", right: 8, top: 8 }}
+            sx={{ position: "absolute", right: 12 }}
           >
             <Close />
           </IconButton>
@@ -100,9 +106,6 @@ export default function AttachmentDialogs({
           <TableContainer component={Paper}>
             <Table
               sx={{
-                "& .MuiTableCell-root": {
-                  borderBottom: "1px solid #1F2933",
-                },
                 "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                   backgroundColor: lightYellow,
                 },
@@ -114,6 +117,16 @@ export default function AttachmentDialogs({
             >
               <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "5%",
+                    }}
+                  >
+                    S.NO
+                  </TableCell>
                   <TableCell
                     sx={{ color: "primary.contrastText", fontWeight: "bold" }}
                   >
@@ -134,7 +147,7 @@ export default function AttachmentDialogs({
               <TableBody>
                 {dispatchAttachments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={2} align="center">
+                    <TableCell colSpan={3} align="center">
                       <Typography color="text.secondary" p={3}>
                         No attachments found.
                       </Typography>
@@ -143,6 +156,9 @@ export default function AttachmentDialogs({
                 ) : (
                   dispatchAttachments.map((att, i) => (
                     <TableRow key={i}>
+                      <TableCell align="center">
+                        {i + 1}
+                      </TableCell>
                       <TableCell>
                         <Box display="flex" alignItems="center" gap={1}>
                           <FilePresent color="action" />
@@ -152,34 +168,36 @@ export default function AttachmentDialogs({
                         </Box>
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title="View">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              onDispatchAttachmentAction(
-                                dispatchInfo[0].id,
-                                att.fileName,
-                                "view"
-                              )
-                            }
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Download">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              onDispatchAttachmentAction(
-                                dispatchInfo[0].id,
-                                att.fileName,
-                                "download"
-                              )
-                            }
-                          >
-                            <Download />
-                          </IconButton>
-                        </Tooltip>
+                        <Box display="flex" justifyContent="center" gap={1}>
+                          <Tooltip title="View">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                onDispatchAttachmentAction(
+                                  dispatchInfo[0].id,
+                                  att.fileName,
+                                  "view"
+                                )
+                              }
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Download">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                onDispatchAttachmentAction(
+                                  dispatchInfo[0].id,
+                                  att.fileName,
+                                  "download"
+                                )
+                              }
+                            >
+                              <Download />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))

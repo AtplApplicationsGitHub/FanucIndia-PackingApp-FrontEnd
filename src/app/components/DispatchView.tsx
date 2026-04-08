@@ -67,6 +67,7 @@ import {
   Info,
   Paperclip,
 } from "lucide-react";
+import CommonButton from "@/common/components/CommonButton";
 
 const buttonSx = {
   height: 40,
@@ -981,14 +982,13 @@ export default function DispatchView() {
             </Tooltip>
           </Box>
           <Box display="flex" gap={2} alignItems="center">
-            <Button
+            <CommonButton
               variant="contained"
-              sx={buttonSx}
               onClick={handleCreateClick}
               startIcon={<Plus size={18} />}
             >
               Create
-            </Button>
+            </CommonButton>
           </Box>
         </Paper>
 
@@ -1030,7 +1030,7 @@ export default function DispatchView() {
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2, }} >ACTION</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>SL.NO</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>S.NO</TableCell>
                       <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>SO COUNT</TableCell>
                       <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>TRANSPORTER</TableCell>
                       <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>VEHICLE NUMBER</TableCell>

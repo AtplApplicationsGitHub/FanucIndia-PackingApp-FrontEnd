@@ -86,7 +86,7 @@ export default function OrderSnapshot({
         mb={2}
       >
         <Typography
-          sx={{ color: "secondary.main", fontWeight: 600 , fontSize:"20px" }}
+          sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
         >
           ORDER
         </Typography>
@@ -189,8 +189,9 @@ export default function OrderSnapshot({
       {dispatchInfo.length > 0 && (
         <Box mt={3}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h5" sx={{ color: "secondary.main", fontWeight: 600 }}>
-              DISPATCH
+            <Typography
+              sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
+            >              DISPATCH
             </Typography>
             {onViewDispatchAttachments && (
               <Link
