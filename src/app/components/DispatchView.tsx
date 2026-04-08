@@ -709,7 +709,6 @@ export default function DispatchView() {
   };
 
   const handleAddSO = async (specificSalesOrderId?: number) => {
-    // Prevent action if no dispatch is selected, or if both input and specific ID are missing
     if (!selectedDispatch) return;
     if (!specificSalesOrderId && !soInput.trim()) return;
 
@@ -718,39 +717,43 @@ export default function DispatchView() {
     try {
       const token = localStorage.getItem("token");
       let finalSalesOrderId = specificSalesOrderId;
+      let finalSaleOrderNumber = soInput.trim();
 
-      // STEP 1: If no specific order ID was passed, hit the GET API to check for duplicates
+      if (specificSalesOrderId && multipleSoOptions.length > 0) {
+        const matchedOption = multipleSoOptions.find(o => o.id === specificSalesOrderId);
+        if (matchedOption) {
+          finalSaleOrderNumber = matchedOption.saleOrderNumber;
+        }
+      }
+
       if (!finalSalesOrderId) {
         const searchRes = await axios.get(
-          API.DISPATCH.SEARCH_SO(soInput.trim()),
+          API.DISPATCH.SEARCH_SO(finalSaleOrderNumber),
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const orders = searchRes.data;
 
         if (orders.length > 1) {
-          // Multiple orders found! Open the dialog and stop execution here.
           setMultipleSoOptions(orders);
           setSoSelectionDialogOpen(true);
           setSoLoading(false);
           return; 
         } else if (orders.length === 1) {
-          // Exactly one order found, grab its ID and proceed to POST
           finalSalesOrderId = orders[0].id;
+          finalSaleOrderNumber = orders[0].saleOrderNumber;
         }
       }
 
-      // STEP 2: Hit the POST API with the specific Order ID to map it to the Dispatch
       await axios.post(
         API.DISPATCH.SO(selectedDispatch.id),
         { 
-          saleOrderNumber: soInput.trim(), 
+          saleOrderNumber: finalSaleOrderNumber, 
           salesOrderId: finalSalesOrderId 
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // On success, close dialog and clear inputs
       setSoInput("");
       setSoSelectionDialogOpen(false);
       setMultipleSoOptions([]);
@@ -760,8 +763,6 @@ export default function DispatchView() {
       
       setTimeout(() => { soInputRef.current?.focus(); }, 100);
     } catch (error: any) {
-      // Handle errors (e.g., 404 Not Found from the GET API)
-      setSoInput("");
       const errMsg = error.response?.data?.message || `Failed to process SO number`;
       showSnackbar(errMsg, "error");
       setTimeout(() => { soInputRef.current?.focus(); }, 100);
