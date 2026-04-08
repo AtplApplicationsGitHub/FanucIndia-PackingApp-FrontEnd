@@ -9,9 +9,10 @@ import AdminUserFormModal, { UserSubmitData } from "@/app/admin/components/dashb
 
 interface AdminManageUsersPanelProps {
   showSnackbar: (msg: string, severity: "success" | "error" | "info" | "warning") => void;
+  usersState: ReturnType<typeof useAdminUsers>;
 }
 
-const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnackbar }) => {
+const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnackbar, usersState }) => {
   const {
     users,
     loading,
@@ -23,16 +24,11 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
     setEditingUser,
     modalOpen,
     setModalOpen,
-  } = useAdminUsers(showSnackbar);
+  } = usersState;
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
-  const onCreate = () => {
-    setEditingUser(null);
-    setModalOpen(true);
-  };
 
   const onEdit = (userId: number) => {
     const user = users.find((u) => u.id === userId) || null;
@@ -40,7 +36,6 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
     setModalOpen(true);
   };
 
-  // Update signature to use UserSubmitData
   const handleSubmit = (data: UserSubmitData, id?: number) => {
     if (id) {
       const updateData = { ...data };
@@ -48,49 +43,12 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({ showSnack
       updateUser(id, updateData);
     } else {
       if (!data.password) return;
-      // We know password is present here because validation in Modal ensures it
       createUser(data as UserSubmitData & { password: string }); 
     }
   };
 
   return (
     <Box p={0} sx={{ width: "100%" }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="flex-end"
-        mb={1}
-      >
-        <Button
-          onClick={onCreate}
-          startIcon={<Plus size={18} />}
-          sx={{
-            bgcolor: (theme) => theme.palette.action.hover,
-            color: (theme) => theme.palette.text.primary,
-            borderRadius: 0,
-            clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-            fontWeight: 600,
-            fontSize: 15,
-            minWidth: 120,
-            height: 40,
-            px: 3,
-            textTransform: "none",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              bgcolor: (theme) => theme.palette.primary.main,
-              color: (theme) => theme.palette.primary.contrastText,
-              boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-              "& .MuiSvgIcon-root, & svg": {
-                color: "#000",
-              },
-            },
-          }}
-        >
-          NEW USER
-        </Button>
-      </Stack>
-
       <AdminUsersTable
         users={users}
         loading={loading}

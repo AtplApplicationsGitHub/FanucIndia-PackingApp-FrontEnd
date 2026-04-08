@@ -12,7 +12,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Button,
   Box,
   Typography,
   InputAdornment,
@@ -24,10 +23,11 @@ import {
   OutlinedInput,
   SelectChangeEvent,
 } from "@mui/material";
-import { Eye, EyeClosed, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Eye, EyeClosed, CheckCircle, XCircle, Loader2, X } from "lucide-react";
 import axios from "axios";
 import { User, UserRole } from "@/app/admin/components/types/admin";
 import { API, fetchWithAuth } from '@/common/lib/endpoints';
+import CommonButton from "@/common/components/CommonButton";
 
 // data sent on form submission
 export interface UserSubmitData {
@@ -304,33 +304,6 @@ const AdminUserFormModal: React.FC<Props> = ({
     (!editingUser && (!password || !allSatisfied || !passwordsMatch)) ||
     (!!password && (!allSatisfied || !passwordsMatch))
 
-  const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover,
-    color: (theme: Theme) => theme.palette.text.primary,
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 120,
-    height: 40,
-    px: 3,
-    textTransform: "none",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main,
-      color: (theme: Theme) => theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-      "& .MuiSvgIcon-root, & svg": {
-        color: "#000",
-      },
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
-      color: (theme: Theme) => theme.palette.text.disabled
-    }
-  };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
@@ -343,8 +316,23 @@ const AdminUserFormModal: React.FC<Props> = ({
         textAlign: 'center',
         pb: 1,
         borderBottom: `1px solid ${theme.palette.divider}`,
+        position: 'relative',
       }}>
         {editingUser ? "Edit User Credentials" : "Create User Credentials"}
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: theme.palette.grey[500],
+            '&:hover': {
+              color: theme.palette.error.main,
+            }
+          }}
+        >
+          <X size={20} />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent>
@@ -585,11 +573,10 @@ const AdminUserFormModal: React.FC<Props> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, pt: 2, justifyContent: 'flex-end', borderTop: `1px solid ${theme.palette.divider}` }}>
-        <Button onClick={handleClose} sx={buttonSx}>CANCEL</Button>
-        <Button onClick={handleSubmit(submitHandler)} disabled={disableSubmit} sx={buttonSx}>
-          {editingUser ? "UPDATE" : "CREATE"}
-        </Button>
+      <DialogActions sx={{ px: 3, pb: 3, pt: 2, justifyContent: 'flex-end' }}>
+        <CommonButton onClick={handleSubmit(submitHandler)} disabled={disableSubmit}>
+          {editingUser ? "UPDATE USER" : "CREATE USER"}
+        </CommonButton>
       </DialogActions>
     </Dialog>
   );

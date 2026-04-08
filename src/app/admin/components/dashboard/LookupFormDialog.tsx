@@ -4,7 +4,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   TextField,
   FormControl,
   FormLabel,
@@ -13,7 +12,11 @@ import {
   Radio,
   Box,
   useTheme,
+  IconButton,
+  MenuItem,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import CommonButton from "@/common/components/CommonButton";
 
 type Props = {
   open: boolean;
@@ -38,29 +41,6 @@ export default function LookupFormDialog({
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null | undefined>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const buttonSx = {
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 100, // Slightly smaller min-width for dialog buttons if needed
-    height: 40,
-    px: 3,
-    textTransform: "none" as const,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    bgcolor: theme.palette.action.hover, 
-    color: theme.palette.text.primary,
-    "&:hover": {
-      bgcolor: theme.palette.primary.main, 
-      color: theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-  };
 
   useEffect(() => {
     if (open) {
@@ -84,53 +64,106 @@ export default function LookupFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle
+       sx={{
+        display: "flex", justifyContent: "center", alignItems: "center",
+        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+        color: "error.main",
+        pb: 1,
+        position: "relative",
+      }}
+      >
+        {title}
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent dividers>
         <Box display="flex" flexDirection="column" gap={2} pt={1}>
-          {fields.map((key, index) => {
-            const isBoolean = key === "acceptBulkData" || key === "remarksRequired"; 
-            
-            if (isBoolean) {
-              return (
-                <FormControl key={key}>
-                  <FormLabel sx={{ textTransform: "capitalize" }}>
-                    {key.replace(/([A-Z])/g, " $1")}
-                  </FormLabel>
-                  <RadioGroup
-                    row
+          {(() => {
+            const rendered: React.ReactNode[] = [];
+            for (let i = 0; i < fields.length; i++) {
+              const key = fields[i];
+              const isBoolean = key === "acceptBulkData" || key === "remarksRequired";
+              const nextKey = fields[i + 1];
+              const nextIsBoolean = nextKey === "acceptBulkData" || nextKey === "remarksRequired";
+
+              if (isBoolean && nextIsBoolean) {
+                rendered.push(
+                  <Box key={`${key}-${nextKey}`} display="flex" gap={2}>
+                    <TextField
+                      select
+                      fullWidth
+                      label={key.replace(/([A-Z])/g, " $1")}
+                      variant="outlined"
+                      value={String(formData[key] ?? "false")}
+                      onChange={(e) => handleChange(key, e.target.value === "true")}
+                    >
+                      <MenuItem value="true">Yes</MenuItem>
+                      <MenuItem value="false">No</MenuItem>
+                    </TextField>
+                    <TextField
+                      select
+                      fullWidth
+                      label={nextKey.replace(/([A-Z])/g, " $1")}
+                      variant="outlined"
+                      value={String(formData[nextKey] ?? "false")}
+                      onChange={(e) => handleChange(nextKey, e.target.value === "true")}
+                    >
+                      <MenuItem value="true">Yes</MenuItem>
+                      <MenuItem value="false">No</MenuItem>
+                    </TextField>
+                  </Box>
+                );
+                i++; // skip next since we handled it
+              } else if (isBoolean) {
+                rendered.push(
+                  <TextField
+                    key={key}
+                    select
+                    fullWidth
+                    label={key.replace(/([A-Z])/g, " $1")}
+                    variant="outlined"
                     value={String(formData[key] ?? "false")}
                     onChange={(e) => handleChange(key, e.target.value === "true")}
                   >
-                    <FormControlLabel value="true" control={<Radio />} label="Yes" />
-                    <FormControlLabel value="false" control={<Radio />} label="No" />
-                  </RadioGroup>
-                </FormControl>
-              );
+                    <MenuItem value="true">Yes</MenuItem>
+                    <MenuItem value="false">No</MenuItem>
+                  </TextField>
+                );
+              } else {
+                rendered.push(
+                  <TextField
+                    key={key}
+                    inputRef={i === 0 ? inputRef : undefined}
+                    margin="dense"
+                    label={key.replace(/([A-Z])/g, " $1")}
+                    value={formData[key] ?? ""}
+                    onChange={(e) => handleChange(key, e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    sx={{ textTransform: "capitalize" }}
+                  />
+                );
+              }
             }
-
-            return (
-              <TextField
-                key={key}
-                inputRef={index === 0 ? inputRef : undefined}
-                margin="dense"
-                label={key.replace(/([A-Z])/g, " $1")}
-                value={formData[key] ?? ""}
-                onChange={(e) => handleChange(key, e.target.value)}
-                fullWidth
-                variant="outlined"
-                sx={{ textTransform: "capitalize" }}
-              />
-            );
-          })}
+            return rendered;
+          })()}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={onClose} sx={buttonSx}>
-          CANCEL
-        </Button>
-        <Button onClick={handleSave} sx={buttonSx} disabled={loading}>
+      <DialogActions sx={{ px: 3, pb: 2,display: "flex", justifyContent: "flex-end" }}>
+        <CommonButton onClick={handleSave} disabled={loading}>
           {loading ? "SAVING..." : "SAVE"}
-        </Button>
+        </CommonButton>
       </DialogActions>
     </Dialog>
   );

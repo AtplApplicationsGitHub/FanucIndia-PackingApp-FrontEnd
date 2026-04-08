@@ -57,12 +57,12 @@ export default function ConfirmDeleteDialog({
       </DialogTitle>
       <Divider />
       <DialogContent>
-        <DialogContentText id="confirm-dialog-description">
+        <DialogContentText id="confirm-dialog-description" sx={{ textAlign: "center" }}>
           {description}
         </DialogContentText>
       </DialogContent>
       <Divider />
-      <DialogActions sx={{ gap: 0.2, px: 3, py: 1.5 }}>
+      <DialogActions sx={{ gap: 1.5, px: 3, py: 2, justifyContent: "center" }}>
         <CommonButton onClick={onCancel} disabled={loading}>
           CANCEL
         </CommonButton>
