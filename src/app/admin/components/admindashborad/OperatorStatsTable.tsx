@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
+import dayjs from "dayjs";
 import { useOperatorStats, OrderDetail } from "../hooks/useOperatorStats";
 
 export default function OperatorStatsTable({
@@ -71,9 +72,18 @@ export default function OperatorStatsTable({
   return (
     <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
       <CardContent sx={{ height: "100%", p: 0 }}>
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: 1,
+            borderColor: "divider",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
-            Operator Productivity
+            Operator Productivity ({dayjs(selectedDate).format("D MMM YYYY")})
           </h2>
         </Box>
 
@@ -205,14 +215,21 @@ export default function OperatorStatsTable({
                   .map((row) => (
                   <TableRow key={row.operatorEmail} hover>
                     <TableCell sx={{ fontWeight: 500 }}>
-                      {row.operatorEmail}
+                      <Box>
+                        <Typography variant="body2" fontWeight="bold">
+                          {row.operatorName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {row.operatorEmail}
+                        </Typography>
+                      </Box>
                     </TableCell>
 
                     <TableCell align="center">
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorEmail} - Issue Assigned`,
+                            `${row.operatorName} - Issue Assigned`,
                             row.issueAssigned || [],
                           )
                         }
@@ -226,7 +243,7 @@ export default function OperatorStatsTable({
                           !row.issueAssigned || row.issueAssigned.length === 0
                         }
                       >
-                        {row.issueAssigned?.length || 0}
+                        {row.issueAssignedCount}
                       </Button>
                     </TableCell>
 
@@ -234,7 +251,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorEmail} - Issue Completed`,
+                            `${row.operatorName} - Issue Completed`,
                             row.issueCompleted || [],
                           )
                         }
@@ -248,7 +265,7 @@ export default function OperatorStatsTable({
                           !row.issueCompleted || row.issueCompleted.length === 0
                         }
                       >
-                        {row.issueCompleted?.length || 0}
+                        {row.issueCompletedCount}
                       </Button>
                     </TableCell>
 
@@ -256,7 +273,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorEmail} - Packing Assigned`,
+                            `${row.operatorName} - Packing Assigned`,
                             row.packingAssigned || [],
                           )
                         }
@@ -271,7 +288,7 @@ export default function OperatorStatsTable({
                           row.packingAssigned.length === 0
                         }
                       >
-                        {row.packingAssigned?.length || 0}
+                        {row.packingAssignedCount}
                       </Button>
                     </TableCell>
 
@@ -279,7 +296,7 @@ export default function OperatorStatsTable({
                       <Button
                         onClick={() =>
                           handleOpenDialog(
-                            `${row.operatorEmail} - Packing Completed`,
+                            `${row.operatorName} - Packing Completed`,
                             row.packingCompleted || [],
                           )
                         }
@@ -294,7 +311,7 @@ export default function OperatorStatsTable({
                           row.packingCompleted.length === 0
                         }
                       >
-                        {row.packingCompleted?.length || 0}
+                        {row.packingCompletedCount}
                       </Button>
                     </TableCell>
                   </TableRow>

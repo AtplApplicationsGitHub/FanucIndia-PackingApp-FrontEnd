@@ -14,6 +14,10 @@ export interface OperatorStat {
   issueCompleted: OrderDetail[];   
   packingAssigned: OrderDetail[];  
   packingCompleted: OrderDetail[]; 
+  issueAssignedCount: number;
+  issueCompletedCount: number;
+  packingAssignedCount: number;
+  packingCompletedCount: number;
 }
 
 export function useOperatorStats(date?: string) {
