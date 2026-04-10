@@ -700,7 +700,6 @@ export default function MaterialDataPage() {
               onSubmit={handleProcess}
               saleOrderNumber={so}
               onFileCreated={() => {
-                setUploadNotice("File metadata saved");
                 refetch();
               }}
               disabled={isOrderFullyComplete}

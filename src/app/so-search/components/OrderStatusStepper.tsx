@@ -26,8 +26,10 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
+// FIX 1: Ignore MUI's default strict sequential active/completed logic. 
+// We will manually pass custom completion booleans to control the icon color.
 const ColorlibStepIconRoot = styled('div')<{
-  ownerState: { completed?: boolean; active?: boolean; skipped?: boolean };
+  ownerState: { completed?: boolean; active?: boolean };
 }>(({ theme, ownerState }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ccc',
   zIndex: 1,
@@ -38,28 +40,19 @@ const ColorlibStepIconRoot = styled('div')<{
   borderRadius: '50%',
   justifyContent: 'center',
   alignItems: 'center',
-  ...(ownerState.active && {
+  ...((ownerState.active || ownerState.completed) && {
     backgroundImage:
       'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)',
-    boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
+    boxShadow: ownerState.active ? '0 4px 10px 0 rgba(0,0,0,.25)' : 'none',
     color: '#1F2933', 
-  }),
-  ...(ownerState.completed && {
-    backgroundImage:
-      'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)',
-     color: '#1F2933', 
-  }),
-  ...(ownerState.skipped && {
-    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#eaeaf0',
-    color: theme.palette.mode === 'dark' ? theme.palette.grey[500] : '#bdbdbd',
   }),
 }));
 
-function ColorlibStepIcon(props: StepIconProps & { skipped?: boolean }) {
-  const { active, completed, className, skipped } = props;
+function ColorlibStepIcon(props: StepIconProps & { isCompletedCustom?: boolean, isActiveCustom?: boolean }) {
+  const { className, isCompletedCustom, isActiveCustom } = props;
 
   return (
-    <ColorlibStepIconRoot ownerState={{ completed, active, skipped }} className={className}>
+    <ColorlibStepIconRoot ownerState={{ completed: isCompletedCustom, active: isActiveCustom }} className={className}>
       {String(props.icon)}
     </ColorlibStepIconRoot>
   );
@@ -133,10 +126,7 @@ function calculateTimeTaken(start: string | null, end: string | null): string | 
     
     let totalSeconds = differenceInSeconds(endDate, startDate);
     
-    // FIX 1: Handle concurrent database inserts when stages are "skipped"
     if (totalSeconds < 0) {
-      // If the difference is extremely small (e.g. within 60 seconds of each other)
-      // it means they were processed together asynchronously. Just count it as instant (0s).
       if (totalSeconds >= -60) {
         totalSeconds = 0;
       } else {
@@ -157,6 +147,11 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
     return STEP_ORDER.indexOf(a.status) - STEP_ORDER.indexOf(b.status);
   });
 
+  // FIX 2: Pre-calculate chronological steps for accurate out-of-sequence time tracking
+  const chronologicalSteps = [...stepsData]
+    .filter(s => s.createdDateTime)
+    .sort((a, b) => new Date(a.createdDateTime!).getTime() - new Date(b.createdDateTime!).getTime());
+
   let activeStep = 0;
   for (let i = sortedSteps.length - 1; i >= 0; i--) {
     if (sortedSteps[i].createdDateTime) {
@@ -175,41 +170,39 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
         {sortedSteps.map((step, index) => {
           
           let timeTaken = null;
-          if (index > 0) {
-            const currentStepTime = step.createdDateTime;
-            
-            // FIX 2: Look backwards to find the last step that ACTUALLY HAS a timestamp.
-            // This prevents the calculation from breaking if the immediate step was skipped.
-            let prevStepTime: string | null = null;
-            for (let j = index - 1; j >= 0; j--) {
-              if (sortedSteps[j].createdDateTime) {
-                prevStepTime = sortedSteps[j].createdDateTime;
-                break;
-              }
+          const hasTimestamp = !!step.createdDateTime;
+          
+          // FIX 3: Calculate time taken based strictly on actual chronological event history
+          // This prevents negative calculations if a prior step is completed out of sequence later
+          if (index > 0 && hasTimestamp) {
+            const myIndex = chronologicalSteps.findIndex(s => s.id === step.id);
+            if (myIndex > 0) {
+              const prevStepTime = chronologicalSteps[myIndex - 1].createdDateTime;
+              timeTaken = calculateTimeTaken(prevStepTime, step.createdDateTime);
             }
-            
-            timeTaken = calculateTimeTaken(prevStepTime, currentStepTime);
           }
 
-          const isSkipped = !step.createdDateTime && index < activeStep;
-
-          // Check specifically for "To be Issued" to display its created time
           const isToBeIssued = step.status === "To be Issued";
           const createdTimeFormatted = isToBeIssued && step.createdDateTime 
             ? format(new Date(step.createdDateTime), "dd MMM yyyy, hh:mm a") 
             : null;
 
+          const isActive = index === activeStep;
+
           return (
             <Step key={step.id}>
               <StepLabel 
                 StepIconComponent={(props) => (
-                  <ColorlibStepIcon {...props} skipped={isSkipped} />
+                  <ColorlibStepIcon 
+                    {...props} 
+                    isCompletedCustom={hasTimestamp} 
+                    isActiveCustom={isActive} 
+                  />
                 )}
               >
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 500 }}>{step.status}</Typography>
                   
-                  {/* Display Created Time for 'To be Issued' */}
                   {createdTimeFormatted && (
                     <Typography variant="caption" color="text.secondary" display="block">
                       {createdTimeFormatted}
@@ -218,13 +211,14 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
 
                   {index > 0 && ( 
                     <>
-                      {step.createdDateTime ? (
+                      {hasTimestamp ? (
                         <Typography variant="caption" color="text.secondary" display="block">
-                          Time Taken: {timeTaken || "..."}
+                          Time Taken: {timeTaken || "0s"}
                         </Typography>
                       ) : (
-                        <Typography variant="caption" color={isSkipped ? "text.disabled" : "text.secondary"} display="block">
-                          {isSkipped ? "Skipped" : "Awaiting Completion"}
+                        // FIX 4: Removed the misleading 'Skipped' label logic. Unstamped steps are just 'Pending'.
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Pending
                         </Typography>
                       )}
                     </>

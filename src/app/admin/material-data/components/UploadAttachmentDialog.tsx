@@ -21,6 +21,8 @@ import {
   useTheme,
   alpha,
   Divider,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -67,6 +69,15 @@ export default function UploadAttachmentDialog({
   const theme = useTheme();
   const [rows, setRows] = useState<Row[]>([]);
   const [loadingList, setLoadingList] = useState(false);
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+
+  const handleSnackbarClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') return;
+    setSnackbarOpen(false);
+  };
 
   useEffect(() => {
     if (!open) onAttachedCountChange?.(0);
@@ -156,6 +167,9 @@ export default function UploadAttachmentDialog({
           })
         );
         onUploaded?.();
+        setSnackbarMessage("Files uploaded successfully");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Upload failed";
         setRows((prev) =>
@@ -209,6 +223,9 @@ export default function UploadAttachmentDialog({
         await deleteMaterialFile(r.dbId);
         setRows((prev) => prev.filter((x) => x.id !== r.id));
         onUploaded?.();
+        setSnackbarMessage("File deleted successfully");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       } catch {
         return;
       }
@@ -239,6 +256,9 @@ export default function UploadAttachmentDialog({
         )
       );
       onUploaded?.();
+      setSnackbarMessage("File description saved successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } finally {
       setRows((prev) =>
         prev.map((x) => (x.id === r.id ? { ...x, saving: false } : x))
@@ -521,6 +541,20 @@ export default function UploadAttachmentDialog({
           </Table>
         </TableContainer>
       </DialogContent>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }

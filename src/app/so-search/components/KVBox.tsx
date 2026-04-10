@@ -36,7 +36,12 @@ export const KVBox = ({
     <Typography
       variant="body1"
       fontWeight={600}
-      sx={{ whiteSpace: "pre-wrap", ...valueSx }}
+      sx={{ 
+        whiteSpace: "pre-wrap", 
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        ...valueSx 
+      }}
     >
       {children || value || "—"}
     </Typography>
