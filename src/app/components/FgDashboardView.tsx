@@ -25,6 +25,8 @@ import {
   Select,
   MenuItem,
   Button,
+  DialogTitle,
+  Divider
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -474,7 +476,7 @@ export default function FgDashboardView() {
                 setPage(0);
               }}
               format="DD-MM-YYYY"
-              minDate={dayjs().subtract(3, 'day')}
+              minDate={dayjs().subtract(3, "day")}
               slotProps={{
                 field: {
                   clearable: true,
@@ -720,9 +722,12 @@ export default function FgDashboardView() {
                               backgroundColor: row.payment
                                 ? alpha(theme.palette.success.main, 0.1)
                                 : alpha(theme.palette.error.main, 0.1),
-                              color: theme.palette.mode === "dark" 
-                                ? "#FFFFFF" 
-                                : (row.payment ? theme.palette.success.dark : theme.palette.error.main),
+                              color:
+                                theme.palette.mode === "dark"
+                                  ? "#FFFFFF"
+                                  : row.payment
+                                    ? theme.palette.success.dark
+                                    : theme.palette.error.main,
                               fontSize: "0.75rem",
                               fontWeight: 600,
                               minWidth: "50px",
@@ -838,7 +843,7 @@ export default function FgDashboardView() {
                         </TableCell>
                         {/* SALES USER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                            {row.createdByEmail || "-"}
+                          {row.createdByEmail || "-"}
                         </TableCell>
                       </TableRow>
                     );
@@ -899,7 +904,7 @@ export default function FgDashboardView() {
                 boxShadow: 6,
               }}
             >
-              <Box
+              {/* <Box
                 sx={{
                   backgroundColor: "background.paper",
                   px: 3,
@@ -911,26 +916,32 @@ export default function FgDashboardView() {
                   borderBottom: "1px solid",
                   borderColor: "divider",
                 }}
-              >
-                <Typography
-                  fontWeight={700}
-                  fontSize="1rem"
+              > */}
+                <DialogTitle
                   sx={{
-                    color: "#d32f2f",
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontWeight: 700,
+                    fontSize: "20px",
+                    letterSpacing: 0.5,
+                    color: "error.main",
+                    pb: 1,
+                    position: "relative",
+                    textTransform: "uppercase"
                   }}
                 >
                   {remarksPopup.title}
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => setRemarksPopup(null)}
-                  sx={{ position: "absolute", right: 12 }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Box>
+                  <IconButton
+                    size="small"
+                    onClick={() => setRemarksPopup(null)}
+                    sx={{ position: "absolute", right: 12 }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </DialogTitle>
+                <Divider />
+              {/* </Box> */}
               <Box sx={{ px: 3, py: 3, backgroundColor: "background.paper" }}>
                 <Paper
                   variant="outlined"
@@ -941,7 +952,15 @@ export default function FgDashboardView() {
                     backgroundColor: "action.hover",
                   }}
                 >
-                  <Typography fontSize="0.9rem" color="text.primary">
+                  <Typography
+                    fontSize="0.9rem"
+                    color="text.primary"
+                    sx={{
+                      wordBreak: "break-word", // <--- ADD THIS
+                      overflowWrap: "break-word", // <--- ADD THIS
+                      whiteSpace: "pre-wrap", // <--- ADD THIS
+                    }}
+                  >
                     {remarksPopup.content}
                   </Typography>
                 </Paper>
