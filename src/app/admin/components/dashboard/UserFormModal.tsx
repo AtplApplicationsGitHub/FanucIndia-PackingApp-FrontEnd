@@ -18,12 +18,13 @@ import {
   IconButton,
   useTheme,
   Theme,
+  Divider,
   Checkbox,
   ListItemText,
   OutlinedInput,
   SelectChangeEvent,
 } from "@mui/material";
-import { Eye, EyeClosed, CheckCircle, XCircle, Loader2, X } from "lucide-react";
+import { Eye, EyeClosed, CheckCircle, XCircle, Loader2, X as CloseIcon } from "lucide-react";
 import axios from "axios";
 import { User, UserRole } from "@/app/admin/components/types/admin";
 import { API, fetchWithAuth } from '@/common/lib/endpoints';
@@ -314,42 +315,31 @@ const AdminUserFormModal: React.FC<Props> = ({
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       {/* Updated Title Color to Fanuc Red */}
       <DialogTitle sx={{
-        color: theme.palette.secondary.main,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        fontSize: 20,
-        textAlign: 'center',
+        display: "flex", justifyContent: "center", alignItems: "center",
+        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+        color: "error.main",
         pb: 1,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        position: 'relative',
+        position: "relative",
+        textTransform: "uppercase",
       }}>
         {editingUser ? "Edit User Credentials" : "Create User Credentials"}
         <IconButton
           onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-            '&:hover': {
-              color: theme.palette.error.main,
-            }
-          }}
+          size="small" sx={{ position: "absolute", right: 12 }}
         >
-          <X size={20} />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
+      <Divider />
 
       <DialogContent>
         <Box
           component="form"
-          mt={2}
           display="flex"
           flexDirection="column"
           gap={2}
           onSubmit={handleSubmit(submitHandler)}
         >
-          {/* ... existing TextFields for Name, Email, Role, etc. ... */}
           <TextField
             label="Name"
             fullWidth
@@ -577,8 +567,8 @@ const AdminUserFormModal: React.FC<Props> = ({
           )}
         </Box>
       </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 3, pt: 2, justifyContent: 'flex-end' }}>
+      <Divider />
+      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
         <CommonButton onClick={handleSubmit(submitHandler)} disabled={disableSubmit}>
           {editingUser ? "UPDATE USER" : "CREATE USER"}
         </CommonButton>

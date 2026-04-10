@@ -5,11 +5,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Box,
   useTheme,
   IconButton,
@@ -63,32 +58,28 @@ export default function LookupFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle
-       sx={{
-        display: "flex", justifyContent: "center", alignItems: "center",
-        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-        color: "error.main",
-        pb: 1,
-        position: "relative",
-      }}
+        sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}
       >
         {title}
         <IconButton
           aria-label="close"
           onClick={onClose}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
+          size="small"
+          sx={{ position: "absolute", right: 12 }}
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        <Box display="flex" flexDirection="column" gap={2} pt={1}>
+        <Box display="flex" flexDirection="column" gap={1}>
           {(() => {
             const rendered: React.ReactNode[] = [];
             for (let i = 0; i < fields.length; i++) {
@@ -103,6 +94,7 @@ export default function LookupFormDialog({
                     <TextField
                       select
                       fullWidth
+                      size="small"
                       label={key.replace(/([A-Z])/g, " $1")}
                       variant="outlined"
                       value={String(formData[key] ?? "false")}
@@ -114,6 +106,7 @@ export default function LookupFormDialog({
                     <TextField
                       select
                       fullWidth
+                      size="small"
                       label={nextKey.replace(/([A-Z])/g, " $1")}
                       variant="outlined"
                       value={String(formData[nextKey] ?? "false")}
@@ -131,6 +124,7 @@ export default function LookupFormDialog({
                     key={key}
                     select
                     fullWidth
+                    size="small"
                     label={key.replace(/([A-Z])/g, " $1")}
                     variant="outlined"
                     value={String(formData[key] ?? "false")}
@@ -146,6 +140,7 @@ export default function LookupFormDialog({
                     key={key}
                     inputRef={i === 0 ? inputRef : undefined}
                     margin="dense"
+                    size="small"
                     label={key.replace(/([A-Z])/g, " $1")}
                     value={formData[key] ?? ""}
                     onChange={(e) => handleChange(key, e.target.value)}
@@ -160,7 +155,7 @@ export default function LookupFormDialog({
           })()}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2,display: "flex", justifyContent: "flex-end" }}>
+      <DialogActions sx={{ px: 2, pb: 1, gap: 1 }}>
         <CommonButton onClick={handleSave} disabled={loading}>
           {loading ? "SAVING..." : "SAVE"}
         </CommonButton>

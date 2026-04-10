@@ -121,13 +121,14 @@ export default function ErpUploadDialog({ open, onClose, onUploadSuccess, saleOr
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
-      <DialogTitle sx={{
-        display: "flex", justifyContent: "center", alignItems: "center",
-        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-        color: "error.main",
-        pb: 1,
-        position: "relative",
-      }}>
+      <DialogTitle
+        sx={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}>
         UPLOAD MATERIAL DATA
         <IconButton onClick={handleClose} size="small" sx={{ position: "absolute", right: 12 }} >
           <CloseIcon fontSize="small" />

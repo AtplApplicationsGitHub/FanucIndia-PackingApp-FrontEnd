@@ -236,6 +236,7 @@ export default function AttachmentDialogs({
         <DialogContent dividers>
           <TableContainer component={Paper}>
             <Table
+              size="small"
               sx={{
                 "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                   backgroundColor: lightYellow,

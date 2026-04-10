@@ -64,7 +64,7 @@ const LookupCrudTable: React.FC<Props> = ({
   return (
     <Paper sx={{ width: "100%", overflow: "hidden", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
       <TableContainer>
-        <Table stickyHeader size="medium">
+        <Table stickyHeader size="small">
           <TableHead>
             <TableRow>
               {keys.map((col) => (

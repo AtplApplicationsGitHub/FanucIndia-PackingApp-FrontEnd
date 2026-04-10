@@ -14,6 +14,8 @@ import {
   PlusCircle,
   Plus,
   RefreshCcw,
+  Download,
+  Upload,
 } from "lucide-react";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
@@ -315,39 +317,6 @@ export default function AdminMasterLookupPanel() {
       e.target.value = "";
     }
   };
-
-  const button = {
-    borderRadius: 0,
-    clipPath:
-      "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 120,
-    height: 40,
-    px: 3,
-    textTransform: "none" as const,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    bgcolor: theme.palette.action.hover,
-    color: theme.palette.text.primary,
-    "&:hover": {
-      bgcolor: theme.palette.primary.main,
-      color: theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-  };
-
-  const commonBtnSx = {
-    height: 40,
-    fontSize: 15,
-    minWidth: 120,
-    px: 3,
-  };
-
   return (
     <Box
       sx={{
@@ -462,13 +431,12 @@ export default function AdminMasterLookupPanel() {
           >
             <InputBase
               sx={{ ml: 1, flex: 1 }}
-              placeholder={`Search ${
-                getSearchKey() === "erpCode"
-                  ? "ERP Code"
-                  : getSearchKey()
-                      .replace(/([A-Z])/g, " $1")
-                      .toLowerCase()
-              }...`}
+              placeholder={`Search ${getSearchKey() === "erpCode"
+                ? "ERP Code"
+                : getSearchKey()
+                  .replace(/([A-Z])/g, " $1")
+                  .toLowerCase()
+                }...`}
               inputProps={{ "aria-label": "search" }}
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
@@ -490,12 +458,12 @@ export default function AdminMasterLookupPanel() {
             </IconButton>
           </Paper>
           <CommonButton
-            startIcon={<CloudDownload />}
+            startIcon={<CloudDownload size={18} />}
             onClick={handleDownloadBulk}
           >
             DOWNLOAD TEMPLATE
           </CommonButton>
-          <CommonButton component="label" startIcon={<CloudUpload />}>
+          <CommonButton component="label"  startIcon={<CloudUpload size={18} />}>
             UPLOAD BULK
             <input
               type="file"
@@ -505,10 +473,10 @@ export default function AdminMasterLookupPanel() {
               onChange={handleUploadBulk}
             />
           </CommonButton>
-          <CommonButton startIcon={<PlusCircle />} onClick={openAddDialog}>
+          <CommonButton startIcon={<PlusCircle size={18} />} onClick={openAddDialog}>
             ADD NEW
           </CommonButton>
-          <CommonButton startIcon={<RefreshCcw />} onClick={fetchData}>
+          <CommonButton startIcon={<RefreshCcw size={18} />} onClick={fetchData}>
             REFRESH
           </CommonButton>
         </Box>
@@ -562,7 +530,7 @@ export default function AdminMasterLookupPanel() {
             onConfirm={handleConfirmDelete}
             onCancel={() => setDeleteDialogOpen(false)}
             loading={actionLoading}
-            title="Delete Confirmation"
+            title="DELETE CONFIRMATION"
             description="Are you sure you want to delete this item?"
           />
         </>

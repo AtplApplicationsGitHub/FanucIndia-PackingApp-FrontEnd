@@ -24,7 +24,7 @@ export default function ConfirmDeleteDialog({
   onConfirm,
   onCancel,
   loading = false,
-  title = "Delete Confirmation",
+  title = "DELETE CONFIRMATION",
   description = "Are you sure you want to proceed? This action may not be reversible.",
   confirmText = "CONFIRM",
   confirmColor = "primary",
@@ -43,14 +43,11 @@ export default function ConfirmDeleteDialog({
       <DialogTitle
         id="confirm-dialog-title"
         sx={{
-          fontWeight: 700,
-          fontSize: 20,
-          textAlign: "center",
-          letterSpacing: 0,
-          color: "secondary.main",
-          textTransform: "uppercase",
-          py: 1,
-          px: 3,
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
         }}
       >
         {title}
@@ -62,7 +59,7 @@ export default function ConfirmDeleteDialog({
         </DialogContentText>
       </DialogContent>
       <Divider />
-      <DialogActions sx={{ gap: 1.5, px: 3, py: 2, justifyContent: "center" }}>
+      <DialogActions sx={{ px: 3, pb: 2}}>
         <CommonButton onClick={onCancel} disabled={loading}>
           CANCEL
         </CommonButton>
