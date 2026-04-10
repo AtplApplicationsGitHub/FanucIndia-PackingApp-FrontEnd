@@ -18,7 +18,8 @@ import {
   TextField,
   IconButton,
   Button,
-  TablePagination, // <-- Added TablePagination
+  TablePagination,
+  Avatar,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -51,7 +52,9 @@ export default function OperatorStatsTable({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -117,14 +120,15 @@ export default function OperatorStatsTable({
               <TableHead>
                 <TableRow sx={{ bgcolor: "background.paper" }}>
                   <TableCell
-                    rowSpan={2}
                     sx={{
                       fontWeight: 800,
                       textTransform: "uppercase",
                       fontSize: "0.85rem",
                       letterSpacing: 0.5,
                       color: (theme) =>
-                        theme.palette.mode === "dark" ? "#FF6B6B" : "#1F2933",
+                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
+                      borderBottom: 1,
+                      borderColor: "divider",
                     }}
                   >
                     Operators
@@ -138,6 +142,8 @@ export default function OperatorStatsTable({
                       letterSpacing: 0.5,
                       borderBottom: 1,
                       borderColor: "divider",
+                      color: (theme) =>
+                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
                     }}
                     colSpan={2}
                   >
@@ -152,21 +158,26 @@ export default function OperatorStatsTable({
                       letterSpacing: 0.5,
                       borderBottom: 1,
                       borderColor: "divider",
+                      color: (theme) =>
+                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
                     }}
                     colSpan={2}
                   >
                     Packing Stage
                   </TableCell>
                 </TableRow>
-                <TableRow>
+                <TableRow sx={{ bgcolor: "background.paper" }}>
+                  <TableCell sx={{ borderBottom: 1, borderColor: "divider" }} />
                   <TableCell
                     align="center"
                     sx={{
                       fontSize: "0.75rem",
-                      fontWeight: 700,
-                      color: "text.secondary",
+                      fontWeight: 800,
+                      color: "#D97706",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      borderBottom: 1,
+                      borderColor: "divider",
                     }}
                   >
                     Assigned
@@ -175,10 +186,12 @@ export default function OperatorStatsTable({
                     align="center"
                     sx={{
                       fontSize: "0.75rem",
-                      fontWeight: 700,
-                      color: "text.secondary",
+                      fontWeight: 800,
+                      color: "success.main",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      borderBottom: 1,
+                      borderColor: "divider",
                     }}
                   >
                     Completed
@@ -187,10 +200,12 @@ export default function OperatorStatsTable({
                     align="center"
                     sx={{
                       fontSize: "0.75rem",
-                      fontWeight: 700,
-                      color: "text.secondary",
+                      fontWeight: 800,
+                      color: "#D97706",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      borderBottom: 1,
+                      borderColor: "divider",
                     }}
                   >
                     Assigned
@@ -199,10 +214,12 @@ export default function OperatorStatsTable({
                     align="center"
                     sx={{
                       fontSize: "0.75rem",
-                      fontWeight: 700,
-                      color: "text.secondary",
+                      fontWeight: 800,
+                      color: "success.main",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      borderBottom: 1,
+                      borderColor: "divider",
                     }}
                   >
                     Completed
@@ -213,109 +230,141 @@ export default function OperatorStatsTable({
                 {stats
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
-                  <TableRow key={row.operatorEmail} hover>
-                    <TableCell sx={{ fontWeight: 500 }}>
-                      <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          {row.operatorName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {row.operatorEmail}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-
-                    <TableCell align="center">
-                      <Button
-                        onClick={() =>
-                          handleOpenDialog(
-                            `${row.operatorName} - Issue Assigned`,
-                            row.issueAssigned || [],
-                          )
-                        }
-                        sx={{
-                          minWidth: 0,
-                          p: 0.5,
-                          fontWeight: "bold",
-                          color: "#D97706",
-                        }}
-                        disabled={
-                          !row.issueAssigned || row.issueAssigned.length === 0
-                        }
+                    <TableRow key={row.operatorEmail} hover>
+                      <TableCell
+                        sx={{ fontWeight: 500, borderColor: "divider" }}
                       >
-                        {row.issueAssignedCount}
-                      </Button>
-                    </TableCell>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "0.85rem",
+                              fontWeight: "bold",
+                              bgcolor: (theme) =>
+                                theme.palette.mode === "dark"
+                                  ? "#0EA5E9"
+                                  : "#BAE6FD",
+                              color: (theme) =>
+                                theme.palette.mode === "dark"
+                                  ? "#FFFFFF"
+                                  : "#0369A1",
+                            }}
+                          >
+                            {row.operatorName.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {row.operatorName}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {row.operatorEmail}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
 
-                    <TableCell align="center">
-                      <Button
-                        onClick={() =>
-                          handleOpenDialog(
-                            `${row.operatorName} - Issue Completed`,
-                            row.issueCompleted || [],
-                          )
-                        }
-                        sx={{
-                          minWidth: 0,
-                          p: 0.5,
-                          fontWeight: "bold",
-                          color: "success.main",
-                        }}
-                        disabled={
-                          !row.issueCompleted || row.issueCompleted.length === 0
-                        }
-                      >
-                        {row.issueCompletedCount}
-                      </Button>
-                    </TableCell>
+                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                        <Button
+                          onClick={() =>
+                            handleOpenDialog(
+                              `${row.operatorName} - ISSUED ASSIGNED`,
+                              row.issueAssigned || [],
+                            )
+                          }
+                          sx={{
+                            minWidth: 0,
+                            p: 0.5,
+                            fontWeight: "bold",
+                            color: "#D97706",
+                          }}
+                          disabled={
+                            !row.issueAssigned || row.issueAssigned.length === 0
+                          }
+                        >
+                          {row.issueAssignedCount}
+                        </Button>
+                      </TableCell>
 
-                    <TableCell align="center">
-                      <Button
-                        onClick={() =>
-                          handleOpenDialog(
-                            `${row.operatorName} - Packing Assigned`,
-                            row.packingAssigned || [],
-                          )
-                        }
-                        sx={{
-                          minWidth: 0,
-                          p: 0.5,
-                          fontWeight: "bold",
-                          color: "#D97706",
-                        }}
-                        disabled={
-                          !row.packingAssigned ||
-                          row.packingAssigned.length === 0
-                        }
-                      >
-                        {row.packingAssignedCount}
-                      </Button>
-                    </TableCell>
+                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                        <Button
+                          onClick={() =>
+                            handleOpenDialog(
+                              `${row.operatorName} -  Issue Completed`,
+                              row.issueCompleted || [],
+                            )
+                          }
+                          sx={{
+                            minWidth: 0,
+                            p: 0.5,
+                            fontWeight: "bold",
+                            color: "success.main",
+                          }}
+                          disabled={
+                            !row.issueCompleted ||
+                            row.issueCompleted.length === 0
+                          }
+                        >
+                          {row.issueCompletedCount}
+                        </Button>
+                      </TableCell>
 
-                    <TableCell align="center">
-                      <Button
-                        onClick={() =>
-                          handleOpenDialog(
-                            `${row.operatorName} - Packing Completed`,
-                            row.packingCompleted || [],
-                          )
-                        }
-                        sx={{
-                          minWidth: 0,
-                          p: 0.5,
-                          fontWeight: "bold",
-                          color: "success.main",
-                        }}
-                        disabled={
-                          !row.packingCompleted ||
-                          row.packingCompleted.length === 0
-                        }
-                      >
-                        {row.packingCompletedCount}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                        <Button
+                          onClick={() =>
+                            handleOpenDialog(
+                              `${row.operatorName} - PACKING ASSIGNED`,
+                              row.packingAssigned || [],
+                            )
+                          }
+                          sx={{
+                            minWidth: 0,
+                            p: 0.5,
+                            fontWeight: "bold",
+                            color: "#D97706",
+                          }}
+                          disabled={
+                            !row.packingAssigned ||
+                            row.packingAssigned.length === 0
+                          }
+                        >
+                          {row.packingAssignedCount}
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                        <Button
+                          onClick={() =>
+                            handleOpenDialog(
+                              `${row.operatorName} - Packing Completed`,
+                              row.packingCompleted || [],
+                            )
+                          }
+                          sx={{
+                            minWidth: 0,
+                            p: 0.5,
+                            fontWeight: "bold",
+                            color: "success.main",
+                          }}
+                          disabled={
+                            !row.packingCompleted ||
+                            row.packingCompleted.length === 0
+                          }
+                        >
+                          {row.packingCompletedCount}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </Box>
@@ -353,7 +402,15 @@ export default function OperatorStatsTable({
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" component="div" fontWeight="bold">
+          <Typography
+            variant="h6"
+            component="div"
+            fontWeight="bold"
+            sx={{
+              color: (theme) =>
+                theme.palette.mode === "dark" ? "#FF6B6B" : "#D00000",
+            }}
+          >
             {dialogTitle}
           </Typography>
           <IconButton onClick={() => setDialogOpen(false)} size="small">
