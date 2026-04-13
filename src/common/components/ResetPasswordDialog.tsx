@@ -15,11 +15,13 @@ import {
   Theme,
   Snackbar,
   Alert,
+  Divider,
 } from "@mui/material";
 import { Eye, EyeClosed, CheckCircle, XCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { UserRole } from "@/app/admin/components/types/admin";
+import CommonButton from "./CommonButton";
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -152,39 +154,18 @@ export default function ResetPasswordDialog({
     }
   };
 
-  const buttonSx = {
-    bgcolor: (theme: Theme) => theme.palette.action.hover,
-    color: (theme: Theme) => theme.palette.text.primary,
-    borderRadius: 0,
-    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-    fontWeight: 600,
-    fontSize: 15,
-    minWidth: 100,
-    height: 40,
-    px: 2,
-    textTransform: "none",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      bgcolor: (theme: Theme) => theme.palette.primary.main,
-      color: (theme: Theme) => theme.palette.primary.contrastText,
-      boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-      "& .MuiSvgIcon-root, & svg": {
-        color: "#000",
-      },
-    },
-    "&:disabled": {
-      opacity: 0.6,
-      bgcolor: (theme: Theme) => theme.palette.action.disabledBackground,
-      color: (theme: Theme) => theme.palette.text.disabled
-    }
-  };
-
   return (
     <Dialog open={open} onClose={handleFormClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ color: "#D00000", fontWeight: "bold" }}>
+      <DialogTitle sx={{
+        display: "flex", justifyContent: "center", alignItems: "center",
+        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+        color: "error.main",
+        pb: 1,
+        position: "relative",
+      }} >
         RESET PASSWORD
       </DialogTitle>
+      <Divider />
       <DialogContent>
         <Box
           component="form"
@@ -263,17 +244,17 @@ export default function ResetPasswordDialog({
           />
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-        <Button onClick={handleFormClose} sx={buttonSx}>
+      <Divider />
+      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+        <CommonButton onClick={handleFormClose} >
           CANCEL
-        </Button>
-        <Button
+        </CommonButton>
+        <CommonButton
           onClick={handleSubmit(onSubmit)}
           disabled={submitting || !allSatisfied}
-          sx={buttonSx}
         >
           {submitting ? "SUBMITTING..." : "SUBMIT"}
-        </Button>
+        </CommonButton>
       </DialogActions>
       <Snackbar
         open={snackbar.open}
