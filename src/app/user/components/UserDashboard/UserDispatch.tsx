@@ -16,7 +16,7 @@ export default function UserDispatch() {
 
         {/* Header */}
         <div className="px-6 pt-6">
-          <h2 className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+          <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Today&apos;s Dispatch
           </h2>
         </div>

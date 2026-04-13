@@ -1,9 +1,6 @@
 "use client";
-
-import React from "react";
 import { motion } from "framer-motion";
 import { UserDashboardView } from "../hooks/useUserDashboard";
-
 import StatsCards from "./UserDashboard/TopSatusCards";
 import UserOrderImports from "./UserDashboard/UserOrderImports";
 import UserDispatch from "./UserDashboard/UserDispatch";
@@ -18,7 +15,7 @@ interface Props {
 export default function UserDashboard({ }: Props) {
   return (
     <div className="py-6 md:py-8">
-      <div className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}

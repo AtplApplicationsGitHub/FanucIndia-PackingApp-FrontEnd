@@ -122,8 +122,8 @@ export default function UserRecentActivity() {
 
   return (
     <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 h-full flex flex-col min-h-[520px]">
-      <div className="mb-5">
-        <h2 className="text-lg font-semibold uppercase tracking-wide text-[#D00000] dark:text-[#FF6B6B]">
+      <div className="mb-8">
+        <h2 className="text-base font-semibold uppercase tracking-wide text-[#D00000] dark:text-[#FF6B6B]">
           Recent Activities
         </h2>
         <p className="mt-1 text-sm text-[#4B5563] dark:text-[#9CA3AF]">

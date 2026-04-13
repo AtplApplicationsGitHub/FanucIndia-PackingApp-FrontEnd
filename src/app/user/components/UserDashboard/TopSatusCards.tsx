@@ -20,16 +20,16 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading = false }) => {
   return (
     <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
-      <div className="flex items-center justify-between gap-6">
+      <div className="flex items-center justify-between gap-5">
         <div className="flex-1 text-center">
-          <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+          <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             {title}
           </p>
           <div className="mt-2 flex justify-center h-10 items-center">
             {loading ? (
               <div className="h-10 w-32 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse" />
             ) : (
-              <p className="text-4xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
+              <p className="text-xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
                 {new Intl.NumberFormat().format(Number(value ?? 0))}
               </p>
             )}
@@ -64,8 +64,8 @@ export default function StatsCards() {
         
         {/* Custom Card for Assigned Orders to accommodate the MUI Date Picker & Split View */}
         <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-4 shadow-sm transition-all hover:shadow-md min-h-[110px]">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm sm:text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               Orders Assigned To Me
             </p>
             
@@ -113,7 +113,7 @@ export default function StatsCards() {
                 {loading ? (
                   <div className="h-8 w-16 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse mx-auto" />
                 ) : (
-                  <p className="text-3xl font-extrabold text-[#1F2933] dark:text-white">
+                  <p className="text-xl font-extrabold text-[#1F2933] dark:text-white">
                     {new Intl.NumberFormat().format(Number(assignedOrders))}
                   </p>
                 )}
@@ -126,7 +126,7 @@ export default function StatsCards() {
                   {loading ? (
                     <div className="h-8 w-16 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse mx-auto" />
                   ) : (
-                    <p className="text-3xl font-extrabold text-green-600 dark:text-green-400">
+                    <p className="text-xl font-extrabold text-green-600 dark:text-green-400">
                       {new Intl.NumberFormat().format(Number(completedOrders))}
                     </p>
                   )}
@@ -135,7 +135,7 @@ export default function StatsCards() {
             </div>
 
             <div className="shrink-0 grid place-items-center h-14 w-14 rounded-xl bg-[#F7F7F7] dark:bg-[#2C3540]">
-              <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <ShoppingCart className=" text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
