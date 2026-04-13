@@ -18,8 +18,6 @@ import {
   Paper,
   ClickAwayListener,
   ListItemButton,
-  SxProps,
-  Theme,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
@@ -42,13 +40,11 @@ export default function SoChatDrawer({
   onClose,
   orderId,
   soNumber,
-  buttonSx,
 }: {
   open: boolean;
   onClose: () => void;
   orderId: number | null;
   soNumber: string | null;
-  buttonSx: SxProps<Theme>;
 }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -362,7 +358,6 @@ export default function SoChatDrawer({
               }}
             >
               <CommonButton
-                variant="contained"
                 startIcon={
                   sending ? (
                     <CircularProgress size={18} color="inherit" />

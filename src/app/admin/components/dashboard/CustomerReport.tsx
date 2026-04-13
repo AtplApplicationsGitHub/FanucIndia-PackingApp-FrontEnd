@@ -279,28 +279,6 @@ function SOBarChartAndTable({
     );
 }
 
-function getButtonSx(theme: any) {
-    return {
-        borderRadius: 0,
-        clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-        fontWeight: 600,
-        fontSize: 15,
-        minWidth: 120,
-        height: 40,
-        px: 3,
-        textTransform: "none" as const,
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-        transition: "all 0.2s ease-in-out",
-        bgcolor: theme.palette.action.hover,
-        color: theme.palette.text.primary,
-        "&:hover": {
-            bgcolor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-            boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-        },
-    };
-}
-
 // TAB 1
 function TabACards() {
     const { cards, loading, error } = useStatusCards();
@@ -622,7 +600,7 @@ function MaterialSOCountTab() {
                                 <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                             </IconButton>
                         </Paper>
-                        <CommonButton onClick={handleSearch} disabled={!inputValue.trim()} sx={getButtonSx(theme)}>
+                        <CommonButton onClick={handleSearch} disabled={!inputValue.trim()}>
                             Search
                         </CommonButton>
                     </Box>

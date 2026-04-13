@@ -248,13 +248,6 @@ function UserDashboardContent() {
         onClose={handleChatClose}
         orderId={chatOrderId}
         soNumber={chatSoNumber}
-        buttonSx={{
-          bgcolor: theme.palette.primary.main,
-          color: "#fff",
-          "&:hover": {
-            bgcolor: theme.palette.primary.dark,
-          },
-        }}
       />
     </>
   );

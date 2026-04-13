@@ -615,7 +615,6 @@ export default function SoSearchPage() {
               onClose={() => setChatOpen(false)}
               orderId={data?.salesOrder?.id || null}
               soNumber={data?.salesOrder?.saleOrderNumber || null}
-              buttonSx={buttonSx}
             />
 
             {/* ARCHIVE / DELETE BUTTONS */}

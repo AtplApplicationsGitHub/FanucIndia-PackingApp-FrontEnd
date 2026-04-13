@@ -474,7 +474,6 @@ function AdminDashboardContent() {
           onClose={() => setChatOpen(false)}
           orderId={chatOrderId}
           soNumber={chatSoNumber}
-          buttonSx={{ bgcolor: "primary.main" }}
         />
       </Box>
     </>
