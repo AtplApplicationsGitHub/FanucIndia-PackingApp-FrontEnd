@@ -43,6 +43,8 @@ const StatCard = ({ title, value, iconType, iconColor, hasDatePicker, selectedDa
                       const dateString = newDate && dayjs.isDayjs(newDate) && newDate.isValid() ? newDate.format('YYYY-MM-DD') : '';
                       if (dateString) onDateChange(dateString);
                     }}
+                    minDate={dayjs().subtract(3, 'day')}
+                    maxDate={dayjs().add(5, 'day')}
                     format="DD-MMM-YYYY"
                     slotProps={{
                       textField: {

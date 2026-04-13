@@ -82,8 +82,8 @@ const StatCard = ({
                           }
                           setOpenPicker(false);
                         }}
-                        // Strict restriction: exactly like the other pages (no older than 3 days)
                         minDate={dayjs().subtract(3, 'day')}
+                        maxDate={dayjs().add(5, 'day')}
                         format="DD-MMM-YYYY"
                       />
                     </div>
