@@ -183,7 +183,6 @@ const InputBoxSection: FC<Props> = ({
       setConfirmDeleteOpen(false);
     } catch (error) {
       console.error("Delete failed", error);
-      // Optional: Add UI feedback here if needed, but parent usually handles it.
     } finally {
       setIsDeleting(false);
     }

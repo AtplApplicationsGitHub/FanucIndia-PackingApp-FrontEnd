@@ -39,7 +39,6 @@ const generateLast5DaysSkeleton = (): AdminNewImportItem[] => {
     });
   }
 
-  // Result order: oldest → newest (e.g., Nov 15, 16, 17, 18, Today)
   return result;
 };
 

@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import { ShoppingCart, Truck } from "lucide-react";
 import { useTopStatusCards } from "../../hooks/useTopStatusCards";
-
-// MUI Date Picker Imports
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -77,22 +75,22 @@ export default function StatsCards() {
                   format="DD/MM/YYYY"
                   label="Date"
                   slotProps={{
-                    field: { clearable: true }, // Adds the built-in 'X' to clear the date
+                    field: { clearable: true }, 
                     textField: {
                       size: "small",
                       sx: {
                         width: "185px",
-                        // Dynamic styling to support both light and dark modes
+                       
                         "& .MuiInputBase-root": {
                           fontSize: "0.875rem",
                           color: "inherit",
                           backgroundColor: "transparent",
                         },
                         "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: "rgba(156, 163, 175, 0.5)", // Subtly matches standard borders
+                          borderColor: "rgba(156, 163, 175, 0.5)", 
                         },
                         "& .MuiSvgIcon-root": {
-                          color: "inherit", // Inherits dark/light text color for calendar/clear icons
+                          color: "inherit", 
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           borderColor: "#9CA3AF",

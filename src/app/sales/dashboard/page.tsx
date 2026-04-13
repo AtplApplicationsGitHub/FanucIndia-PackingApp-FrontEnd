@@ -1,4 +1,3 @@
-// src/app/sales/dashboard/page.tsx
 "use client";
 
 import React, { useState, Suspense } from "react";
@@ -162,7 +161,7 @@ function SalesDashboardContent() {
           showBackButton={view !== "home"}
         />
 
-        {/* HOME VIEW - Beautiful Dashboard */}
+        {/* HOME VIEW - Dashboard */}
         {view === "home" &&
           <motion.div
             initial={{ opacity: 0, y: -20 }}

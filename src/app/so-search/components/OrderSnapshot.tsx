@@ -1,7 +1,6 @@
 import { Box, Link, Paper, Typography } from "@mui/material";
 import { KVBox } from "./KVBox";
 
-// Define a minimal type for the salesOrder prop
 interface SalesOrder {
   status: string;
   priority?: string;

@@ -72,7 +72,6 @@ export function useRecentActivity() {
 
       setActivities(enriched);
     } catch (err: unknown) {
-      // Narrow unknown -> Error or fallback to string
       const message = err instanceof Error ? err.message : String(err ?? "Something went wrong");
       console.error("useRecentActivity error:", err);
       setError(message);

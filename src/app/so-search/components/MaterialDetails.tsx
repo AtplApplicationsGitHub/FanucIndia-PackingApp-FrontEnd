@@ -62,25 +62,25 @@ export default function MaterialDetails({
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, theme.palette.mode === "dark" ? 0.1 : 0.25);
 
-  // [NEW] Group Filter State
+  //  Group Filter State
   const [groupFilter, setGroupFilter] = useState<string>("All");
   const [classificationFilter, setClassificationFilter] = useState<string>("All");
 
-  // [NEW] Extract unique groups from the data
+  //  Extract unique groups from the data
   const uniqueGroups = useMemo(() => {
     const list = materialDetails || [];
     const groups = list.map((m) => m.Group).filter((g): g is string => !!g);
     return ["All", ...Array.from(new Set(groups)).sort()];
   }, [materialDetails]);
 
-  // [NEW] Extract unique classifications from the data
+  // Extract unique classifications from the data
   const uniqueClassifications = useMemo(() => {
     const list = materialDetails || [];
     const classifications = list.map((m) => m.Classification).filter((c): c is string => !!c);
     return ["All", ...Array.from(new Set(classifications)).sort()];
   }, [materialDetails]);
 
-  // [UPDATED] Filter materials based on selected group AND classification
+  //  Filter materials based on selected group AND classification
   const displayMaterials = useMemo(() => {
     const list = materialDetails || [];
     return list.filter((m) => {
@@ -90,7 +90,7 @@ export default function MaterialDetails({
     });
   }, [materialDetails, groupFilter, classificationFilter]);
 
-  // [NEW] Calculate Durations and Extract User Names for Issue and Packing Stages
+  // Calculate Durations and Extract User Names for Issue and Packing Stages
   const { issueDuration, packingDuration, issueUpdatedBy, packingUpdatedBy } = useMemo(() => {
     const calculate = (dates: (string | undefined)[]) => {
       const validDates = dates
@@ -255,30 +255,6 @@ export default function MaterialDetails({
 
           <CommonButton
             onClick={onViewAttachments}
-            variant="contained"
-          // sx={{
-          //   bgcolor: (theme) => theme.palette.action.hover,
-          //   color: (theme) => theme.palette.text.primary,
-          //   borderRadius: 0,
-          //   clipPath:
-          //     "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
-          //   fontWeight: 600,
-          //   fontSize: 15,
-          //   minWidth: 120,
-          //   height: 40,
-          //   px: 3,
-          //   textTransform: "none",
-          //   boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          //   transition: "all 0.2s ease-in-out",
-          //   "&:hover": {
-          //     bgcolor: (theme) => theme.palette.primary.main,
-          //     color: (theme) => theme.palette.primary.contrastText,
-          //     boxShadow: "0 4px 8px rgba(208,0,0,0.3)",
-          //     "& .MuiSvgIcon-root, & svg": {
-          //       color: "#000",
-          //     },
-          //   },
-          // }}
           >
             ATTACHMENTS
           </CommonButton>
@@ -356,7 +332,6 @@ export default function MaterialDetails({
             ))}
             {displayMaterials.length === 0 && (
               <TableRow>
-                {/* Changed colSpan from 14 to 12 because we removed 2 columns */}
                 <TableCell colSpan={12} align="center" sx={{ py: 3 }}>
                   <Typography color="text.secondary">
                     No material details found for this group.
@@ -368,7 +343,6 @@ export default function MaterialDetails({
         </Table>
       </TableContainer>
 
-      {/* Dialog for Remarks remains unchanged */}
       <Dialog
         open={openRemarks}
         onClose={handleCloseRemarks}

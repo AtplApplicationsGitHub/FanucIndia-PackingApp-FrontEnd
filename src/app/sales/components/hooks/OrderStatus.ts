@@ -45,11 +45,6 @@ export function useSalesKpis() {
     void loadKpis();
   }, [loadKpis]);
 
-  /*  
-   ----------------------------------------------------------
-   FIXED: totalSoCount NOW TAKEN DIRECTLY FROM API FIELD  
-   ----------------------------------------------------------
-  */
   const totalSoCount = data?.totalSoCount ?? 0;
 
   return {

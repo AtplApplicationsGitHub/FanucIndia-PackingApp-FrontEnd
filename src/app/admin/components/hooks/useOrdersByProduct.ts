@@ -1,7 +1,7 @@
 // src/hooks/useOrdersByProduct.ts
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/common/lib/endpoints";
-import { API } from "@/common/lib/endpoints"; // <-- Import your API constants!
+import { API } from "@/common/lib/endpoints"; 
 
 export type OrderByProduct = {
   name: string;

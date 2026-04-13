@@ -146,6 +146,6 @@ export function useReport(filters?: {
         fetchLookups();
     }, [fetchData, fetchLookups]);
 
-    // CHANGE the return to include totalCount:
+   
     return { rows, totalCount, lookup, loading, refreshing, error, refresh: fetchData };
 }

@@ -239,8 +239,8 @@ export function useAssign() {
           ? customers.map((c: any) => ({ 
               id: c.id, 
               name: c.name || "Unknown",
-              address: c.address || "", // 👈 Added to satisfy TypeScript
-              contact: c.contact || ""  // 👈 Added to satisfy TypeScript
+              address: c.address || "", 
+              contact: c.contact || ""  
             }))
           : [],
       });
@@ -354,7 +354,6 @@ export function useAssign() {
       );
 
       try {
-        // removed
         // removed
 
         const response = await fetchWithAuth(API.ADMIN.BULK_ASSIGN, {

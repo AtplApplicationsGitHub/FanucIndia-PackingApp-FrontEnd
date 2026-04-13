@@ -1,4 +1,3 @@
-// src/app/sales/salesdashboard/RecentActivity.tsx
 "use client";
 
 import React from "react";
@@ -16,9 +15,7 @@ import {
 } from "lucide-react";
 import { useRecentActivity } from "../hooks/RecentActivity";
 
-/**
- * Adjust this interface if your hook returns additional/different fields.
- */
+
 interface RecentActivityItem {
   salesOrderNumber?: string;
   activityTimestamp?: string | number;
@@ -26,7 +23,7 @@ interface RecentActivityItem {
     label?: string | null;
   };
   timeAgo?: string;
-  // add any other fields your hook actually returns
+  
 }
 
 function getIconByLabel(label?: string) {
@@ -99,7 +96,7 @@ export default function RecentActivity(): React.ReactElement {
   if (loading) {
     return (
       <div className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 w-full h-full font-sans">
-        <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+        <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
           Recent Activity
         </p>
 
@@ -122,7 +119,7 @@ export default function RecentActivity(): React.ReactElement {
 
   return (
     <div className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 w-full h-full font-sans transition-all">
-      <p className="text-lg uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
+      <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
         Recent Activity
       </p>
 

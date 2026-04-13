@@ -1,4 +1,3 @@
-// hooks/useSalesDashboard.ts
 import { useEffect, useState } from "react";
 import { API } from "../../../../common/lib/endpoints";
 import { SalesKPIsResponse } from "../types/sales";

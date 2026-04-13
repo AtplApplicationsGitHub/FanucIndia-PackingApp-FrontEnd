@@ -26,7 +26,7 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
-// FIX 1: Ignore MUI's default strict sequential active/completed logic. 
+// Ignore MUI's default strict sequential active/completed logic. 
 // We will manually pass custom completion booleans to control the icon color.
 const ColorlibStepIconRoot = styled('div')<{
   ownerState: { completed?: boolean; active?: boolean };
@@ -147,7 +147,7 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
     return STEP_ORDER.indexOf(a.status) - STEP_ORDER.indexOf(b.status);
   });
 
-  // FIX 2: Pre-calculate chronological steps for accurate out-of-sequence time tracking
+  //  Pre-calculate chronological steps for accurate out-of-sequence time tracking
   const chronologicalSteps = [...stepsData]
     .filter(s => s.createdDateTime)
     .sort((a, b) => new Date(a.createdDateTime!).getTime() - new Date(b.createdDateTime!).getTime());
@@ -172,7 +172,7 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
           let timeTaken = null;
           const hasTimestamp = !!step.createdDateTime;
           
-          // FIX 3: Calculate time taken based strictly on actual chronological event history
+          //  Calculate time taken based strictly on actual chronological event history
           // This prevents negative calculations if a prior step is completed out of sequence later
           if (index > 0 && hasTimestamp) {
             const myIndex = chronologicalSteps.findIndex(s => s.id === step.id);
@@ -216,7 +216,7 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
                           Time Taken: {timeTaken || "0s"}
                         </Typography>
                       ) : (
-                        // FIX 4: Removed the misleading 'Skipped' label logic. Unstamped steps are just 'Pending'.
+                        //  Removed the misleading 'Skipped' label logic. Unstamped steps are just 'Pending'.
                         <Typography variant="caption" color="text.secondary" display="block">
                           Pending
                         </Typography>

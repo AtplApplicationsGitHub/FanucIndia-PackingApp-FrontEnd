@@ -58,7 +58,7 @@ export default function SalesOrdersTable({
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
   const hoverYellow = alpha(theme.palette.primary.main, 0.15);
 
-  // --- SELECTION HANDLERS ---
+  //  SELECTION HANDLERS
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSelectedIdsChange(e.target.checked ? orders.map((o) => o.id) : []);
   };
@@ -71,7 +71,7 @@ export default function SalesOrdersTable({
     );
   };
 
-  // --- PAGINATION HANDLERS ---
+  //  PAGINATION HANDLERS 
   const handleChangePage = (event: unknown, newPage: number) => {
     onPaginationModelChange({ ...paginationModel, page: newPage });
   };
@@ -100,7 +100,6 @@ export default function SalesOrdersTable({
         <Table
           sx={{
             minWidth: 650,
-            // Zebra striping & No borders logic
             "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
               backgroundColor: lightYellow,
             },
@@ -118,7 +117,6 @@ export default function SalesOrdersTable({
         >
           <TableHead
             sx={{
-              // White background for light mode, Black for dark mode
               bgcolor: (theme) =>
                 theme.palette.mode === "dark" ? "#000000" : "#ffffff",
             }}
@@ -383,8 +381,6 @@ export default function SalesOrdersTable({
           bgcolor: "background.paper",
         }}
       />
-
-      {/* ACTIONS MENU */}
 
     </Box>
   );

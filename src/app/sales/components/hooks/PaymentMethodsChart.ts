@@ -1,4 +1,3 @@
-// src/app/sales/components/salesdashboard/hooks/usePaymentClearance.ts
 import { useState, useEffect } from "react";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
 import { API } from "../../../../common/lib/endpoints";

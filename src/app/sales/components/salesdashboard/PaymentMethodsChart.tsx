@@ -12,8 +12,6 @@ import {
 export default function PaymentMethodsChart({ selectedDate, displayDate }: { selectedDate: string, displayDate: string }) {
   const [chartData, setChartData] = useState<{ cleared: number; pending: number } | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // FIX: Added state to handle view toggling, defaulting to 'table'
   const [viewType, setViewType] = useState<'table' | 'chart'>('table');
 
   useEffect(() => {
