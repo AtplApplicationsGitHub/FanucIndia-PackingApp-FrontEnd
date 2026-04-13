@@ -206,14 +206,19 @@ export default function AdminOrderEditModal({
           (c) => String(c.id) === String(value),
         );
 
-        if (selectedCustomer && typeof selectedCustomer.address === "string") {
-          updated.address = selectedCustomer.address;
+        if (selectedCustomer) {
+          updated.address = selectedCustomer.address || "";
+        } else {
+          updated.address = "";
         }
       }
 
       if (key === "customerNameText") {
-        updated.customerId = undefined;
-      }
+  updated.customerId = null as any; 
+  if (value && String(value).trim() !== "") {
+     updated.address = "";
+  }
+}
 
       return updated;
     });
@@ -268,12 +273,16 @@ export default function AdminOrderEditModal({
             patch[key] = Number(v) as SalesOrderPatch[typeof key];
           } else if (typeof v === "number") {
             patch[key] = v as SalesOrderPatch[typeof key];
+          } else if (v === "" || v === null) {
+            (patch as any)[key] = null;
           }
           break;
 
         case "customerNameText":
           if (typeof v === "string" && v.trim() !== "") {
             patch.customerNameText = v.trim();
+          } else if (v === "" || v === null) {
+            patch.customerNameText = null;
           }
           break;
 
@@ -330,7 +339,27 @@ export default function AdminOrderEditModal({
       await axios.patch(API.ADMIN.SALES_ORDER_BY_ID(order.id), patch, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      onUpdate?.({ ...order, ...patch });
+
+      // --- FIX: Manually update nested objects for UI Refresh ---
+      const updatedOrder = { ...order, ...patch };
+
+      if (patch.customerId) {
+        // If an existing customer was selected, inject their name into the nested object
+        const matchedCust = lookup.customers.find(
+          (c) => String(c.id) === String(patch.customerId)
+        );
+        if (matchedCust) {
+          updatedOrder.customer = { id: matchedCust.id, name: matchedCust.name } as any;
+        }
+      } else if (patch.customerNameText || patch.customerNameText === null) {
+        // If a new name was typed manually, clear the nested customer object
+        updatedOrder.customer = null as any;
+      }
+      // ---------------------------------------------------------
+
+      // Send the updated nested object to the parent table
+      onUpdate?.(updatedOrder);
+
       setSnackbar({
         open: true,
         message: "Order updated!",
@@ -338,6 +367,7 @@ export default function AdminOrderEditModal({
       });
       onClose();
     } catch (err: unknown) {
+      // ... keep your existing catch block exactly the same ...
       console.error("Update error:", err);
       let errMsg = "Failed to update order.";
 
@@ -567,21 +597,17 @@ export default function AdminOrderEditModal({
                           return String(option.id) === String(v?.id);
                         }}
                         onChange={(_, newValue: CustomerValue) => {
-                          if (typeof newValue === "string") {
-                            handleChange("customerNameText", newValue);
-                            handleChange("customerId", "");
-                            return;
-                          }
-
-                          if (newValue && typeof newValue === "object") {
-                            handleChange("customerId", String(newValue.id));
-                            handleChange("customerNameText", "");
-                            return;
-                          }
-
-                          handleChange("customerId", "");
-                          handleChange("customerNameText", "");
-                        }}
+  if (typeof newValue === "string") {
+    // User typed a free-text name
+    handleChange("customerNameText", newValue);
+  } else if (newValue && typeof newValue === "object") {
+    // User selected an existing lookup customer
+    handleChange("customerId", String(newValue.id));
+  } else {
+    // User completely cleared the input
+    handleChange("customerId", ""); 
+  }
+}}
                         renderInput={(params) => (
                           <TextField
                             {...params}

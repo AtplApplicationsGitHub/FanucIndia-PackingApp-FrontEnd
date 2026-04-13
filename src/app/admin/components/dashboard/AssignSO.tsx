@@ -227,6 +227,11 @@ export default function AssignSO() {
         message: result.message || "Orders updated successfully",
         severity: "success",
       });
+
+      // --- FIX: Add this line so the table fetches the updated names and addresses! ---
+      refresh(); 
+      // --------------------------------------------------------------------------------
+
     } catch (err: any) {
       setSnackbar({
         open: true,

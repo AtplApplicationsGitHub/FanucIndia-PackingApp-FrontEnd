@@ -277,7 +277,7 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorName} - ISSUED ASSIGNED`,
+                              `${row.operatorEmail} - ISSUED ASSIGNED`,
                               row.issueAssigned || [],
                             )
                           }
@@ -299,7 +299,7 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorName} -  Issue Completed`,
+                              `${row.operatorEmail} -  ISSUE COMPLETED`,
                               row.issueCompleted || [],
                             )
                           }
@@ -322,7 +322,7 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorName} - PACKING ASSIGNED`,
+                              `${row.operatorEmail} - PACKING ASSIGNED`,
                               row.packingAssigned || [],
                             )
                           }
@@ -345,7 +345,7 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorName} - Packing Completed`,
+                              `${row.operatorEmail} - PACKING COMPLETED`,
                               row.packingCompleted || [],
                             )
                           }
@@ -398,14 +398,16 @@ export default function OperatorStatsTable({
             m: 0,
             p: 2,
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "center",
+            position: "relative",
           }}
         >
           <Typography
             variant="h6"
             component="div"
             fontWeight="bold"
+            textTransform="uppercase"
             sx={{
               color: (theme) =>
                 theme.palette.mode === "dark" ? "#FF6B6B" : "#D00000",
@@ -413,7 +415,11 @@ export default function OperatorStatsTable({
           >
             {dialogTitle}
           </Typography>
-          <IconButton onClick={() => setDialogOpen(false)} size="small">
+          <IconButton 
+            onClick={() => setDialogOpen(false)} 
+            size="small"
+            sx={{ position: "absolute", right: 12 }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>

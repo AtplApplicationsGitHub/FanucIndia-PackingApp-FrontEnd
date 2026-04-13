@@ -31,7 +31,9 @@ import {
   Tooltip,
   TablePagination,
   Divider,
-  Tabs, Tab, Chip
+  Tabs,
+  Tab,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -246,13 +248,19 @@ const AttachmentDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{
-        display: "flex", justifyContent: "center", alignItems: "center",
-        fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-        color: "error.main",
-        pb: 1,
-        position: "relative",
-      }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontWeight: 700,
+          fontSize: "20px",
+          letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}
+      >
         ATTACHMENTS
         <IconButton onClick={onClose} sx={{ position: "absolute", right: 12 }}>
           <CloseIcon fontSize="small" />
@@ -265,16 +273,18 @@ const AttachmentDialog = ({
         sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}
       >
         <Tab label="Upload New" />
-        <Tab label={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            Uploaded Files
-            <Chip
-              label={dispatch?.attachments?.length ?? 0}
-              size="small"
-              sx={{ height: 20, fontSize: 11 }}
-            />
-          </Box>
-        } />
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              Uploaded Files
+              <Chip
+                label={dispatch?.attachments?.length ?? 0}
+                size="small"
+                sx={{ height: 20, fontSize: 11 }}
+              />
+            </Box>
+          }
+        />
       </Tabs>
       <DialogContent dividers>
         {activeTab === 0 && (
@@ -300,11 +310,15 @@ const AttachmentDialog = ({
               }}
             >
               <input {...getInputProps()} />
-              <UploadCloud size={30} color="#9e9e9e" style={{ marginBottom: 4 }} />
+              <UploadCloud
+                size={30}
+                color="#9e9e9e"
+                style={{ marginBottom: 4 }}
+              />
               <Typography fontSize={17} fontWeight={500} color="text.primary">
                 Click or drag to upload
               </Typography>
-              <Typography fontSize={15} color="text.secondary" >
+              <Typography fontSize={15} color="text.secondary">
                 Supports all file types
               </Typography>
             </Box>
@@ -336,7 +350,9 @@ const AttachmentDialog = ({
                       )
                     }
                   >
-                    {loading ? "Uploading..." : `Upload ${files.length} File(s)`}
+                    {loading
+                      ? "Uploading..."
+                      : `Upload ${files.length} File(s)`}
                   </CommonButton>
                 </Box>
                 <Box
@@ -361,11 +377,10 @@ const AttachmentDialog = ({
                         borderRadius: 1,
                       }}
                     >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Paperclip
-                          size={15}
-                          color="#7C3AED"
-                        />
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Paperclip size={15} color="#7C3AED" />
                         <Typography
                           variant="body2"
                           fontWeight="500"
@@ -378,7 +393,11 @@ const AttachmentDialog = ({
                         size="small"
                         onClick={() => removeFile(index)}
                       >
-                        <DeleteOutlineIcon fontSize="small" sx={{ color: "error.main" }} />                  </IconButton>
+                        <DeleteOutlineIcon
+                          fontSize="small"
+                          sx={{ color: "error.main" }}
+                        />{" "}
+                      </IconButton>
                     </Box>
                   ))}
                 </Box>
@@ -394,9 +413,10 @@ const AttachmentDialog = ({
                   "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                     backgroundColor: lightYellow,
                   },
-                  "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
-                    borderBottom: 0,
-                  },
+                  "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                    {
+                      borderBottom: 0,
+                    },
                 }}
               >
                 <TableHead>
@@ -434,10 +454,13 @@ const AttachmentDialog = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {dispatch?.attachments?.length === 0 && (
+                  {(!dispatch?.attachments ||
+                    dispatch.attachments.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={3} align="center">
-                        No attachments found.
+                        <Typography color="text.secondary" p={3}>
+                          No attachments found.
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   )}
@@ -476,7 +499,10 @@ const AttachmentDialog = ({
                               onClick={() => handleDelete(att.fileName)}
                               size="small"
                             >
-                              <DeleteOutlineIcon fontSize="small" sx={{ color: "error.main" }} />
+                              <DeleteOutlineIcon
+                                fontSize="small"
+                                sx={{ color: "error.main" }}
+                              />
                             </IconButton>
                           </Tooltip>
                         </Box>
@@ -516,7 +542,9 @@ export default function DispatchView() {
   );
   const [dispatchSOs, setDispatchSOs] = useState<DispatchSO[]>([]);
   const [soInput, setSoInput] = useState("");
-  const [multipleSoOptions, setMultipleSoOptions] = useState<{ id: number, saleOrderNumber: string, outboundDelivery: string | null }[]>([]);
+  const [multipleSoOptions, setMultipleSoOptions] = useState<
+    { id: number; saleOrderNumber: string; outboundDelivery: string | null }[]
+  >([]);
   const [soSelectionDialogOpen, setSoSelectionDialogOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -702,7 +730,9 @@ export default function DispatchView() {
       let finalSaleOrderNumber = soInput.trim();
 
       if (specificSalesOrderId && multipleSoOptions.length > 0) {
-        const matchedOption = multipleSoOptions.find(o => o.id === specificSalesOrderId);
+        const matchedOption = multipleSoOptions.find(
+          (o) => o.id === specificSalesOrderId,
+        );
         if (matchedOption) {
           finalSaleOrderNumber = matchedOption.saleOrderNumber;
         }
@@ -711,7 +741,7 @@ export default function DispatchView() {
       if (!finalSalesOrderId) {
         const searchRes = await axios.get(
           API.DISPATCH.SEARCH_SO(finalSaleOrderNumber),
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         const orders = searchRes.data;
@@ -731,9 +761,9 @@ export default function DispatchView() {
         API.DISPATCH.SO(selectedDispatch.id),
         {
           saleOrderNumber: finalSaleOrderNumber,
-          salesOrderId: finalSalesOrderId
+          salesOrderId: finalSalesOrderId,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setSoInput("");
@@ -743,11 +773,16 @@ export default function DispatchView() {
       fetchDispatchSOs(selectedDispatch.id);
       fetchDispatches();
 
-      setTimeout(() => { soInputRef.current?.focus(); }, 100);
+      setTimeout(() => {
+        soInputRef.current?.focus();
+      }, 100);
     } catch (error: any) {
-      const errMsg = error.response?.data?.message || `Failed to process SO number`;
+      const errMsg =
+        error.response?.data?.message || `Failed to process SO number`;
       showSnackbar(errMsg, "error");
-      setTimeout(() => { soInputRef.current?.focus(); }, 100);
+      setTimeout(() => {
+        soInputRef.current?.focus();
+      }, 100);
     } finally {
       setSoLoading(false);
     }
@@ -862,22 +897,24 @@ export default function DispatchView() {
             py: 1.5,
           }}
         >
-          <Box sx={{
-            display: "flex",
-            flexWrap: "nowrap",
-            gap: 1,
-            alignItems: "center",
-            flex: 1,
-            width: "100%",
-            minWidth: 0,
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "nowrap",
+              gap: 1,
+              alignItems: "center",
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
             <Box>
               <DatePicker
                 label="FROM"
                 value={startDate}
                 onChange={(val) => setStartDate(val)}
                 format="DD-MM-YYYY"
-                minDate={dayjs().subtract(3, 'day')}
+                minDate={dayjs().subtract(3, "day")}
                 slotProps={{
                   textField: {
                     size: "small",
@@ -926,7 +963,7 @@ export default function DispatchView() {
                 value={endDate}
                 onChange={(val) => setEndDate(val)}
                 format="DD-MM-YYYY"
-                minDate={startDate ? startDate : dayjs().subtract(3, 'day')}
+                minDate={startDate ? startDate : dayjs().subtract(3, "day")}
                 slotProps={{
                   textField: {
                     size: "small",
@@ -1031,19 +1068,160 @@ export default function DispatchView() {
                 <Table stickyHeader size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2, }} >ACTION</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>S.NO</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>SO COUNT</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>TRANSPORTER</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>VEHICLE NUMBER</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>UPDATED BY</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }}>UPDATED DATE</TableCell>
-                      <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000", bgcolor: theme.palette.mode === "dark" ? "#000000" : "#f8fafc", py: 2 }} align="center">ATTACHMENTS</TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        ACTION
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        S.NO
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        SO COUNT
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        TRANSPORTER
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        VEHICLE NUMBER
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        UPDATED BY
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                      >
+                        UPDATED DATE
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                          textTransform: "uppercase",
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#FFFFFF"
+                              : "#000000",
+                          bgcolor:
+                            theme.palette.mode === "dark"
+                              ? "#000000"
+                              : "#f8fafc",
+                          py: 2,
+                        }}
+                        align="center"
+                      >
+                        ATTACHMENTS
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {loading ? (
-                      <TableRow><TableCell colSpan={8} align="center" sx={{ py: 10 }}><CircularProgress /></TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
                     ) : dispatches.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
@@ -1070,15 +1248,89 @@ export default function DispatchView() {
                           page * rowsPerPage + rowsPerPage,
                         )
                         .map((row, index) => (
-                          <TableRow key={row.id} hover onClick={() => setSelectedDispatch(row)} selected={selectedDispatch?.id === row.id} sx={{ cursor: "pointer", bgcolor: theme.palette.mode === "dark" ? (index % 2 === 0 ? "#45451B" : "#1A1F26") : (index % 2 === 0 ? "#FFF2AF" : "#FFFFFF"), "&.Mui-selected": { bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)", "&:hover": { bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.08)" } } }}>
-                            <TableCell><IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMenuClick(e, row.id); }}><MoreVert /></IconButton></TableCell>
-                            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                          <TableRow
+                            key={row.id}
+                            hover
+                            onClick={() => setSelectedDispatch(row)}
+                            selected={selectedDispatch?.id === row.id}
+                            sx={{
+                              cursor: "pointer",
+                              bgcolor:
+                                theme.palette.mode === "dark"
+                                  ? index % 2 === 0
+                                    ? "#45451B"
+                                    : "#1A1F26"
+                                  : index % 2 === 0
+                                    ? "#FFF2AF"
+                                    : "#FFFFFF",
+                              "&.Mui-selected": {
+                                bgcolor:
+                                  theme.palette.mode === "dark"
+                                    ? "rgba(255,255,255,0.15)"
+                                    : "rgba(0,0,0,0.06)",
+                                "&:hover": {
+                                  bgcolor:
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255,255,255,0.2)"
+                                      : "rgba(0,0,0,0.08)",
+                                },
+                              },
+                            }}
+                          >
+                            <TableCell>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMenuClick(e, row.id);
+                                }}
+                              >
+                                <MoreVert />
+                              </IconButton>
+                            </TableCell>
+                            <TableCell>
+                              {page * rowsPerPage + index + 1}
+                            </TableCell>
                             <TableCell>{row.soCount}</TableCell>
-                            <TableCell>{row.transporterName || row.transporter?.name || "-"}</TableCell>
+                            <TableCell>
+                              {row.transporterName ||
+                                row.transporter?.name ||
+                                "-"}
+                            </TableCell>
                             <TableCell>{row.vehicleNumber}</TableCell>
                             <TableCell>{row.UpdatedBy || "-"}</TableCell>
-                            <TableCell><Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>{row.UpdatedDate ? new Date(row.UpdatedDate).toLocaleString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) : "-"}</Typography></TableCell>
-                            <TableCell align="center"><IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenAttachmentDialog(row); }}><VisibilityIcon /></IconButton></TableCell>
+                            <TableCell>
+                              <Typography
+                                variant="body2"
+                                sx={{ whiteSpace: "nowrap" }}
+                              >
+                                {row.UpdatedDate
+                                  ? new Date(row.UpdatedDate).toLocaleString(
+                                      "en-IN",
+                                      {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                      },
+                                    )
+                                  : "-"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenAttachmentDialog(row);
+                                }}
+                              >
+                                <VisibilityIcon />
+                              </IconButton>
+                            </TableCell>
                           </TableRow>
                         ))
                     )}
@@ -1326,13 +1578,19 @@ export default function DispatchView() {
           fullWidth
           maxWidth="md"
         >
-          <DialogTitle sx={{
-            display: "flex", justifyContent: "center", alignItems: "center",
-            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-            color: "error.main",
-            pb: 1,
-            position: "relative",
-          }}>
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontWeight: 700,
+              fontSize: "20px",
+              letterSpacing: 0.5,
+              color: "error.main",
+              pb: 1,
+              position: "relative",
+            }}
+          >
             {editingId ? "EDIT DISPATCH" : "CREATE DISPATCH"}
             <IconButton
               onClick={handleDialogClose}
@@ -1398,7 +1656,7 @@ export default function DispatchView() {
                   cursor: "pointer",
                   bgcolor: "transparent",
                   transition: "background-color 0.2s, border-color 0.2s",
-                  '&:hover': { borderColor: 'primary.main' },
+                  "&:hover": { borderColor: "primary.main" },
                 }}
               >
                 <input {...getInputProps()} />
@@ -1433,7 +1691,9 @@ export default function DispatchView() {
                         borderRadius: 1,
                       }}
                     >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
                         <Paperclip
                           size={18}
                           color="#7C3AED" // Vibrant Purple/Violet
@@ -1483,52 +1743,82 @@ export default function DispatchView() {
         </Dialog>
 
         {/* Specific SO Selection Dialog */}
-        <Dialog open={soSelectionDialogOpen} onClose={() => setSoSelectionDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{
-            display: "flex", justifyContent: "center", alignItems: "center",
-            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-            color: "error.main",
-            pb: 1,
-            position: "relative",
-          }}>
+        <Dialog
+          open={soSelectionDialogOpen}
+          onClose={() => setSoSelectionDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontWeight: 700,
+              fontSize: "20px",
+              letterSpacing: 0.5,
+              color: "error.main",
+              pb: 1,
+              position: "relative",
+            }}
+          >
             SELECT OUTBOUND DELIVERY
-            <IconButton onClick={() => setSoSelectionDialogOpen(false)} sx={{ position: "absolute", right: 12 }}>
+            <IconButton
+              onClick={() => setSoSelectionDialogOpen(false)}
+              sx={{ position: "absolute", right: 12 }}
+            >
               <CloseIcon fontSize="small" />
             </IconButton>
           </DialogTitle>
           <DialogContent dividers>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Multiple orders found for <Typography component="span" fontWeight="bold" color="text.primary">{soInput}</Typography>. <br />
+              Multiple orders found for{" "}
+              <Typography
+                component="span"
+                fontWeight="bold"
+                color="text.primary"
+              >
+                {soInput}
+              </Typography>
+              . <br />
               Please select the correct Outbound Delivery (OBD):
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {multipleSoOptions.map((option) => (
                 <Box
                   key={option.id}
                   onClick={() => handleAddSO(option.id)}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                     p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
+                    border: "1px solid",
+                    borderColor: "divider",
                     borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    '&:hover': {
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    "&:hover": {
                       borderColor: theme.palette.primary.main,
                       bgcolor: alpha(theme.palette.primary.main, 0.05),
-                    }
+                    },
                   }}
                 >
                   <Box>
-                    <Typography variant="subtitle2" fontWeight="700">{option.saleOrderNumber}</Typography>
+                    <Typography variant="subtitle2" fontWeight="700">
+                      {option.saleOrderNumber}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      OBD: {option.outboundDelivery || 'N/A'}
+                      OBD: {option.outboundDelivery || "N/A"}
                     </Typography>
                   </Box>
-                  <CommonButton size="small" onClick={(e) => { e.stopPropagation(); handleAddSO(option.id); }} >
+                  <CommonButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddSO(option.id);
+                    }}
+                  >
                     SELECT
                   </CommonButton>
                 </Box>
@@ -1576,6 +1866,6 @@ export default function DispatchView() {
           </Alert>
         </Snackbar>
       </Box>
-    </LocalizationProvider >
+    </LocalizationProvider>
   );
 }
