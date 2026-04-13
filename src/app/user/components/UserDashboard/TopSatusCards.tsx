@@ -50,7 +50,7 @@ export default function StatsCards() {
 
   // Format the Dayjs object to a string (YYYY-MM-DD) for the API, or undefined if cleared
   const dateString = filterDate ? filterDate.format("YYYY-MM-DD") : undefined;
-  
+
   // Pass the formatted string to your hook
   const { data, loading } = useTopStatusCards(dateString);
 
@@ -60,15 +60,15 @@ export default function StatsCards() {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
         {/* Custom Card for Assigned Orders to accommodate the MUI Date Picker & Split View */}
         <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-4 shadow-sm transition-all hover:shadow-md min-h-[110px]">
           <div className="flex items-center justify-between mb-3">
             <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               Orders Assigned To Me
             </p>
-            
+
             <div className="flex items-center">
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
@@ -85,7 +85,7 @@ export default function StatsCards() {
                         // Dynamic styling to support both light and dark modes
                         "& .MuiInputBase-root": {
                           fontSize: "0.875rem",
-                          color: "inherit", 
+                          color: "inherit",
                           backgroundColor: "transparent",
                         },
                         "& .MuiOutlinedInput-notchedOutline": {
@@ -118,7 +118,7 @@ export default function StatsCards() {
                   </p>
                 )}
               </div>
-              
+
               {/* COMPLETED (Only visible if a date is selected) */}
               {filterDate && (
                 <div className="flex-1 text-center px-2">

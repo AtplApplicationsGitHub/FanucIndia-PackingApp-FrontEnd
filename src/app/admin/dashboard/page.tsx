@@ -65,7 +65,7 @@ function AdminDashboardContent() {
   const router = useRouter();
   const { snackbar: adminSnackbar, onSnackbarClose: handleAdminSnackbarClose } =
     admin;
-  
+
   React.useEffect(() => {
     const urlView = searchParams.get("view") as any;
     if (urlView) {
@@ -282,44 +282,68 @@ function AdminDashboardContent() {
                     onTodayClick={admin.handleTodayFilters}
                   />
                 </Box>
-              </motion.div>
-              <Paper
-                elevation={0}
-                sx={{
-                  width: "100%",
-                  mb: 2,
-                  px: { xs: 1, md: 2 },
-                  py: 1,
-                  bgcolor: "background.paper",
-                }}
-              >
-                <AdminOrdersTable
-                  orders={displayedOrders}
-                  lookup={admin.lookup}
-                  currentPage={admin.currentPage}
-                  pageSize={admin.pageSize}
-                  rowCount={admin.totalOrders}
-                  setCurrentPage={admin.setCurrentPage}
-                  setPageSize={admin.setPageSize}
-                  onDelete={(id: number) =>
-                    admin.setConfirmDelete({ type: "orders", id })
-                  }
-                  onUpdateInline={onUpdateInline}
-                  onOpenChat={handleOpenChat}
-                  onEdit={(order: SalesOrder) => {
-                    setEditOrder(order);
-                    setEditModalOpen(true);
+                <Paper
+                  elevation={0}
+                  sx={{
+                    width: "100%",
+                    mb: 2,
+                    px: { xs: 1, md: 2 },
+                    py: 1,
+                    bgcolor: "background.paper",
                   }}
-                  onDetailedView={handleDetailedViewClick}
-                  loading={admin.loading}
-                />
-              </Paper>
+                >
+                  <AdminOrdersTable
+                    orders={displayedOrders}
+                    lookup={admin.lookup}
+                    currentPage={admin.currentPage}
+                    pageSize={admin.pageSize}
+                    rowCount={admin.totalOrders}
+                    setCurrentPage={admin.setCurrentPage}
+                    setPageSize={admin.setPageSize}
+                    onDelete={(id: number) =>
+                      admin.setConfirmDelete({ type: "orders", id })
+                    }
+                    onUpdateInline={onUpdateInline}
+                    onOpenChat={handleOpenChat}
+                    onEdit={(order: SalesOrder) => {
+                      setEditOrder(order);
+                      setEditModalOpen(true);
+                    }}
+                    onDetailedView={handleDetailedViewClick}
+                    loading={admin.loading}
+                  />
+                </Paper>
+              </motion.div>
             </Box>
           )}
 
-          {admin.view === "master" && <AdminMasterLookupPanel />}
-          {admin.view === "dispatch" && <DispatchView />}
-          {admin.view === "fg_dashboard" && <FgDashboardView />}
+          {admin.view === "master" &&
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <AdminMasterLookupPanel />
+            </motion.div>}
+          {admin.view === "dispatch" &&
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <DispatchView />
+            </motion.div>}
+          {admin.view === "fg_dashboard" &&
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "0.5% 0 2rem 0" }}
+            >
+              <FgDashboardView />
+            </motion.div>}
 
           {admin.view === "status_hub" && (
 

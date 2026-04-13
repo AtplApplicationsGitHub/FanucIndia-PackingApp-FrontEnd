@@ -14,7 +14,7 @@ interface Props {
 
 export default function UserDashboard({ }: Props) {
   return (
-    <div className="py-6 md:py-8">
+    <div className="py-2 md:py-2">
       <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}

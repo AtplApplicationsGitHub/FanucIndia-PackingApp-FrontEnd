@@ -174,6 +174,12 @@ function SalesDashboardContent() {
           </motion.div>}
 
         {(view === "orders" || view === "dispatched") && (
+           <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
           <Box px={{ xs: 1.5, md: 2 }} py={1}>
             <SalesDashboardToolbar
               view={view}
@@ -224,6 +230,7 @@ function SalesDashboardContent() {
               onSelectedIdsChange={setSelectedIds}
             />
           </Box>
+          </motion.div>
         )}
 
         {/* Dialogs */}

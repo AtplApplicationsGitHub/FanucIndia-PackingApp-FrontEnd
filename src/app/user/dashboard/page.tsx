@@ -38,7 +38,7 @@ function UserDashboardContent() {
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
-  
+
   const router = useRouter();
 
   React.useEffect(() => {
@@ -77,7 +77,7 @@ function UserDashboardContent() {
       console.error("Failed to clear notifications", err);
     }
   };
-  
+
   const handleChatClose = () => {
     setChatOpen(false);
     setChatSoNumber(null);
@@ -97,7 +97,7 @@ function UserDashboardContent() {
       const res = await axios.get(API.ADMIN.ERP_MATERIALS_BY_ORDER(order.id), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (res.data && res.data.length > 0) {
         router.push(`/orders/${order.id}`);
       } else {
@@ -157,7 +157,14 @@ function UserDashboardContent() {
         />
 
         {view === "home" && (
-          <UserDashboardMain userName={userName} setView={setView} />
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <UserDashboardMain userName={userName} setView={setView} />
+          </motion.div>
         )}
 
         {view === "pick_pack" && (
@@ -165,7 +172,9 @@ function UserDashboardContent() {
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.4 }}
+              style={{ padding: "1rem" }}
+
             >
               <Paper
                 elevation={0}
@@ -189,9 +198,27 @@ function UserDashboardContent() {
           </Box>
         )}
 
-        {view === "dispatch" && <DispatchView />}
+        {view === "dispatch" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <DispatchView />
+          </motion.div>
+        )}
 
-        {view === "fg_dashboard" && <FgDashboardView />}
+        {view === "fg_dashboard" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <FgDashboardView />
+          </motion.div>
+        )}
 
         {error && (
           <Box
@@ -217,18 +244,18 @@ function UserDashboardContent() {
       />
 
       <SoChatDrawer
-          open={chatOpen}
-          onClose={handleChatClose}
-          orderId={chatOrderId}
-          soNumber={chatSoNumber}
-          buttonSx={{
-            bgcolor: theme.palette.primary.main,
-            color: "#fff",
-            "&:hover": {
-              bgcolor: theme.palette.primary.dark,
-            },
-          }}
-        />
+        open={chatOpen}
+        onClose={handleChatClose}
+        orderId={chatOrderId}
+        soNumber={chatSoNumber}
+        buttonSx={{
+          bgcolor: theme.palette.primary.main,
+          color: "#fff",
+          "&:hover": {
+            bgcolor: theme.palette.primary.dark,
+          },
+        }}
+      />
     </>
   );
 }
