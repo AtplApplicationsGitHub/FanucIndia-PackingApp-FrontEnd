@@ -20,6 +20,8 @@ import {
   Button,
   TablePagination,
   Avatar,
+  useTheme, 
+  alpha     
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -31,6 +33,9 @@ export default function OperatorStatsTable({
 }: {
   selectedDate: string;
 }) {
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
+
   const { data: stats = [], loading } = useOperatorStats(selectedDate);
 
   // Pagination State
@@ -395,32 +400,20 @@ export default function OperatorStatsTable({
       >
         <DialogTitle
           sx={{
-            m: 0,
-            p: 2,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            position: "relative",
-          }}
+          display: "flex", justifyContent: "center", alignItems: "center",
+          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          color: "error.main",
+          pb: 1,
+          position: "relative",
+        }}
         >
-          <Typography
-            variant="h6"
-            component="div"
-            fontWeight="bold"
-            textTransform="uppercase"
-            sx={{
-              color: (theme) =>
-                theme.palette.mode === "dark" ? "#FF6B6B" : "#D00000",
-            }}
-          >
             {dialogTitle}
-          </Typography>
           <IconButton 
             onClick={() => setDialogOpen(false)} 
             size="small"
             sx={{ position: "absolute", right: 12 }}
           >
-            <CloseIcon />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ p: 2 }}>
@@ -449,21 +442,32 @@ export default function OperatorStatsTable({
               borderRadius: 1,
             }}
           >
-            <Table size="small" stickyHeader>
+            <Table 
+              size="small" 
+              stickyHeader
+              sx={{
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: lightYellow,
+                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
+                  borderBottom: 0,
+                },
+              }}
+            >
               <TableHead>
                 <TableRow>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "background.default" }}
+                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
                   >
                     S.No
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "background.default" }}
+                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
                   >
                     SO Number
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "background.default" }}
+                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
                   >
                     OBD
                   </TableCell>
