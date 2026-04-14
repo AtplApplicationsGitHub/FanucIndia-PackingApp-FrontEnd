@@ -16,7 +16,9 @@ import {
   RefreshCcw,
   Download,
   Upload,
+  Settings
 } from "lucide-react";
+import CloseIcon from "@mui/icons-material/Close";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, {
@@ -25,7 +27,8 @@ import LookupCrudTable, {
 import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog";
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
-import { Button, Paper, useTheme, InputBase, IconButton } from "@mui/material";
+import { 
+  Button, Paper, useTheme, InputBase, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
@@ -97,6 +100,9 @@ export default function AdminMasterLookupPanel() {
     id: number;
   } | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+
+  const [ipDialogOpen, setIpDialogOpen] = useState(false);
+  const [printerIp, setPrinterIp] = useState("");
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -273,6 +279,46 @@ export default function AdminMasterLookupPanel() {
     } finally {
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
+      setActionLoading(false);
+    }
+  };
+
+  const openIpConfigDialog = async () => {
+    setActionLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`);
+      if (res.ok) {
+        const data = await res.json();
+        setPrinterIp(data?.value || "");
+      } else {
+        setPrinterIp(""); // Default if it doesn't exist yet
+      }
+      setIpDialogOpen(true);
+    } catch (error) {
+      showSnackbar("Failed to fetch current IP config", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const savePrinterIp = async () => {
+    if (!printerIp.trim()) {
+      showSnackbar("IP address cannot be empty", "error");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`, {
+        method: "PATCH",
+        body: JSON.stringify({ value: printerIp.trim() }),
+      });
+      if (!res.ok) throw new Error("Failed to save IP");
+      
+      showSnackbar("Customer Label Printer IP updated successfully!", "success");
+      setIpDialogOpen(false);
+    } catch (error) {
+      showSnackbar("Failed to save configuration", "error");
+    } finally {
       setActionLoading(false);
     }
   };
@@ -479,6 +525,14 @@ export default function AdminMasterLookupPanel() {
           <CommonButton startIcon={<RefreshCcw size={18} />} onClick={fetchData}>
             REFRESH
           </CommonButton>
+          {selectedType === "printers" && (
+            <CommonButton
+              startIcon={<Settings size={18} />}
+              onClick={openIpConfigDialog}
+            >
+              CUSTOMER LABEL IP
+            </CommonButton>
+          )}
         </Box>
       )}
 
@@ -550,6 +604,51 @@ export default function AdminMasterLookupPanel() {
           {snackbar.message}
         </MuiAlert>
       </Snackbar>
+
+      {/* IP Configuration Dialog */}
+      <Dialog open={ipDialogOpen} onClose={() => setIpDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle
+          sx={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}
+        >
+          CUSTOMER LABEL PRINTER IP
+          <IconButton
+            aria-label="close"
+            onClick={() => setIpDialogOpen(false)}
+            size="small"
+            sx={{ position: "absolute", right: 12 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <TextField
+              autoFocus
+              margin="dense"
+              size="small"
+              label="Printer IP Address"
+              type="text"
+              fullWidth
+              variant="outlined"
+              placeholder="Printer IP Address"
+              value={printerIp}
+              onChange={(e) => setPrinterIp(e.target.value)}
+              disabled={actionLoading}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 1, gap: 1 }}>
+          <CommonButton onClick={savePrinterIp} disabled={actionLoading}>
+            {actionLoading ? "SAVING..." : "SAVE"}
+          </CommonButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

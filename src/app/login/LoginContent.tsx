@@ -116,6 +116,31 @@ export default function LoginContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get("loggedout") === "1" || searchParams.get("reason") === "session-expired") {
+      return;
+    }
+
+    const token = Cookies.get("token") || localStorage.getItem("token");
+    const userStr = localStorage.getItem("user");
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr) as User;
+        
+        if (user.role === "ADMIN") {
+          router.replace("/admin/dashboard");
+        } else if (user.role === "SALES") {
+          router.replace("/sales/dashboard");
+        } else if (user.role === "USER") {
+          router.replace("/user/dashboard");
+        }
+      } catch (err: unknown) {
+        console.warn("Failed to parse user session data", err);
+      }
+    }
+  }, [router, searchParams]);
+
   const handleLoggedOutSnackbarClose = (
     _e?: React.SyntheticEvent | Event,
     reason?: string,

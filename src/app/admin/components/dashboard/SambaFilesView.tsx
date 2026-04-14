@@ -331,25 +331,23 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
             <DesktopDatePicker
               format="DD-MM-YYYY"
               value={selectedDate ? dayjs(selectedDate) : null}
-              disabled
               onChange={(newDate) => {
                 if (newDate && newDate.isValid()) {
                   setSelectedDate(newDate.format("YYYY-MM-DD"));
+                  setPage(0);
                 }
-                setPage(0);
               }}
               slotProps={{
                 textField: {
                   size: "small",
                   placeholder: "Select Date",
+                  InputProps: {
+                    readOnly: true,
+                    sx: { cursor: 'pointer' }
+                  },
                   sx: {
                     width: { xs: "170px", sm: "200px" },
                     "& .MuiInputBase-root": { borderRadius: 1.5 },
-                    // This forces the disabled text to appear in solid primary text color
-                    "& .MuiInputBase-input.Mui-disabled": {
-                      WebkitTextFillColor: theme.palette.text.primary,
-                      color: theme.palette.text.primary,
-                    },
                   },
                 },
               }}
