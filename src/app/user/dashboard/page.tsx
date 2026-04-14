@@ -13,7 +13,7 @@ import axios from "axios";
 import { API } from '@/common/lib/endpoints';
 import { SalesOrder } from "@/app/admin/components/types/admin";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
-import UserDashboardMain from "@/app/user/components/UserdashboradMain";
+import UserDashboardMain from "@/app/user/components/UserdashboardMain";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useTheme } from "@mui/material";
 
@@ -56,7 +56,7 @@ function UserDashboardContent() {
     }
   }, [searchParams]);
 
-  // NEW: Custom function to update the tab AND the browser history URL
+  // Custom function to update the tab AND the browser history URL
   const handleViewChange = (newView: any) => {
     setView(newView);
     sessionStorage.setItem("userDashboardView", newView);

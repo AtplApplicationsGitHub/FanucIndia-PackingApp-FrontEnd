@@ -27,13 +27,16 @@ export const useTopStatusCards = (dateStr?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isActive = true;
     const fetchData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        if (isActive) {
+          setLoading(true);
+          setError(null);
+        }
 
-        const statsUrl = dateStr 
-          ? `${API.USER_DASHBOARD.STATS}?date=${dateStr}` 
+        const statsUrl = dateStr
+          ? `${API.USER_DASHBOARD.STATS}?date=${encodeURIComponent(dateStr)}`
           : API.USER_DASHBOARD.STATS;
 
         const [statsResponse, kpisResponse] = await Promise.all([
@@ -42,29 +45,35 @@ export const useTopStatusCards = (dateStr?: string) => {
         ]);
 
         if (!statsResponse.ok) {
-           throw new Error(`Failed to fetch user stats: ${statsResponse.statusText}`);
+          throw new Error(`Failed to fetch user stats: ${statsResponse.statusText}`);
         }
         if (!kpisResponse.ok) {
-           throw new Error(`Failed to fetch admin KPIs: ${kpisResponse.statusText}`);
+          throw new Error(`Failed to fetch admin KPIs: ${kpisResponse.statusText}`);
         }
 
         const statsData: DashboardStats = await statsResponse.json();
         const kpisData: AdminKpis = await kpisResponse.json();
-
+        if (!isActive) return;
         setData({
           assignedOrdersCount: statsData.assignedOrdersCount ?? 0,
           completedOrdersCount: statsData.completedOrdersCount,
           overdueOrdersCount: kpisData.overdueSoCount ?? 0,
         });
-      } catch (err) {
+      } catch (err: unknown) {
+        if (!isActive) return;
         console.error("Error fetching top status cards data:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+    return () => {
+      isActive = false;
+    };
   }, [dateStr]);
 
   return { data, loading, error };

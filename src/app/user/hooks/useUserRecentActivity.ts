@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "../../../common/lib/endpoints";
 
 export interface RecentActivityItem {
@@ -18,7 +18,7 @@ export function useUserRecentActivity() {
       try {
         setLoading(true);
         const response = await fetchWithAuth(API.TERMINAL_USER_DASHBOARD.RECENT_ACTIVITY);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch activities: ${response.statusText}`);
         }

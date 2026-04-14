@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ShoppingCart, Truck } from "lucide-react";
 import { useTopStatusCards } from "../../hooks/useTopStatusCards";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -15,6 +15,29 @@ interface StatCardProps {
   loading?: boolean;
 }
 
+// Utility function to format numbers with commas
+export const formatNumber = (value: number | string): string =>
+  new Intl.NumberFormat().format(Number(value ?? 0));
+
+const DATE_PICKER_SX = {
+  width: "100%",
+  maxWidth: "185px",
+  "& .MuiInputBase-root": {
+    fontSize: "0.875rem",
+    color: "inherit",
+    backgroundColor: "transparent",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "rgba(156, 163, 175, 0.5)",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "inherit",
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#9CA3AF",
+  },
+} as const;
+
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading = false }) => {
   return (
     <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-6 shadow-sm transition-all hover:shadow-md min-h-[110px]">
@@ -28,7 +51,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading = false
               <div className="h-10 w-32 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse" />
             ) : (
               <p className="text-xl font-extrabold text-[#1F2933] dark:text-white leading-tight">
-                {new Intl.NumberFormat().format(Number(value ?? 0))}
+                {formatNumber(value)}
               </p>
             )}
           </div>
@@ -43,12 +66,14 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, loading = false
 };
 
 export default function StatsCards() {
-  // Use Dayjs object for MUI DatePicker state, initialized to today
+  // initialized to today
   const [filterDate, setFilterDate] = useState<Dayjs | null>(dayjs());
 
   // Format the Dayjs object to a string (YYYY-MM-DD) for the API, or undefined if cleared
-  const dateString = filterDate ? filterDate.format("YYYY-MM-DD") : undefined;
-
+  const dateString = useMemo(
+    () => (filterDate ? filterDate.format("YYYY-MM-DD") : undefined),
+    [filterDate]
+  );
   // Pass the formatted string to your hook
   const { data, loading } = useTopStatusCards(dateString);
 
@@ -58,11 +83,10 @@ export default function StatsCards() {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
-        {/* Custom Card for Assigned Orders to accommodate the MUI Date Picker & Split View */}
         <div className="relative group rounded-xl bg-white dark:bg-[#1F2933] border border-[#E5E7EB] dark:border-[#4B5563] px-6 py-4 shadow-sm transition-all hover:shadow-md min-h-[110px]">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
             <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               Orders Assigned To Me
             </p>
@@ -75,27 +99,10 @@ export default function StatsCards() {
                   format="DD/MM/YYYY"
                   label="Date"
                   slotProps={{
-                    field: { clearable: true }, 
+                    field: { clearable: true },
                     textField: {
                       size: "small",
-                      sx: {
-                        width: "185px",
-                       
-                        "& .MuiInputBase-root": {
-                          fontSize: "0.875rem",
-                          color: "inherit",
-                          backgroundColor: "transparent",
-                        },
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: "rgba(156, 163, 175, 0.5)", 
-                        },
-                        "& .MuiSvgIcon-root": {
-                          color: "inherit", 
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          borderColor: "#9CA3AF",
-                        }
-                      }
+                      sx: DATE_PICKER_SX
                     }
                   }}
                 />
@@ -103,7 +110,7 @@ export default function StatsCards() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4 mt-2">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 mt-2">
             <div className="flex-1 flex justify-center divide-x divide-gray-200 dark:divide-gray-700">
               {/* PENDING / CURRENT QUEUE */}
               <div className="flex-1 text-center px-2">
@@ -112,7 +119,7 @@ export default function StatsCards() {
                   <div className="h-8 w-16 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse mx-auto" />
                 ) : (
                   <p className="text-xl font-extrabold text-[#1F2933] dark:text-white">
-                    {new Intl.NumberFormat().format(Number(assignedOrders))}
+                    {formatNumber(assignedOrders)}
                   </p>
                 )}
               </div>
@@ -125,7 +132,7 @@ export default function StatsCards() {
                     <div className="h-8 w-16 bg-[#E5E7EB] dark:bg-[#2C3540] rounded animate-pulse mx-auto" />
                   ) : (
                     <p className="text-xl font-extrabold text-green-600 dark:text-green-400">
-                      {new Intl.NumberFormat().format(Number(completedOrders))}
+                      {formatNumber(completedOrders)}
                     </p>
                   )}
                 </div>
@@ -146,6 +153,6 @@ export default function StatsCards() {
           loading={loading}
         />
       </div>
-    </div>
+    </div >
   );
 }

@@ -13,12 +13,19 @@ const COLORS = {
 };
 
 export default function OrderStatusChart() {
-  const { data, totalSoCount, loading } = useSalesKpis();
+  const { data, totalSoCount, loading, error } = useSalesKpis();
 
-  const total = Number.isFinite(totalSoCount as number)
-    ? (totalSoCount as number)
-    : 0;
+  const total = Number.isFinite(totalSoCount) ? totalSoCount : 0;
 
+  if (error) {
+    return (
+      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[520px] flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4">
+          <span className="text-red-500">Failed to load chart data.</span>
+        </div>
+      </div>
+    );
+  }
   if (loading) {
     return (
       <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[520px] flex items-center justify-center font-sans">
@@ -104,14 +111,14 @@ export default function OrderStatusChart() {
             height={400}
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
             slotProps={{
-               legend: {
-                  sx: {
-                     text: {
-                        fill: "#9CA3AF",
-                        fontSize: 12,
-                     },
+              legend: {
+                sx: {
+                  text: {
+                    fill: "#9CA3AF",
+                    fontSize: 12,
                   },
-               }
+                },
+              }
             }}
           />
         ) : (

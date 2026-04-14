@@ -16,6 +16,7 @@ import {
 import { useUserRecentActivity } from "../../hooks/useUserRecentActivity";
 
 function formatTimeAgo(timestamp: string) {
+  if (!timestamp) return "";
   try {
     const date = new Date(timestamp);
     const now = new Date();
@@ -59,7 +60,7 @@ function getActivityConfig(type: string, text: string) {
       bg: "bg-green-50 dark:bg-green-900/20",
     };
   }
-  
+
   if (content.includes("fg location") || content.includes("storage")) {
     return {
       icon: <Warehouse size={20} className="text-purple-600 dark:text-purple-400" />,
@@ -69,14 +70,14 @@ function getActivityConfig(type: string, text: string) {
 
   // Fallback based on Type
   if (t === "ASSIGNMENT") {
-     return {
+    return {
       icon: <FileText size={20} className="text-indigo-600 dark:text-indigo-400" />,
       bg: "bg-indigo-50 dark:bg-indigo-900/20",
     };
   }
 
   if (t === "MESSAGE") {
-     return {
+    return {
       icon: <MessageSquare size={20} className="text-amber-600 dark:text-amber-400" />,
       bg: "bg-amber-50 dark:bg-amber-900/20",
     };
@@ -113,7 +114,7 @@ export default function UserRecentActivity() {
   if (error) {
     return (
       <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm p-6">
-        <Alert severity="error">Failed to load activities: {error}</Alert>
+        <Alert severity="error">Failed to load activities. Please try again later.</Alert>
       </Box>
     );
   }
@@ -121,7 +122,7 @@ export default function UserRecentActivity() {
   const items = activities || [];
 
   return (
-    <Box className="bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 h-full flex flex-col min-h-[520px]">
+    <Box className={`bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex flex-col ${items.length === 0 ? '' : 'h-full min-h-[520px]'}`}>
       <div className="mb-8">
         <h2 className="text-base font-semibold uppercase tracking-wide text-[#D00000] dark:text-[#FF6B6B]">
           Recent Activities
@@ -140,13 +141,13 @@ export default function UserRecentActivity() {
           items.map((item, index) => {
             const { icon, bg } = getActivityConfig(item.type, item.text);
             const timeAgo = formatTimeAgo(item.timestamp);
-            
+
             return (
               <motion.div
                 key={item.id || index}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: Math.min(index * 0.05, 0.3) }}
                 className="flex items-start gap-4 group"
               >
                 {/* Icon Circle */}
@@ -162,7 +163,7 @@ export default function UserRecentActivity() {
                     {item.text}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
-                    {item.type} • {timeAgo}
+                    {item.type || "Activity"} • {timeAgo}
                   </span>
                 </div>
               </motion.div>

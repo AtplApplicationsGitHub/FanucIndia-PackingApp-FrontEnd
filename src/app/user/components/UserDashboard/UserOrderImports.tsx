@@ -8,7 +8,15 @@ const UserOrderImports = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
-  const { data: ordersData, loading } = useUserOrderImports();
+  const { data: ordersData, loading, error } = useUserOrderImports();
+
+  if (error) {
+    return (
+      <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex items-center justify-center">
+        <span className="text-red-500">Failed to load order data.</span>
+      </div>
+    );
+  }
 
   if (loading && (!ordersData || ordersData.length === 0)) {
     return (
@@ -50,16 +58,23 @@ const UserOrderImports = () => {
         };
     }
   };
+  if (!ordersData || ordersData.length === 0) {
+    return (
+      <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex items-center justify-center">
+        <span className="text-gray-500">No orders found.</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex flex-col justify-between font-sans transition-all">
+    <div className="w-full h-full min-h-[520px] bg-white dark:bg-[#1F2933] rounded-xl border border-[#E5E7EB] dark:border-[#4B5563] shadow-sm p-6 flex flex-col justify-between font-sans ">
       <div>
         <h2 className="text-base font-semibold uppercase text-[#D00000] dark:text-[#FF6B6B] mb-2">
           ORDERS CREATED
         </h2>
 
         <div className="flex items-center gap-2 mb-6 text-[#4B5563] dark:text-[#9CA3AF]">
-          <Calendar className="w-4 h-4"  />
+          <Calendar className="w-4 h-4" />
           <span className="text-sm font-medium">Last 5 Days</span>
         </div>
 
@@ -86,7 +101,7 @@ const UserOrderImports = () => {
                     }}
                     className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-base shrink-0"
                   >
-                    {item.label.substring(0, 3)}
+                    {item.label?.substring(0, 3) ?? "N/A"}
                   </div>
 
                   {/* Date Labels */}

@@ -2,6 +2,40 @@ import React from "react";
 import { useDispatchSummary } from "../../hooks/useDispatch";
 import { Clock, CheckCircle, ClipboardCheck } from "lucide-react";
 
+export const formatDate = (date: Date): string =>
+  date.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+
+const DISPATCH_STATS = [
+  {
+    key: "ordersToBeDispatched",
+    label: "Orders to be Dispatched",
+    icon: Clock,
+    colorClass: "text-yellow-600 dark:text-yellow-400",
+    bgClass: "bg-yellow-50 dark:bg-yellow-900/20",
+  },
+  {
+    key: "readyForDispatchToday",
+    label: "Ready for Dispatch",
+    icon: ClipboardCheck,
+    colorClass: "text-blue-600 dark:text-blue-400",
+    bgClass: "bg-blue-50 dark:bg-blue-900/20",
+  },
+  {
+    key: "ordersDispatchedToday",
+    label: "Orders Dispatched",
+    icon: CheckCircle,
+    colorClass: "text-green-600 dark:text-green-400",
+    bgClass: "bg-green-50 dark:bg-green-900/20",
+  },
+] as const;
+
+type DispatchStatKey = typeof DISPATCH_STATS[number]["key"];
+
 export default function UserDispatch() {
   const { data, loading, error } = useDispatchSummary();
 
@@ -34,52 +68,24 @@ export default function UserDispatch() {
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8 lg:gap-10 w-full">
-
-              {/* 1. Orders to be Dispatched */}
-              <div className="flex flex-col items-center gap-3 flex-1">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full grid place-items-center bg-yellow-50 dark:bg-yellow-900/20">
-                  <Clock className="w-8 h-8 lg:w-10 lg:h-10 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] text-center font-medium">
-                  Orders to be Dispatched
-                </p>
-                <div className="text-4xl lg:text-5xl font-extrabold text-yellow-600 dark:text-yellow-400">
-                  {ordersToBeDispatched}
-                </div>
-              </div>
-
-              {/* Divider 1 */}
-              <div className="hidden sm:block h-24 lg:h-32 w-px bg-[#E5E7EB] dark:bg-[#4B5563]" />
-
-              {/* 2. Ready for Dispatch Today (NEW) */}
-              <div className="flex flex-col items-center gap-3 flex-1">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full grid place-items-center bg-blue-50 dark:bg-blue-900/20">
-                  <ClipboardCheck className="w-8 h-8 lg:w-10 lg:h-10 text-blue-600 dark:text-blue-400" />
-                </div>
-                <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] text-center font-medium">
-                  Ready for Dispatch
-                </p>
-                <div className="text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-blue-400">
-                  {readyForDispatchToday}
-                </div>
-              </div>
-
-              {/* Divider 2 */}
-              <div className="hidden sm:block h-24 lg:h-32 w-px bg-[#E5E7EB] dark:bg-[#4B5563]" />
-
-              {/* 3. Orders Dispatched Today */}
-              <div className="flex flex-col items-center gap-3 flex-1">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full grid place-items-center bg-green-50 dark:bg-green-900/20">
-                  <CheckCircle className="w-8 h-8 lg:w-10 lg:h-10 text-green-600 dark:text-green-400" />
-                </div>
-                <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] text-center font-medium">
-                  Orders Dispatched
-                </p>
-                <div className="text-4xl lg:text-5xl font-extrabold text-green-600 dark:text-green-400">
-                  {ordersDispatchedToday}
-                </div>
-              </div>
-
+              {DISPATCH_STATS.map((stat, index) => (
+                <React.Fragment key={stat.key}>
+                  {index > 0 && (
+                    <div className="hidden sm:block h-24 lg:h-32 w-px bg-[#E5E7EB] dark:bg-[#4B5563]" />
+                  )}
+                  <div className="flex flex-col items-center gap-3 flex-1">
+                    <div className={`w-16 h-16 lg:w-20 lg:h-20 rounded-full grid place-items-center ${stat.bgClass}`}>
+                      <stat.icon className={`w-8 h-8 lg:w-10 lg:h-10 ${stat.colorClass}`} />
+                    </div>
+                    <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] text-center font-medium">
+                      {stat.label}
+                    </p>
+                    <div className={`text-4xl lg:text-5xl font-extrabold ${stat.colorClass}`}>
+                      {data?.[stat.key as DispatchStatKey] ?? 0}
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           )}
         </div>
@@ -88,7 +94,7 @@ export default function UserDispatch() {
         <div className="px-6 pb-6">
           <p className="text-xs text-gray-400">
             <span suppressHydrationWarning>
-              Updated: {new Date().toLocaleDateString()}
+              Updated: {formatDate(new Date())}
             </span>
           </p>
         </div>

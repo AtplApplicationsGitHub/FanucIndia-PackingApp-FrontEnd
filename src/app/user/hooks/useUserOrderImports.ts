@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 export interface UserOrderImportItem {
@@ -16,7 +16,7 @@ export function useUserOrderImports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchImports = async () => {
+  const fetchImports = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchWithAuth(API.TERMINAL_USER_DASHBOARD.ORDERS_CREATED);
@@ -26,7 +26,7 @@ export function useUserOrderImports() {
           (item: { dayLabel: string; date: string; count: number }, index: number) => {
             let type: "today" | "yesterday" | "past" = "past";
             const lowerLabel = item.dayLabel.toLowerCase();
-            
+
             if (lowerLabel.includes("today")) {
               type = "today";
             } else if (lowerLabel.includes("yesterday")) {
@@ -67,16 +67,18 @@ export function useUserOrderImports() {
     } finally {
       setLoading(false);
     }
-  };
 
-  useEffect(() => {
-    fetchImports();
-  }, []);
+  
+    }, []);
 
-  return {
-    data,
-    loading,
-    error,
-    refetch: fetchImports,
-  };
+useEffect(() => {
+  fetchImports();
+}, [fetchImports]);
+
+return {
+  data,
+  loading,
+  error,
+  refetch: fetchImports,
+};
 }
