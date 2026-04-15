@@ -12,7 +12,7 @@ export function useInactivityLogout(timeoutMinutes: number = 120, isEnabled: boo
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
     
-    router.push("/login");
+    router.push("/login?reason=inactivity");
   }, [router]);
 
   const resetTimer = useCallback(() => {

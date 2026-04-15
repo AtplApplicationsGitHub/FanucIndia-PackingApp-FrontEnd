@@ -269,11 +269,29 @@ TERMINAL_USER_DASHBOARD: {
 
 };
 
+let isFetchRedirecting = false;
+
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const headers = {
     ...(options.headers || {}),
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
-  return fetch(url, { ...options, headers });
+  const response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401 && typeof window !== 'undefined') {
+    if (!isFetchRedirecting) {
+      isFetchRedirecting = true;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      setTimeout(() => {
+          window.location.href = '/login?reason=session-expired';
+      }, 500);
+    }
+    
+    return new Promise<Response>(() => {}); 
+  }
+
+  return response;
 }

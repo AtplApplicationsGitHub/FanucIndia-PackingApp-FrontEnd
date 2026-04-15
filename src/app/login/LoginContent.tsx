@@ -68,7 +68,7 @@ export default function LoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loggedOutSnackbar, setLoggedOutSnackbar] = useState<boolean>(false);
-  const [sessionExpiredAlert, setSessionExpiredAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
 
   // APK Dropdown state
   const [apkAnchorEl, setApkAnchorEl] = useState<null | HTMLElement>(null);
@@ -111,8 +111,12 @@ export default function LoginContent() {
     if (searchParams.get("loggedout") === "1") {
       setLoggedOutSnackbar(true);
     }
-    if (searchParams.get("reason") === "session-expired") {
-      setSessionExpiredAlert(true);
+    
+    const reason = searchParams.get("reason");
+    if (reason === "session-expired") {
+      setAlertMessage("Your session was revoked because this account was accessed from another device. Please log in again.");
+    } else if (reason === "inactivity") {
+      setAlertMessage("Your session expired due to inactivity. Please log in again.");
     }
   }, [searchParams]);
 
@@ -402,13 +406,13 @@ export default function LoginContent() {
         >
           <LoginHeader />
           <CardContent sx={{ px: 4, pb: 4 }}>
-            {sessionExpiredAlert && (
+            {alertMessage && (
               <Alert
                 severity="warning"
-                onClose={() => setSessionExpiredAlert(false)}
+                onClose={() => setAlertMessage("")}
                 sx={{ mb: 2, width: "100%" }}
               >
-                Your session expired due to inactivity. Please log in again.
+                {alertMessage}
               </Alert>
             )}
             <LoginForm

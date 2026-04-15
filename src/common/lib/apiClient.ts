@@ -25,6 +25,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   config.headers = headers;
   return config;
 });
+let isRedirecting = false;
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -32,11 +33,18 @@ apiClient.interceptors.response.use(
     const isLoginRequest = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/mobile-login');
 
     if (err.response?.status === 401 && !isLoginRequest && typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setTimeout(() => {
-            window.location.href = '/login?reason=session-expired';
-        }, 500);
+        
+        if (!isRedirecting) {
+            isRedirecting = true;
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            setTimeout(() => {
+                window.location.href = '/login?reason=session-expired';
+            }, 500);
+        }
+
+        return new Promise(() => {});
     }
 
     const payload = err.response?.data as { code?: string; message?: string } | undefined;
