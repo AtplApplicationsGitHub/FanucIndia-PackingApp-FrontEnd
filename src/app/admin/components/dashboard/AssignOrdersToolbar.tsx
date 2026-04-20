@@ -47,6 +47,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { LookupRow } from "@/app/admin/components/types/admin";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { TextField } from "@mui/material";
@@ -590,61 +591,98 @@ export default function AssignOrdersToolbar({
                   </Typography>
                 </Box>
               ))}
-              <Tooltip
-                title={
-                  sftpStatus === "LOADING"
-                    ? "Checking Server..."
-                    : sftpStatus === "UP"
-                      ? "Samba Connected (Click to view files)"
-                      : sftpStatus === "DOWN"
-                        ? "Samba Disconnected"
-                        : "Check Samba Server Status"
-                }
-              >
-                <IconButton
-                  onClick={() => {
-                    if (sftpStatus === "UP" && onOpenSambaView) {
-                      onOpenSambaView();
-                    } else {
-                      handleCheckSambaStatus();
-                    }
-                  }}
-                  disabled={sftpStatus === "LOADING"}
-                  sx={{
-                    ml: 1,
-                    width: 36,
-                    height: 36,
-                    bgcolor:
-                      sftpStatus === "UP"
-                        ? "success.main"
+              <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
+                <Tooltip title="Critical Status" arrow>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      px: 0.75,
+                      py: 0.25,
+                      borderRadius: "18px",
+                      border: "1px solid #ffcdd2",
+                      bgcolor: "#ffebee",
+                      mr: 0.5,
+                    }}
+                  >
+                    <IconButton
+                      sx={{
+                        color: "#d32f2f",
+                        width: 28,
+                        height: 28,
+                        "&:hover": { bgcolor: "rgba(211, 47, 47, 0.08)" },
+                      }}
+                    >
+                      <WarningAmberOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <Typography
+                      sx={{
+                        color: "#d32f2f",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        pr: 0.5,
+                      }}
+                    >
+                      78
+                    </Typography>
+                  </Box>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    sftpStatus === "LOADING"
+                      ? "Checking Server..."
+                      : sftpStatus === "UP"
+                        ? "Samba Connected (Click to view files)"
                         : sftpStatus === "DOWN"
-                          ? "error.main"
-                          : "transparent",
-                    color:
-                      sftpStatus === "UP" || sftpStatus === "DOWN"
-                        ? "#ffffff"
-                        : "text.secondary",
-                    "&:hover": {
+                          ? "Samba Disconnected"
+                          : "Check Samba Server Status"
+                  }
+                >
+                  <IconButton
+                    onClick={() => {
+                      if (sftpStatus === "UP" && onOpenSambaView) {
+                        onOpenSambaView();
+                      } else {
+                        handleCheckSambaStatus();
+                      }
+                    }}
+                    disabled={sftpStatus === "LOADING"}
+                    sx={{
+                      width: 36,
+                      height: 36,
                       bgcolor:
                         sftpStatus === "UP"
-                          ? "success.dark"
+                          ? "success.main"
                           : sftpStatus === "DOWN"
-                            ? "error.dark"
-                            : "action.hover",
-                    },
-                  }}
-                >
-                  {sftpStatus === "LOADING" ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : sftpStatus === "UP" ? (
-                    <CheckCircleOutlineIcon fontSize="small" />
-                  ) : sftpStatus === "DOWN" ? (
-                    <ErrorOutlineIcon fontSize="small" />
-                  ) : (
-                    <StorageOutlinedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </Tooltip>
+                            ? "error.main"
+                            : "transparent",
+                      color:
+                        sftpStatus === "UP" || sftpStatus === "DOWN"
+                          ? "#ffffff"
+                          : "text.secondary",
+                      "&:hover": {
+                        bgcolor:
+                          sftpStatus === "UP"
+                            ? "success.dark"
+                            : sftpStatus === "DOWN"
+                              ? "error.dark"
+                              : "action.hover",
+                      },
+                    }}
+                  >
+                    {sftpStatus === "LOADING" ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : sftpStatus === "UP" ? (
+                      <CheckCircleOutlineIcon fontSize="small" />
+                    ) : sftpStatus === "DOWN" ? (
+                      <ErrorOutlineIcon fontSize="small" />
+                    ) : (
+                      <StorageOutlinedIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
           </Box>
         </Paper>
