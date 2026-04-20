@@ -47,6 +47,9 @@ export default function OperatorStatsTable({
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogData, setDialogData] = useState<OrderDetail[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStage, setSelectedStage] = useState<"issue" | "packing">(
+    "issue",
+  );
 
   // Reset to first page when date/data changes
   useEffect(() => {
@@ -77,6 +80,22 @@ export default function OperatorStatsTable({
       d.outboundDelivery.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const sortedStats = [...stats].sort((a, b) => {
+    const aTotal =
+      selectedStage === "issue"
+        ? a.issueAssignedCount + a.issueCompletedCount
+        : a.packingAssignedCount + a.packingCompletedCount;
+    const bTotal =
+      selectedStage === "issue"
+        ? b.issueAssignedCount + b.issueCompletedCount
+        : b.packingAssignedCount + b.packingCompletedCount;
+
+    if (bTotal !== aTotal) return bTotal - aTotal;
+
+    // Tie-breaker: keep ordering stable and readable
+    return a.operatorName.localeCompare(b.operatorName);
+  });
+
   return (
     <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
       <CardContent sx={{ height: "100%", p: 0 }}>
@@ -88,11 +107,86 @@ export default function OperatorStatsTable({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
           }}
         >
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Operator Productivity ({dayjs(selectedDate).format("D MMM YYYY")})
           </h2>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              bgcolor: "action.hover",
+              borderRadius: 2,
+              p: 0.5,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Button
+              disableRipple
+              size="small"
+              onClick={() => setSelectedStage("issue")}
+              sx={{
+                px: 1.6,
+                py: 0.65,
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                borderRadius: 1.5,
+                textTransform: "none",
+                minWidth: "unset",
+                bgcolor:
+                  selectedStage === "issue" ? "background.paper" : "transparent",
+                color: selectedStage === "issue" ? "#D00000" : "text.secondary",
+                boxShadow:
+                  selectedStage === "issue" ? 1 : "none",
+                "&:hover": {
+                  bgcolor:
+                    selectedStage === "issue"
+                      ? "background.paper"
+                      : "transparent",
+                  color:
+                    selectedStage === "issue" ? "#D00000" : "text.primary",
+                },
+              }}
+            >
+              Issue
+            </Button>
+            <Button
+              disableRipple
+              size="small"
+              onClick={() => setSelectedStage("packing")}
+              sx={{
+                px: 1.6,
+                py: 0.65,
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                borderRadius: 1.5,
+                textTransform: "none",
+                minWidth: "unset",
+                bgcolor:
+                  selectedStage === "packing"
+                    ? "background.paper"
+                    : "transparent",
+                color:
+                  selectedStage === "packing" ? "#D00000" : "text.secondary",
+                boxShadow:
+                  selectedStage === "packing" ? 1 : "none",
+                "&:hover": {
+                  bgcolor:
+                    selectedStage === "packing"
+                      ? "background.paper"
+                      : "transparent",
+                  color:
+                    selectedStage === "packing" ? "#D00000" : "text.primary",
+                },
+              }}
+            >
+              Packing
+            </Button>
+          </Box>
         </Box>
 
         {loading ? (
@@ -152,23 +246,7 @@ export default function OperatorStatsTable({
                     }}
                     colSpan={2}
                   >
-                    Issue Stage
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      fontSize: "0.85rem",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                      color: (theme) =>
-                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
-                    }}
-                    colSpan={2}
-                  >
-                    Packing Stage
+                    {selectedStage === "issue" ? "Issue Stage" : "Packing Stage"}
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ bgcolor: "background.paper" }}>
@@ -201,38 +279,10 @@ export default function OperatorStatsTable({
                   >
                     Completed
                   </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      color: "#D97706",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    Assigned
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      color: "success.main",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    Completed
-                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {stats
+                {sortedStats
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <TableRow key={row.operatorEmail} hover>
@@ -282,8 +332,14 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorEmail} - ISSUED ASSIGNED`,
-                              row.issueAssigned || [],
+                              `${row.operatorEmail} - ${
+                                selectedStage === "issue"
+                                  ? "ISSUE ASSIGNED"
+                                  : "PACKING ASSIGNED"
+                              }`,
+                              selectedStage === "issue"
+                                ? row.issueAssigned || []
+                                : row.packingAssigned || [],
                             )
                           }
                           sx={{
@@ -293,10 +349,16 @@ export default function OperatorStatsTable({
                             color: "#D97706",
                           }}
                           disabled={
-                            !row.issueAssigned || row.issueAssigned.length === 0
+                            selectedStage === "issue"
+                              ? !row.issueAssigned ||
+                                row.issueAssigned.length === 0
+                              : !row.packingAssigned ||
+                                row.packingAssigned.length === 0
                           }
                         >
-                          {row.issueAssignedCount}
+                          {selectedStage === "issue"
+                            ? row.issueAssignedCount
+                            : row.packingAssignedCount}
                         </Button>
                       </TableCell>
 
@@ -304,8 +366,14 @@ export default function OperatorStatsTable({
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorEmail} -  ISSUE COMPLETED`,
-                              row.issueCompleted || [],
+                              `${row.operatorEmail} - ${
+                                selectedStage === "issue"
+                                  ? "ISSUE COMPLETED"
+                                  : "PACKING COMPLETED"
+                              }`,
+                              selectedStage === "issue"
+                                ? row.issueCompleted || []
+                                : row.packingCompleted || [],
                             )
                           }
                           sx={{
@@ -315,57 +383,16 @@ export default function OperatorStatsTable({
                             color: "success.main",
                           }}
                           disabled={
-                            !row.issueCompleted ||
-                            row.issueCompleted.length === 0
+                            selectedStage === "issue"
+                              ? !row.issueCompleted ||
+                                row.issueCompleted.length === 0
+                              : !row.packingCompleted ||
+                                row.packingCompleted.length === 0
                           }
                         >
-                          {row.issueCompletedCount}
-                        </Button>
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ borderColor: "divider" }}>
-                        <Button
-                          onClick={() =>
-                            handleOpenDialog(
-                              `${row.operatorEmail} - PACKING ASSIGNED`,
-                              row.packingAssigned || [],
-                            )
-                          }
-                          sx={{
-                            minWidth: 0,
-                            p: 0.5,
-                            fontWeight: "bold",
-                            color: "#D97706",
-                          }}
-                          disabled={
-                            !row.packingAssigned ||
-                            row.packingAssigned.length === 0
-                          }
-                        >
-                          {row.packingAssignedCount}
-                        </Button>
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ borderColor: "divider" }}>
-                        <Button
-                          onClick={() =>
-                            handleOpenDialog(
-                              `${row.operatorEmail} - PACKING COMPLETED`,
-                              row.packingCompleted || [],
-                            )
-                          }
-                          sx={{
-                            minWidth: 0,
-                            p: 0.5,
-                            fontWeight: "bold",
-                            color: "success.main",
-                          }}
-                          disabled={
-                            !row.packingCompleted ||
-                            row.packingCompleted.length === 0
-                          }
-                        >
-                          {row.packingCompletedCount}
+                          {selectedStage === "issue"
+                            ? row.issueCompletedCount
+                            : row.packingCompletedCount}
                         </Button>
                       </TableCell>
                     </TableRow>
