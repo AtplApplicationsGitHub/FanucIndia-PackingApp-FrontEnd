@@ -27,8 +27,9 @@ import LookupCrudTable, {
 import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog";
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
-import { 
-  Button, Paper, useTheme, InputBase, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
+import {
+  Button, Paper, useTheme, InputBase, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
@@ -79,6 +80,17 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Material Barcode", key: "materialBarcodes" },
   { label: "Users", key: "users" },
 ];
+
+const TYPE_TO_SHEET_NAME: Record<string, string> = {
+  products: "Products",
+  transporters: "Transporters",
+  plantCodes: "Plant Codes",
+  salesZones: "Sales Zones",
+  packConfigs: "Packing Configs",
+  customers: "Customers",
+  printers: "Printers",
+  materialBarcodes: "Material Barcodes",
+};
 
 export default function AdminMasterLookupPanel() {
   const theme = useTheme();
@@ -313,7 +325,7 @@ export default function AdminMasterLookupPanel() {
         body: JSON.stringify({ value: printerIp.trim() }),
       });
       if (!res.ok) throw new Error("Failed to save IP");
-      
+
       showSnackbar("Customer Label Printer IP updated successfully!", "success");
       setIpDialogOpen(false);
     } catch (error) {
@@ -326,12 +338,13 @@ export default function AdminMasterLookupPanel() {
   const handleDownloadBulk = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(API.LOOKUP.BULK_TEMPLATE, {
+      const sheetName = TYPE_TO_SHEET_NAME[selectedType] ?? "";
+      const res = await fetch(`${API.LOOKUP.BULK_TEMPLATE}?type=${sheetName}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
-      secureDownload(blob, "master_data_bulk.xlsx");
+      secureDownload(blob, `${selectedType}_master_data.xlsx`);
     } catch {
       showSnackbar("Failed to download template", "error");
     }
@@ -509,7 +522,7 @@ export default function AdminMasterLookupPanel() {
           >
             DOWNLOAD TEMPLATE
           </CommonButton>
-          <CommonButton component="label"  startIcon={<CloudUpload size={18} />}>
+          <CommonButton component="label" startIcon={<CloudUpload size={18} />}>
             UPLOAD BULK
             <input
               type="file"
