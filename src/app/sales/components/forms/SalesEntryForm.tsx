@@ -52,8 +52,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
 
   const isRestrictedMode =
     !!initialData &&
-    initialData.status !== "To be Issued" &&
-    initialData.status !== null;
+    initialData.status === "Dispatched";
 
   useEffect(() => {
     if (
