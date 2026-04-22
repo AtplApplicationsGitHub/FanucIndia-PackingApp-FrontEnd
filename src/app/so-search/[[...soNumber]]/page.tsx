@@ -370,7 +370,7 @@ export default function SoSearchPage() {
 
     try {
       const res = await fetchWithAuth(
-        API.ERP_MATERIAL_FILES.BY_SO(data.salesOrder.saleOrderNumber)
+        `${API.ERP_MATERIAL_FILES.BY_SO(data.salesOrder.saleOrderNumber)}?salesOrderId=${data.salesOrder.id}`
       );
       if (!res.ok) throw new Error("Could not fetch attachments");
       const attachments = await res.json();

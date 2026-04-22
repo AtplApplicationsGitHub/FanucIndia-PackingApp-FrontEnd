@@ -65,6 +65,7 @@ export default function AssignSO() {
     dynamicCounts,
     fetchDynamicCounts,
     refresh,
+    downloadFailedErpData,
   } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
@@ -93,6 +94,7 @@ export default function AssignSO() {
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
+  const [failedImportFilter, setFailedImportFilter] = React.useState(false);
 
   // Persistence logic - Load
   React.useEffect(() => {
@@ -113,6 +115,8 @@ export default function AssignSO() {
         else if (parsed.end === null) setEndDate(null);
         if (parsed.currentPage) setCurrentPage(parsed.currentPage);
         if (parsed.pageSize) setPageSize(parsed.pageSize);
+        if (parsed.failedImport !== undefined)
+          setFailedImportFilter(parsed.failedImport);
       } catch (e) {
         console.error("Failed to load saved filters", e);
       }
@@ -130,6 +134,7 @@ export default function AssignSO() {
       status: statusFilter,
       customer: customerFilter,
       pendingImport: pendingImportFilter,
+      failedImport: failedImportFilter,
       start: startDate ? startDate.toISOString() : null,
       end: endDate ? endDate.toISOString() : null,
       currentPage,
@@ -147,6 +152,7 @@ export default function AssignSO() {
     endDate,
     currentPage,
     pageSize,
+    failedImportFilter,
     isStatesLoaded,
   ]);
 
@@ -229,9 +235,8 @@ export default function AssignSO() {
       });
 
       // --- FIX: Add this line so the table fetches the updated names and addresses! ---
-      refresh(); 
+      refresh();
       // --------------------------------------------------------------------------------
-
     } catch (err: any) {
       setSnackbar({
         open: true,
@@ -460,6 +465,7 @@ export default function AssignSO() {
         startDate,
         endDate,
         pendingImportFilter,
+        failedImportFilter,
       });
     }, 300);
 
@@ -473,6 +479,7 @@ export default function AssignSO() {
     startDate,
     endDate,
     pendingImportFilter,
+    failedImportFilter,
     fetchDynamicCounts,
     isStatesLoaded,
   ]);
@@ -555,13 +562,16 @@ export default function AssignSO() {
       const matchesPendingImport =
         !pendingImportFilter || !order.hasMaterialData;
 
+      const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
+
       return (
         matchesSearch &&
         matchesPayment &&
         matchesZone &&
         matchesStatus &&
         matchesDate &&
-        matchesPendingImport
+        matchesPendingImport &&
+        matchesFailedImport
       );
     });
 
@@ -681,6 +691,8 @@ export default function AssignSO() {
       const matchesPendingImport =
         !pendingImportFilter || !order.hasMaterialData;
 
+      const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
+
       return (
         matchesSearch &&
         matchesPayment &&
@@ -688,7 +700,8 @@ export default function AssignSO() {
         matchesStatus &&
         matchesDate &&
         matchesCustomer &&
-        matchesPendingImport
+        matchesPendingImport &&
+        matchesFailedImport
       );
     });
   }, [
@@ -701,8 +714,44 @@ export default function AssignSO() {
     endDate,
     customerFilter,
     pendingImportFilter,
+    failedImportFilter,
     lookup.customers,
   ]);
+
+  const handleDownloadFailedErpData = async () => {
+    if (selectedIds.length === 0) {
+      setSnackbar({ open: true, message: "Please select at least one order", severity: "warning" });
+      return;
+    }
+
+    // Extract valid sale order numbers that ACTUALLY failed
+    const failedSaleOrderNumbers: string[] = [];
+    selectedIds.forEach((id) => {
+      const order = orders.find((o) => o.id === id);
+      // Only attempt to download if it's marked as a failed import
+      if (order && order.saleOrderNumber && order.hasFailedImport) {
+        failedSaleOrderNumbers.push(order.saleOrderNumber);
+      }
+    });
+
+    if (failedSaleOrderNumbers.length === 0) {
+      setSnackbar({ open: true, message: "None of the selected orders have a failed ERP import.", severity: "warning" });
+      return;
+    }
+
+    setSnackbar({ open: true, message: `Downloading failed ERP data for ${failedSaleOrderNumbers.length} orders...`, severity: "info" });
+
+    try {
+      const result = await downloadFailedErpData(failedSaleOrderNumbers);
+      if (!result.success) {
+        setSnackbar({ open: true, message: result.message || "Download failed", severity: "error" });
+      } else {
+        setSnackbar({ open: true, message: "Failed ERP data downloaded successfully.", severity: "success" });
+      }
+    } catch (err: any) {
+      setSnackbar({ open: true, message: "An unexpected error occurred", severity: "error" });
+    }
+  };
 
   const handleExcelExport = React.useCallback(async () => {
     const visibleRows = filteredOrders;
@@ -1165,6 +1214,13 @@ export default function AssignSO() {
               }}
               customers={availableCustomers}
               onOpenSambaView={() => setShowSambaView(true)}
+              failedImportFilter={failedImportFilter}
+              onFailedImportClick={() => {
+                setFailedImportFilter(!failedImportFilter);
+                if (!failedImportFilter) setPendingImportFilter(false);
+                setCurrentPage(1);
+              }}
+              onDownloadFailedErpData={handleDownloadFailedErpData}
             />
           </Box>
 

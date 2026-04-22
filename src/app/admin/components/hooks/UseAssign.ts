@@ -9,29 +9,96 @@ export function useAssign() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dynamicCounts, setDynamicCounts] = useState({ R105: 0, W105: 0, PendingImport: 0 });
+  const [dynamicCounts, setDynamicCounts] = useState({
+    R105: 0,
+    W105: 0,
+    PendingImport: 0,
+    ErpImportFailed: 0,
+  });
 
   const fetchDynamicCounts = useCallback(async (filters: any) => {
     try {
       const queryParams = new URLSearchParams();
-      if (filters.search) queryParams.append('search', filters.search);
-      if (filters.paymentFilter) queryParams.append('paymentFilter', filters.paymentFilter);
-      if (filters.zoneFilter) queryParams.append('zoneFilter', filters.zoneFilter);
-      if (filters.statusFilter) queryParams.append('statusFilter', filters.statusFilter);
-      if (filters.customerFilter) queryParams.append('customerFilter', filters.customerFilter);
-      if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
-      if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
-      if (filters.pendingImportFilter) queryParams.append('pendingImportFilter', 'true'); // <-- Add this line
+      if (filters.search) queryParams.append("search", filters.search);
+      if (filters.paymentFilter)
+        queryParams.append("paymentFilter", filters.paymentFilter);
+      if (filters.zoneFilter)
+        queryParams.append("zoneFilter", filters.zoneFilter);
+      if (filters.statusFilter)
+        queryParams.append("statusFilter", filters.statusFilter);
+      if (filters.customerFilter)
+        queryParams.append("customerFilter", filters.customerFilter);
+      if (filters.startDate)
+        queryParams.append("startDate", filters.startDate.toISOString());
+      if (filters.endDate)
+        queryParams.append("endDate", filters.endDate.toISOString());
+      if (filters.pendingImportFilter)
+        queryParams.append("pendingImportFilter", "true");
+      if (filters.failedImportFilter)
+        queryParams.append("failedImportFilter", "true");
 
-      const res = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}/counts/dynamic?${queryParams.toString()}`);
+      const res = await fetchWithAuth(
+        `${API.ADMIN.SALES_ORDERS}/counts/dynamic?${queryParams.toString()}`,
+      );
+      let countsData = {
+        R105: 0,
+        W105: 0,
+        PendingImport: 0,
+        ErpImportFailed: 0,
+      };
+
       if (res.ok) {
         const data = await res.json();
-        setDynamicCounts(data);
+        countsData = { ...countsData, ...data };
       }
+
+      setDynamicCounts(countsData);
     } catch (err) {
       console.error("Failed to fetch dynamic counts", err);
     }
   }, []);
+
+  const downloadFailedErpData = useCallback(
+    async (saleOrderNumbers: string[]) => {
+      try {
+        const response = await fetchWithAuth(
+          `${API.ADMIN.SALES_ORDERS}/download-failed-erp`, // Ensure this matches your backend route
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ saleOrderNumbers }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          return {
+            success: false,
+            message: errorData.message || "Failed to download",
+            missingSOs: errorData.missing || [],
+          };
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute(
+          "download",
+          `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`,
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true, missingSOs: [] };
+      } catch (err: any) {
+        return { success: false, message: err.message, missingSOs: [] };
+      }
+    },
+    [],
+  );
 
   const [lookup, setLookup] = useState<Lookup>({
     products: [],
@@ -94,7 +161,7 @@ export function useAssign() {
           const detail = detailsMap.get(`${son}_${obd}`) || {};
 
           return {
-            id: item.id || detail.id || index + 1, 
+            id: item.id || detail.id || index + 1,
 
             user:
               detail.user ||
@@ -104,7 +171,11 @@ export function useAssign() {
 
             product:
               detail.product ||
-              (item.product ? (typeof item.product === "string" ? { name: item.product } : item.product) : null) ||
+              (item.product
+                ? typeof item.product === "string"
+                  ? { name: item.product }
+                  : item.product
+                : null) ||
               null,
             productId: detail.productId || null,
 
@@ -148,23 +219,47 @@ export function useAssign() {
 
             assignedUser:
               detail.assignedUser ||
-              (item.assignedUser ? (typeof item.assignedUser === "string" ? { name: item.assignedUser } : item.assignedUser) : null) ||
+              (item.assignedUser
+                ? typeof item.assignedUser === "string"
+                  ? { name: item.assignedUser }
+                  : item.assignedUser
+                : null) ||
               null,
             assignedUserId:
               detail.assignedUserId || item.assignedUserId || null,
             issueUser:
               detail.issueUser ||
-              (item.issueUser ? (typeof item.issueUser === "string" ? { name: item.issueUser } : item.issueUser) : null) ||
+              (item.issueUser
+                ? typeof item.issueUser === "string"
+                  ? { name: item.issueUser }
+                  : item.issueUser
+                : null) ||
               null,
-            issueUserId: detail.issueAssignedUserId || detail.issueUserId || item.issueAssignedUserId || item.issueUserId || null,
+            issueUserId:
+              detail.issueAssignedUserId ||
+              detail.issueUserId ||
+              item.issueAssignedUserId ||
+              item.issueUserId ||
+              null,
             packingUser:
               detail.packingUser ||
-              (item.packingUser ? (typeof item.packingUser === "string" ? { name: item.packingUser } : item.packingUser) : null) ||
+              (item.packingUser
+                ? typeof item.packingUser === "string"
+                  ? { name: item.packingUser }
+                  : item.packingUser
+                : null) ||
               null,
-            packingUserId: detail.packingAssignedUserId || detail.packingUserId || item.packingAssignedUserId || item.packingUserId || null,
+            packingUserId:
+              detail.packingAssignedUserId ||
+              detail.packingUserId ||
+              item.packingAssignedUserId ||
+              item.packingUserId ||
+              null,
 
             hasMaterialData:
               detail.hasMaterialData ?? item.hasMaterialData ?? false,
+            hasFailedImport:
+              item.hasFailedImport ?? detail.hasFailedImport ?? false,
             skipIssueStage:
               detail.skipIssueStage ??
               item.skipIssueStage ??
@@ -200,13 +295,13 @@ export function useAssign() {
   const fetchLookups = useCallback(async () => {
     try {
       const [usersRes, productsRes, zonesRes, packConfigsRes, customersRes] =
-  await Promise.all([
-    fetchWithAuth(`${API.ADMIN.USERS}?role=USER`),
-    fetchWithAuth(API.LOOKUP.PRODUCTS),
-    fetchWithAuth(API.LOOKUP.SALES_ZONES),
-    fetchWithAuth(API.LOOKUP.PACK_CONFIGS),
-    fetchWithAuth(API.LOOKUP.CUSTOMERS),
-  ]);
+        await Promise.all([
+          fetchWithAuth(`${API.ADMIN.USERS}?role=USER`),
+          fetchWithAuth(API.LOOKUP.PRODUCTS),
+          fetchWithAuth(API.LOOKUP.SALES_ZONES),
+          fetchWithAuth(API.LOOKUP.PACK_CONFIGS),
+          fetchWithAuth(API.LOOKUP.CUSTOMERS),
+        ]);
 
       const [users, products, zones, packConfigs, customers] =
         await Promise.all([
@@ -228,19 +323,22 @@ export function useAssign() {
 
       setLookup({
         assignableUsers: Array.isArray(users)
-          ? users.map((u: any) => ({ id: u.id, name: u.email || u.name || "Unknown" }))
+          ? users.map((u: any) => ({
+              id: u.id,
+              name: u.email || u.name || "Unknown",
+            }))
           : [],
         products: Array.isArray(products) ? products : [],
         salesZones: Array.isArray(zones) ? zones : [],
         packConfigs: Array.isArray(packConfigs) ? packConfigs : [],
         transporters: [],
         plantCodes: [],
-        customers: Array.isArray(customers) 
-          ? customers.map((c: any) => ({ 
-              id: c.id, 
+        customers: Array.isArray(customers)
+          ? customers.map((c: any) => ({
+              id: c.id,
               name: c.name || "Unknown",
-              address: c.address || "", 
-              contact: c.contact || ""  
+              address: c.address || "",
+              contact: c.contact || "",
             }))
           : [],
       });
@@ -258,22 +356,28 @@ export function useAssign() {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== id) return o;
-        
+
         const updated = { ...o, [field]: value };
-        
+
         if (field === "issueUserId") {
           const userObj = lookup.assignableUsers.find((u) => u.id === value);
-          updated.issueUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+          updated.issueUser = userObj
+            ? { id: userObj.id, name: userObj.name }
+            : null;
         } else if (field === "packingUserId") {
           const userObj = lookup.assignableUsers.find((u) => u.id === value);
-          updated.packingUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+          updated.packingUser = userObj
+            ? { id: userObj.id, name: userObj.name }
+            : null;
         } else if (field === "assignedUserId") {
           const userObj = lookup.assignableUsers.find((u) => u.id === value);
-          updated.assignedUser = userObj ? { id: userObj.id, name: userObj.name } : null;
+          updated.assignedUser = userObj
+            ? { id: userObj.id, name: userObj.name }
+            : null;
         }
-        
+
         return updated;
-      })
+      }),
     );
 
     let payloadField = field;
@@ -302,10 +406,22 @@ export function useAssign() {
   };
 
   const bulkUpdate = useCallback(
-    async (ids: number[], assignedUserId: any, priorityStr?: string, issueUserId?: string, packingUserId?: string, skipIssue?: string, skipPacking?: string) => {
+    async (
+      ids: number[],
+      assignedUserId: any,
+      priorityStr?: string,
+      issueUserId?: string,
+      packingUserId?: string,
+      skipIssue?: string,
+      skipPacking?: string,
+    ) => {
       // Optimistic update
       let normalizedId: number | null | undefined;
-      if (assignedUserId === "unassign" || assignedUserId === null || assignedUserId === "null") {
+      if (
+        assignedUserId === "unassign" ||
+        assignedUserId === null ||
+        assignedUserId === "null"
+      ) {
         normalizedId = null;
       } else if (assignedUserId === undefined || assignedUserId === "") {
         normalizedId = undefined;
@@ -322,35 +438,105 @@ export function useAssign() {
           ? Number(priorityStr)
           : undefined;
 
-      const normalizedIssueId = issueUserId === "" || issueUserId === "null" || issueUserId === null || issueUserId === "unassign" ? null : issueUserId ? Number(issueUserId) : undefined;
-      const normalizedPackingId = packingUserId === "" || packingUserId === "null" || packingUserId === null || packingUserId === "unassign" ? null : packingUserId ? Number(packingUserId) : undefined;
-      const issueUserObj = normalizedIssueId ? lookup.assignableUsers.find((u) => u.id === normalizedIssueId) : null;
-      const packingUserObj = normalizedPackingId ? lookup.assignableUsers.find((u) => u.id === normalizedPackingId) : null;
+      const normalizedIssueId =
+        issueUserId === "" ||
+        issueUserId === "null" ||
+        issueUserId === null ||
+        issueUserId === "unassign"
+          ? null
+          : issueUserId
+            ? Number(issueUserId)
+            : undefined;
+      const normalizedPackingId =
+        packingUserId === "" ||
+        packingUserId === "null" ||
+        packingUserId === null ||
+        packingUserId === "unassign"
+          ? null
+          : packingUserId
+            ? Number(packingUserId)
+            : undefined;
+      const issueUserObj = normalizedIssueId
+        ? lookup.assignableUsers.find((u) => u.id === normalizedIssueId)
+        : null;
+      const packingUserObj = normalizedPackingId
+        ? lookup.assignableUsers.find((u) => u.id === normalizedPackingId)
+        : null;
 
       setOrders((prev) =>
         prev.map((o) => {
           if (ids.includes(o.id)) {
-            const shouldUpdateToR105 = 
-              (o.status === null || !o.status) && 
-              (normalizedId !== undefined || priorityVal !== undefined || normalizedIssueId !== undefined || normalizedPackingId !== undefined);
+            const shouldUpdateToR105 =
+              (o.status === null || !o.status) &&
+              (normalizedId !== undefined ||
+                priorityVal !== undefined ||
+                normalizedIssueId !== undefined ||
+                normalizedPackingId !== undefined);
 
             return {
               ...o,
-              ...(normalizedId !== undefined ? { assignedUserId: normalizedId === null ? undefined : normalizedId } : {}),
-              ...(selectedUser ? { assignedUser: { id: selectedUser.id, name: selectedUser.name } } : normalizedId === null ? { assignedUser: null } : {}),
+              ...(normalizedId !== undefined
+                ? {
+                    assignedUserId:
+                      normalizedId === null ? undefined : normalizedId,
+                  }
+                : {}),
+              ...(selectedUser
+                ? {
+                    assignedUser: {
+                      id: selectedUser.id,
+                      name: selectedUser.name,
+                    },
+                  }
+                : normalizedId === null
+                  ? { assignedUser: null }
+                  : {}),
               ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
-              ...(normalizedIssueId !== undefined ? { issueUserId: normalizedIssueId === null ? undefined : normalizedIssueId } : {}),
-              ...(issueUserObj ? { issueUser: { id: issueUserObj.id, name: issueUserObj.name } } : normalizedIssueId === null ? { issueUser: null } : {}),
-              ...(normalizedPackingId !== undefined ? { packingUserId: normalizedPackingId === null ? undefined : normalizedPackingId } : {}),
-              ...(packingUserObj ? { packingUser: { id: packingUserObj.id, name: packingUserObj.name } } : normalizedPackingId === null ? { packingUser: null } : {}),
+              ...(normalizedIssueId !== undefined
+                ? {
+                    issueUserId:
+                      normalizedIssueId === null
+                        ? undefined
+                        : normalizedIssueId,
+                  }
+                : {}),
+              ...(issueUserObj
+                ? {
+                    issueUser: { id: issueUserObj.id, name: issueUserObj.name },
+                  }
+                : normalizedIssueId === null
+                  ? { issueUser: null }
+                  : {}),
+              ...(normalizedPackingId !== undefined
+                ? {
+                    packingUserId:
+                      normalizedPackingId === null
+                        ? undefined
+                        : normalizedPackingId,
+                  }
+                : {}),
+              ...(packingUserObj
+                ? {
+                    packingUser: {
+                      id: packingUserObj.id,
+                      name: packingUserObj.name,
+                    },
+                  }
+                : normalizedPackingId === null
+                  ? { packingUser: null }
+                  : {}),
 
-              ...(skipIssue !== undefined && skipIssue !== "none" ? { skipIssueStage: skipIssue === "yes" } : {}),
-            ...(skipPacking !== undefined && skipPacking !== "none" ? { skipPackingStage: skipPacking === "yes" } : {}),
+              ...(skipIssue !== undefined && skipIssue !== "none"
+                ? { skipIssueStage: skipIssue === "yes" }
+                : {}),
+              ...(skipPacking !== undefined && skipPacking !== "none"
+                ? { skipPackingStage: skipPacking === "yes" }
+                : {}),
               ...(shouldUpdateToR105 ? { status: "R105" } : {}),
             };
           }
           return o;
-        })
+        }),
       );
 
       try {
@@ -363,12 +549,22 @@ export function useAssign() {
           },
           body: JSON.stringify({
             salesOrderIds: ids,
-            ...(normalizedId !== undefined ? { assignedUserId: normalizedId } : {}),
+            ...(normalizedId !== undefined
+              ? { assignedUserId: normalizedId }
+              : {}),
             ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
-            ...(normalizedIssueId !== undefined ? { issueUserId: normalizedIssueId } : {}),
-            ...(normalizedPackingId !== undefined ? { packingUserId: normalizedPackingId } : {}),
-            ...(skipIssue !== undefined && skipIssue !== "none" ? { skipIssueStage: skipIssue === "yes" } : {}),
-            ...(skipPacking !== undefined && skipPacking !== "none" ? { skipPackingStage: skipPacking === "yes" } : {}),
+            ...(normalizedIssueId !== undefined
+              ? { issueUserId: normalizedIssueId }
+              : {}),
+            ...(normalizedPackingId !== undefined
+              ? { packingUserId: normalizedPackingId }
+              : {}),
+            ...(skipIssue !== undefined && skipIssue !== "none"
+              ? { skipIssueStage: skipIssue === "yes" }
+              : {}),
+            ...(skipPacking !== undefined && skipPacking !== "none"
+              ? { skipPackingStage: skipPacking === "yes" }
+              : {}),
           }),
         });
 
@@ -549,55 +745,61 @@ export function useAssign() {
     [fetchData],
   );
 
-  const downloadErpData = useCallback(
-    async (saleOrderNumbers: string[]) => {
-      try {
-        const response = await fetchWithAuth(
-          API.ERP_IMPORTER.BULK_DOWNLOAD_DRIVE,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ saleOrderNumbers }),
+  const downloadErpData = useCallback(async (saleOrderNumbers: string[]) => {
+    try {
+      const response = await fetchWithAuth(
+        API.ERP_IMPORTER.BULK_DOWNLOAD_DRIVE,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({ saleOrderNumbers }),
+        },
+      );
 
-        if (!response.ok) {
-          let errorMsg = "Download failed";
-          let missing: string[] = [];
-          try {
-            const errorData = await response.json();
-            errorMsg = errorData.message || errorMsg;
-            missing = errorData.missing || [];
-          } catch (e) {}
-          // FIX: Return an object instead of throwing an Error
-          return { success: false, message: errorMsg, missingSOs: missing };
-        }
-
-        // Read the custom header to see if any files were missing
-        const missingHeader = response.headers.get("X-Missing-SOs");
-        const missingSOs = missingHeader ? missingHeader.split(',').filter(Boolean) : [];
-
-        // Trigger file download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        return { success: true, missingSOs };
-      } catch (err: any) {
-        console.error("ERP Data download error:", err);
-        return { success: false, message: err.message || "Failed to download ERP data", missingSOs: [] };
+      if (!response.ok) {
+        let errorMsg = "Download failed";
+        let missing: string[] = [];
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorMsg;
+          missing = errorData.missing || [];
+        } catch (e) {}
+        // FIX: Return an object instead of throwing an Error
+        return { success: false, message: errorMsg, missingSOs: missing };
       }
-    },
-    []
-  );
+
+      // Read the custom header to see if any files were missing
+      const missingHeader = response.headers.get("X-Missing-SOs");
+      const missingSOs = missingHeader
+        ? missingHeader.split(",").filter(Boolean)
+        : [];
+
+      // Trigger file download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { success: true, missingSOs };
+    } catch (err: any) {
+      console.error("ERP Data download error:", err);
+      return {
+        success: false,
+        message: err.message || "Failed to download ERP data",
+        missingSOs: [],
+      };
+    }
+  }, []);
 
   return {
     orders,
@@ -614,5 +816,6 @@ export function useAssign() {
     refresh: fetchData,
     dynamicCounts,
     fetchDynamicCounts,
+    downloadFailedErpData,
   };
 }

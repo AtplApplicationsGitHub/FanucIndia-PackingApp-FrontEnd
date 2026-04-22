@@ -33,6 +33,7 @@ export type SalesOrder = {
   labelRemarks?: string | null;
   fgLocation?: string | null;
   hasMaterialData?: boolean;
+  hasFailedImport?: boolean;
   skipIssueStage?: boolean;
   skipPackingStage?: boolean;
   address?: string | null;

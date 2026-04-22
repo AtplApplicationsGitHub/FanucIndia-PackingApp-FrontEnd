@@ -94,6 +94,7 @@ type Props = {
     R105: number;
     W105: number;
     PendingImport?: number;
+    ErpImportFailed?: number;
   };
   pendingImportFilter?: boolean;
   onPendingImportClick?: () => void;
@@ -103,6 +104,9 @@ type Props = {
   customers?: { id: number; name: string }[];
   onOpenSambaView?: () => void;
   onTodayClick?: () => void;
+  failedImportFilter?: boolean;
+  onFailedImportClick?: () => void;
+  onDownloadFailedErpData?: () => void;
 };
 
 export default function AssignOrdersToolbar({
@@ -128,7 +132,10 @@ export default function AssignOrdersToolbar({
   onDownloadErpData,
   onExcelExport,
   onExcelImport,
-  statusCounts = { R105: 0, W105: 0, PendingImport: 0 },
+  statusCounts = { R105: 0, W105: 0, PendingImport: 0, ErpImportFailed: 0 },
+  failedImportFilter = false,
+  onFailedImportClick,
+  onDownloadFailedErpData,
   pendingImportFilter = false,
   onPendingImportClick,
   customerFilter,
@@ -511,6 +518,43 @@ export default function AssignOrdersToolbar({
                 justifyContent: "center",
               }}
             >
+            {/* NEW: ERP Import Failed Card (Render only if > 0) */}
+    {(statusCounts.ErpImportFailed ?? 0) >= 2 && (
+      <Tooltip title="ERP Import Failed">
+         <Box
+           onClick={onFailedImportClick}
+           sx={{
+             display: "flex",
+             alignItems: "center",
+             gap: 1.2,
+             px: 2,
+             py: 1,
+             borderRadius: "32px",
+             bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
+             border: "1px solid",
+             borderColor: failedImportFilter ? "#d32f2f" : "#ffcdd2",
+             cursor: "pointer",
+             transition: "all 0.2s ease-in-out",
+             "&:hover": { bgcolor: "#ffebee" },
+           }}
+         >
+           <Box sx={{ color: "#d32f2f", display: "flex" }}>
+             <WarningAmberOutlinedIcon sx={{ fontSize: 20 }} />
+           </Box>
+           <Typography
+             sx={{
+               fontWeight: 700,
+               color: "#d32f2f",
+               fontSize: "14px",
+               display: "flex",
+               alignItems: "center",
+             }}
+           >
+             {statusCounts.ErpImportFailed ?? 0}
+           </Typography>
+         </Box>
+      </Tooltip>
+    )}
               <Box
                 onClick={onPendingImportClick}
                 sx={{
@@ -592,42 +636,6 @@ export default function AssignOrdersToolbar({
                 </Box>
               ))}
               <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
-                <Tooltip title="Critical Status" arrow>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      px: 0.75,
-                      py: 0.25,
-                      borderRadius: "18px",
-                      border: "1px solid #ffcdd2",
-                      bgcolor: "#ffebee",
-                      mr: 0.5,
-                    }}
-                  >
-                    <IconButton
-                      sx={{
-                        color: "#d32f2f",
-                        width: 28,
-                        height: 28,
-                        "&:hover": { bgcolor: "rgba(211, 47, 47, 0.08)" },
-                      }}
-                    >
-                      <WarningAmberOutlinedIcon fontSize="small" />
-                    </IconButton>
-                    <Typography
-                      sx={{
-                        color: "#d32f2f",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        pr: 0.5,
-                      }}
-                    >
-                      78
-                    </Typography>
-                  </Box>
-                </Tooltip>
                 <Tooltip
                   title={
                     sftpStatus === "LOADING"
@@ -715,6 +723,27 @@ export default function AssignOrdersToolbar({
             },
           }}
         >
+        {/* NEW: Download Failed ERP Data Action */}
+{failedImportFilter && (
+  <MenuItem
+    onClick={() =>
+      handleActionClick(() => {
+        onDownloadFailedErpData?.();
+      })
+    }
+  >
+    <ListItemIcon>
+      <FileDownloadOutlinedIcon
+        fontSize="small"
+        sx={{ color: "#d32f2f" }} // Red color to indicate failed
+      />
+    </ListItemIcon>
+    <ListItemText
+      primary="DOWNLOAD FAILED ERP DATA"
+      primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+    />
+  </MenuItem>
+)}
           {/* General Actions */}
           <MenuItem
             onClick={() => {
