@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useInactivityLogout } from "@/common/hooks/useInactivityLogout";
+import GlobalSnackbar from "./GlobalSnackbar";
 
 export default function AppProviders({
   children,
@@ -22,6 +23,7 @@ export default function AppProviders({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       {children}
+      <GlobalSnackbar /> 
     </LocalizationProvider>
   );
 }

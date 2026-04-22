@@ -639,6 +639,7 @@ export default function AssignOrdersToolbar({
                           : "Check Samba Server Status"
                   }
                 >
+                  <span>
                   <IconButton
                     onClick={() => {
                       if (sftpStatus === "UP" && onOpenSambaView) {
@@ -681,6 +682,7 @@ export default function AssignOrdersToolbar({
                       <StorageOutlinedIcon fontSize="small" />
                     )}
                   </IconButton>
+                  </span>
                 </Tooltip>
               </Box>
             </Box>
