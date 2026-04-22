@@ -26,7 +26,8 @@ import {
   MenuItem,
   Button,
   DialogTitle,
-  Divider
+  Divider,
+  Tooltip
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -39,7 +40,7 @@ import { API, API_BASE_URL } from "@/common/lib/endpoints";
 import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
-import { X } from "lucide-react";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 
 // Defined Color Codes per requirements
 const STATUS_COLORS = {
@@ -323,6 +324,58 @@ export default function FgDashboardView() {
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
 
+  const handleExport = async () => {
+    try {
+      setSnackbar({
+        open: true,
+        message: "Generating Excel file...",
+        severity: "success", // Using success to look like info
+      });
+
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (date) params.append("date", dayjs(date).format("YYYY-MM-DD"));
+      if (paymentFilter) params.append("payment", paymentFilter);
+      if (zoneFilter) params.append("zone", zoneFilter);
+      if (statusFilter) params.append("status", statusFilter);
+
+      // Construct export URL
+      const exportUrl = `${API.FG_DASHBOARD}/export?${params.toString()}`;
+
+      // Use authFetch to get the file blob
+      const res = await authFetch(exportUrl);
+
+      if (!res.ok) throw new Error("Export failed");
+
+      // Process the download
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `FG_Dashboard_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      setSnackbar({
+        open: true,
+        message: "Excel export successful",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to export data",
+        severity: "error",
+      });
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ width: "100%", p: { xs: 1, sm: 2 }, boxSizing: "border-box" }}>
@@ -495,19 +548,36 @@ export default function FgDashboardView() {
             />
 
             {/* Clear Button (Icon Only) */}
-            <IconButton
-              onClick={handleClear}
-              title="Clear Filters"
-              sx={{
-                color: "text.secondary",
-                "&:hover": {
-                  color: "error.main",
-                  opacity: 0.8,
-                },
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="Clear Filters">
+              <IconButton
+                onClick={handleClear}
+                sx={{
+                  color: "text.secondary",
+                  "&:hover": {
+                    color: "error.main",
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            {/* 3. ADD THIS: Export Button next to the Clear button */}
+            <Tooltip title="Export to Excel">
+              <IconButton
+                onClick={handleExport}
+                sx={{
+                  color: "success.main", // Green color for Excel
+                  "&:hover": {
+                    color: "success.dark",
+                    backgroundColor: alpha(theme.palette.success.main, 0.1),
+                  },
+                }}
+              >
+                <FileDownloadOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Paper>
         </Box>
 

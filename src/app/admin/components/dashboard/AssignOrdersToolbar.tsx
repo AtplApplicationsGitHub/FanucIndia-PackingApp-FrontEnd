@@ -151,8 +151,8 @@ export default function AssignOrdersToolbar({
   const [tempIssueUser, setTempIssueUser] = useState<string>("placeholder");
   const [tempPackingUser, setTempPackingUser] = useState<string>("placeholder");
 
-  const [tempSkipIssue, setTempSkipIssue] = useState<string>("no");
-  const [tempSkipPacking, setTempSkipPacking] = useState<string>("no");
+  const [tempSkipIssue, setTempSkipIssue] = useState<string>("none");
+  const [tempSkipPacking, setTempSkipPacking] = useState<string>("none");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -398,7 +398,7 @@ export default function AssignOrdersToolbar({
               value={startDate ? dayjs(startDate) : null}
               onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
               format="DD-MM-YYYY"
-              minDate={dayjs().subtract(3, 'day')}
+              minDate={dayjs().subtract(3, "day")}
               slotProps={{
                 field: {
                   clearable: true,
@@ -428,7 +428,9 @@ export default function AssignOrdersToolbar({
               value={endDate ? dayjs(endDate) : null}
               onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
               format="DD-MM-YYYY"
-              minDate={startDate ? dayjs(startDate) : dayjs().subtract(3, 'day')}
+              minDate={
+                startDate ? dayjs(startDate) : dayjs().subtract(3, "day")
+              }
               slotProps={{
                 field: {
                   clearable: true,
@@ -469,12 +471,16 @@ export default function AssignOrdersToolbar({
                 },
               }}
             >
-              <IconButton onClick={onTodayClick} sx={{
-                bgcolor: "#FFC107",
-                borderRadius: "90%",
-                "&:hover": { bgcolor: "#FFD100" },
-                color: (theme) => theme.palette.mode === "dark" ? "#000000" : "#000000",
-              }}>
+              <IconButton
+                onClick={onTodayClick}
+                sx={{
+                  bgcolor: "#FFC107",
+                  borderRadius: "90%",
+                  "&:hover": { bgcolor: "#FFD100" },
+                  color: (theme) =>
+                    theme.palette.mode === "dark" ? "#000000" : "#000000",
+                }}
+              >
                 <CalendarCheck size={16} />
               </IconButton>
             </Tooltip>
@@ -518,43 +524,43 @@ export default function AssignOrdersToolbar({
                 justifyContent: "center",
               }}
             >
-            {/* NEW: ERP Import Failed Card (Render only if > 0) */}
-    {(statusCounts.ErpImportFailed ?? 0) >= 2 && (
-      <Tooltip title="ERP Import Failed">
-         <Box
-           onClick={onFailedImportClick}
-           sx={{
-             display: "flex",
-             alignItems: "center",
-             gap: 1.2,
-             px: 2,
-             py: 1,
-             borderRadius: "32px",
-             bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
-             border: "1px solid",
-             borderColor: failedImportFilter ? "#d32f2f" : "#ffcdd2",
-             cursor: "pointer",
-             transition: "all 0.2s ease-in-out",
-             "&:hover": { bgcolor: "#ffebee" },
-           }}
-         >
-           <Box sx={{ color: "#d32f2f", display: "flex" }}>
-             <WarningAmberOutlinedIcon sx={{ fontSize: 20 }} />
-           </Box>
-           <Typography
-             sx={{
-               fontWeight: 700,
-               color: "#d32f2f",
-               fontSize: "14px",
-               display: "flex",
-               alignItems: "center",
-             }}
-           >
-             {statusCounts.ErpImportFailed ?? 0}
-           </Typography>
-         </Box>
-      </Tooltip>
-    )}
+              {/* NEW: ERP Import Failed Card (Render only if > 0) */}
+              {(statusCounts.ErpImportFailed ?? 0) >= 2 && (
+                <Tooltip title="ERP Import Failed">
+                  <Box
+                    onClick={onFailedImportClick}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.2,
+                      px: 2,
+                      py: 1,
+                      borderRadius: "32px",
+                      bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
+                      border: "1px solid",
+                      borderColor: failedImportFilter ? "#d32f2f" : "#ffcdd2",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": { bgcolor: "#ffebee" },
+                    }}
+                  >
+                    <Box sx={{ color: "#d32f2f", display: "flex" }}>
+                      <WarningAmberOutlinedIcon sx={{ fontSize: 20 }} />
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "#d32f2f",
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {statusCounts.ErpImportFailed ?? 0}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              )}
               <Box
                 onClick={onPendingImportClick}
                 sx={{
@@ -648,48 +654,48 @@ export default function AssignOrdersToolbar({
                   }
                 >
                   <span>
-                  <IconButton
-                    onClick={() => {
-                      if (sftpStatus === "UP" && onOpenSambaView) {
-                        onOpenSambaView();
-                      } else {
-                        handleCheckSambaStatus();
-                      }
-                    }}
-                    disabled={sftpStatus === "LOADING"}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      bgcolor:
-                        sftpStatus === "UP"
-                          ? "success.main"
-                          : sftpStatus === "DOWN"
-                            ? "error.main"
-                            : "transparent",
-                      color:
-                        sftpStatus === "UP" || sftpStatus === "DOWN"
-                          ? "#ffffff"
-                          : "text.secondary",
-                      "&:hover": {
+                    <IconButton
+                      onClick={() => {
+                        if (sftpStatus === "UP" && onOpenSambaView) {
+                          onOpenSambaView();
+                        } else {
+                          handleCheckSambaStatus();
+                        }
+                      }}
+                      disabled={sftpStatus === "LOADING"}
+                      sx={{
+                        width: 36,
+                        height: 36,
                         bgcolor:
                           sftpStatus === "UP"
-                            ? "success.dark"
+                            ? "success.main"
                             : sftpStatus === "DOWN"
-                              ? "error.dark"
-                              : "action.hover",
-                      },
-                    }}
-                  >
-                    {sftpStatus === "LOADING" ? (
-                      <CircularProgress size={20} color="inherit" />
-                    ) : sftpStatus === "UP" ? (
-                      <CheckCircleOutlineIcon fontSize="small" />
-                    ) : sftpStatus === "DOWN" ? (
-                      <ErrorOutlineIcon fontSize="small" />
-                    ) : (
-                      <StorageOutlinedIcon fontSize="small" />
-                    )}
-                  </IconButton>
+                              ? "error.main"
+                              : "transparent",
+                        color:
+                          sftpStatus === "UP" || sftpStatus === "DOWN"
+                            ? "#ffffff"
+                            : "text.secondary",
+                        "&:hover": {
+                          bgcolor:
+                            sftpStatus === "UP"
+                              ? "success.dark"
+                              : sftpStatus === "DOWN"
+                                ? "error.dark"
+                                : "action.hover",
+                        },
+                      }}
+                    >
+                      {sftpStatus === "LOADING" ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : sftpStatus === "UP" ? (
+                        <CheckCircleOutlineIcon fontSize="small" />
+                      ) : sftpStatus === "DOWN" ? (
+                        <ErrorOutlineIcon fontSize="small" />
+                      ) : (
+                        <StorageOutlinedIcon fontSize="small" />
+                      )}
+                    </IconButton>
                   </span>
                 </Tooltip>
               </Box>
@@ -723,27 +729,27 @@ export default function AssignOrdersToolbar({
             },
           }}
         >
-        {/* NEW: Download Failed ERP Data Action */}
-{failedImportFilter && (
-  <MenuItem
-    onClick={() =>
-      handleActionClick(() => {
-        onDownloadFailedErpData?.();
-      })
-    }
-  >
-    <ListItemIcon>
-      <FileDownloadOutlinedIcon
-        fontSize="small"
-        sx={{ color: "#d32f2f" }} // Red color to indicate failed
-      />
-    </ListItemIcon>
-    <ListItemText
-      primary="DOWNLOAD FAILED ERP DATA"
-      primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
-    />
-  </MenuItem>
-)}
+          {/* NEW: Download Failed ERP Data Action */}
+          {failedImportFilter && (
+            <MenuItem
+              onClick={() =>
+                handleActionClick(() => {
+                  onDownloadFailedErpData?.();
+                })
+              }
+            >
+              <ListItemIcon>
+                <FileDownloadOutlinedIcon
+                  fontSize="small"
+                  sx={{ color: "#d32f2f" }} // Red color to indicate failed
+                />
+              </ListItemIcon>
+              <ListItemText
+                primary="DOWNLOAD FAILED ERP DATA"
+                primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+              />
+            </MenuItem>
+          )}
           {/* General Actions */}
           <MenuItem
             onClick={() => {
@@ -860,49 +866,56 @@ export default function AssignOrdersToolbar({
             setAssignDialogOpen(false);
             setTempIssueUser("placeholder");
             setTempPackingUser("placeholder");
-            setTempSkipIssue("no");
-            setTempSkipPacking("no");
+            setTempSkipIssue("none");
+            setTempSkipPacking("none");
             setAssignPriority("");
           }}
           maxWidth="sm"
           fullWidth
           PaperProps={{
             sx: {
-
               bgcolor: "background.paper",
               backgroundImage: "none",
               border: "1px solid",
               borderColor: "divider",
               borderRadius: "8px",
-            }
+            },
           }}
         >
-          <DialogTitle sx={{
-            fontWeight: 700,
-            fontSize: 20,
-            textAlign: "center",
-            letterSpacing: 0,
-            color: "secondary.main",
-            p: 1.5,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}>
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              fontSize: 20,
+              textAlign: "center",
+              letterSpacing: 0,
+              color: "secondary.main",
+              p: 1.5,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}
+          >
             BULK ACTIONS
             <Typography
               component="span"
-              sx={{ fontSize: 16, fontWeight: 400, color: "text.secondary", ml: 1 }}
+              sx={{
+                fontSize: 16,
+                fontWeight: 400,
+                color: "text.secondary",
+                ml: 1,
+              }}
             >
-              · {selectedIds.length} {selectedIds.length === 1 ? "order" : "orders"}
+              · {selectedIds.length}{" "}
+              {selectedIds.length === 1 ? "order" : "orders"}
             </Typography>
             <IconButton
               onClick={() => {
                 setAssignDialogOpen(false);
                 setTempIssueUser("placeholder");
                 setTempPackingUser("placeholder");
-                setTempSkipIssue("no");
-                setTempSkipPacking("no");
+                setTempSkipIssue("none");
+                setTempSkipPacking("none");
                 setAssignPriority("");
               }}
               size="small"
@@ -918,7 +931,9 @@ export default function AssignOrdersToolbar({
             </IconButton>
           </DialogTitle>
           <Divider />
-          <DialogContent sx={{ bgcolor: "background.paper", pt: "16px !important" }}>
+          <DialogContent
+            sx={{ bgcolor: "background.paper", pt: "16px !important" }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -979,7 +994,6 @@ export default function AssignOrdersToolbar({
                     "& .MuiInputLabel-root": { fontSize: "13px" },
                     "& .MuiSelect-select": { fontSize: "14px" },
                   }}
-
                 >
                   <MenuItem value="placeholder" disabled>
                     Select User
@@ -1013,10 +1027,13 @@ export default function AssignOrdersToolbar({
                     "& .MuiSelect-select": { fontSize: "14px" },
                   }}
                 >
+                  <MenuItem value="none" disabled>
+                    Select Option
+                  </MenuItem>{" "}
+                  {/* Add this line */}
                   <MenuItem value="no">No</MenuItem>
                   <MenuItem value="yes">Yes</MenuItem>
                 </TextField>
-
 
                 <TextField
                   select
@@ -1037,10 +1054,13 @@ export default function AssignOrdersToolbar({
                     "& .MuiSelect-select": { fontSize: "14px" },
                   }}
                 >
+                  <MenuItem value="none" disabled>
+                    Select Option
+                  </MenuItem>{" "}
+                  {/* Add this line */}
                   <MenuItem value="no">No</MenuItem>
                   <MenuItem value="yes">Yes</MenuItem>
                 </TextField>
-
               </Box>
 
               <TextField
@@ -1057,7 +1077,7 @@ export default function AssignOrdersToolbar({
             </Box>
           </DialogContent>
           <Divider />
-          <DialogActions sx={{ px: 3, pb: 2}}>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
             <CommonButton
               variant="contained"
               disableElevation
@@ -1068,10 +1088,12 @@ export default function AssignOrdersToolbar({
                   tempPackingUser === "placeholder"
                     ? undefined
                     : tempPackingUser;
-                const skipIssueVal = tempSkipIssue;
-                const skipPackingVal = tempSkipPacking;
 
-                // If anything was selected, submit it. Omitting general user so it's undefined.
+                const skipIssueVal =
+                  tempSkipIssue === "none" ? undefined : tempSkipIssue;
+                const skipPackingVal =
+                  tempSkipPacking === "none" ? undefined : tempSkipPacking;
+
                 if (
                   onAssignUser &&
                   (issueVal ||
@@ -1089,11 +1111,12 @@ export default function AssignOrdersToolbar({
                     skipPackingVal,
                   );
                 }
+
                 setAssignDialogOpen(false);
                 setTempIssueUser("placeholder");
                 setTempPackingUser("placeholder");
-                setTempSkipIssue("no");
-                setTempSkipPacking("no");
+                setTempSkipIssue("none");
+                setTempSkipPacking("none");
                 setAssignPriority("");
               }}
             >
@@ -1116,6 +1139,6 @@ export default function AssignOrdersToolbar({
           </Alert>
         </Snackbar>
       </Box>
-    </LocalizationProvider >
+    </LocalizationProvider>
   );
 }
