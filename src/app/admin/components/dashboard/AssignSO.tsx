@@ -1358,7 +1358,7 @@ export default function AssignSO() {
                                     )
                                   }
                                   sx={{
-                                    color: theme.palette.warning.main,
+                                    color: row.hasFailedImport ? theme.palette.error.main : theme.palette.warning.main,
                                     ml: 1,
                                     cursor: "pointer", // <--- Added cursor
                                     "&:hover": { opacity: 0.7 }, // <--- Added hover effect

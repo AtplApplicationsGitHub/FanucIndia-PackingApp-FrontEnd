@@ -525,7 +525,7 @@ export default function AssignOrdersToolbar({
               }}
             >
               {/* NEW: ERP Import Failed Card (Render only if > 0) */}
-              {(statusCounts.ErpImportFailed ?? 0) >= 2 && (
+              {(statusCounts.ErpImportFailed ?? 0) > 0 && (
                 <Tooltip title="ERP Import Failed">
                   <Box
                     onClick={onFailedImportClick}
