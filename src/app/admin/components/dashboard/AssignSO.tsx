@@ -35,6 +35,7 @@ import { useAssign } from "@/app/admin/components/hooks/UseAssign";
 import AssignOrdersToolbar from "./AssignOrdersToolbar";
 import ErpUploadDialog from "./ErpUploadDialog";
 import SambaFilesView from "./SambaFilesView";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 type InlineEditField = "status" | "priority" | "issueUserId" | "packingUserId";
 
@@ -196,6 +197,7 @@ export default function AssignSO() {
     setEndDate(null);
     setCustomerFilter("");
     setPendingImportFilter(false);
+    setFailedImportFilter(false);
     setCurrentPage(1);
   };
 
@@ -593,6 +595,7 @@ export default function AssignSO() {
     startDate,
     endDate,
     pendingImportFilter,
+    failedImportFilter,
     lookup.customers,
   ]);
 
@@ -720,37 +723,84 @@ export default function AssignSO() {
 
   const handleDownloadFailedErpData = async () => {
     if (selectedIds.length === 0) {
-      setSnackbar({ open: true, message: "Please select at least one order", severity: "warning" });
+      setSnackbar({
+        open: true,
+        message: "Please select at least one order",
+        severity: "warning",
+      });
       return;
     }
 
-    // Extract valid sale order numbers that ACTUALLY failed
-    const failedSaleOrderNumbers: string[] = [];
+    const failedOrderIds: number[] = [];
     selectedIds.forEach((id) => {
       const order = orders.find((o) => o.id === id);
-      // Only attempt to download if it's marked as a failed import
-      if (order && order.saleOrderNumber && order.hasFailedImport) {
-        failedSaleOrderNumbers.push(order.saleOrderNumber);
+      if (order?.hasFailedImport) {
+        failedOrderIds.push(order.id);
       }
     });
 
-    if (failedSaleOrderNumbers.length === 0) {
-      setSnackbar({ open: true, message: "None of the selected orders have a failed ERP import.", severity: "warning" });
+    if (failedOrderIds.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "None of the selected orders have a failed ERP import.",
+        severity: "warning",
+      });
       return;
     }
 
-    setSnackbar({ open: true, message: `Downloading failed ERP data for ${failedSaleOrderNumbers.length} orders...`, severity: "info" });
+    setSnackbar({
+      open: true,
+      message: `Downloading failed ERP data for ${failedOrderIds.length} orders...`,
+      severity: "info",
+    });
 
     try {
-      const result = await downloadFailedErpData(failedSaleOrderNumbers);
+      const result = await downloadFailedErpData(failedOrderIds);
       if (!result.success) {
-        setSnackbar({ open: true, message: result.message || "Download failed", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: result.message || "Download failed",
+          severity: "error",
+        });
       } else {
-        setSnackbar({ open: true, message: "Failed ERP data downloaded successfully.", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Failed ERP data downloaded successfully.",
+          severity: "success",
+        });
       }
     } catch (err: any) {
-      setSnackbar({ open: true, message: "An unexpected error occurred", severity: "error" });
+      setSnackbar({
+        open: true,
+        message: "An unexpected error occurred",
+        severity: "error",
+      });
     }
+  };
+
+  const handleSingleFailedErpDownload = async (orderId: number) => {
+    setSnackbar({
+      open: true,
+      message: "Downloading failed ERP file...",
+      severity: "info",
+    });
+
+    const result = await downloadFailedErpData([orderId]);
+
+    if (!result.success) {
+      setSnackbar({
+        open: true,
+        message: result.message || "Download failed",
+        severity: "error",
+      });
+      return;
+    }
+
+    setSnackbar({
+      open: true,
+      message: "Failed ERP file downloaded successfully.",
+      severity: "success",
+    });
   };
 
   const handleExcelExport = React.useCallback(async () => {
@@ -1334,7 +1384,9 @@ export default function AssignSO() {
                               title={
                                 row.hasMaterialData
                                   ? "ERP Data Imported"
-                                  : "Material Data Pending - Click to Import"
+                                  : row.hasFailedImport
+                                    ? "Download failed ERP Excel from error folder"
+                                    : "Material Data Pending - Click to Import"
                               }
                             >
                               {row.hasMaterialData ? (
@@ -1350,6 +1402,19 @@ export default function AssignSO() {
                                   }}
                                   fontSize="small"
                                 />
+                              ) : row.hasFailedImport ? (
+                                <WarningAmberRoundedIcon
+                                  onClick={() =>
+                                    handleSingleFailedErpDownload(row.id)
+                                  }
+                                  sx={{
+                                    color: theme.palette.error.main,
+                                    ml: 1,
+                                    cursor: "pointer",
+                                    "&:hover": { opacity: 0.75 },
+                                  }}
+                                  fontSize="small"
+                                />
                               ) : (
                                 <ErrorOutlineIcon
                                   onClick={() =>
@@ -1358,10 +1423,10 @@ export default function AssignSO() {
                                     )
                                   }
                                   sx={{
-                                    color: row.hasFailedImport ? theme.palette.error.main : theme.palette.warning.main,
+                                    color: theme.palette.warning.main,
                                     ml: 1,
-                                    cursor: "pointer", // <--- Added cursor
-                                    "&:hover": { opacity: 0.7 }, // <--- Added hover effect
+                                    cursor: "pointer",
+                                    "&:hover": { opacity: 0.7 },
                                   }}
                                   fontSize="small"
                                 />

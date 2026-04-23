@@ -29,13 +29,17 @@ export function useAssign() {
       if (filters.customerFilter)
         queryParams.append("customerFilter", filters.customerFilter);
       if (filters.startDate)
-        queryParams.append("startDate", filters.startDate.toISOString());
+        queryParams.append(
+          "startDate",
+          dayjs(filters.startDate).format("YYYY-MM-DD"),
+        );
       if (filters.endDate)
-        queryParams.append("endDate", filters.endDate.toISOString());
+        queryParams.append(
+          "endDate",
+          dayjs(filters.endDate).format("YYYY-MM-DD"),
+        );
       if (filters.pendingImportFilter)
         queryParams.append("pendingImportFilter", "true");
-      if (filters.failedImportFilter)
-        queryParams.append("failedImportFilter", "true");
 
       const res = await fetchWithAuth(
         `${API.ADMIN.SALES_ORDERS}/counts/dynamic?${queryParams.toString()}`,
@@ -58,47 +62,44 @@ export function useAssign() {
     }
   }, []);
 
-  const downloadFailedErpData = useCallback(
-    async (saleOrderNumbers: string[]) => {
-      try {
-        const response = await fetchWithAuth(
-          `${API.ADMIN.SALES_ORDERS}/download-failed-erp`, // Ensure this matches your backend route
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ saleOrderNumbers }),
-          },
-        );
+  const downloadFailedErpData = useCallback(async (orderIds: number[]) => {
+    try {
+      const response = await fetchWithAuth(
+        `${API.ADMIN.SALES_ORDERS}/download-failed-erp`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderIds }),
+        },
+      );
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          return {
-            success: false,
-            message: errorData.message || "Failed to download",
-            missingSOs: errorData.missing || [],
-          };
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute(
-          "download",
-          `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`,
-        );
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        return { success: true, missingSOs: [] };
-      } catch (err: any) {
-        return { success: false, message: err.message, missingSOs: [] };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          message: errorData.message || "Failed to download",
+          missingOrders: errorData.missing || [],
+        };
       }
-    },
-    [],
-  );
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { success: true, missingOrders: [] };
+    } catch (err: any) {
+      return { success: false, message: err.message, missingOrders: [] };
+    }
+  }, []);
 
   const [lookup, setLookup] = useState<Lookup>({
     products: [],
@@ -266,7 +267,8 @@ export function useAssign() {
               detail.skipStage ??
               item.skipStage ??
               false,
-            skipPackingStage: detail.skipPackingStage ?? item.skipPackingStage ?? false,
+            skipPackingStage:
+              detail.skipPackingStage ?? item.skipPackingStage ?? false,
             notificationCount: detail.notificationCount ?? 0,
             transporter: detail.transporter || item.transporter || null,
             plantCode: detail.plantCode || item.plantCode || "",

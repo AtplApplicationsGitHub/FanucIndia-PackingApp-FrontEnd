@@ -524,43 +524,40 @@ export default function AssignOrdersToolbar({
                 justifyContent: "center",
               }}
             >
-              {/* NEW: ERP Import Failed Card (Render only if > 0) */}
-              {(statusCounts.ErpImportFailed ?? 0) > 0 && (
-                <Tooltip title="ERP Import Failed">
-                  <Box
-                    onClick={onFailedImportClick}
+              <Tooltip title="ERP Import Failed">
+                <Box
+                  onClick={onFailedImportClick}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.2,
+                    px: 2,
+                    py: 1,
+                    borderRadius: "32px",
+                    bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
+                    border: "1px solid",
+                    borderColor: failedImportFilter ? "#d32f2f" : "#ffcdd2",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": { bgcolor: "#ffebee" },
+                  }}
+                >
+                  <Box sx={{ color: "#d32f2f", display: "flex" }}>
+                    <WarningAmberOutlinedIcon sx={{ fontSize: 20 }} />
+                  </Box>
+                  <Typography
                     sx={{
+                      fontWeight: 700,
+                      color: "#d32f2f",
+                      fontSize: "14px",
                       display: "flex",
                       alignItems: "center",
-                      gap: 1.2,
-                      px: 2,
-                      py: 1,
-                      borderRadius: "32px",
-                      bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
-                      border: "1px solid",
-                      borderColor: failedImportFilter ? "#d32f2f" : "#ffcdd2",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": { bgcolor: "#ffebee" },
                     }}
                   >
-                    <Box sx={{ color: "#d32f2f", display: "flex" }}>
-                      <WarningAmberOutlinedIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#d32f2f",
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      {statusCounts.ErpImportFailed ?? 0}
-                    </Typography>
-                  </Box>
-                </Tooltip>
-              )}
+                    {statusCounts.ErpImportFailed ?? 0}
+                  </Typography>
+                </Box>
+              </Tooltip>
               <Box
                 onClick={onPendingImportClick}
                 sx={{
