@@ -20,13 +20,14 @@ import {
   Button,
   TablePagination,
   Avatar,
-  useTheme, 
-  alpha     
+  useTheme,
+  alpha,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import dayjs from "dayjs";
 import { useOperatorStats, OrderDetail } from "../hooks/useOperatorStats";
+import Link from "next/link";
 
 export default function OperatorStatsTable({
   selectedDate,
@@ -138,17 +139,17 @@ export default function OperatorStatsTable({
                 textTransform: "none",
                 minWidth: "unset",
                 bgcolor:
-                  selectedStage === "issue" ? "background.paper" : "transparent",
+                  selectedStage === "issue"
+                    ? "background.paper"
+                    : "transparent",
                 color: selectedStage === "issue" ? "#D00000" : "text.secondary",
-                boxShadow:
-                  selectedStage === "issue" ? 1 : "none",
+                boxShadow: selectedStage === "issue" ? 1 : "none",
                 "&:hover": {
                   bgcolor:
                     selectedStage === "issue"
                       ? "background.paper"
                       : "transparent",
-                  color:
-                    selectedStage === "issue" ? "#D00000" : "text.primary",
+                  color: selectedStage === "issue" ? "#D00000" : "text.primary",
                 },
               }}
             >
@@ -172,8 +173,7 @@ export default function OperatorStatsTable({
                     : "transparent",
                 color:
                   selectedStage === "packing" ? "#D00000" : "text.secondary",
-                boxShadow:
-                  selectedStage === "packing" ? 1 : "none",
+                boxShadow: selectedStage === "packing" ? 1 : "none",
                 "&:hover": {
                   bgcolor:
                     selectedStage === "packing"
@@ -246,7 +246,9 @@ export default function OperatorStatsTable({
                     }}
                     colSpan={2}
                   >
-                    {selectedStage === "issue" ? "Issue Stage" : "Packing Stage"}
+                    {selectedStage === "issue"
+                      ? "Issue Stage"
+                      : "Packing Stage"}
                   </TableCell>
                 </TableRow>
                 <TableRow sx={{ bgcolor: "background.paper" }}>
@@ -427,16 +429,20 @@ export default function OperatorStatsTable({
       >
         <DialogTitle
           sx={{
-          display: "flex", justifyContent: "center", alignItems: "center",
-          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-          color: "error.main",
-          pb: 1,
-          position: "relative",
-        }}
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: "20px",
+            letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}
         >
-            {dialogTitle}
-          <IconButton 
-            onClick={() => setDialogOpen(false)} 
+          {dialogTitle}
+          <IconButton
+            onClick={() => setDialogOpen(false)}
             size="small"
             sx={{ position: "absolute", right: 12 }}
           >
@@ -469,32 +475,45 @@ export default function OperatorStatsTable({
               borderRadius: 1,
             }}
           >
-            <Table 
-              size="small" 
+            <Table
+              size="small"
               stickyHeader
               sx={{
                 "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                   backgroundColor: lightYellow,
                 },
-                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
-                  borderBottom: 0,
-                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                  {
+                    borderBottom: 0,
+                  },
               }}
             >
               <TableHead>
                 <TableRow>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
+                    sx={{
+                      fontWeight: "bold",
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                    }}
                   >
                     S.No
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
+                    sx={{
+                      fontWeight: "bold",
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                    }}
                   >
                     SO Number
                   </TableCell>
                   <TableCell
-                    sx={{ fontWeight: "bold", bgcolor: "primary.main", color: "primary.contrastText" }}
+                    sx={{
+                      fontWeight: "bold",
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                    }}
                   >
                     OBD
                   </TableCell>
@@ -505,7 +524,21 @@ export default function OperatorStatsTable({
                   filteredDialogData.map((order, index) => (
                     <TableRow key={index} hover>
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>{order.saleOrderNumber}</TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/so-search/${encodeURIComponent(
+                            order.saleOrderNumber,
+                          )}/${encodeURIComponent(order.outboundDelivery)}`}
+                          style={{
+                            color: "#1976d2",
+                            fontWeight: 600,
+                            textDecoration: "none",
+                          }}
+                        >
+                          {order.saleOrderNumber}
+                        </Link>
+                      </TableCell>
+
                       <TableCell>{order.outboundDelivery}</TableCell>
                     </TableRow>
                   ))
