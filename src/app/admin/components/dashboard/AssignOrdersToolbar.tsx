@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   IconButton,
   Paper,
   InputBase,
@@ -20,13 +19,8 @@ import {
   DialogActions,
   Snackbar,
   Alert,
-  Chip,
   CircularProgress,
   Tooltip,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormLabel,
   Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -40,16 +34,12 @@ import dayjs from "dayjs";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
-import FastForwardOutlinedIcon from "@mui/icons-material/FastForwardOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { LookupRow } from "@/app/admin/components/types/admin";
-import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { TextField } from "@mui/material";
 import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 import CommonButton from "@/common/components/CommonButton";
@@ -95,6 +85,7 @@ type Props = {
     W105: number;
     PendingImport?: number;
     ErpImportFailed?: number;
+    ErpSuccessUpload?: number;
   };
   pendingImportFilter?: boolean;
   onPendingImportClick?: () => void;
@@ -107,6 +98,8 @@ type Props = {
   failedImportFilter?: boolean;
   onFailedImportClick?: () => void;
   onDownloadFailedErpData?: () => void;
+  successImportFilter?: boolean;
+  onSuccessImportClick?: () => void;
 };
 
 export default function AssignOrdersToolbar({
@@ -132,12 +125,14 @@ export default function AssignOrdersToolbar({
   onDownloadErpData,
   onExcelExport,
   onExcelImport,
-  statusCounts = { R105: 0, W105: 0, PendingImport: 0, ErpImportFailed: 0 },
+  statusCounts = { R105: 0, W105: 0, PendingImport: 0, ErpImportFailed: 0, ErpSuccessUpload: 0 },
   failedImportFilter = false,
   onFailedImportClick,
   onDownloadFailedErpData,
   pendingImportFilter = false,
   onPendingImportClick,
+  successImportFilter = false,
+  onSuccessImportClick,
   customerFilter,
   onCustomerFilterChange,
   customers = [],
@@ -530,8 +525,8 @@ export default function AssignOrdersToolbar({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 1.2,
-                    px: 2,
+                    gap: 0.7,
+                    px: 1.9,
                     py: 1,
                     borderRadius: "32px",
                     bgcolor: failedImportFilter ? "#ffebee" : "#fff5f5",
@@ -558,38 +553,65 @@ export default function AssignOrdersToolbar({
                   </Typography>
                 </Box>
               </Tooltip>
-              <Box
-                onClick={onPendingImportClick}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.2,
-                  px: 2,
-                  py: 1,
-                  borderRadius: "32px",
-                  bgcolor: pendingImportFilter ? "#fff3e0" : "#fff8e1",
-                  border: "1px solid",
-                  borderColor: pendingImportFilter ? "#ff9800" : "#ffe0b2",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": { bgcolor: "#fff3e0" },
-                }}
-              >
-                <Box sx={{ color: "#ed6c02", display: "flex" }}>
-                  <ErrorOutlineIcon sx={{ fontSize: 20 }} />
-                </Box>
-                <Typography
+              <Tooltip title="ERP Import Success">
+                <Box
+                  onClick={onSuccessImportClick}
                   sx={{
-                    fontWeight: 700,
-                    color: "#ed6c02",
-                    fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
+                    gap: 0.7,
+                    px: 1.9,
+                    py: 1,
+                    borderRadius: "32px",
+                    bgcolor: successImportFilter ? "#dcfce7" : "#f0fdf4",
+                    border: "1px solid",
+                    borderColor: successImportFilter ? "#16a34a" : "#bbf7d0",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": { bgcolor: "#dcfce7" },
+                  }}>
+                  < Box sx={{ color: "#16a34a", display: "flex" }}>
+                    <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />
+                  </Box>
+                  <Typography sx={{ fontWeight: 700, color: "#16a34a", fontSize: "14px" }}>
+                    {statusCounts.ErpSuccessUpload ?? 0}
+                  </Typography>
+                </Box>
+              </Tooltip>
+              <Tooltip title="ERP Import Pending">
+                <Box
+                  onClick={onPendingImportClick}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.7,
+                    px: 1.9,
+                    py: 1,
+                    borderRadius: "32px",
+                    bgcolor: pendingImportFilter ? "#fff3e0" : "#fff8e1",
+                    border: "1px solid",
+                    borderColor: pendingImportFilter ? "#ff9800" : "#ffe0b2",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": { bgcolor: "#fff3e0" },
                   }}
                 >
-                  {statusCounts.PendingImport ?? 0}
-                </Typography>
-              </Box>
+                  <Box sx={{ color: "#ed6c02", display: "flex" }}>
+                    <ErrorOutlineIcon sx={{ fontSize: 20 }} />
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: "#ed6c02",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {statusCounts.PendingImport ?? 0}
+                  </Typography>
+                </Box>
+              </Tooltip>
               {[
                 {
                   label: "R",
@@ -597,7 +619,6 @@ export default function AssignOrdersToolbar({
                   color: "#1976d2", // Blue
                   bgcolor: "#f0f7ff",
                   border: "#e1effe",
-                  icon: <PersonOutlineIcon sx={{ fontSize: 22 }} />,
                 },
                 {
                   label: "W",
@@ -605,7 +626,6 @@ export default function AssignOrdersToolbar({
                   color: "#ed6c02", // Orange
                   bgcolor: "#fffaf0",
                   border: "#fef3c7",
-                  icon: <Inventory2OutlinedIcon sx={{ fontSize: 20 }} />,
                 },
               ].map((card) => (
                 <Box
@@ -622,9 +642,6 @@ export default function AssignOrdersToolbar({
                     borderColor: card.border,
                   }}
                 >
-                  <Box sx={{ color: card.color, display: "flex" }}>
-                    {card.icon}
-                  </Box>
                   <Typography
                     sx={{
                       fontWeight: 700,
@@ -638,7 +655,7 @@ export default function AssignOrdersToolbar({
                   </Typography>
                 </Box>
               ))}
-              <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Tooltip
                   title={
                     sftpStatus === "LOADING"
@@ -698,7 +715,7 @@ export default function AssignOrdersToolbar({
               </Box>
             </Box>
           </Box>
-        </Paper>
+        </Paper >
 
         <Menu
           id="actions-menu"
@@ -1135,7 +1152,7 @@ export default function AssignOrdersToolbar({
             Please select Order(s)
           </Alert>
         </Snackbar>
-      </Box>
-    </LocalizationProvider>
+      </Box >
+    </LocalizationProvider >
   );
 }

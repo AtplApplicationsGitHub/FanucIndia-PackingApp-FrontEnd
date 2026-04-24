@@ -14,6 +14,7 @@ export function useAssign() {
     W105: 0,
     PendingImport: 0,
     ErpImportFailed: 0,
+    ErpSuccessUpload: 0,
   });
 
   const fetchDynamicCounts = useCallback(async (filters: any) => {
@@ -49,6 +50,7 @@ export function useAssign() {
         W105: 0,
         PendingImport: 0,
         ErpImportFailed: 0,
+        ErpSuccessUpload: 0,
       };
 
       if (res.ok) {
@@ -337,9 +339,9 @@ export function useAssign() {
       setLookup({
         assignableUsers: Array.isArray(users)
           ? users.map((u: any) => ({
-              id: u.id,
-              name: u.email || u.name || "Unknown",
-            }))
+            id: u.id,
+            name: u.email || u.name || "Unknown",
+          }))
           : [],
         products: Array.isArray(products) ? products : [],
         salesZones: Array.isArray(zones) ? zones : [],
@@ -348,11 +350,11 @@ export function useAssign() {
         plantCodes: [],
         customers: Array.isArray(customers)
           ? customers.map((c: any) => ({
-              id: c.id,
-              name: c.name || "Unknown",
-              address: c.address || "",
-              contact: c.contact || "",
-            }))
+            id: c.id,
+            name: c.name || "Unknown",
+            address: c.address || "",
+            contact: c.contact || "",
+          }))
           : [],
       });
     } catch (err) {
@@ -453,18 +455,18 @@ export function useAssign() {
 
       const normalizedIssueId =
         issueUserId === "" ||
-        issueUserId === "null" ||
-        issueUserId === null ||
-        issueUserId === "unassign"
+          issueUserId === "null" ||
+          issueUserId === null ||
+          issueUserId === "unassign"
           ? null
           : issueUserId
             ? Number(issueUserId)
             : undefined;
       const normalizedPackingId =
         packingUserId === "" ||
-        packingUserId === "null" ||
-        packingUserId === null ||
-        packingUserId === "unassign"
+          packingUserId === "null" ||
+          packingUserId === null ||
+          packingUserId === "unassign"
           ? null
           : packingUserId
             ? Number(packingUserId)
@@ -490,51 +492,51 @@ export function useAssign() {
               ...o,
               ...(normalizedId !== undefined
                 ? {
-                    assignedUserId:
-                      normalizedId === null ? undefined : normalizedId,
-                  }
+                  assignedUserId:
+                    normalizedId === null ? undefined : normalizedId,
+                }
                 : {}),
               ...(selectedUser
                 ? {
-                    assignedUser: {
-                      id: selectedUser.id,
-                      name: selectedUser.name,
-                    },
-                  }
+                  assignedUser: {
+                    id: selectedUser.id,
+                    name: selectedUser.name,
+                  },
+                }
                 : normalizedId === null
                   ? { assignedUser: null }
                   : {}),
               ...(priorityVal !== undefined ? { priority: priorityVal } : {}),
               ...(normalizedIssueId !== undefined
                 ? {
-                    issueUserId:
-                      normalizedIssueId === null
-                        ? undefined
-                        : normalizedIssueId,
-                  }
+                  issueUserId:
+                    normalizedIssueId === null
+                      ? undefined
+                      : normalizedIssueId,
+                }
                 : {}),
               ...(issueUserObj
                 ? {
-                    issueUser: { id: issueUserObj.id, name: issueUserObj.name },
-                  }
+                  issueUser: { id: issueUserObj.id, name: issueUserObj.name },
+                }
                 : normalizedIssueId === null
                   ? { issueUser: null }
                   : {}),
               ...(normalizedPackingId !== undefined
                 ? {
-                    packingUserId:
-                      normalizedPackingId === null
-                        ? undefined
-                        : normalizedPackingId,
-                  }
+                  packingUserId:
+                    normalizedPackingId === null
+                      ? undefined
+                      : normalizedPackingId,
+                }
                 : {}),
               ...(packingUserObj
                 ? {
-                    packingUser: {
-                      id: packingUserObj.id,
-                      name: packingUserObj.name,
-                    },
-                  }
+                  packingUser: {
+                    id: packingUserObj.id,
+                    name: packingUserObj.name,
+                  },
+                }
                 : normalizedPackingId === null
                   ? { packingUser: null }
                   : {}),
@@ -744,7 +746,7 @@ export function useAssign() {
           try {
             const errorData = await response.json();
             errorMsg = errorData.message || errorMsg;
-          } catch (e) {}
+          } catch (e) { }
           throw new Error(errorMsg);
         }
 
@@ -778,7 +780,7 @@ export function useAssign() {
           const errorData = await response.json();
           errorMsg = errorData.message || errorMsg;
           missing = errorData.missing || [];
-        } catch (e) {}
+        } catch (e) { }
         // FIX: Return an object instead of throwing an Error
         return { success: false, message: errorMsg, missingSOs: missing };
       }

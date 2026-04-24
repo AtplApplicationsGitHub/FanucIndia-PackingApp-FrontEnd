@@ -96,6 +96,7 @@ export default function AssignSO() {
   const [customerFilter, setCustomerFilter] = React.useState("");
   const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
   const [failedImportFilter, setFailedImportFilter] = React.useState(false);
+  const [successImportFilter, setSuccessImportFilter] = React.useState(false);
 
   // Persistence logic - Load
   React.useEffect(() => {
@@ -118,6 +119,8 @@ export default function AssignSO() {
         if (parsed.pageSize) setPageSize(parsed.pageSize);
         if (parsed.failedImport !== undefined)
           setFailedImportFilter(parsed.failedImport);
+        if (parsed.successImport !== undefined)
+          setSuccessImportFilter(parsed.successImport);
       } catch (e) {
         console.error("Failed to load saved filters", e);
       }
@@ -136,6 +139,7 @@ export default function AssignSO() {
       customer: customerFilter,
       pendingImport: pendingImportFilter,
       failedImport: failedImportFilter,
+      successImport: successImportFilter,
       start: startDate ? startDate.toISOString() : null,
       end: endDate ? endDate.toISOString() : null,
       currentPage,
@@ -154,6 +158,7 @@ export default function AssignSO() {
     currentPage,
     pageSize,
     failedImportFilter,
+    successImportFilter,
     isStatesLoaded,
   ]);
 
@@ -198,6 +203,7 @@ export default function AssignSO() {
     setCustomerFilter("");
     setPendingImportFilter(false);
     setFailedImportFilter(false);
+    setSuccessImportFilter(false);
     setCurrentPage(1);
   };
 
@@ -468,6 +474,7 @@ export default function AssignSO() {
         endDate,
         pendingImportFilter,
         failedImportFilter,
+        successImportFilter,
       });
     }, 300);
 
@@ -482,6 +489,7 @@ export default function AssignSO() {
     endDate,
     pendingImportFilter,
     failedImportFilter,
+    successImportFilter,
     fetchDynamicCounts,
     isStatesLoaded,
   ]);
@@ -565,6 +573,7 @@ export default function AssignSO() {
         !pendingImportFilter || !order.hasMaterialData;
 
       const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
+      const matchesSuccessImport = !successImportFilter || order.hasMaterialData;
 
       return (
         matchesSearch &&
@@ -573,7 +582,8 @@ export default function AssignSO() {
         matchesStatus &&
         matchesDate &&
         matchesPendingImport &&
-        matchesFailedImport
+        matchesFailedImport &&
+        matchesSuccessImport
       );
     });
 
@@ -652,9 +662,9 @@ export default function AssignSO() {
 
       const selectedCustomerName = customerFilter
         ? (
-            lookup.customers.find((c) => String(c.id) === customerFilter)
-              ?.name || ""
-          ).toLowerCase()
+          lookup.customers.find((c) => String(c.id) === customerFilter)
+            ?.name || ""
+        ).toLowerCase()
         : "";
 
       const matchesCustomer =
@@ -695,6 +705,7 @@ export default function AssignSO() {
         !pendingImportFilter || !order.hasMaterialData;
 
       const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
+      const matchesSuccessImport = !successImportFilter || order.hasMaterialData;
 
       return (
         matchesSearch &&
@@ -704,7 +715,8 @@ export default function AssignSO() {
         matchesDate &&
         matchesCustomer &&
         matchesPendingImport &&
-        matchesFailedImport
+        matchesFailedImport &&
+        matchesSuccessImport
       );
     });
   }, [
@@ -718,6 +730,7 @@ export default function AssignSO() {
     customerFilter,
     pendingImportFilter,
     failedImportFilter,
+    successImportFilter,
     lookup.customers,
   ]);
 
@@ -865,11 +878,11 @@ export default function AssignSO() {
         priority: row.priority ?? "",
         issueUser: clearHyphen(
           findName(lookup.assignableUsers, row.issueUserId ?? 0) ||
-            row.issueUser?.name,
+          row.issueUser?.name,
         ),
         packingUser: clearHyphen(
           findName(lookup.assignableUsers, row.packingUserId ?? 0) ||
-            row.packingUser?.name,
+          row.packingUser?.name,
         ),
         skipIssueStage: isIssueSkipped,
         skipPackingStage: isPackingSkipped,
@@ -1270,6 +1283,15 @@ export default function AssignSO() {
                 if (!failedImportFilter) setPendingImportFilter(false);
                 setCurrentPage(1);
               }}
+              successImportFilter={successImportFilter}
+              onSuccessImportClick={() => {
+                setSuccessImportFilter(!successImportFilter);
+                if (!successImportFilter) {
+                  setPendingImportFilter(false);
+                  setFailedImportFilter(false);
+                }
+                setCurrentPage(1);
+              }}
               onDownloadFailedErpData={handleDownloadFailedErpData}
             />
           </Box>
@@ -1465,13 +1487,12 @@ export default function AssignSO() {
                           >
                             {row.skipIssueStage || row.skipPackingStage ? (
                               <Tooltip
-                                title={`Skip Stages: ${
-                                  row.skipIssueStage && row.skipPackingStage
-                                    ? "Issue & Packing"
-                                    : row.skipIssueStage
-                                      ? "Issue"
-                                      : "Packing"
-                                }`}
+                                title={`Skip Stages: ${row.skipIssueStage && row.skipPackingStage
+                                  ? "Issue & Packing"
+                                  : row.skipIssueStage
+                                    ? "Issue"
+                                    : "Packing"
+                                  }`}
                               >
                                 <FlagIcon
                                   sx={{
@@ -1635,7 +1656,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 80 }}>
                           {inlineEdit?.id === row.id &&
-                          inlineEdit.field === "priority" ? (
+                            inlineEdit.field === "priority" ? (
                             <CustomEditTextField
                               initialValue={inlineEdit.value}
                               onCommit={(val) => handleInlineSave(val)}
@@ -1666,7 +1687,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 150 }}>
                           {inlineEdit?.id === row.id &&
-                          inlineEdit.field === "issueUserId" ? (
+                            inlineEdit.field === "issueUserId" ? (
                             <CustomEditSelect
                               initialValue={inlineEdit.value}
                               onCommit={(val: string | number) =>
@@ -1705,7 +1726,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 150 }}>
                           {inlineEdit?.id === row.id &&
-                          inlineEdit.field === "packingUserId" ? (
+                            inlineEdit.field === "packingUserId" ? (
                             <CustomEditSelect
                               initialValue={inlineEdit.value}
                               onCommit={(val: string | number) =>
