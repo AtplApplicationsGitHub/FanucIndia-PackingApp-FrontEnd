@@ -11,6 +11,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
+import { useErpImportCounts } from "../hooks/useErpImportCounts";
 
 const iconMap: Record<string, React.ReactNode> = {
   cart: <ShoppingCart className="w-7 h-7" />,
@@ -52,7 +53,7 @@ const StatCard = ({
             <p className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
               {title}
             </p>
-            
+
             {/* Date Display and Optional DatePicker Icon */}
             {(dateText || showDatePicker) && (
               <div className="flex items-center gap-1">
@@ -63,8 +64,8 @@ const StatCard = ({
                 )}
                 {showDatePicker && (
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       onClick={() => setOpenPicker(true)}
                       sx={{ color: "text.secondary", padding: "4px" }}
                     >
@@ -101,11 +102,10 @@ const StatCard = ({
             <div className="flex items-center mt-1 text-sm text-[#4B5563] dark:text-[#E5E7EB]">
               <span>vs last month</span>
               <div
-                className={`flex items-center ml-2 ${
-                  isPositive
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-[#D00000] dark:text-red-400"
-                }`}
+                className={`flex items-center ml-2 ${isPositive
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-[#D00000] dark:text-red-400"
+                  }`}
               >
                 {isPositive ? (
                   <ArrowUpIcon className="w-4 h-4" />
@@ -160,32 +160,55 @@ const formatDate = (dateStr: string) => {
 const StatusCards = ({ selectedDate, setSelectedDate }: { selectedDate: string, setSelectedDate: (date: string) => void }) => {
   // Pass the selectedDate down to the hook so it fetches data for the newly picked date
   const { data: dispatch, loading: dispatchLoading, error: dispatchError } = useDispatchSummary(selectedDate);
-
+  const { data: erpCounts, loading: erpLoading, error: erpError } = useErpImportCounts(selectedDate);
   const dispatchCards: StatCardProps[] = dispatch
     ? [
-        {
-          title: "To Be Dispatched",
-          value: dispatch.ordersToBeDispatched,
-          iconType: "packageCheck",
-          iconColor: "text-blue-500 dark:text-blue-400",
-        },
-        {
-          title: "Ready for Dispatch Today",
-          value: dispatch.readyForDispatchToday,
-          iconType: "clock",
-          iconColor: "text-yellow-500 dark:text-yellow-400",
-        },
-        {
-          title: "Dispatched Today",
-          value: dispatch.ordersDispatchedToday,
-          iconType: "send",
-          iconColor: "text-green-500 dark:text-green-400",
-          dateText: formatDate(selectedDate),
-          showDatePicker: true, // Enables the calendar icon for this specific card
-          selectedDate: selectedDate,
-          onDateChange: setSelectedDate, // Updates the state in AdminDashboard
-        },
-      ]
+      {
+        title: "To Be Dispatched",
+        value: dispatch.ordersToBeDispatched,
+        iconType: "packageCheck",
+        iconColor: "text-blue-500 dark:text-blue-400",
+      },
+      {
+        title: "Ready for Dispatch Today",
+        value: dispatch.readyForDispatchToday,
+        iconType: "clock",
+        iconColor: "text-yellow-500 dark:text-yellow-400",
+      },
+      {
+        title: "Dispatched Today",
+        value: dispatch.ordersDispatchedToday,
+        iconType: "send",
+        iconColor: "text-green-500 dark:text-green-400",
+        dateText: formatDate(selectedDate),
+        showDatePicker: true, // Enables the calendar icon for this specific card
+        selectedDate: selectedDate,
+        onDateChange: setSelectedDate, // Updates the state in AdminDashboard
+      },
+    ]
+    : [];
+
+  const erpCards: StatCardProps[] = erpCounts
+    ? [
+      {
+        title: "Pending Import",
+        value: erpCounts.PendingImport,
+        iconType: "clock",
+        iconColor: "text-yellow-500 dark:text-yellow-400",
+      },
+      {
+        title: "ERP Success Upload",
+        value: erpCounts.ErpSuccessUpload,
+        iconType: "packageCheck",
+        iconColor: "text-green-500 dark:text-green-400",
+      },
+      {
+        title: "ERP Import Failed",
+        value: erpCounts.ErpImportFailed,
+        iconType: "alert",
+        iconColor: "text-red-500 dark:text-red-400",
+      },
+    ]
     : [];
 
   return (
@@ -199,6 +222,20 @@ const StatusCards = ({ selectedDate, setSelectedDate }: { selectedDate: string, 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xl text-[#1F2933] dark:text-[#F7F7F7] uppercase font-semibold">
           {dispatchCards.map((card, idx) => (
+            <StatCard key={idx} {...card} />
+          ))}
+        </div>
+      )}
+      {/* ERP Import Counts Row */}
+      {erpLoading ? (
+        <SkeletonRow />
+      ) : erpError ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ErrorBanner message={erpError} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xl text-[#1F2933] dark:text-[#F7F7F7] uppercase font-semibold">
+          {erpCards.map((card, idx) => (
             <StatCard key={idx} {...card} />
           ))}
         </div>

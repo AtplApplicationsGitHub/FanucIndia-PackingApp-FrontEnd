@@ -241,6 +241,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
     ADMIN_STATUS_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-status-by-customer`,
     ADMIN_PAYMENT_BY_CUSTOMER:`${API_BASE_URL}/dashboard/admin-payment-by-customer`,
     OPERATOR_STATS: (date?: string) => `${API_BASE_URL}/dashboard/operator-stats${date ? `?date=${date}` : ''}`,
+    ADMIN_ERP_IMPORT_COUNTS: (date?: string) => `${API_BASE_URL}/dashboard/admin-erp-import-counts${date ? `?date=${date}` : ''}`,
   },
   SO_CHAT: {
     MENTION_USERS: (orderId: number) => `${API_BASE_URL}/so-chat/${orderId}/mention-users`,
