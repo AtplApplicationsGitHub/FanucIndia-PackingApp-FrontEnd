@@ -1380,16 +1380,8 @@ export default function AssignSO() {
                               onChange={() => handleSelectOne(row.id)}
                               sx={{ p: 0.5 }}
                             />
-                            <Tooltip
-                              title={
-                                row.hasMaterialData
-                                  ? "ERP Data Imported"
-                                  : row.hasFailedImport
-                                    ? "Download failed ERP Excel from error folder"
-                                    : "Material Data Pending - Click to Import"
-                              }
-                            >
-                              {row.hasMaterialData ? (
+                            {row.hasMaterialData ? (
+                              <Tooltip title="ERP Data Imported">
                                 <CheckCircleOutlineIcon
                                   onClick={() =>
                                     router.push(`/orders/${row.id}`)
@@ -1402,20 +1394,48 @@ export default function AssignSO() {
                                   }}
                                   fontSize="small"
                                 />
-                              ) : row.hasFailedImport ? (
-                                <WarningAmberRoundedIcon
-                                  onClick={() =>
-                                    handleSingleFailedErpDownload(row.id)
-                                  }
-                                  sx={{
-                                    color: theme.palette.error.main,
-                                    ml: 1,
-                                    cursor: "pointer",
-                                    "&:hover": { opacity: 0.75 },
-                                  }}
-                                  fontSize="small"
-                                />
-                              ) : (
+                              </Tooltip>
+                            ) : row.hasFailedImport ? (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                  ml: 1,
+                                }}
+                              >
+                                <Tooltip title="Download failed ERP Excel from error folder">
+                                  <WarningAmberRoundedIcon
+                                    onClick={() =>
+                                      handleSingleFailedErpDownload(row.id)
+                                    }
+                                    sx={{
+                                      color: theme.palette.error.main,
+                                      cursor: "pointer",
+                                      "&:hover": { opacity: 0.75 },
+                                    }}
+                                    fontSize="small"
+                                  />
+                                </Tooltip>
+
+                                <Tooltip title="Material Data Pending - Click to Import Manually">
+                                  <ErrorOutlineIcon
+                                    onClick={() =>
+                                      handleOpenErpDialog(
+                                        row.saleOrderNumber || "",
+                                      )
+                                    }
+                                    sx={{
+                                      color: theme.palette.warning.main,
+                                      cursor: "pointer",
+                                      "&:hover": { opacity: 0.7 },
+                                    }}
+                                    fontSize="small"
+                                  />
+                                </Tooltip>
+                              </Box>
+                            ) : (
+                              <Tooltip title="Material Data Pending - Click to Import">
                                 <ErrorOutlineIcon
                                   onClick={() =>
                                     handleOpenErpDialog(
@@ -1430,8 +1450,8 @@ export default function AssignSO() {
                                   }}
                                   fontSize="small"
                                 />
-                              )}
-                            </Tooltip>
+                              </Tooltip>
+                            )}
                           </Box>
                         </TableCell>
 

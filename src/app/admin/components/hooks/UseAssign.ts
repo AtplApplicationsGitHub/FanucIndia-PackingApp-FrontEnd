@@ -84,12 +84,23 @@ export function useAssign() {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename =
+        orderIds.length === 1
+          ? `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`
+          : `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`;
+
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match?.[1]) {
+          filename = match[1];
+        }
+      }
+
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `Failed_ERP_Data_${dayjs().format("YYYYMMDD_HHmm")}.zip`,
-      );
+      link.setAttribute("download", filename);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
