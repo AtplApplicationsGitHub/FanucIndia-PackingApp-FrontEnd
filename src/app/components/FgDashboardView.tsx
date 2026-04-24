@@ -27,8 +27,13 @@ import {
   Button,
   DialogTitle,
   Divider,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogContent,
+  CircularProgress,
 } from "@mui/material";
+import { Visibility, Download } from "@mui/icons-material";
+import { secureDownload, secureView } from "@/common/lib/secure-download";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -54,6 +59,16 @@ const STATUS_COLORS = {
   dispatched: "#00B894", // Emerald green
 };
 
+interface PaymentAttachment {
+  id: number;
+  fileName: string;
+  saleOrderNumber: string;
+  outboundDelivery: string;
+  user?: {
+    name: string;
+  };
+}
+
 interface FgDashboardRow {
   id: number;
   deliveryDate: string;
@@ -77,6 +92,7 @@ interface FgDashboardRow {
   salesUser?: string;
   specialRemarks?: string;
   additionalRemarks?: string;
+  attachments?: PaymentAttachment[];
 }
 
 const formatDate = (dateString?: string) => {
@@ -168,6 +184,53 @@ export default function FgDashboardView() {
   const [salesZones, setSalesZones] = useState<{ id: number; name: string }[]>(
     [],
   );
+
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentAttachments, setPaymentAttachments] = useState<
+    PaymentAttachment[]
+  >([]);
+  const [paymentAttachmentsLoading, setPaymentAttachmentsLoading] =
+    useState(false);
+
+  const isViewable = (fileName: string) => {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    return ["pdf", "jpg", "jpeg", "png", "txt", "gif", "webp"].includes(
+      ext || "",
+    );
+  };
+
+  const handleOpenPaymentAttachments = (attachments?: PaymentAttachment[]) => {
+    setPaymentAttachmentsLoading(true);
+    setPaymentDialogOpen(true);
+    setPaymentAttachments(attachments || []);
+    setPaymentAttachmentsLoading(false);
+  };
+
+  const handlePaymentAttachmentAction = async (
+    fileId: number,
+    fileName: string,
+    action: "view" | "download",
+  ) => {
+    try {
+      const res = await authFetch(API.SALES.ATTACHMENT_DOWNLOAD(fileId));
+
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+
+      if (action === "view" && isViewable(fileName)) {
+        secureView(blob);
+      } else {
+        secureDownload(blob, fileName);
+      }
+    } catch {
+      setSnackbar({
+        open: true,
+        message: "Failed to open attachment",
+        severity: "error",
+      });
+    }
+  };
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -354,13 +417,13 @@ export default function FgDashboardView() {
       link.href = url;
       link.setAttribute(
         "download",
-        `FG_Dashboard_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`
+        `FG_Dashboard_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       setSnackbar({
         open: true,
         message: "Excel export successful",
@@ -778,33 +841,28 @@ export default function FgDashboardView() {
 
                         {/* PAYMENT */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          <Box
-                            sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: "3px 10px",
-                              borderRadius: "16px",
-                              border: "1px solid",
-                              borderColor: row.payment
-                                ? alpha(theme.palette.success.main, 0.5)
-                                : alpha(theme.palette.error.main, 0.5),
-                              backgroundColor: row.payment
-                                ? alpha(theme.palette.success.main, 0.1)
-                                : alpha(theme.palette.error.main, 0.1),
-                              color:
-                                theme.palette.mode === "dark"
-                                  ? "#FFFFFF"
-                                  : row.payment
-                                    ? theme.palette.success.dark
-                                    : theme.palette.error.main,
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              minWidth: "50px",
-                            }}
-                          >
-                            {row.payment ? "Yes" : "No"}
-                          </Box>
+                          {Array.isArray(row.attachments) &&
+                          row.attachments.length > 0 ? (
+                            <MuiLink
+                              component="button"
+                              variant="body2"
+                              underline="hover"
+                              onClick={() =>
+                                handleOpenPaymentAttachments(row.attachments)
+                              }
+                              sx={{ fontWeight: 600, cursor: "pointer" }}
+                            >
+                              {row.payment ? "Yes" : "No"}
+                            </MuiLink>
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              component="span"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {row.payment ? "Yes" : "No"}
+                            </Typography>
+                          )}
                         </TableCell>
 
                         {/* TRANSPORTER */}
@@ -987,30 +1045,30 @@ export default function FgDashboardView() {
                   borderColor: "divider",
                 }}
               > */}
-                <DialogTitle
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    letterSpacing: 0.5,
-                    color: "error.main",
-                    pb: 1,
-                    position: "relative",
-                    textTransform: "uppercase"
-                  }}
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontWeight: 700,
+                  fontSize: "20px",
+                  letterSpacing: 0.5,
+                  color: "error.main",
+                  pb: 1,
+                  position: "relative",
+                  textTransform: "uppercase",
+                }}
+              >
+                {remarksPopup.title}
+                <IconButton
+                  size="small"
+                  onClick={() => setRemarksPopup(null)}
+                  sx={{ position: "absolute", right: 12 }}
                 >
-                  {remarksPopup.title}
-                  <IconButton
-                    size="small"
-                    onClick={() => setRemarksPopup(null)}
-                    sx={{ position: "absolute", right: 12 }}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </DialogTitle>
-                <Divider />
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </DialogTitle>
+              <Divider />
               {/* </Box> */}
               <Box sx={{ px: 3, py: 3, backgroundColor: "background.paper" }}>
                 <Paper
@@ -1038,6 +1096,151 @@ export default function FgDashboardView() {
             </Paper>
           </Box>
         )}
+        <Dialog
+          open={paymentDialogOpen}
+          onClose={() => setPaymentDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              color: "secondary.main",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            PAYMENT ATTACHMENTS
+            <IconButton
+              onClick={() => setPaymentDialogOpen(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent dividers>
+            <TableContainer component={Paper}>
+              <Table
+                sx={{
+                  "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                    backgroundColor: lightYellow,
+                  },
+                  "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                    {
+                      borderBottom: 0,
+                    },
+                }}
+              >
+                <TableHead sx={{ bgcolor: "primary.main" }}>
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        color: "primary.contrastText",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      SO Number
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        color: "primary.contrastText",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Outbound Delivery
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        color: "primary.contrastText",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      File Name
+                    </TableCell>
+
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color: "primary.contrastText",
+                        fontWeight: "bold",
+                        width: "150px",
+                      }}
+                    >
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {paymentAttachmentsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center">
+                        <Box display="flex" justifyContent="center" p={4}>
+                          <CircularProgress />
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ) : paymentAttachments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center">
+                        <Typography color="text.secondary" p={3}>
+                          No attachments found.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paymentAttachments.map((file) => (
+                      <TableRow key={file.id}>
+                        <TableCell>{file.saleOrderNumber}</TableCell>
+                        <TableCell>{file.outboundDelivery}</TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {file.fileName}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Tooltip title="View">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handlePaymentAttachmentAction(
+                                  file.id,
+                                  file.fileName,
+                                  "view",
+                                )
+                              }
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </Tooltip>
+
+                          <Tooltip title="Download">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handlePaymentAttachmentAction(
+                                  file.id,
+                                  file.fileName,
+                                  "download",
+                                )
+                              }
+                            >
+                              <Download />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+        </Dialog>
       </Box>
     </LocalizationProvider>
   );
