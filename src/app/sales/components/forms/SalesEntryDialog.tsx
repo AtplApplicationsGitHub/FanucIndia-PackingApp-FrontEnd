@@ -37,7 +37,7 @@ export default function SalesEntryDialog({
             maxHeight: "95vh",
             bgcolor: "background.paper",
             borderRadius: 0,
-            overflow: "hidden",
+            overflow: "visible",
           },
         },
       }}
@@ -62,7 +62,7 @@ export default function SalesEntryDialog({
             textAlign: "center",
             letterSpacing: 0,
             color: "secondary.main",
-            p:1
+            p: 1
           }}
         >
           {initialData ? "EDIT ORDER" : "CREATE ORDER"}

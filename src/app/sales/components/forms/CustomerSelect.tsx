@@ -59,7 +59,7 @@ const CustomerSelect: React.FC<Props> = ({
       onInputChange={(_, newInputValue, reason) => {
         if (reason === "input") {
           onChange("customerName", newInputValue);
-          onChange("customerId", ""); 
+          onChange("customerId", "");
         } else if (reason === "clear") {
           onChange("customerName", "");
           onChange("customerId", "");

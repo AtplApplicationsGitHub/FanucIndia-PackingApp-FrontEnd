@@ -191,13 +191,13 @@ const StatusCards = ({ selectedDate, setSelectedDate }: { selectedDate: string, 
   const erpCards: StatCardProps[] = erpCounts
     ? [
       {
-        title: "Pending Import",
+        title: "Awaiting for Import",
         value: erpCounts.PendingImport,
         iconType: "clock",
         iconColor: "text-yellow-500 dark:text-yellow-400",
       },
       {
-        title: "ERP Success Upload",
+        title: "ERP Import Successful",
         value: erpCounts.ErpSuccessUpload,
         iconType: "packageCheck",
         iconColor: "text-green-500 dark:text-green-400",
