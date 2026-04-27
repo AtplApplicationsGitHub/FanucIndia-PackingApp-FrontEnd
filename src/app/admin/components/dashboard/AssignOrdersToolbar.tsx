@@ -612,49 +612,6 @@ export default function AssignOrdersToolbar({
                   </Typography>
                 </Box>
               </Tooltip>
-              {[
-                {
-                  label: "R",
-                  count: statusCounts.R105,
-                  color: "#1976d2", // Blue
-                  bgcolor: "#f0f7ff",
-                  border: "#e1effe",
-                },
-                {
-                  label: "W",
-                  count: statusCounts.W105,
-                  color: "#ed6c02", // Orange
-                  bgcolor: "#fffaf0",
-                  border: "#fef3c7",
-                },
-              ].map((card) => (
-                <Box
-                  key={card.label}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.2,
-                    px: 2,
-                    py: 1,
-                    borderRadius: "32px",
-                    bgcolor: card.bgcolor,
-                    border: "1px solid",
-                    borderColor: card.border,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: card.color,
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card.label}: {card.count}
-                  </Typography>
-                </Box>
-              ))}
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Tooltip
                   title={
