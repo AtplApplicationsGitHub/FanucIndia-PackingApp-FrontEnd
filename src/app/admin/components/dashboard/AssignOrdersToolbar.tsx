@@ -142,6 +142,26 @@ export default function AssignOrdersToolbar({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
+  // Make the ERP status chips behave like a single-select group:
+  // when one is clicked, automatically unselect the other active one(s).
+  const handleFailedChipClick = () => {
+    if (pendingImportFilter && onPendingImportClick) onPendingImportClick();
+    if (successImportFilter && onSuccessImportClick) onSuccessImportClick();
+    onFailedImportClick?.();
+  };
+
+  const handleSuccessChipClick = () => {
+    if (pendingImportFilter && onPendingImportClick) onPendingImportClick();
+    if (failedImportFilter && onFailedImportClick) onFailedImportClick();
+    onSuccessImportClick?.();
+  };
+
+  const handlePendingChipClick = () => {
+    if (failedImportFilter && onFailedImportClick) onFailedImportClick();
+    if (successImportFilter && onSuccessImportClick) onSuccessImportClick();
+    onPendingImportClick?.();
+  };
+
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [tempIssueUser, setTempIssueUser] = useState<string>("placeholder");
   const [tempPackingUser, setTempPackingUser] = useState<string>("placeholder");
@@ -521,7 +541,7 @@ export default function AssignOrdersToolbar({
             >
               <Tooltip title="ERP Import Failed">
                 <Box
-                  onClick={onFailedImportClick}
+                  onClick={handleFailedChipClick}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -555,7 +575,7 @@ export default function AssignOrdersToolbar({
               </Tooltip>
               <Tooltip title="ERP Import Success">
                 <Box
-                  onClick={onSuccessImportClick}
+                  onClick={handleSuccessChipClick}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -580,7 +600,7 @@ export default function AssignOrdersToolbar({
               </Tooltip>
               <Tooltip title="ERP Import Pending">
                 <Box
-                  onClick={onPendingImportClick}
+                  onClick={handlePendingChipClick}
                   sx={{
                     display: "flex",
                     alignItems: "center",
