@@ -11,10 +11,27 @@ import {
   Alert,
   Stack,
   InputBase,
-  Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Table, TableHead, 
-  TableRow, TableCell, TableBody
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
-import { Search, Print, Archive, Delete, Close, Visibility, Download } from "@mui/icons-material";
+import {
+  Search,
+  Print,
+  Archive,
+  Delete,
+  Close,
+  Visibility,
+  Download,
+} from "@mui/icons-material";
 import axios from "axios";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { useRouter, useParams } from "next/navigation";
@@ -34,6 +51,13 @@ import { useTheme, alpha, TableContainer, Tooltip } from "@mui/material";
 import CommonButton from "@/common/components/CommonButton";
 import BackButton from "@/common/components/BackButton";
 
+interface ErpImportLogData {
+  id: number;
+  status: string;
+  message: string | null;
+  createdAt: string;
+}
+
 interface SalesOrder {
   id: number;
   saleOrderNumber: string;
@@ -45,7 +69,7 @@ interface SalesOrder {
   paymentClearance?: boolean;
   priority?: string;
   product?: { name: string };
-  customer?: { name: string; address?: string; contactNumber?: string | null; };
+  customer?: { name: string; address?: string; contactNumber?: string | null };
   packConfig?: { configName: string };
   transporter?: { name: string };
   plantCode?: { code: string };
@@ -54,6 +78,10 @@ interface SalesOrder {
   address?: string | null;
   specialRemarks?: string;
   attachments?: any[];
+  skipIssueStage?: boolean | null;
+  skipPackingStage?: boolean | null;
+  issueAssignedUser?: { name: string; email?: string } | null;
+  packingAssignedUser?: { name: string; email?: string } | null;
 }
 
 interface DispatchInfoData {
@@ -108,6 +136,7 @@ interface SoDetails {
   materialDetails: MaterialDetail[];
   isArchived: boolean;
   materialFiles?: MaterialAttachment[];
+  erpImportLogs?: ErpImportLogData[];
 }
 
 interface MaterialAttachment {
@@ -128,7 +157,7 @@ type UserRole = "ADMIN" | "SALES" | "USER" | null;
 const isViewable = (fileName: string) => {
   const ext = fileName.split(".").pop()?.toLowerCase();
   return ["pdf", "jpg", "jpeg", "png", "txt", "gif", "webp"].includes(
-    ext || ""
+    ext || "",
   );
 };
 
@@ -141,7 +170,9 @@ export default function SoSearchPage() {
   const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false);
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
 
-  const [multipleOrders, setMultipleOrders] = useState<{ saleOrderNumber: string, outboundDelivery: string }[] | null>(null);
+  const [multipleOrders, setMultipleOrders] = useState<
+    { saleOrderNumber: string; outboundDelivery: string }[] | null
+  >(null);
   const [selectedObd, setSelectedObd] = useState<string>("");
   const [multipleDialogOpen, setMultipleDialogOpen] = useState(false);
 
@@ -166,8 +197,11 @@ export default function SoSearchPage() {
     number | null
   >(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentAttachments, setPaymentAttachments] = useState<PaymentAttachment[]>([]);
-  const [paymentAttachmentsLoading, setPaymentAttachmentsLoading] = useState(false);
+  const [paymentAttachments, setPaymentAttachments] = useState<
+    PaymentAttachment[]
+  >([]);
+  const [paymentAttachmentsLoading, setPaymentAttachmentsLoading] =
+    useState(false);
   const [salesZone, setSalesZone] = useState("");
   const searchParams = useSearchParams();
   const theme = useTheme();
@@ -187,7 +221,7 @@ export default function SoSearchPage() {
   const handleVehicleAttachmentAction = (
     entryId: number,
     fileName: string,
-    action: "view" | "download"
+    action: "view" | "download",
   ) => {
     const isArchived = data?.isArchived;
     const url = isArchived
@@ -216,14 +250,13 @@ export default function SoSearchPage() {
 
     try {
       const res = await fetchWithAuth(
-        API.SALES.ATTACHMENTS_BY_ORDER(data.salesOrder.id)
+        API.SALES.ATTACHMENTS_BY_ORDER(data.salesOrder.id),
       );
 
       if (!res.ok) throw new Error("Failed to fetch");
 
       const attachments = await res.json();
       setPaymentAttachments(attachments);
-
     } catch {
       setError("Failed to load payment attachments.");
       setPaymentDialogOpen(false);
@@ -235,7 +268,7 @@ export default function SoSearchPage() {
   const handlePaymentAttachmentAction = async (
     fileId: number,
     fileName: string,
-    action: "view" | "download"
+    action: "view" | "download",
   ) => {
     try {
       const res = await fetchWithAuth(API.SALES.ATTACHMENT_DOWNLOAD(fileId));
@@ -285,42 +318,47 @@ export default function SoSearchPage() {
     }
   }, [router]);
 
-  const performSearch = useCallback(async (searchNumber: string, searchObd?: string) => {
-    if (!searchNumber) return;
-    setLoading(true);
-    setError(null);
-    setData(null);
-    setMultipleOrders(null); // Reset multiple orders state
-    try {
-      const token = localStorage.getItem("token");
+  const performSearch = useCallback(
+    async (searchNumber: string, searchObd?: string) => {
+      if (!searchNumber) return;
+      setLoading(true);
+      setError(null);
+      setData(null);
+      setMultipleOrders(null); // Reset multiple orders state
+      try {
+        const token = localStorage.getItem("token");
 
-      let url = API.SO_SEARCH.BY_SO_NUMBER(searchNumber.trim());
-      if (searchObd) {
-        url += `?obd=${encodeURIComponent(searchObd.trim())}`;
-      }
+        let url = API.SO_SEARCH.BY_SO_NUMBER(searchNumber.trim());
+        if (searchObd) {
+          url += `?obd=${encodeURIComponent(searchObd.trim())}`;
+        }
 
-      const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      // --- NEW MULTIPLE ORDERS CHECK ---
-      if (res.data.multiple) {
-        setMultipleOrders(res.data.orders);
-        setSelectedObd(res.data.orders[0].outboundDelivery); // Default selection
-        setMultipleDialogOpen(true);
-      } else {
-        setData(res.data);
+        // --- NEW MULTIPLE ORDERS CHECK ---
+        if (res.data.multiple) {
+          setMultipleOrders(res.data.orders);
+          setSelectedObd(res.data.orders[0].outboundDelivery); // Default selection
+          setMultipleDialogOpen(true);
+        } else {
+          setData(res.data);
+        }
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          setError(
+            err.response?.data?.message || "Failed to fetch SO details.",
+          );
+        } else {
+          setError("Failed to fetch SO details.");
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Failed to fetch SO details.");
-      } else {
-        setError("Failed to fetch SO details.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     const soFromUrl = params.soNumber?.[0];
@@ -328,7 +366,9 @@ export default function SoSearchPage() {
 
     if (soFromUrl) {
       const decodedSo = decodeURIComponent(soFromUrl);
-      const decodedObd = obdFromUrl ? decodeURIComponent(obdFromUrl) : undefined;
+      const decodedObd = obdFromUrl
+        ? decodeURIComponent(obdFromUrl)
+        : undefined;
 
       setSoNumber(decodedSo);
       performSearch(decodedSo, decodedObd);
@@ -348,11 +388,11 @@ export default function SoSearchPage() {
 
   const handleOpenDispatchAttachments = () => {
     if (data?.dispatchInfo) {
-      const allAttachments = data.dispatchInfo.flatMap(
-        (d) => (d.attachments || []).map((att: any) => ({
+      const allAttachments = data.dispatchInfo.flatMap((d) =>
+        (d.attachments || []).map((att: any) => ({
           fileName: att.fileName,
           dispatchId: d.id,
-        }))
+        })),
       );
       setDispatchAttachments(allAttachments);
       setDispatchDialogOpen(true);
@@ -370,7 +410,7 @@ export default function SoSearchPage() {
 
     try {
       const res = await fetchWithAuth(
-        `${API.ERP_MATERIAL_FILES.BY_SO(data.salesOrder.saleOrderNumber)}?salesOrderId=${data.salesOrder.id}`
+        `${API.ERP_MATERIAL_FILES.BY_SO(data.salesOrder.saleOrderNumber)}?salesOrderId=${data.salesOrder.id}`,
       );
       if (!res.ok) throw new Error("Could not fetch attachments");
       const attachments = await res.json();
@@ -384,7 +424,7 @@ export default function SoSearchPage() {
   const handleAttachmentViewOrDownload = (
     fileId: number,
     action: "view" | "download",
-    fileName?: string
+    fileName?: string,
   ) => {
     const fileObj = materialAttachments.find((f) => f.ID === fileId);
     const resolvedName =
@@ -422,7 +462,7 @@ export default function SoSearchPage() {
   const handleDispatchAttachmentAction = (
     dispatchId: number,
     fileName: string,
-    action: "view" | "download"
+    action: "view" | "download",
   ) => {
     const isArchived = data?.isArchived;
     const url = isArchived
@@ -435,7 +475,7 @@ export default function SoSearchPage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) =>
-        res.ok ? res.blob() : Promise.reject("Failed to get attachment")
+        res.ok ? res.blob() : Promise.reject("Failed to get attachment"),
       )
       .then((blob) => {
         if (action === "view" && isViewable(fileName)) {
@@ -571,7 +611,6 @@ export default function SoSearchPage() {
                 variant="contained"
                 startIcon={<ChatBubbleOutlineIcon />}
                 onClick={() => setChatOpen(true)}
-
                 disabled={!data?.salesOrder?.saleOrderNumber}
               >
                 CHAT
@@ -596,7 +635,7 @@ export default function SoSearchPage() {
                       onClick={() =>
                         openConfirmation(
                           "archive",
-                          data.salesOrder.saleOrderNumber
+                          data.salesOrder.saleOrderNumber,
                         )
                       }
                       disabled={isActionLoading}
@@ -615,7 +654,7 @@ export default function SoSearchPage() {
                     onClick={() =>
                       openConfirmation(
                         "delete",
-                        data.salesOrder.saleOrderNumber
+                        data.salesOrder.saleOrderNumber,
                       )
                     }
                     disabled={isActionLoading}
@@ -652,15 +691,21 @@ export default function SoSearchPage() {
             <OrderStatusStepper
               status={data.salesOrder.status}
               stepsData={data.salesOrder.statusStepper}
+              skipIssueStage={data.salesOrder.skipIssueStage}
+              skipPackingStage={data.salesOrder.skipPackingStage}
             />
             <OrderSnapshot
               salesOrder={data.salesOrder}
               dispatchInfo={data.dispatchInfo}
+              erpImportLogs={data.erpImportLogs}
               onViewPackingAttachments={handleOpenMaterialAttachments}
               onViewDispatchAttachments={handleOpenDispatchAttachments}
               onViewVehicleAttachments={handleOpenVehicleAttachments}
               onViewPaymentAttachments={handleOpenPaymentAttachments}
-              hasPaymentAttachments={Array.isArray(data.salesOrder.attachments) && data.salesOrder.attachments.length > 0}
+              hasPaymentAttachments={
+                Array.isArray(data.salesOrder.attachments) &&
+                data.salesOrder.attachments.length > 0
+              }
             />
             <MaterialDetails
               materialDetails={data.materialDetails}
@@ -676,7 +721,9 @@ export default function SoSearchPage() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
+        <DialogTitle
+          sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}
+        >
           PAYMENT ATTACHMENTS
           <IconButton
             onClick={() => setPaymentDialogOpen(false)}
@@ -692,23 +739,37 @@ export default function SoSearchPage() {
                 "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
                   backgroundColor: lightYellow,
                 },
-                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
-                  borderBottom: 0,
-                },
+                "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                  {
+                    borderBottom: 0,
+                  },
               }}
             >
               <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
-                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                  <TableCell
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
                     SO Number
                   </TableCell>
-                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                  <TableCell
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
                     Outbound Delivery
                   </TableCell>
-                  <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                  <TableCell
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
                     File Name
                   </TableCell>
-                  <TableCell align="center" sx={{ color: "primary.contrastText", fontWeight: "bold", width: "150px" }}>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color: "primary.contrastText",
+                      fontWeight: "bold",
+                      width: "150px",
+                    }}
+                  >
                     Actions
                   </TableCell>
                 </TableRow>
@@ -742,7 +803,13 @@ export default function SoSearchPage() {
                         <Tooltip title="View">
                           <IconButton
                             size="small"
-                            onClick={() => handlePaymentAttachmentAction(file.id, file.fileName, "view")}
+                            onClick={() =>
+                              handlePaymentAttachmentAction(
+                                file.id,
+                                file.fileName,
+                                "view",
+                              )
+                            }
                           >
                             <Visibility />
                           </IconButton>
@@ -750,7 +817,13 @@ export default function SoSearchPage() {
                         <Tooltip title="Download">
                           <IconButton
                             size="small"
-                            onClick={() => handlePaymentAttachmentAction(file.id, file.fileName, "download")}
+                            onClick={() =>
+                              handlePaymentAttachmentAction(
+                                file.id,
+                                file.fileName,
+                                "download",
+                              )
+                            }
                           >
                             <Download />
                           </IconButton>
@@ -782,15 +855,28 @@ export default function SoSearchPage() {
         currentVehicleEntryId={currentVehicleEntryId}
       />
       {/* Multiple Orders Dialog */}
-      <Dialog open={multipleDialogOpen} onClose={() => setMultipleDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{
-          color: "secondary.main", fontWeight: 700, fontSize: 20, textAlign: "center", py: 1.5, px: 2
-        }}>
+      <Dialog
+        open={multipleDialogOpen}
+        onClose={() => setMultipleDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            color: "secondary.main",
+            fontWeight: 700,
+            fontSize: 20,
+            textAlign: "center",
+            py: 1.5,
+            px: 2,
+          }}
+        >
           MULTIPLE ORDERS FOUND
         </DialogTitle>
         <DialogContent dividers>
           <Typography mb={2} variant="body2" color="text.secondary">
-            There are multiple Outbound Deliveries associated with SO <b>{soNumber}</b>. Please select the specific OBD to view:
+            There are multiple Outbound Deliveries associated with SO{" "}
+            <b>{soNumber}</b>. Please select the specific OBD to view:
           </Typography>
           <Select
             fullWidth
@@ -806,13 +892,20 @@ export default function SoSearchPage() {
           </Select>
         </DialogContent>
         <DialogActions>
-          <CommonButton onClick={() => setMultipleDialogOpen(false)} color="inherit">Cancel</CommonButton>
+          <CommonButton
+            onClick={() => setMultipleDialogOpen(false)}
+            color="inherit"
+          >
+            Cancel
+          </CommonButton>
           <CommonButton
             variant="contained"
             onClick={() => {
               setMultipleDialogOpen(false);
               // Pushing to URL triggers the useEffect which calls performSearch automatically
-              router.push(`/so-search/${encodeURIComponent(soNumber)}/${encodeURIComponent(selectedObd)}`);
+              router.push(
+                `/so-search/${encodeURIComponent(soNumber)}/${encodeURIComponent(selectedObd)}`,
+              );
             }}
           >
             View Order

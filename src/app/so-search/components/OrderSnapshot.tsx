@@ -11,7 +11,7 @@ interface SalesOrder {
   outboundDelivery?: string;
   paymentClearance?: boolean;
   product?: { name: string };
-  customer?: { name: string; address?: string; contactNumber?: string | null; };
+  customer?: { name: string; address?: string; contactNumber?: string | null };
   customerNameText?: string | null;
   packConfig?: { configName: string };
   transporter?: { name: string };
@@ -21,6 +21,8 @@ interface SalesOrder {
   additionalRemarks?: string;
   labelRemarks?: string;
   address?: string | null;
+  issueAssignedUser?: { name: string; email?: string } | null;
+  packingAssignedUser?: { name: string; email?: string } | null;
 }
 
 interface DispatchInfoData {
@@ -41,9 +43,17 @@ interface VehicleEntrySummary {
   attachments: { fileName: string }[];
 }
 
+interface ErpImportLogData {
+  id: number;
+  status: string;
+  message: string | null;
+  createdAt: string;
+}
+
 interface Props {
   salesOrder: SalesOrder;
   dispatchInfo?: DispatchInfoData[];
+  erpImportLogs?: ErpImportLogData[];
   onViewPackingAttachments: () => void;
   onViewDispatchAttachments?: () => void;
   onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void;
@@ -54,6 +64,7 @@ interface Props {
 export default function OrderSnapshot({
   salesOrder,
   dispatchInfo = [],
+  erpImportLogs = [],
   onViewPackingAttachments,
   onViewDispatchAttachments,
   onViewVehicleAttachments,
@@ -74,6 +85,40 @@ export default function OrderSnapshot({
   }
   if (customerContact) {
     customerDisplay += `\n${customerContact}`;
+  }
+
+  const issueUser = salesOrder.issueAssignedUser?.email;
+  const packUser = salesOrder.packingAssignedUser?.email;
+
+  let terminalValue = "-";
+  if (issueUser && packUser) {
+    terminalValue = `Issue: ${issueUser}\nPack: ${packUser}`;
+  } else if (issueUser) {
+    terminalValue = `Issue: ${issueUser}`;
+  } else if (packUser) {
+    terminalValue = `Pack: ${packUser}`;
+  }
+
+  const latestLog =
+    erpImportLogs && erpImportLogs.length > 0 ? erpImportLogs[0] : null;
+  let erpLogDisplay = "-";
+
+  if (latestLog) {
+    const d = new Date(latestLog.createdAt);
+    const dateStr = d
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
+    const timeStr = d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    erpLogDisplay = `${dateStr} ${timeStr}\nStatus: ${latestLog.status}\nMessage: ${latestLog.message || "-"}`;
   }
 
   return (
@@ -121,7 +166,11 @@ export default function OrderSnapshot({
               {salesOrder.paymentClearance ? "Yes" : "No"}
             </Link>
           ) : (
-            <Typography variant="body2" component="span" sx={{ fontWeight: 600 }}>
+            <Typography
+              variant="body2"
+              component="span"
+              sx={{ fontWeight: 600 }}
+            >
               {salesOrder.paymentClearance ? "Yes" : "No"}
             </Typography>
           )}
@@ -147,12 +196,12 @@ export default function OrderSnapshot({
             fontSize: "0.85rem",
             lineHeight: 1.25,
             fontWeight: 600,
-            whiteSpace: "pre-wrap"
+            whiteSpace: "pre-wrap",
           }}
         />
 
         <KVBox label="Priority" value={salesOrder.priority} />
-        <KVBox label="Terminal" value={"-"} />
+        <KVBox label="Terminal" value={terminalValue} />
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox
@@ -162,35 +211,52 @@ export default function OrderSnapshot({
         <KVBox label="Transporter" value={salesOrder.transporter?.name} />
         <KVBox
           label="Delivery Plant Code"
-          value={typeof salesOrder.plantCode === 'object' ? salesOrder.plantCode?.code : salesOrder.plantCode}
+          value={
+            typeof salesOrder.plantCode === "object"
+              ? salesOrder.plantCode?.code
+              : salesOrder.plantCode
+          }
         />
         <KVBox label="Sales Zone" value={salesOrder.salesZone?.name} />
       </Box>
 
       {/* Special & Additional Remarks */}
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
-        <KVBox
-          label="Special Remarks"
-          value={salesOrder.specialRemarks}
-        />
+        <KVBox label="Special Remarks" value={salesOrder.specialRemarks} />
         <KVBox
           label="Additional Remarks"
           value={salesOrder.additionalRemarks}
         />
-        <KVBox
-          label="Label Remarks"
-          value={salesOrder.labelRemarks}
+        <KVBox label="Label Remarks" value={salesOrder.labelRemarks} />
+        <KVBox 
+          label="ERP Import Log" 
+          value={erpLogDisplay} 
+          valueSx={{ 
+            fontSize: "0.85rem", 
+            lineHeight: 1.4, 
+            whiteSpace: "pre-wrap" 
+          }} 
         />
-        <Box sx={{ flex: "1 1 23%", minWidth: "200px" }} />
       </Box>
 
       {/* Dispatch Info Section */}
       {dispatchInfo.length > 0 && (
         <Box mt={3}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
             <Typography
-              sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
-            >              DISPATCH
+              sx={{
+                color: "secondary.main",
+                fontWeight: 600,
+                fontSize: "20px",
+              }}
+            >
+              {" "}
+              DISPATCH
             </Typography>
             {onViewDispatchAttachments && (
               <Link
@@ -205,17 +271,26 @@ export default function OrderSnapshot({
             )}
           </Box>
           {dispatchInfo.map((dispatch) => (
-            <Box key={dispatch.id} display="flex" flexWrap="wrap" gap={2} mb={2}>
+            <Box
+              key={dispatch.id}
+              display="flex"
+              flexWrap="wrap"
+              gap={2}
+              mb={2}
+            >
               <KVBox label="Vehicle Number">
                 <Link
                   component="button"
                   variant="body2"
-                  onClick={() => dispatch.vehicleEntry && onViewVehicleAttachments?.(dispatch.vehicleEntry)}
+                  onClick={() =>
+                    dispatch.vehicleEntry &&
+                    onViewVehicleAttachments?.(dispatch.vehicleEntry)
+                  }
                   sx={{
                     fontWeight: 600,
-                    textDecoration: 'none',
-                    color: dispatch.vehicleEntry ? '' : '',
-                    cursor: dispatch.vehicleEntry ? 'pointer' : 'default'
+                    textDecoration: "none",
+                    color: dispatch.vehicleEntry ? "" : "",
+                    cursor: dispatch.vehicleEntry ? "pointer" : "default",
                   }}
                 >
                   {dispatch.vehicleNumber}
@@ -223,12 +298,18 @@ export default function OrderSnapshot({
               </KVBox>
               <KVBox
                 label="Transporter"
-                value={dispatch.transporterName || dispatch.transporter?.name || "-"}
+                value={
+                  dispatch.transporterName || dispatch.transporter?.name || "-"
+                }
               />
               <KVBox label="Updated By" value={dispatch.UpdatedBy || "-"} />
               <KVBox
                 label="Updated Datetime"
-                value={dispatch.UpdatedDate ? new Date(dispatch.UpdatedDate).toLocaleString() : "-"}
+                value={
+                  dispatch.UpdatedDate
+                    ? new Date(dispatch.UpdatedDate).toLocaleString()
+                    : "-"
+                }
               />
             </Box>
           ))}

@@ -3,6 +3,7 @@
 import { Stack, Step, StepLabel, Stepper, StepConnector, stepConnectorClasses, styled, Typography, Box } from "@mui/material";
 import { StepIconProps } from "@mui/material/StepIcon";
 import { differenceInSeconds, format } from 'date-fns'; 
+import FlagIcon from '@mui/icons-material/Flag';
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
@@ -26,33 +27,41 @@ const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   },
 }));
 
-// Ignore MUI's default strict sequential active/completed logic. 
-// We will manually pass custom completion booleans to control the icon color.
 const ColorlibStepIconRoot = styled('div')<{
-  ownerState: { completed?: boolean; active?: boolean };
-}>(({ theme, ownerState }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ccc',
-  zIndex: 1,
-  color: '#fff',
-  width: 50,
-  height: 50,
-  display: 'flex',
-  borderRadius: '50%',
-  justifyContent: 'center',
-  alignItems: 'center',
-  ...((ownerState.active || ownerState.completed) && {
-    backgroundImage:
-      'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)',
-    boxShadow: ownerState.active ? '0 4px 10px 0 rgba(0,0,0,.25)' : 'none',
-    color: '#1F2933', 
-  }),
-}));
+  ownerState: { completed?: boolean; active?: boolean; customColor?: 'blue' | 'red' | 'purple' };
+}>(({ theme, ownerState }) => {
+  let backgroundImage = 'linear-gradient( 136deg, #FFEA00 0%, #FFD200 50%, #E6BD00 100%)';
+  
+  if (ownerState.customColor === 'blue') {
+    backgroundImage = 'linear-gradient( 136deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)';
+  } else if (ownerState.customColor === 'red') {
+    backgroundImage = 'linear-gradient( 136deg, #f87171 0%, #ef4444 50%, #dc2626 100%)';
+  } else if (ownerState.customColor === 'purple') {
+    backgroundImage = 'linear-gradient( 136deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)';
+  }
 
-function ColorlibStepIcon(props: StepIconProps & { isCompletedCustom?: boolean, isActiveCustom?: boolean }) {
-  const { className, isCompletedCustom, isActiveCustom } = props;
+  return {
+    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ccc',
+    zIndex: 1,
+    color: '#fff',
+    width: 50,
+    height: 50,
+    display: 'flex',
+    borderRadius: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...((ownerState.active || ownerState.completed || ownerState.customColor) && {
+      backgroundImage,
+      boxShadow: ownerState.active ? '0 4px 10px 0 rgba(0,0,0,.25)' : 'none',
+      color: ownerState.customColor ? '#fff' : '#1F2933', 
+    }),
+  };
+});
 
+function ColorlibStepIcon(props: StepIconProps & { isCompletedCustom?: boolean, isActiveCustom?: boolean, customColor?: 'blue' | 'red' | 'purple' }) {
+  const { className, isCompletedCustom, isActiveCustom, customColor } = props;
   return (
-    <ColorlibStepIconRoot ownerState={{ completed: isCompletedCustom, active: isActiveCustom }} className={className}>
+    <ColorlibStepIconRoot ownerState={{ completed: isCompletedCustom, active: isActiveCustom, customColor }} className={className}>
       {String(props.icon)}
     </ColorlibStepIconRoot>
   );
@@ -68,6 +77,8 @@ interface StatusStepperData {
 interface Props {
   status?: string; 
   stepsData: StatusStepperData[];
+  skipIssueStage?: boolean | null;  // <-- ADD THIS
+  skipPackingStage?: boolean | null; // <-- ADD THIS
 }
 
 const STEP_ORDER = [
@@ -141,7 +152,11 @@ function calculateTimeTaken(start: string | null, end: string | null): string | 
   }
 }
 
-export default function OrderStatusStepper({ stepsData = [] }: Props) {
+export default function OrderStatusStepper({ 
+  stepsData = [], 
+  skipIssueStage,
+  skipPackingStage
+}: Props) {
   
   const sortedSteps = [...stepsData].sort((a, b) => {
     return STEP_ORDER.indexOf(a.status) - STEP_ORDER.indexOf(b.status);
@@ -168,12 +183,9 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
         connector={<ColorlibConnector />}
       >
         {sortedSteps.map((step, index) => {
-          
           let timeTaken = null;
           const hasTimestamp = !!step.createdDateTime;
           
-          //  Calculate time taken based strictly on actual chronological event history
-          // This prevents negative calculations if a prior step is completed out of sequence later
           if (index > 0 && hasTimestamp) {
             const myIndex = chronologicalSteps.findIndex(s => s.id === step.id);
             if (myIndex > 0) {
@@ -181,13 +193,24 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
               timeTaken = calculateTimeTaken(prevStepTime, step.createdDateTime);
             }
           }
-
+          
           const isToBeIssued = step.status === "To be Issued";
           const createdTimeFormatted = isToBeIssued && step.createdDateTime 
             ? format(new Date(step.createdDateTime), "dd MMM yyyy, hh:mm a") 
             : null;
-
           const isActive = index === activeStep;
+
+          // --- NEW: Calculate flag color for skipped stages ---
+          let flagColor: string | null = null;
+          
+          if (skipIssueStage && skipPackingStage) {
+            if (step.status === 'Issued' || step.status === 'Packed') flagColor = '#a855f7'; // Purple
+          } else if (skipIssueStage && !skipPackingStage) {
+            if (step.status === 'Issued') flagColor = '#3b82f6'; // Blue
+          } else if (!skipIssueStage && skipPackingStage) {
+            if (step.status === 'Packed') flagColor = '#ef4444'; // Red
+          }
+          // --------------------------------------------------
 
           return (
             <Step key={step.id}>
@@ -201,22 +224,39 @@ export default function OrderStatusStepper({ stepsData = [] }: Props) {
                 )}
               >
                 <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>{step.status}</Typography>
+                  {/* Container uses relative positioning so the absolute icon anchors to it */}
+                  <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {step.status}
+                    </Typography>
+                    
+                    {flagColor && (
+                      <FlagIcon 
+                        sx={{ 
+                          color: flagColor, 
+                          fontSize: 18,
+                          position: 'absolute',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          right: -22 // Pulls the icon outside the text boundary
+                        }} 
+                      />
+                    )}
+                  </Box>
                   
                   {createdTimeFormatted && (
                     <Typography variant="caption" color="text.secondary" display="block">
                       {createdTimeFormatted}
                     </Typography>
                   )}
-
-                  {index > 0 && ( 
+                  {index > 0 && (
                     <>
+                      {/* Sub-text logic is now completely independent of the flag */}
                       {hasTimestamp ? (
                         <Typography variant="caption" color="text.secondary" display="block">
                           Time Taken: {timeTaken || "0s"}
                         </Typography>
                       ) : (
-                        //  Removed the misleading 'Skipped' label logic. Unstamped steps are just 'Pending'.
                         <Typography variant="caption" color="text.secondary" display="block">
                           Pending
                         </Typography>
