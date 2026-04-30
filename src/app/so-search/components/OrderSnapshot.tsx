@@ -23,6 +23,8 @@ interface SalesOrder {
   address?: string | null;
   issueAssignedUser?: { name: string; email?: string } | null;
   packingAssignedUser?: { name: string; email?: string } | null;
+  erpImportLogs?: ErpImportLogData[];
+  ERPImportLogs?: ErpImportLogData[];
 }
 
 interface DispatchInfoData {
@@ -99,26 +101,35 @@ export default function OrderSnapshot({
     terminalValue = `Pack: ${packUser}`;
   }
 
+  const allErpLogs = [
+    ...(Array.isArray(erpImportLogs) ? erpImportLogs : []),
+    ...(Array.isArray(salesOrder.erpImportLogs) ? salesOrder.erpImportLogs : []),
+    ...(Array.isArray(salesOrder.ERPImportLogs) ? salesOrder.ERPImportLogs : []),
+  ];
   const latestLog =
-    erpImportLogs && erpImportLogs.length > 0 ? erpImportLogs[0] : null;
+    allErpLogs.length > 0
+      ? [...allErpLogs].sort((a, b) => {
+          const timeA = new Date(a.createdAt).getTime();
+          const timeB = new Date(b.createdAt).getTime();
+          if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
+            return timeB - timeA;
+          }
+          return b.id - a.id;
+        })[0]
+      : null;
   let erpLogDisplay = "-";
+  let erpLogColor = "text.primary";
 
   if (latestLog) {
-    const d = new Date(latestLog.createdAt);
-    const dateStr = d
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-      .replace(/\//g, "-");
-    const timeStr = d.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    const normalizedStatus = latestLog.status?.trim().toLowerCase();
 
-    erpLogDisplay = `${dateStr} ${timeStr}\nStatus: ${latestLog.status}\nMessage: ${latestLog.message || "-"}`;
+    if (normalizedStatus === "success") {
+      erpLogDisplay = latestLog.message?.trim() || "Imported successfully - MANUAL";
+      erpLogColor = "success.main";
+    } else {
+      erpLogDisplay = "Failed";
+      erpLogColor = "error.main";
+    }
   }
 
   return (
@@ -228,15 +239,20 @@ export default function OrderSnapshot({
           value={salesOrder.additionalRemarks}
         />
         <KVBox label="Label Remarks" value={salesOrder.labelRemarks} />
-        <KVBox 
-          label="ERP Import Log" 
-          value={erpLogDisplay} 
-          valueSx={{ 
-            fontSize: "0.85rem", 
-            lineHeight: 1.4, 
-            whiteSpace: "pre-wrap" 
-          }} 
-        />
+        <KVBox label="ERP Import Log">
+          <Typography
+            component="span"
+            sx={{
+              fontSize: "0.85rem",
+              lineHeight: 1.4,
+              whiteSpace: "pre-wrap",
+              color: erpLogColor,
+              fontWeight: 600,
+            }}
+          >
+            {erpLogDisplay}
+          </Typography>
+        </KVBox>
       </Box>
 
       {/* Dispatch Info Section */}
