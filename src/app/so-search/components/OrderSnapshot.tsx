@@ -103,8 +103,12 @@ export default function OrderSnapshot({
 
   const allErpLogs = [
     ...(Array.isArray(erpImportLogs) ? erpImportLogs : []),
-    ...(Array.isArray(salesOrder.erpImportLogs) ? salesOrder.erpImportLogs : []),
-    ...(Array.isArray(salesOrder.ERPImportLogs) ? salesOrder.ERPImportLogs : []),
+    ...(Array.isArray(salesOrder.erpImportLogs)
+      ? salesOrder.erpImportLogs
+      : []),
+    ...(Array.isArray(salesOrder.ERPImportLogs)
+      ? salesOrder.ERPImportLogs
+      : []),
   ];
   const latestLog =
     allErpLogs.length > 0
@@ -117,18 +121,41 @@ export default function OrderSnapshot({
           return b.id - a.id;
         })[0]
       : null;
-  let erpLogDisplay = "-";
+  let erpDateDisplay = "-";
+  let erpStatusDisplay = "";
   let erpLogColor = "text.primary";
 
   if (latestLog) {
-    const normalizedStatus = latestLog.status?.trim().toLowerCase();
+    // Format Date & Time
+    const d = new Date(latestLog.createdAt);
+    const dateStr = d
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
+    const timeStr = d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
 
+    erpDateDisplay = `${dateStr} ${timeStr}`;
+
+    // Format Status & Message
+    const rawStatus = latestLog.status || "Unknown";
+    const message = latestLog.message ? ` - ${latestLog.message}` : "";
+    erpStatusDisplay = `Status: ${rawStatus}${message}`;
+
+    // Set Colors
+    const normalizedStatus = rawStatus.trim().toLowerCase();
     if (normalizedStatus === "success") {
-      erpLogDisplay = latestLog.message?.trim() || "Imported successfully - MANUAL";
       erpLogColor = "success.main";
-    } else {
-      erpLogDisplay = "Failed";
+    } else if (normalizedStatus === "failed") {
       erpLogColor = "error.main";
+    } else {
+      erpLogColor = "warning.main";
     }
   }
 
@@ -240,18 +267,43 @@ export default function OrderSnapshot({
         />
         <KVBox label="Label Remarks" value={salesOrder.labelRemarks} />
         <KVBox label="ERP Import Log">
-          <Typography
-            component="span"
-            sx={{
-              fontSize: "0.85rem",
-              lineHeight: 1.4,
-              whiteSpace: "pre-wrap",
-              color: erpLogColor,
-              fontWeight: 600,
-            }}
-          >
-            {erpLogDisplay}
-          </Typography>
+          {latestLog ? (
+            <Box display="flex" flexDirection="column" gap={0.5}>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: "0.85rem",
+                  color: "text.primary",
+                  fontWeight: 600,
+                }}
+              >
+                {erpDateDisplay}
+              </Typography>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: "0.85rem",
+                  lineHeight: 1.4,
+                  whiteSpace: "pre-wrap",
+                  color: erpLogColor,
+                  fontWeight: 600,
+                }}
+              >
+                {erpStatusDisplay}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography
+              component="span"
+              sx={{
+                fontSize: "0.85rem",
+                color: "text.primary",
+                fontWeight: 600,
+              }}
+            >
+              -
+            </Typography>
+          )}
         </KVBox>
       </Box>
 

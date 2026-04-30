@@ -34,6 +34,7 @@ export const KVBox = ({
       {label}
     </Typography>
     <Typography
+      component="div"
       variant="body1"
       fontWeight={600}
       sx={{ 
