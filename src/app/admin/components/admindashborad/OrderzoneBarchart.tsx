@@ -26,14 +26,23 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
   };
 
   // Transform API data (business logic unchanged)
-  const chartData = (data || []).map((item: ZoneStatus) => ({
-    zone: item.zoneName,
-    toBeIssued: item.toBeIssuedCount,
-    assigned: item.r105Count,
-    issued: item.w105Count,
-    packed: item.f105Count,
-    dispatched: item.dispatchedCount,
-  }));
+  const chartData = (data || [])
+    .map((item: ZoneStatus) => ({
+      zone: item.zoneName,
+      toBeIssued: item.toBeIssuedCount,
+      assigned: item.r105Count,
+      issued: item.w105Count,
+      packed: item.f105Count,
+      dispatched: item.dispatchedCount,
+    }))
+    .filter(
+      (item) =>
+        item.toBeIssued > 0 ||
+        item.assigned > 0 ||
+        item.issued > 0 ||
+        item.packed > 0 ||
+        item.dispatched > 0
+    );
 
   if (loading) {
     return (

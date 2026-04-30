@@ -27,7 +27,9 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
   const { data: rawData, loading, error } = usePaymentClearanceBarchart(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
-  const data = (rawData as unknown as ChartDatum[]) ?? [];
+  const data = ((rawData as unknown as ChartDatum[]) ?? []).filter(
+    (item) => item.cleared > 0 || item.pending > 0
+  );
 
   if (loading) {
     return (

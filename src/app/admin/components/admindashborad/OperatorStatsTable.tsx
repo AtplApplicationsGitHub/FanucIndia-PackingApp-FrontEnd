@@ -81,21 +81,29 @@ export default function OperatorStatsTable({
       d.outboundDelivery.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const sortedStats = [...stats].sort((a, b) => {
-    const aTotal =
-      selectedStage === "issue"
-        ? a.issueAssignedCount + a.issueCompletedCount
-        : a.packingAssignedCount + a.packingCompletedCount;
-    const bTotal =
-      selectedStage === "issue"
-        ? b.issueAssignedCount + b.issueCompletedCount
-        : b.packingAssignedCount + b.packingCompletedCount;
+  const sortedStats = [...stats]
+    .filter((row) => {
+      const total =
+        selectedStage === "issue"
+          ? row.issueAssignedCount + row.issueCompletedCount
+          : row.packingAssignedCount + row.packingCompletedCount;
+      return total > 0;
+    })
+    .sort((a, b) => {
+      const aTotal =
+        selectedStage === "issue"
+          ? a.issueAssignedCount + a.issueCompletedCount
+          : a.packingAssignedCount + a.packingCompletedCount;
+      const bTotal =
+        selectedStage === "issue"
+          ? b.issueAssignedCount + b.issueCompletedCount
+          : b.packingAssignedCount + b.packingCompletedCount;
 
-    if (bTotal !== aTotal) return bTotal - aTotal;
+      if (bTotal !== aTotal) return bTotal - aTotal;
 
-    // Tie-breaker: keep ordering stable and readable
-    return a.operatorName.localeCompare(b.operatorName);
-  });
+      // Tie-breaker: keep ordering stable and readable
+      return a.operatorName.localeCompare(b.operatorName);
+    });
 
   return (
     <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
@@ -200,7 +208,7 @@ export default function OperatorStatsTable({
           >
             <CircularProgress size={30} />
           </Box>
-        ) : stats.length === 0 ? (
+        ) : sortedStats.length === 0 ? (
           <Box
             sx={{
               display: "flex",
@@ -210,7 +218,7 @@ export default function OperatorStatsTable({
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              No operator data available.
+              No operator data available for {selectedStage} stage.
             </Typography>
           </Box>
         ) : (
@@ -403,11 +411,11 @@ export default function OperatorStatsTable({
             </Table>
           </Box>
         )}
-        {!loading && stats.length > 0 && (
+        {!loading && sortedStats.length > 0 && (
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={stats.length}
+            count={sortedStats.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
