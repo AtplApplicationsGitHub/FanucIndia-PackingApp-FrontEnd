@@ -227,7 +227,9 @@ const AttachmentDialog = ({
       );
 
       const safeBlob = new Blob([response.data], {
-        type: response.headers["content-type"],
+        type:
+          (response.headers["content-type"] as string) ||
+          "application/octet-stream",
       });
       const fileURL = URL.createObjectURL(safeBlob);
 
@@ -414,9 +416,9 @@ const AttachmentDialog = ({
                     backgroundColor: lightYellow,
                   },
                   "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
-                  {
-                    borderBottom: 0,
-                  },
+                    {
+                      borderBottom: 0,
+                    },
                 }}
               >
                 <TableHead>
@@ -456,14 +458,14 @@ const AttachmentDialog = ({
                 <TableBody>
                   {(!dispatch?.attachments ||
                     dispatch.attachments.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          <Typography color="text.secondary" p={3}>
-                            No attachments found.
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        <Typography color="text.secondary" p={3}>
+                          No attachments found.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {dispatch?.attachments?.map((att, index) => (
                     <TableRow key={index}>
                       <TableCell align="center" sx={{ py: 0.5 }}>
@@ -1306,17 +1308,17 @@ export default function DispatchView() {
                               >
                                 {row.UpdatedDate
                                   ? new Date(row.UpdatedDate).toLocaleString(
-                                    "en-IN",
-                                    {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                      year: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      second: "2-digit",
-                                      hour12: true,
-                                    },
-                                  )
+                                      "en-IN",
+                                      {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                      },
+                                    )
                                   : "-"}
                               </Typography>
                             </TableCell>
