@@ -2,8 +2,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
-type StageKey = "erpImport" | "issued" | "packed" | "stored" | "storage" | "labelPrint" | "dispatched";
-type StageStatus = boolean;
+export type TimelineState = "completed" | "pending" | "upcoming";
+
+export interface TimelineNode {
+  key: string;
+  label: string;
+  state: TimelineState;
+}
 
 export type ReportRow = {
     rowIndex: number;
@@ -13,7 +18,7 @@ export type ReportRow = {
     salesZone: string;
     paymentClearance: boolean;
     status: string;
-    stages: Record<StageKey, boolean>;
+    statusHubTimeline: TimelineNode[];
 };
 
 export type ReportLookup = {
@@ -21,9 +26,7 @@ export type ReportLookup = {
     customers: { id: number; name: string }[];
 };
 
-
 function mapToReportRow(item: any, index: number): ReportRow {
-    const s = item.statusObj ?? {};
     return {
         rowIndex: index + 1,
         saleOrderNumber: item.saleOrderNumber ?? "",
@@ -32,15 +35,7 @@ function mapToReportRow(item: any, index: number): ReportRow {
         salesZone: item.salesZone ?? "",
         paymentClearance: item.paymentClearance ?? false,
         status: item.status ?? "N/A",
-        stages: {
-            erpImport: s.isErpImported ?? false,
-            issued: s.isR105 ?? false,
-            packed: s.isW105 ?? false,
-            stored: s.isF105 ?? false,
-            storage: s.isStored ?? false,
-            labelPrint: s.isCustomerLabelPrinted ?? false,
-            dispatched: s.isDispatched ?? false,
-        },
+        statusHubTimeline: item.statusHubTimeline || [], 
     };
 }
 
