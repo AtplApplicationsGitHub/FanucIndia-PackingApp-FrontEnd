@@ -76,6 +76,10 @@ function SalesDashboardContent() {
     handleAttachmentFileChange,
   } = useSalesDashboard();
 
+  const defaultZoneId = lookup.salesZones.find(
+    (z) => z.name.toLowerCase() === (salesZone || "").toLowerCase(),
+  )?.id;
+
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
   const [chatOrderId, setChatOrderId] = React.useState<number | null>(null);
@@ -162,7 +166,7 @@ function SalesDashboardContent() {
         />
 
         {/* HOME VIEW - Dashboard */}
-        {view === "home" &&
+        {view === "home" && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -170,65 +174,71 @@ function SalesDashboardContent() {
             style={{ padding: "1rem" }}
           >
             <HomeDashboard />
-          </motion.div>}
+          </motion.div>
+        )}
 
         {(view === "orders" || view === "dispatched") && (
-           <motion.div
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             style={{ padding: "1rem" }}
           >
-          <Box px={{ xs: 1.5, md: 2 }} py={1}>
-            <SalesDashboardToolbar
-              view={view}
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
-              onCreate={handleCreate}
-              onDownload={handleDownloadTemplate}
-              onDownloadBlank={handleDownloadBlankTemplate}
-              onBulkUpload={handleBulkUpload}
-              onUploadAttachment={() => {
-                if (selectedIds.length === 0) {
-                  setAlert({ severity: "error", message: "Please select at least one order before uploading attachments." });
-                  return;
-                }
-                setAttachmentDialogOpen(true);
-              }} onClear={handleClearFilters}
-              fileInputRef={fileInputRef}
-              onFileChange={handleFileChange}
-              paymentFilter={paymentFilter}
-              onPaymentFilterChange={setPaymentFilter}
-              zoneFilter={zoneFilter}
-              onZoneFilterChange={setZoneFilter}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              salesZones={lookup.salesZones}
-              startDate={startDate}
-              onStartDateChange={setStartDate}
-              endDate={endDate}
-              onEndDateChange={setEndDate}
-              selectedIds={selectedIds}
-            />
+            <Box px={{ xs: 1.5, md: 2 }} py={1}>
+              <SalesDashboardToolbar
+                view={view}
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                onCreate={handleCreate}
+                onDownload={handleDownloadTemplate}
+                onDownloadBlank={handleDownloadBlankTemplate}
+                onBulkUpload={handleBulkUpload}
+                onUploadAttachment={() => {
+                  if (selectedIds.length === 0) {
+                    setAlert({
+                      severity: "error",
+                      message:
+                        "Please select at least one order before uploading attachments.",
+                    });
+                    return;
+                  }
+                  setAttachmentDialogOpen(true);
+                }}
+                onClear={handleClearFilters}
+                fileInputRef={fileInputRef}
+                onFileChange={handleFileChange}
+                paymentFilter={paymentFilter}
+                onPaymentFilterChange={setPaymentFilter}
+                zoneFilter={zoneFilter}
+                onZoneFilterChange={setZoneFilter}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                salesZones={lookup.salesZones}
+                startDate={startDate}
+                onStartDateChange={setStartDate}
+                endDate={endDate}
+                onEndDateChange={setEndDate}
+                selectedIds={selectedIds}
+              />
 
-            <SalesOrdersTable
-              view={view}
-              orders={orders}
-              lookup={lookup}
-              totalOrders={totalOrders}
-              onEdit={handleEdit}
-              onOpenChat={handleOpenChat}
-              onDelete={setDeletingId}
-              paginationModel={{ page: currentPage - 1, pageSize }}
-              onPaginationModelChange={({ page, pageSize }) => {
-                setCurrentPage(page + 1);
-                setPageSize(pageSize);
-                fetchOrders(page + 1, pageSize);
-              }}
-              selectedIds={selectedIds}
-              onSelectedIdsChange={setSelectedIds}
-            />
-          </Box>
+              <SalesOrdersTable
+                view={view}
+                orders={orders}
+                lookup={lookup}
+                totalOrders={totalOrders}
+                onEdit={handleEdit}
+                onOpenChat={handleOpenChat}
+                onDelete={setDeletingId}
+                paginationModel={{ page: currentPage - 1, pageSize }}
+                onPaginationModelChange={({ page, pageSize }) => {
+                  setCurrentPage(page + 1);
+                  setPageSize(pageSize);
+                  fetchOrders(page + 1, pageSize);
+                }}
+                selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
+              />
+            </Box>
           </motion.div>
         )}
 
@@ -258,8 +268,18 @@ function SalesDashboardContent() {
             setShowForm(false);
             handleModalClose();
           }}
-          initialData={editingOrder || undefined}
-          lookup={lookup}
+          initialData={
+            editingOrder ||
+            (defaultZoneId
+              ? ({ salesZoneId: defaultZoneId } as any)
+              : undefined)
+          }
+          lookup={{
+            ...lookup,
+            salesZones: lookup.salesZones.filter(
+              (zone) => zone.id === defaultZoneId,
+            ),
+          }}
           onSuccess={() => {
             setShowForm(false);
             handleModalClose();
@@ -288,7 +308,18 @@ function SalesDashboardContent() {
 
 export default function SalesDashboard() {
   return (
-    <Suspense fallback={<Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center">Loading...</Box>}>
+    <Suspense
+      fallback={
+        <Box
+          minHeight="100vh"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          Loading...
+        </Box>
+      }
+    >
       <SalesDashboardContent />
     </Suspense>
   );
