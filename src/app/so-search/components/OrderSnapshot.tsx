@@ -146,7 +146,7 @@ export default function OrderSnapshot({
     // Format Status & Message
     const rawStatus = latestLog.status || "Unknown";
     const message = latestLog.message ? ` - ${latestLog.message}` : "";
-    erpStatusDisplay = `Status: ${rawStatus}${message}`;
+    erpStatusDisplay = `${rawStatus}${message}`;
 
     // Set Colors
     const normalizedStatus = rawStatus.trim().toLowerCase();
