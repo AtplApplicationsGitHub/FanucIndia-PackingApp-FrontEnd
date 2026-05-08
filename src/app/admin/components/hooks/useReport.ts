@@ -3,7 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 type StageKey = "erpImport" | "issued" | "packed" | "stored" | "storage" | "labelPrint" | "dispatched";
-type StageStatus = boolean;
+
+type StatusStepperItem = {
+    status?: string | null;
+    createdDateTime?: string | null;
+};
 
 export type ReportRow = {
     rowIndex: number;
@@ -22,8 +26,32 @@ export type ReportLookup = {
 };
 
 
+function hasCompletedStep(statusStepper: StatusStepperItem[] | undefined, statuses: string[]): boolean {
+    if (!Array.isArray(statusStepper)) return false;
+
+    const wanted = new Set(statuses.map((status) => status.toLowerCase()));
+    return statusStepper.some((step) => {
+        const status = String(step.status ?? "").toLowerCase();
+        return wanted.has(status) && Boolean(step.createdDateTime);
+    });
+}
+
 function mapToReportRow(item: any, index: number): ReportRow {
     const s = item.statusObj ?? {};
+    const statusStepper = item.statusStepper as StatusStepperItem[] | undefined;
+
+    const stagesFromStepper: Record<StageKey, boolean> = {
+        erpImport: item.isErpImported ?? s.isErpImported ?? false,
+        issued: hasCompletedStep(statusStepper, ["Under Issue"]),
+        packed: hasCompletedStep(statusStepper, ["Issued"]),
+        stored: hasCompletedStep(statusStepper, ["Under Packing"]),
+        storage: hasCompletedStep(statusStepper, ["WIP Storage", "Packed"]),
+        labelPrint: hasCompletedStep(statusStepper, ["Ready for Dispatch"]),
+        dispatched: hasCompletedStep(statusStepper, ["Dispatched"]),
+    };
+
+    const hasNewStepper = Array.isArray(statusStepper);
+
     return {
         rowIndex: index + 1,
         saleOrderNumber: item.saleOrderNumber ?? "",
@@ -32,8 +60,8 @@ function mapToReportRow(item: any, index: number): ReportRow {
         salesZone: item.salesZone ?? "",
         paymentClearance: item.paymentClearance ?? false,
         status: item.status ?? "N/A",
-        stages: {
-            erpImport: s.isErpImported ?? false,
+        stages: hasNewStepper ? stagesFromStepper : {
+            erpImport: s.isErpImported ?? item.isErpImported ?? false,
             issued: s.isR105 ?? false,
             packed: s.isW105 ?? false,
             stored: s.isF105 ?? false,

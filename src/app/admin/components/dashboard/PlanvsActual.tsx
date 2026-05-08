@@ -58,84 +58,91 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const GREEN = "#22c55e";
-  const dimColor = isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)";
-  const dimText = isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.30)";
-  const dimBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
-  const dimLine = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+  const pendingBorder = isDark ? "rgba(255,255,255,0.24)" : "rgba(0,0,0,0.18)";
+  const pendingIcon = isDark ? "rgba(255,255,255,0.32)" : "rgba(0,0,0,0.26)";
+  const pendingText = isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.42)";
+  const pendingBg = isDark ? "rgba(255,255,255,0.05)" : "#f2f2ed";
+  const pendingLine = isDark ? "rgba(255,255,255,0.14)" : "#d8d6c7";
+  const circleSize = 22;
+  const nodeWidth = 44;
+  const connectorWidth = 12;
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
+        width: "max-content",
+        maxWidth: "100%",
+        overflow: "visible",
+      }}
+    >
       {STAGE_DEFS.map((stage, idx) => {
         const isDone = stages[stage.key] === true;
         const isLast = idx === STAGE_DEFS.length - 1;
 
-        const circleSize = 22;
-        let circleSx: any = {
-          width: circleSize, height: circleSize, borderRadius: "50%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          border: "2px solid", flexShrink: 0, transition: "all 0.25s ease",
-        };
-
-        if (isDone) {
-          circleSx = {
-            ...circleSx,
-            bgcolor: GREEN,
-            borderColor: GREEN,
-            color: "#fff",
-            boxShadow: `0 0 8px ${GREEN}55`,
-          };
-        } else {
-          circleSx = {
-            ...circleSx,
-            bgcolor: dimBg,
-            borderColor: dimColor,
-            color: dimText,
-          };
-        }
-
-        const labelColor = isDone ? (isDark ? "#ffffff" : "#111111") : dimText;
-        const labelWeight = isDone ? 600 : 400;
+        const labelColor = isDone ? (isDark ? "#ffffff" : "#111111") : pendingText;
 
         const nextStage = !isLast ? STAGE_DEFS[idx + 1] : null;
         const nextDone = nextStage ? stages[nextStage.key] : false;
-        const lineColor = isDone && nextDone ? GREEN : isDone ? `${GREEN}44` : dimLine;
+        const lineColor = isDone && nextDone ? "#86efac" : isDone ? "#bbf7d0" : pendingLine;
         return (
           <Box key={stage.key} sx={{ display: "flex", alignItems: "flex-start" }}>
-            {/* Node + label */}
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 36 }}>
-              <Box sx={circleSx}>
-                <CheckIcon sx={{ fontSize: 11, color: isDone ? "#fff" : dimColor }} />
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: nodeWidth, minWidth: nodeWidth }}>
+              <Box
+                aria-label={`${stage.line1} ${isDone ? "completed" : "pending"}`}
+                sx={{
+                  width: circleSize,
+                  height: circleSize,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  bgcolor: isDone ? GREEN : pendingBg,
+                  border: "2px solid",
+                  borderColor: isDone ? GREEN : pendingBorder,
+                  color: isDone ? "#ffffff" : pendingIcon,
+                  boxShadow: isDone ? `0 0 0 2px ${GREEN}18` : "none",
+                }}
+              >
+                <CheckIcon sx={{ fontSize: 12 }} />
               </Box>
               <Box sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.2 }}>
-                <Typography sx={{ fontSize: "8.5px", fontWeight: labelWeight, color: labelColor, lineHeight: 1.2 }}>
+                <Typography
+                  sx={{
+                    color: labelColor,
+                    fontSize: "7.5px",
+                    fontWeight: isDone ? 700 : 500,
+                    lineHeight: 1.1,
+                    maxWidth: nodeWidth,
+                    overflow: "visible",
+                    textAlign: "center",
+                    whiteSpace: "normal",
+                    overflowWrap: "anywhere",
+                  }}
+                  title={stage.line1}
+                >
                   {stage.line1}
                 </Typography>
               </Box>
             </Box>
 
-            {/* Connector line */}
             {!isLast && (
               <Box
                 sx={{
-                  mt: `${(22 / 2) - 1}px`,
-                  width: 18,
+                  mt: `${circleSize / 2 - 1}px`,
+                  width: connectorWidth,
                   height: 2,
                   borderRadius: 1,
                   flexShrink: 0,
                   bgcolor: lineColor,
-                  transition: "background-color 0.3s",
                 }}
               />
             )}
           </Box>
         );
       })}
-
-      <style>{`
-        @keyframes activePulse {
-          0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
-          50%       { box-shadow: 0 0 0 7px rgba(34,197,94,0.05); }
-        }
-      `}</style>
     </Box>
   );
 }
@@ -190,7 +197,7 @@ export default function ReportPage() {
     { id: "customer", label: "CUSTOMER NAME", width: 160 },
     { id: "zone", label: "SALES ZONE", width: 100 },
     { id: "payment", label: "PAYMENT", width: 90 },
-    { id: "stages", label: "STATUS TIMELINE", width: 340 },
+    { id: "stages", label: "STATUS TIMELINE", width: 380 },
   ];
 
   return (
