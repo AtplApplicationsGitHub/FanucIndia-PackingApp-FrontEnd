@@ -145,7 +145,7 @@ export function useAssign() {
         : listData.data || [];
 
       // 2. Get detailed records (for id, hasMaterialData, etc.)
-      const detailsRes = await fetchWithAuth(API.ADMIN.SALES_ORDERS);
+      const detailsRes = await fetchWithAuth(`${API.ADMIN.SALES_ORDERS}?limit=5000`);
       if (detailsRes.status === 401 || detailsRes.status === 403) {
         if (typeof window !== "undefined") window.location.href = "/login";
         return;

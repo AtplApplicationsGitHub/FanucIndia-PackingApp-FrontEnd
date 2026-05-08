@@ -539,8 +539,19 @@ export default function AssignSO() {
         (paymentFilter === "true"
           ? order.paymentClearance
           : !order.paymentClearance);
+
+      const selectedZoneName = zoneFilter
+        ? (
+            lookup.salesZones.find((z) => String(z.id) === zoneFilter)?.name ||
+            ""
+          ).toLowerCase()
+        : "";
+
       const matchesZone =
-        !zoneFilter || String(order.salesZoneId) === zoneFilter;
+        !zoneFilter ||
+        String(order.salesZoneId) === zoneFilter ||
+        (order.salesZone?.name || "").toLowerCase() === selectedZoneName;
+
       const matchesStatus =
         !statusFilter ||
         (statusFilter === "None"
@@ -573,7 +584,8 @@ export default function AssignSO() {
         !pendingImportFilter || !order.hasMaterialData;
 
       const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
-      const matchesSuccessImport = !successImportFilter || order.hasMaterialData;
+      const matchesSuccessImport =
+        !successImportFilter || order.hasMaterialData;
 
       return (
         matchesSearch &&
@@ -657,14 +669,24 @@ export default function AssignSO() {
           ? order.paymentClearance
           : !order.paymentClearance);
 
+      const selectedZoneNameForFilter = zoneFilter
+        ? (
+            lookup.salesZones.find((z) => String(z.id) === zoneFilter)?.name ||
+            ""
+          ).toLowerCase()
+        : "";
+
       const matchesZone =
-        !zoneFilter || String(order.salesZoneId) === zoneFilter;
+        !zoneFilter ||
+        String(order.salesZoneId) === zoneFilter ||
+        (order.salesZone?.name || "").toLowerCase() ===
+          selectedZoneNameForFilter;
 
       const selectedCustomerName = customerFilter
         ? (
-          lookup.customers.find((c) => String(c.id) === customerFilter)
-            ?.name || ""
-        ).toLowerCase()
+            lookup.customers.find((c) => String(c.id) === customerFilter)
+              ?.name || ""
+          ).toLowerCase()
         : "";
 
       const matchesCustomer =
@@ -705,7 +727,8 @@ export default function AssignSO() {
         !pendingImportFilter || !order.hasMaterialData;
 
       const matchesFailedImport = !failedImportFilter || order.hasFailedImport;
-      const matchesSuccessImport = !successImportFilter || order.hasMaterialData;
+      const matchesSuccessImport =
+        !successImportFilter || order.hasMaterialData;
 
       return (
         matchesSearch &&
@@ -878,11 +901,11 @@ export default function AssignSO() {
         priority: row.priority ?? "",
         issueUser: clearHyphen(
           findName(lookup.assignableUsers, row.issueUserId ?? 0) ||
-          row.issueUser?.name,
+            row.issueUser?.name,
         ),
         packingUser: clearHyphen(
           findName(lookup.assignableUsers, row.packingUserId ?? 0) ||
-          row.packingUser?.name,
+            row.packingUser?.name,
         ),
         skipIssueStage: isIssueSkipped,
         skipPackingStage: isPackingSkipped,
@@ -1487,12 +1510,13 @@ export default function AssignSO() {
                           >
                             {row.skipIssueStage || row.skipPackingStage ? (
                               <Tooltip
-                                title={`Skip Stages: ${row.skipIssueStage && row.skipPackingStage
-                                  ? "Issue & Packing"
-                                  : row.skipIssueStage
-                                    ? "Issue"
-                                    : "Packing"
-                                  }`}
+                                title={`Skip Stages: ${
+                                  row.skipIssueStage && row.skipPackingStage
+                                    ? "Issue & Packing"
+                                    : row.skipIssueStage
+                                      ? "Issue"
+                                      : "Packing"
+                                }`}
                               >
                                 <FlagIcon
                                   sx={{
@@ -1656,7 +1680,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 80 }}>
                           {inlineEdit?.id === row.id &&
-                            inlineEdit.field === "priority" ? (
+                          inlineEdit.field === "priority" ? (
                             <CustomEditTextField
                               initialValue={inlineEdit.value}
                               onCommit={(val) => handleInlineSave(val)}
@@ -1687,7 +1711,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 150 }}>
                           {inlineEdit?.id === row.id &&
-                            inlineEdit.field === "issueUserId" ? (
+                          inlineEdit.field === "issueUserId" ? (
                             <CustomEditSelect
                               initialValue={inlineEdit.value}
                               onCommit={(val: string | number) =>
@@ -1726,7 +1750,7 @@ export default function AssignSO() {
 
                         <TableCell sx={{ minWidth: 150 }}>
                           {inlineEdit?.id === row.id &&
-                            inlineEdit.field === "packingUserId" ? (
+                          inlineEdit.field === "packingUserId" ? (
                             <CustomEditSelect
                               initialValue={inlineEdit.value}
                               onCommit={(val: string | number) =>
