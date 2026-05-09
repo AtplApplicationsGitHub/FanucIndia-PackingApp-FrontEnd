@@ -60,8 +60,6 @@ function SalesDashboardContent() {
     setAlert,
     paymentFilter,
     setPaymentFilter,
-    zoneFilter,
-    setZoneFilter,
     statusFilter,
     setStatusFilter,
     startDate,
@@ -209,11 +207,8 @@ function SalesDashboardContent() {
                 onFileChange={handleFileChange}
                 paymentFilter={paymentFilter}
                 onPaymentFilterChange={setPaymentFilter}
-                zoneFilter={zoneFilter}
-                onZoneFilterChange={setZoneFilter}
                 statusFilter={statusFilter}
                 onStatusFilterChange={setStatusFilter}
-                salesZones={lookup.salesZones}
                 startDate={startDate}
                 onStartDateChange={setStartDate}
                 endDate={endDate}

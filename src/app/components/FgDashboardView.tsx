@@ -475,7 +475,7 @@ export default function FgDashboardView() {
               component="form"
               onSubmit={(e: React.FormEvent) => {
                 e.preventDefault();
-                setSearch(localSearch); // Trigger data fetch only on Enter
+                setSearch(localSearch.trim().replace(/\s+/g, ' '));
                 setPage(0);
               }}
               sx={{

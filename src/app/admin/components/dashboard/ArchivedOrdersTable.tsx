@@ -29,7 +29,7 @@ export default function ArchivedOrdersTable() {
     limit: pageSize,
   });
   const setSearch = (val: string) => {
-    setFilters(f => ({ ...f, search: val }));
+    setFilters(f => ({ ...f, search: val.trim().replace(/\s+/g, ' ') }));
     setCurrentPage(1);
   };
 

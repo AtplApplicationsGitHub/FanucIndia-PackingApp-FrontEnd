@@ -517,7 +517,7 @@ function MaterialSOCountTab() {
     const { rows, loading, error, notFound, fetch: fetchByMaterial } = useCustomerSOByMaterial();
 
     const handleSearch = () => {
-        const code = inputValue.trim().toUpperCase();
+        const code = inputValue.trim().replace(/\s+/g, ' ').toUpperCase();
         if (!code) return;
         setCommittedCode(code);
         setPage(0);

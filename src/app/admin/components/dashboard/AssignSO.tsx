@@ -496,7 +496,7 @@ export default function AssignSO() {
 
   const availableCustomers = React.useMemo(() => {
     const ordersMatchingOtherFilters = orders.filter((order) => {
-      const searchStr = searchInput.toLowerCase();
+      const searchStr = searchInput.trim().replace(/\s+/g, ' ').toLowerCase();
       const productName = (
         order.product?.name ||
         findName(lookup.products, order.productId ?? 0) ||
@@ -623,7 +623,7 @@ export default function AssignSO() {
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
-      const searchStr = searchInput.toLowerCase();
+      const searchStr = searchInput.trim().replace(/\s+/g, ' ').toLowerCase();
 
       const productName = (
         order.product?.name ||

@@ -231,7 +231,7 @@ export default function ReportPage() {
               >
                 <InputBase
                   sx={{ ml: 1, flex: 1, fontSize: "14px" }}
-                  placeholder="Search SO / Customer"
+                  placeholder="Search"
                   value={searchInput}
                   onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(0); }}
                 />

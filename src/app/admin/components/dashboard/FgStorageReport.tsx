@@ -52,7 +52,7 @@ export default function FgStorageReportPanel() {
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-            setSearch(searchInput);
+            setSearch(searchInput.trim().replace(/\s+/g, ' '));
         }
     };
 
@@ -70,7 +70,7 @@ export default function FgStorageReportPanel() {
                     component="form"
                     onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
-                        setSearch(searchInput);
+                        setSearch(searchInput.trim().replace(/\s+/g, ' '));
                     }}
                     sx={{
                         p: "2px 4px",

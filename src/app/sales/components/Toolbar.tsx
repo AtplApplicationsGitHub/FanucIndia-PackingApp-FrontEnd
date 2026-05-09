@@ -43,11 +43,8 @@ type Props = {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   paymentFilter: string;
   onPaymentFilterChange: (val: string) => void;
-  zoneFilter: string;
-  onZoneFilterChange: (val: string) => void;
   statusFilter: string;
   onStatusFilterChange: (val: string) => void;
-  salesZones: { id: number; name: string }[];
   startDate: Date | null;
   onStartDateChange: (val: Date | null) => void;
   endDate: Date | null;
@@ -69,11 +66,8 @@ export default function SalesDashboardToolbar({
   onFileChange,
   paymentFilter,
   onPaymentFilterChange,
-  zoneFilter,
-  onZoneFilterChange,
   statusFilter,
   onStatusFilterChange,
-  salesZones,
   startDate,
   onStartDateChange,
   endDate,
@@ -128,7 +122,7 @@ export default function SalesDashboardToolbar({
             component="form"
             onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
-              onSearchChange(localSearch);
+              onSearchChange(localSearch.trim().replace(/\s+/g, " "));
             }}
             sx={{
               p: "2px 4px",
@@ -193,34 +187,6 @@ export default function SalesDashboardToolbar({
             </Select>
           </FormControl>
 
-          <FormControl
-            size="small"
-            sx={{
-              minWidth: { xs: 110, md: 120 },
-              bgcolor: "background.paper",
-              flexShrink: 1,
-            }}
-          >
-            <Select
-              value={zoneFilter}
-              displayEmpty
-              onChange={(e) => onZoneFilterChange(e.target.value)}
-              sx={{ height: 40, fontSize: "13px" }}
-            >
-              <MenuItem value="" sx={{ fontSize: "13px" }}>
-                SALES ZONE
-              </MenuItem>
-              {salesZones.map((zone) => (
-                <MenuItem
-                  key={zone.id}
-                  value={String(zone.id)}
-                  sx={{ fontSize: "13px" }}
-                >
-                  {zone.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
           {view !== "dispatched" && (
             <FormControl
               size="small"

@@ -61,7 +61,6 @@ export function useSalesDashboard() {
 
   // Filter states
   const [paymentFilter, setPaymentFilter] = useState("");
-  const [zoneFilter, setZoneFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(new Date());
@@ -69,7 +68,6 @@ export function useSalesDashboard() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setPaymentFilter("");
-    setZoneFilter("");
     setStatusFilter("");
     setStartDate(null);
     setEndDate(null);
@@ -251,7 +249,6 @@ export function useSalesDashboard() {
           params: {
             search: searchTerm || undefined,
             paymentClearance: paymentFilter || undefined,
-            salesZoneId: zoneFilter || undefined,
             status: finalStatusFilter,
             excludeStatus: finalExcludeStatus,
             startDate: startDate ? toLocalYMD(startDate) : undefined,
@@ -273,7 +270,6 @@ export function useSalesDashboard() {
     [
       searchTerm,
       paymentFilter,
-      zoneFilter,
       statusFilter,
       startDate,
       endDate,
@@ -295,7 +291,7 @@ export function useSalesDashboard() {
       fetchOrders(1, pageSize);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
+  }, [searchTerm, paymentFilter, statusFilter, startDate, endDate, view]);
 
   const handleDownloadTemplate = useCallback(async (isBlank: boolean = false) => {
     if (typeof window === "undefined") return;
@@ -306,7 +302,6 @@ export function useSalesDashboard() {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (paymentFilter) params.append("paymentClearance", paymentFilter);
-      if (zoneFilter) params.append("salesZoneId", zoneFilter);
       if (startDate) params.append("startDate", toLocalYMD(startDate));
       if (endDate) params.append("endDate", toLocalYMD(endDate));
 
@@ -347,7 +342,7 @@ export function useSalesDashboard() {
     } catch (error) {
       setAlert({ severity: "error", message: "Failed to download template." });
     }
-  }, [searchTerm, paymentFilter, zoneFilter, statusFilter, startDate, endDate, view]);
+  }, [searchTerm, paymentFilter, statusFilter, startDate, endDate, view]);
 
   const handleBulkUpload = () => fileInputRef.current?.click();
 
@@ -556,8 +551,6 @@ export function useSalesDashboard() {
     setAlert,
     paymentFilter,
     setPaymentFilter,
-    zoneFilter,
-    setZoneFilter,
     statusFilter,
     setStatusFilter,
     startDate,
