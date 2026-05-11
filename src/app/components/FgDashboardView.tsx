@@ -46,6 +46,7 @@ import { authFetch } from "@/common/lib/authFetch";
 import { format } from "date-fns";
 import Link from "next/link";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { formatDateTimeIST, formatDateIST } from "@/common/utils/dateTime";
 
 // Defined Color Codes per requirements
 const STATUS_COLORS = {
@@ -98,7 +99,7 @@ interface FgDashboardRow {
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";
   try {
-    return format(new Date(dateString), "dd-MMM-yyyy");
+    return formatDateIST(dateString);
   } catch {
     return "Invalid Date";
   }
@@ -821,17 +822,7 @@ export default function FgDashboardView() {
                                     }}
                                   >
                                     {" "}
-                                    {new Date(row.updatedDate).toLocaleString(
-                                      "en-IN",
-                                      {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                      },
-                                    )}
+                                    {formatDateTimeIST(row.updatedDate)}
                                   </Typography>
                                 )}
                               </Box>

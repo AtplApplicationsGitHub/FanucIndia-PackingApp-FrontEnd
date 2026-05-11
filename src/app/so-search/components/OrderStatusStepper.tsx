@@ -4,6 +4,7 @@ import { Stack, Step, StepLabel, Stepper, StepConnector, stepConnectorClasses, s
 import { StepIconProps } from "@mui/material/StepIcon";
 import { differenceInSeconds, format } from 'date-fns'; 
 import FlagIcon from '@mui/icons-material/Flag';
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
@@ -196,7 +197,7 @@ export default function OrderStatusStepper({
           
           const isToBeIssued = step.status === "To be Issued";
           const createdTimeFormatted = isToBeIssued && step.createdDateTime 
-            ? format(new Date(step.createdDateTime), "dd MMM yyyy, hh:mm a") 
+            ? formatDateTimeIST(step.createdDateTime) 
             : null;
           const isActive = index === activeStep;
 

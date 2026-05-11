@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import { getISTMonthShort } from "@/common/utils/dateTime";
 
 export interface UserOrderImportItem {
   id: string | number;
@@ -42,7 +43,7 @@ export function useUserOrderImports() {
               // Extract Month from date (e.g., "2026-01-06" -> "Jan")
               const dateObj = new Date(item.date);
               if (!isNaN(dateObj.getTime())) {
-                abbr = dateObj.toLocaleString("en-US", { month: "short" });
+                abbr = getISTMonthShort(dateObj);
               }
             }
 

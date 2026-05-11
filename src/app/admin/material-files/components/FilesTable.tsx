@@ -8,6 +8,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { MaterialFile } from '@/app/admin/material-files/types/material-file';
 import { updateMaterialFile } from '@/common/services/materialFile.service';
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 type Props = {
   rows: MaterialFile[];
@@ -20,14 +21,6 @@ const formatBytes = (n?: number | null) => {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
-};
-
-const formatDate = (s?: string | Date | null) => {
-  if (!s) return '—';
-  const d = s instanceof Date ? s : new Date(s);
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
-  }).format(d);
 };
 
 export default function FilesTable({ rows, onEdit, onDelete }: Props) {
@@ -156,7 +149,7 @@ export default function FilesTable({ rows, onEdit, onDelete }: Props) {
 
                 <TableCell>{formatBytes(row.fileSizeBytes)}</TableCell>
                 <TableCell>{row.mimeType || '—'}</TableCell>
-                <TableCell>{formatDate(row.createdAt)}</TableCell>
+                <TableCell>{formatDateTimeIST(row.createdAt)}</TableCell>
 
                 <TableCell align="right">
                   {onEdit && (

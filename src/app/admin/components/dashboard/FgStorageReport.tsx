@@ -23,13 +23,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import Link from "next/link";
 import { useFgStorageReport } from "@/app/admin/components/hooks/useFgStorageReport";
-import { format } from "date-fns";
 import { useEffect } from "react";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 function formatDate(iso: string) {
     if (!iso || iso === "-") return "-";
     try {
-        return format(new Date(iso), "dd-MMM-yyyy HH:mm");
+        return formatDateTimeIST(iso);
     } catch {
         return iso;
     }

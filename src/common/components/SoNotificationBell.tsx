@@ -15,6 +15,7 @@ import axios from "axios";
 import { io, Socket } from "socket.io-client";
 import { useRouter, usePathname } from "next/navigation";
 import { API } from "@/common/lib/endpoints";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 type NotificationItem = {
   id: number;
@@ -190,7 +191,7 @@ export default function SoNotificationBell() {
                 secondary={
                   <Box>
                     <Typography variant="caption" color="text.secondary">
-                      {new Date(n.createdAt).toLocaleString()}
+                      {formatDateTimeIST(n.createdAt)}
                     </Typography>
                   </Box>
                 }

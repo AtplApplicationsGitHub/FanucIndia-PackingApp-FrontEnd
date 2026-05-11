@@ -1,5 +1,5 @@
-import { format, parseISO } from "date-fns";
 import { LookupRow } from "@/app/admin/components/types/admin";
+import { formatDateIST, formatDateTimeIST } from "@/common/utils/dateTime";
 
 export function findName(
   arr: LookupRow[],
@@ -13,24 +13,13 @@ export function findName(
 }
 
 export function formatDate(iso?: string) {
-  try {
-    return iso ? format(parseISO(iso), "dd-MMM-yyyy") : "-";
-  } catch {
-    return "-";
-  }
+  return formatDateIST(iso);
 }
 
 export function formatDateDMY(iso?: string) {
-  try {
-    return iso ? format(parseISO(iso), "dd-MM-yyyy") : "-";
-  } catch {
-    return "-";
-  }
+  return formatDateIST(iso);
 }
+
 export function formatDateTime(iso?: string) {
-  try {
-    return iso ? format(parseISO(iso), "dd-MMM-yyyy hh:mm a") : "-";
-  } catch {
-    return "-";
-  }
+  return formatDateTimeIST(iso);
 }

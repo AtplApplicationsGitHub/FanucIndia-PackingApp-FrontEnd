@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useRecentActivity } from "../hooks/RecentActivity";
 
-
 interface RecentActivityItem {
   salesOrderNumber?: string;
   activityTimestamp?: string | number;

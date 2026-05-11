@@ -1,13 +1,11 @@
 import React from "react";
 import { useDispatchSummary } from "../../hooks/useDispatch";
 import { Clock, CheckCircle, ClipboardCheck } from "lucide-react";
+import { formatDateIST } from "@/common/utils/dateTime";
 
-export const formatDate = (date: Date): string =>
-  date.toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+const formatDate = (date: Date | string | null | undefined) => {
+  return formatDateIST(date);
+};
 
 
 const DISPATCH_STATS = [

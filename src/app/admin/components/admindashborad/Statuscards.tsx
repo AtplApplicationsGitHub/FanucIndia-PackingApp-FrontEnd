@@ -12,6 +12,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { useErpImportCounts } from "../hooks/useErpImportCounts";
+import { getISTMonthShort } from "@/common/utils/dateTime";
 
 const iconMap: Record<string, React.ReactNode> = {
   cart: <ShoppingCart className="w-7 h-7" />,
@@ -152,7 +153,7 @@ const formatDate = (dateStr: string) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   const day = String(d.getDate()).padStart(2, "0");
-  const month = d.toLocaleString("en-GB", { month: "short" });
+  const month = getISTMonthShort(d);
   const year = d.getFullYear();
   return `${day}-${month}-${year}`;
 };

@@ -25,6 +25,7 @@ import { useState, useMemo } from "react";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import CommonButton from "@/common/components/CommonButton";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 interface MaterialDetail {
   ID: number;
@@ -320,12 +321,12 @@ export default function MaterialDetails({
                 <TableCell>{m.Packing_stage}</TableCell>
                 <TableCell>
                   {m.IssueUpdatedDate
-                    ? new Date(m.IssueUpdatedDate).toLocaleString()
+                    ? formatDateTimeIST(m.IssueUpdatedDate)
                     : "-"}
                 </TableCell>
                 <TableCell>
                   {m.PackingUpdatedDate
-                    ? new Date(m.PackingUpdatedDate).toLocaleString()
+                    ? formatDateTimeIST(m.PackingUpdatedDate)
                     : "-"}
                 </TableCell>
               </TableRow>

@@ -13,16 +13,15 @@ import PaymentClearanceChart from "../admindashborad/PaymentClearanceBarchart";
 import OrderStatusByCustomerChart from '../admindashborad/OrderStatusByCustomerChart';
 import PaymentClearanceByCustomerChart from '../admindashborad/PaymentClearanceByCustomerChart';
 import OperatorStatsTable from "../admindashborad/OperatorStatsTable";
+import { formatDateIST, getISTDateKey } from "@/common/utils/dateTime";
 
 export default function AdminDashboard() {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    getISTDateKey(new Date())
   );
 
   const displayDate = selectedDate 
-    ? new Date(selectedDate).toLocaleDateString("en-GB", {
-        day: "numeric", month: "short", year: "numeric",
-      })
+    ? formatDateIST(selectedDate)
     : "All Time";
 
   return (
