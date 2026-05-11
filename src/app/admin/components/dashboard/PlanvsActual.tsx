@@ -34,7 +34,7 @@ import MuiLink from "@mui/material/Link";
 import { TableChart } from "@mui/icons-material";
 import { useReport, ReportRow } from "@/app/admin/components/hooks/useReport";
 
-type StageKey = "erpImport" | "issued" | "packed" | "stored" | "storage" | "labelPrint" | "dispatched";
+type StageKey = "erpImport" | "r105" | "w105" | "f105" | "storage" | "labelPrint" | "dispatched";
 
 type StageDef = {
   key: StageKey;
@@ -44,9 +44,9 @@ type StageDef = {
 // STAGE DEFINITION
 const STAGE_DEFS: StageDef[] = [
   { key: "erpImport", line1: "ERP" },
-  { key: "issued", line1: "R105" },
-  { key: "packed", line1: "W105" },
-  { key: "stored", line1: "F105" },
+  { key: "r105", line1: "R105" },
+  { key: "w105", line1: "W105" },
+  { key: "f105", line1: "F105" },
   { key: "storage", line1: "Storage" },
   { key: "labelPrint", line1: "Label Print" },
   { key: "dispatched", line1: "Dispatched" },
