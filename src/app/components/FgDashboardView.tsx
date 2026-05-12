@@ -24,15 +24,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Button,
   DialogTitle,
   Divider,
   Tooltip,
   Dialog,
   DialogContent,
   CircularProgress,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
-import { Visibility, Download } from "@mui/icons-material";
+import { Visibility, Download, AccessTime, Refresh } from "@mui/icons-material";
 import { secureDownload, secureView } from "@/common/lib/secure-download";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -164,11 +165,44 @@ const PROGRESS_CONFIG: Record<StepLabel, StepConfig> = {
 };
 
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
+const AUTO_REFRESH_OPTIONS = [
+  { label: "Off", value: 0 },
+  { label: "1 min", value: 1 },
+  { label: "5 min", value: 5 },
+  { label: "10 min", value: 10 },
+  { label: "15 min", value: 15 },
+  { label: "30 min", value: 30 },
+];
+const DEFAULT_AUTO_REFRESH_MINUTES = 5;
+const AUTO_REFRESH_STORAGE_KEY = "fgDashboardAutoRefreshMinutes";
+const LAST_REFRESH_STORAGE_KEY = "fgDashboardLastRefreshTime";
+const getValidAutoRefreshMinutes = (value: number) =>
+  AUTO_REFRESH_OPTIONS.some((option) => option.value === value)
+    ? value
+    : DEFAULT_AUTO_REFRESH_MINUTES;
+const formatIstTime = (date?: Date | null) =>
+  date
+    ? date.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      })
+    : "--";
+const formatAutoRefreshLabel = (minutes: number) =>
+  minutes > 0 ? `Auto refresh every ${minutes} min` : "Auto refresh off";
 
 export default function FgDashboardView() {
   const theme = useTheme();
   const [rows, setRows] = useState<FgDashboardRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [autoRefreshMinutes, setAutoRefreshMinutes] = useState(
+    DEFAULT_AUTO_REFRESH_MINUTES,
+  );
+  const [autoRefreshDialogOpen, setAutoRefreshDialogOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [localSearch, setLocalSearch] = useState("");
@@ -176,6 +210,7 @@ export default function FgDashboardView() {
   const [paymentFilter, setPaymentFilter] = useState("");
   const [zoneFilter, setZoneFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [hideDispatched, setHideDispatched] = useState(true);
   const [remarksPopup, setRemarksPopup] = useState<{
     title: string;
     content: string;
@@ -244,6 +279,7 @@ export default function FgDashboardView() {
     setPaymentFilter("");
     setZoneFilter("");
     setStatusFilter("");
+    setHideDispatched(true);
     setDate(null);
     setPage(0);
   };
@@ -313,6 +349,62 @@ export default function FgDashboardView() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    const storedAutoRefreshMinutes = window.localStorage.getItem(
+      AUTO_REFRESH_STORAGE_KEY,
+    );
+
+    if (storedAutoRefreshMinutes !== null) {
+      setAutoRefreshMinutes(
+        getValidAutoRefreshMinutes(Number(storedAutoRefreshMinutes)),
+      );
+    }
+
+    const storedLastRefreshTime = window.localStorage.getItem(
+      LAST_REFRESH_STORAGE_KEY,
+    );
+    if (storedLastRefreshTime) {
+      const parsedLastRefreshTime = new Date(storedLastRefreshTime);
+      if (!Number.isNaN(parsedLastRefreshTime.getTime())) {
+        setLastRefreshTime(parsedLastRefreshTime);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hideDispatched && statusFilter === "Dispatched") {
+      setStatusFilter("");
+      setPage(0);
+    }
+  }, [hideDispatched, statusFilter]);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+
+    const clockTimer = window.setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(clockTimer);
+  }, []);
+
+  useEffect(() => {
+    if (autoRefreshMinutes <= 0) return;
+
+    const refreshTimer = window.setInterval(() => {
+      void fetchData().then(() => {
+        const refreshedAt = new Date();
+        setLastRefreshTime(refreshedAt);
+        window.localStorage.setItem(
+          LAST_REFRESH_STORAGE_KEY,
+          refreshedAt.toISOString(),
+        );
+      });
+    }, autoRefreshMinutes * 60 * 1000);
+
+    return () => window.clearInterval(refreshTimer);
+  }, [autoRefreshMinutes, fetchData]);
+
   const getStatusInfo = (row: FgDashboardRow) => {
     const s = (row.status || "").toUpperCase();
     const { assignedUserId, fgLocation, isReadyForDispatch, isWipStorage } =
@@ -358,6 +450,14 @@ export default function FgDashboardView() {
     };
   };
 
+  const statusOptions = hideDispatched
+    ? STATUS_OPTIONS.filter((status) => status !== "Dispatched")
+    : STATUS_OPTIONS;
+
+  const tableRows = hideDispatched
+    ? rows.filter((row) => getStatusInfo(row).current !== "Dispatched")
+    : rows;
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -386,6 +486,31 @@ export default function FgDashboardView() {
   const lightYellow = alpha(theme.palette.primary.main, 0.15);
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
+  const filterFieldSx = {
+    bgcolor: "background.paper",
+    "& .MuiInputBase-root": {
+      height: 40,
+      borderRadius: 1,
+      fontSize: "14px",
+      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "primary.main",
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "primary.main",
+        borderWidth: 1,
+      },
+    },
+  };
+  const toolbarIconButtonSx = {
+    width: 38,
+    height: 38,
+    borderRadius: 1,
+    color: "text.secondary",
+    "&:hover": {
+      bgcolor: alpha(theme.palette.primary.main, 0.08),
+    },
+  };
 
   const handleExport = async () => {
     try {
@@ -448,14 +573,13 @@ export default function FgDashboardView() {
             mt: 1,
             px: 1,
             pb: 0,
-            mb: 3,
+            mb: 2.5,
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {/* Main Floating Toolbar */}
-          <Paper
+           <Paper
             elevation={2}
             sx={{
               mb: 0,
@@ -471,7 +595,41 @@ export default function FgDashboardView() {
               mx: "auto",
             }}
           >
-            <Box
+            <Tooltip title="Hide dispatched orders">
+              <FormControlLabel
+                label=""
+                sx={{
+                  width: 40,
+                  height: 40,
+                  m: 0,
+                  px: 0,
+                  justifyContent: "center",
+                  borderRadius: 1,
+                  bgcolor: "transparent",
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.warning.main, 0.12),
+                  },
+                }}
+                control={
+                  <Radio
+                    size="small"
+                    checked={hideDispatched}
+                    onClick={() => {
+                      setHideDispatched((prev) => !prev);
+                      setPage(0);
+                    }}
+                    sx={{
+                      p: 0.5,
+                      color: "warning.main",
+                      "&.Mui-checked": {
+                        color: "warning.main",
+                      },
+                    }}
+                  />
+                }
+              />
+            </Tooltip>
+           <Box
               component="form"
               onSubmit={(e: React.FormEvent) => {
                 e.preventDefault();
@@ -521,7 +679,7 @@ export default function FgDashboardView() {
             {/* Payment Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: 120, bgcolor: "background.paper" }}
+              sx={{ ...filterFieldSx, minWidth: { xs: "100%", sm: 128 } }}
             >
               <Select
                 value={paymentFilter}
@@ -541,7 +699,7 @@ export default function FgDashboardView() {
             {/* Zone Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: 140, bgcolor: "background.paper" }}
+              sx={{ ...filterFieldSx, minWidth: { xs: "100%", sm: 150 } }}
             >
               <Select
                 value={zoneFilter}
@@ -564,7 +722,7 @@ export default function FgDashboardView() {
             {/* Status Filter */}
             <FormControl
               size="small"
-              sx={{ minWidth: 140, bgcolor: "background.paper" }}
+              sx={{ ...filterFieldSx, minWidth: { xs: "100%", sm: 142 } }}
             >
               <Select
                 value={statusFilter}
@@ -576,7 +734,7 @@ export default function FgDashboardView() {
                 sx={{ height: 40, fontSize: "14px" }}
               >
                 <MenuItem value="">STATUS</MenuItem>
-                {STATUS_OPTIONS.map((status) => (
+                {statusOptions.map((status) => (
                   <MenuItem key={status} value={status}>
                     {status}
                   </MenuItem>
@@ -602,9 +760,8 @@ export default function FgDashboardView() {
                   size: "small",
                   variant: "outlined",
                   sx: {
-                    minWidth: 140,
-                    bgcolor: "background.paper",
-                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                    ...filterFieldSx,
+                    minWidth: { xs: "100%", sm: 220, lg: 205 },
                   },
                 },
               }}
@@ -615,10 +772,10 @@ export default function FgDashboardView() {
               <IconButton
                 onClick={handleClear}
                 sx={{
-                  color: "text.secondary",
+                  ...toolbarIconButtonSx,
                   "&:hover": {
+                    ...toolbarIconButtonSx["&:hover"],
                     color: "error.main",
-                    opacity: 0.8,
                   },
                 }}
               >
@@ -631,16 +788,103 @@ export default function FgDashboardView() {
               <IconButton
                 onClick={handleExport}
                 sx={{
-                  color: "success.main", // Green color for Excel
+                  ...toolbarIconButtonSx,
+                  color: "success.main",
                   "&:hover": {
+                    ...toolbarIconButtonSx["&:hover"],
                     color: "success.dark",
-                    backgroundColor: alpha(theme.palette.success.main, 0.1),
+                    bgcolor: alpha(theme.palette.success.main, 0.1),
                   },
                 }}
               >
                 <FileDownloadOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{
+                mx: 0,
+                display: { xs: "none", lg: "block" },
+              }}
+            />
+
+            <Box
+              component="button"
+              type="button"
+              onClick={() => setAutoRefreshDialogOpen(true)}
+              sx={{
+                ml: { xs: 0, lg: 0.25 },
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: { xs: "center", sm: "flex-end" },
+                flex: { xs: "1 1 100%", lg: "0 0 auto" },
+                flexWrap: "nowrap",
+                flexShrink: 0,
+                gap: 0.9,
+                px: 1.25,
+                border: "1px solid",
+                borderColor: alpha(theme.palette.primary.main, 0.16),
+                borderRadius: 1,
+                bgcolor: alpha(theme.palette.primary.main, 0.04),
+                color: "inherit",
+                cursor: "pointer",
+                font: "inherit",
+                overflow: "hidden",
+                textAlign: "left",
+                "&:hover": {
+                  bgcolor: alpha(theme.palette.warning.main, 0.08),
+                  borderColor: alpha(theme.palette.warning.main, 0.45),
+                },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                <AccessTime sx={{ fontSize: 18, color: "warning.main" }} />
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatIstTime(currentTime)} IST
+                </Typography>
+              </Box>
+
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ display: { xs: "none", sm: "block" } }}
+              />
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                <Refresh sx={{ fontSize: 18, color: "success.main" }} />
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatAutoRefreshLabel(autoRefreshMinutes)}
+                </Typography>
+              </Box>
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Last: {formatIstTime(lastRefreshTime)}
+              </Typography>
+            </Box>
           </Paper>
         </Box>
 
@@ -667,7 +911,7 @@ export default function FgDashboardView() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.length === 0 && !loading ? (
+                {tableRows.length === 0 && !loading ? (
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
@@ -680,7 +924,7 @@ export default function FgDashboardView() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  rows.map((row, index) => {
+                  tableRows.map((row, index) => {
                     return (
                       <TableRow
                         key={row.id}
@@ -1096,6 +1340,63 @@ export default function FgDashboardView() {
             </Paper>
           </Box>
         )}
+
+        <Dialog
+          open={autoRefreshDialogOpen}
+          onClose={() => setAutoRefreshDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              textAlign: "center",
+              position: "relative",
+            }}
+          >
+            AUTO REFRESH
+            <IconButton
+              size="small"
+              onClick={() => setAutoRefreshDialogOpen(false)}
+              sx={{ position: "absolute", right: 8, top: 8 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent dividers>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="auto-refresh-select-label">
+                  Refresh time
+                </InputLabel>
+                <Select
+                  labelId="auto-refresh-select-label"
+                  label="Refresh time"
+                  value={autoRefreshMinutes}
+                  onChange={(event) => {
+                    const minutes = getValidAutoRefreshMinutes(
+                      Number(event.target.value),
+                    );
+                    setAutoRefreshMinutes(minutes);
+                    window.localStorage.setItem(
+                      AUTO_REFRESH_STORAGE_KEY,
+                      String(minutes),
+                    );
+                  }}
+                >
+                  {AUTO_REFRESH_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+            </Box>
+          </DialogContent>
+        </Dialog>
+
         <Dialog
           open={paymentDialogOpen}
           onClose={() => setPaymentDialogOpen(false)}
