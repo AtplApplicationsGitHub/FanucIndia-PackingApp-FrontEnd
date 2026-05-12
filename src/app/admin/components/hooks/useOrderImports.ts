@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/common/lib/endpoints";
 import { API } from "@/common/lib/endpoints";
 import { AdminNewImportItem } from "../types/admin";
+import { getISTMonthShort } from "@/common/utils/dateTime";
 
 type UseOrderImportsReturn = {
   data: AdminNewImportItem[] | null;
@@ -24,7 +25,7 @@ const generateLast5DaysSkeleton = (): AdminNewImportItem[] => {
     date.setDate(today.getDate() - i);
 
     const dateStr = date.toISOString().split("T")[0];
-    const month = date.toLocaleString("en-US", { month: "short" });
+    const month = getISTMonthShort(date);
     const dayNum = date.getDate();
 
     let dayLabel: string;

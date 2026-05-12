@@ -75,6 +75,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 interface Transporter {
   id: number;
@@ -1307,18 +1308,7 @@ export default function DispatchView() {
                                 sx={{ whiteSpace: "nowrap" }}
                               >
                                 {row.UpdatedDate
-                                  ? new Date(row.UpdatedDate).toLocaleString(
-                                      "en-IN",
-                                      {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        second: "2-digit",
-                                        hour12: true,
-                                      },
-                                    )
+                                  ? formatDateTimeIST(row.UpdatedDate)
                                   : "-"}
                               </Typography>
                             </TableCell>

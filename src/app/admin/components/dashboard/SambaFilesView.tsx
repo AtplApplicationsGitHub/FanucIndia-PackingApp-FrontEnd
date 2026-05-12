@@ -36,6 +36,7 @@ import ListIcon from "@mui/icons-material/List";
 import { RefreshCcw } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { fetchWithAuth, API } from "../../../../common/lib/endpoints";
+import { formatDateTimeIST, getISTDateKey } from "@/common/utils/dateTime";
 
 type FileRow = {
   id: number;
@@ -54,10 +55,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   const [search, setSearch] = useState("");
   const [searchStr, setSearchStr] = useState("");
   const [selectedDate, setSelectedDate] = useState<string>(() => {
-    const today = new Date();
-    return new Date(today.getTime() - today.getTimezoneOffset() * 60000)
-      .toISOString()
-      .split("T")[0];
+    return getISTDateKey(new Date());
   });
   const [filesByTab, setFilesByTab] = useState<Record<string, FileRow[]>>({
     ACTIVE: [],
@@ -123,7 +121,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     setLoading(true);
     try {
       // Fetch without date constraint to get recent logs
-      const url = `${API.SAMBA.FILES.replace('/files', '/db-logs')}`;
+      const url = `${API.SAMBA.FILES.replace("/files", "/db-logs")}`;
       const res = await fetchWithAuth(url);
       if (res.ok) {
         setDbLogs(await res.json());
@@ -190,7 +188,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
         link.href = url;
         const outName =
           filenames.length === 1 ? filenames[0] : `${activeTab}_FILES.zip`;
-        
+
         const sanitizedOutName = outName.replace(/[^a-zA-Z0-9.\-_ ]/g, "_");
         link.setAttribute("download", sanitizedOutName);
         link.click();
@@ -200,7 +198,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
       console.error("Download failed", error);
     }
     setDownloading(false);
-};
+  };
 
   const filteredFiles = useMemo(() => {
     const currentFiles = filesByTab[activeTab] || [];
@@ -209,9 +207,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
         // 1. Date Filter
         if (selectedDate) {
           // FIX: Safely convert numeric timestamp to Date object before splitting
-          const fileDate = f.createdDatetime
-            ? new Date(f.createdDatetime).toISOString().split("T")[0]
-            : "";
+          const fileDate = getISTDateKey(f.createdDatetime);
           if (fileDate !== selectedDate) return false;
         }
         // 2. Search Filter
@@ -231,9 +227,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     return dbLogs.filter((log) => {
       // 1. Date Filter
       if (selectedDate) {
-        const logD = new Date(log.createdAt);
-        const istDate = new Date(logD.getTime() + 5.5 * 60 * 60 * 1000);
-        const fileDate = istDate.toISOString().split("T")[0];
+        const fileDate = getISTDateKey(log.createdAt);
         if (fileDate !== selectedDate) return false;
       }
       // 2. Search Filter
@@ -258,9 +252,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     const tabFiles = filesByTab[tab] || [];
     return tabFiles.filter((f) => {
       if (selectedDate) {
-        const fileDate = f.createdDatetime
-          ? new Date(f.createdDatetime).toISOString().split("T")[0]
-          : "";
+        const fileDate = getISTDateKey(f.createdDatetime);
         if (fileDate !== selectedDate) return false;
       }
       if (search && !f.filename.toLowerCase().includes(search.toLowerCase()))
@@ -343,7 +335,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                   placeholder: "Select Date",
                   InputProps: {
                     readOnly: true,
-                    sx: { cursor: 'pointer' }
+                    sx: { cursor: "pointer" },
                   },
                   sx: {
                     width: { xs: "170px", sm: "200px" },
@@ -363,7 +355,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
             onChange={(e) => setSearchStr(e.target.value)}
             onKeyDown={(e) => {
               // Apply the filter ONLY when Enter is pressed
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 setSearch(searchStr);
                 setPage(0);
               }
@@ -547,17 +539,43 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                 <>
                   <TableHead
                     sx={{
-                      bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                      bgcolor:
+                        theme.palette.mode === "dark" ? "#000000" : "#ffffff",
                     }}
                   >
                     <TableRow sx={{ height: 50 }}>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: "10%" }}>S.No</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: 700, width: "10%" }}
+                      >
+                        S.No
+                      </TableCell>
                       {/* Left Aligned */}
-                      <TableCell align="left" sx={{ fontWeight: 700, width: "20%" }}>SO Number</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: "15%" }}>Status</TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{ fontWeight: 700, width: "20%" }}
+                      >
+                        SO Number
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: 700, width: "15%" }}
+                      >
+                        Status
+                      </TableCell>
                       {/* Left Aligned */}
-                      <TableCell align="left" sx={{ fontWeight: 700, width: "35%" }}>Message</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: "20%" }}>Timestamp</TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{ fontWeight: 700, width: "35%" }}
+                      >
+                        Message
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: 700, width: "20%" }}
+                      >
+                        Timestamp
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -569,26 +587,45 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                       </TableRow>
                     ) : filteredDbLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ py: 5, bgcolor: lightYellow }}>
+                        <TableCell
+                          colSpan={5}
+                          align="center"
+                          sx={{ py: 5, bgcolor: lightYellow }}
+                        >
                           No logs found.
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredDbLogs
-                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                        .slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage,
+                        )
                         .map((log, index) => (
                           <TableRow key={log.id}>
-                            <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
-                            {/* Left Aligned */}
-                            <TableCell align="left" sx={{ fontWeight: 600 }}>{log.saleOrderNumber}</TableCell>
                             <TableCell align="center">
-                              <span style={{ color: log.status === "Success" ? "green" : "red", fontWeight: 600 }}>
+                              {page * rowsPerPage + index + 1}
+                            </TableCell>
+                            {/* Left Aligned */}
+                            <TableCell align="left" sx={{ fontWeight: 600 }}>
+                              {log.saleOrderNumber}
+                            </TableCell>
+                            <TableCell align="center">
+                              <span
+                                style={{
+                                  color:
+                                    log.status === "Success" ? "green" : "red",
+                                  fontWeight: 600,
+                                }}
+                              >
                                 {log.status}
                               </span>
                             </TableCell>
                             {/* Left Aligned */}
                             <TableCell align="left">{log.message}</TableCell>
-                            <TableCell align="center">{new Date(log.createdAt).toLocaleString()}</TableCell>
+                            <TableCell align="center">
+                              {formatDateTimeIST(log.createdAt)}
+                            </TableCell>
                           </TableRow>
                         ))
                     )}
@@ -598,18 +635,39 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                 <>
                   <TableHead
                     sx={{
-                      bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                      bgcolor:
+                        theme.palette.mode === "dark" ? "#000000" : "#ffffff",
                     }}
                   >
                     <TableRow sx={{ height: 50 }}>
                       <TableCell padding="checkbox" align="center">
-                        <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                        <Checkbox
+                          checked={isAllSelected}
+                          onChange={handleSelectAll}
+                        />
                       </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: "10%" }}>S.No</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: 700, width: "10%" }}
+                      >
+                        S.No
+                      </TableCell>
                       {/* Left Aligned */}
-                      <TableCell align="left" sx={{ fontWeight: 700, width: "45%" }}>Filename</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: "25%" }}>Created DateTime</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                      <TableCell
+                        align="left"
+                        sx={{ fontWeight: 700, width: "45%" }}
+                      >
+                        Filename
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ fontWeight: 700, width: "25%" }}
+                      >
+                        Created DateTime
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -621,7 +679,11 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                       </TableRow>
                     ) : paginatedFiles.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ py: 5, bgcolor: lightYellow }}>
+                        <TableCell
+                          colSpan={5}
+                          align="center"
+                          sx={{ py: 5, bgcolor: lightYellow }}
+                        >
                           No files found in {activeTab}.
                         </TableCell>
                       </TableRow>
@@ -634,18 +696,27 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
                               onChange={() => handleSelectOne(row.filename)}
                             />
                           </TableCell>
-                          <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
-                          {/* Left Aligned */}
-                          <TableCell align="left" sx={{ fontWeight: 500 }}>{row.filename}</TableCell>
                           <TableCell align="center">
-                            {row.createdDatetime ? new Date(row.createdDatetime).toLocaleString() : "N/A"}
+                            {page * rowsPerPage + index + 1}
+                          </TableCell>
+                          {/* Left Aligned */}
+                          <TableCell align="left" sx={{ fontWeight: 500 }}>
+                            {row.filename}
+                          </TableCell>
+                          <TableCell align="center">
+                            {formatDateTimeIST(row.createdDatetime)}
                           </TableCell>
                           <TableCell align="center">
                             <Tooltip title="Download File">
                               <IconButton
                                 size="small"
                                 onClick={() => handleDownload([row.filename])}
-                                sx={{ color: theme.palette.mode === "dark" ? "#90caf9" : "#1976d2" }}
+                                sx={{
+                                  color:
+                                    theme.palette.mode === "dark"
+                                      ? "#90caf9"
+                                      : "#1976d2",
+                                }}
                               >
                                 <FileDownloadOutlinedIcon fontSize="small" />
                               </IconButton>
@@ -662,7 +733,11 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
           <TablePagination
             component="div"
             // Ensure count uses filteredDbLogs for the LOGS tab
-            count={activeTab === "LOGS" ? filteredDbLogs.length : filteredFiles.length}
+            count={
+              activeTab === "LOGS"
+                ? filteredDbLogs.length
+                : filteredFiles.length
+            }
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}

@@ -23,13 +23,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import Link from "next/link";
 import { useFgStorageReport } from "@/app/admin/components/hooks/useFgStorageReport";
-import { format } from "date-fns";
 import { useEffect } from "react";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 function formatDate(iso: string) {
     if (!iso || iso === "-") return "-";
     try {
-        return format(new Date(iso), "dd-MMM-yyyy HH:mm");
+        return formatDateTimeIST(iso);
     } catch {
         return iso;
     }
@@ -52,7 +52,7 @@ export default function FgStorageReportPanel() {
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-            setSearch(searchInput);
+            setSearch(searchInput.trim().replace(/\s+/g, ' '));
         }
     };
 
@@ -70,7 +70,7 @@ export default function FgStorageReportPanel() {
                     component="form"
                     onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
-                        setSearch(searchInput);
+                        setSearch(searchInput.trim().replace(/\s+/g, ' '));
                     }}
                     sx={{
                         p: "2px 4px",

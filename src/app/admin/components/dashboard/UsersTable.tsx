@@ -23,6 +23,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { User } from "@/app/admin/components/types/admin";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 interface Props {
   users: User[];
@@ -153,7 +154,7 @@ const AdminUsersTable: React.FC<Props> = ({
                     {row.salesZone?.name ?? "-"}
                   </TableCell>
                   <TableCell>
-                    {row.createdAt ? format(new Date(row.createdAt), "dd MMM yyyy") : "-"}
+                    {row.createdAt ? formatDateTimeIST(row.createdAt) : "-"}
                   </TableCell>
                   <TableCell align="center">
                     <IconButton

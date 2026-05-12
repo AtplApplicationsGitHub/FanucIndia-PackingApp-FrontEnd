@@ -9,16 +9,15 @@ import OrderStatus from "./salesdashboard/OrderStatus";
 import PaymentMethodsChart from "./salesdashboard/PaymentMethodsChart";
 import SalesOrderStatusByCustomerChart from "./salesdashboard/SalesOrderStatusByCustomerChart";
 import RecentActivity from "./salesdashboard/RecentActivity";
+import { formatDateIST, getISTDateKey } from "@/common/utils/dateTime";
 
 export default function SalesDashboard() {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    getISTDateKey(new Date())
   );
 
   const displayDate = selectedDate
-    ? new Date(selectedDate).toLocaleDateString("en-GB", {
-        day: "numeric", month: "short", year: "numeric",
-      })
+    ? formatDateIST(selectedDate)
     : "All Time";
 
   return (

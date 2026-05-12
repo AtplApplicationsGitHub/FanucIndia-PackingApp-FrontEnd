@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
-type StageKey = "erpImport" | "issued" | "packed" | "stored" | "storage" | "labelPrint" | "dispatched";
+type StageKey = "erpImport" | "r105" | "w105" | "f105" | "storage" | "labelPrint" | "dispatched";
 
 type StatusStepperItem = {
     status?: string | null;
@@ -37,20 +37,17 @@ function hasCompletedStep(statusStepper: StatusStepperItem[] | undefined, status
 }
 
 function mapToReportRow(item: any, index: number): ReportRow {
-    const s = item.statusObj ?? {};
     const statusStepper = item.statusStepper as StatusStepperItem[] | undefined;
 
     const stagesFromStepper: Record<StageKey, boolean> = {
-        erpImport: item.isErpImported ?? s.isErpImported ?? false,
-        issued: hasCompletedStep(statusStepper, ["Under Issue"]),
-        packed: hasCompletedStep(statusStepper, ["Issued"]),
-        stored: hasCompletedStep(statusStepper, ["Under Packing"]),
-        storage: hasCompletedStep(statusStepper, ["WIP Storage", "Packed"]),
+        erpImport: item.isErpImported === true || item.isErpImported === 1,
+        r105: item.priority !== null && item.priority !== undefined,
+        w105: hasCompletedStep(statusStepper, ["Issued"]),
+        f105: hasCompletedStep(statusStepper, ["Packed"]),
+        storage: hasCompletedStep(statusStepper, ["WIP Storage"]),
         labelPrint: hasCompletedStep(statusStepper, ["Ready for Dispatch"]),
         dispatched: hasCompletedStep(statusStepper, ["Dispatched"]),
     };
-
-    const hasNewStepper = Array.isArray(statusStepper);
 
     return {
         rowIndex: index + 1,
@@ -60,15 +57,7 @@ function mapToReportRow(item: any, index: number): ReportRow {
         salesZone: item.salesZone ?? "",
         paymentClearance: item.paymentClearance ?? false,
         status: item.status ?? "N/A",
-        stages: hasNewStepper ? stagesFromStepper : {
-            erpImport: s.isErpImported ?? item.isErpImported ?? false,
-            issued: s.isR105 ?? false,
-            packed: s.isW105 ?? false,
-            stored: s.isF105 ?? false,
-            storage: s.isStored ?? false,
-            labelPrint: s.isCustomerLabelPrinted ?? false,
-            dispatched: s.isDispatched ?? false,
-        },
+        stages: stagesFromStepper,
     };
 }
 

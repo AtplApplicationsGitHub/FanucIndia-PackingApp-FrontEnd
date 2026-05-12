@@ -1,5 +1,6 @@
 import { Box, Link, Paper, Typography } from "@mui/material";
 import { KVBox } from "./KVBox";
+import { formatDateIST, formatDateTimeIST } from "@/common/utils/dateTime";
 
 interface SalesOrder {
   status: string;
@@ -126,29 +127,12 @@ export default function OrderSnapshot({
   let erpLogColor = "text.primary";
 
   if (latestLog) {
-    // Format Date & Time
-    const d = new Date(latestLog.createdAt);
-    const dateStr = d
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-      .replace(/\//g, "-");
-    const timeStr = d.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    erpDateDisplay = formatDateTimeIST(latestLog.createdAt);
 
-    erpDateDisplay = `${dateStr} ${timeStr}`;
-
-    // Format Status & Message
     const rawStatus = latestLog.status || "Unknown";
     const message = latestLog.message ? ` - ${latestLog.message}` : "";
     erpStatusDisplay = `${rawStatus}${message}`;
 
-    // Set Colors
     const normalizedStatus = rawStatus.trim().toLowerCase();
     if (normalizedStatus === "success") {
       erpLogColor = "success.main";
@@ -178,7 +162,7 @@ export default function OrderSnapshot({
         <KVBox label="Status" value={salesOrder.status} />
         <KVBox
           label="Delivery Date"
-          value={new Date(salesOrder.deliveryDate).toLocaleDateString()}
+          value={formatDateIST(salesOrder.deliveryDate)}
         />
         <KVBox
           label="FG Location"
@@ -373,11 +357,7 @@ export default function OrderSnapshot({
               <KVBox label="Updated By" value={dispatch.UpdatedBy || "-"} />
               <KVBox
                 label="Updated Datetime"
-                value={
-                  dispatch.UpdatedDate
-                    ? new Date(dispatch.UpdatedDate).toLocaleString()
-                    : "-"
-                }
+                value={formatDateTimeIST(dispatch.UpdatedDate)}
               />
             </Box>
           ))}

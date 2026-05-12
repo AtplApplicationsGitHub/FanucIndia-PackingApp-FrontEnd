@@ -13,6 +13,7 @@ import {
   alpha,
   Link,
 } from "@mui/material";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 interface DispatchInfoData {
   id: number;
@@ -176,7 +177,7 @@ export default function DispatchInfo({
                 <TableCell>{dispatch.UpdatedBy || "-"}</TableCell>
                 <TableCell>
                   {dispatch.UpdatedDate
-                    ? new Date(dispatch.UpdatedDate).toLocaleString()
+                    ? formatDateTimeIST(dispatch.UpdatedDate)
                     : "-"}
                 </TableCell>
               </TableRow>

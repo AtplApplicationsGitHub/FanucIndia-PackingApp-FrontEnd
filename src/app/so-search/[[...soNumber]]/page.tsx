@@ -376,7 +376,7 @@ export default function SoSearchPage() {
   }, [params.soNumber, performSearch]);
 
   const handleManualSearch = () => {
-    const trimmedSo = soNumber.trim();
+    const trimmedSo = soNumber.trim().replace(/\s+/g, ' ');
     if (trimmedSo) {
       router.push(`/so-search/${encodeURIComponent(trimmedSo)}`);
     } else {

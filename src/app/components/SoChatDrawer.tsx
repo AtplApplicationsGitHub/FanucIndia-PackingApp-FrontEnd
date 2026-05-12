@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
 import CommonButton from "@/common/components/CommonButton";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 
 type MentionUser = { id: number; name: string; role: string; email: string };
 
@@ -266,7 +267,7 @@ export default function SoChatDrawer({
                             color="text.secondary" 
                             sx={{ whiteSpace: 'nowrap' }}
                           >
-                            {new Date(m.createdAt).toLocaleString()}
+                            {formatDateTimeIST(m.createdAt)}
                           </Typography>
                         </Box>
                       }

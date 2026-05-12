@@ -2,6 +2,7 @@
 import React from "react";
 import { useDispatchSummary } from "../hooks/useDispatchSummary";
 import { Clock, CheckCircle, ClipboardCheck } from "lucide-react";
+import { formatDateIST } from "@/common/utils/dateTime";
 
 export default function DispatchSummary() {
   const { data, loading, error } = useDispatchSummary();
@@ -89,7 +90,7 @@ export default function DispatchSummary() {
         <div className="px-6 pb-6">
           <p className="text-xs text-[#9CA3AF]">
             <span suppressHydrationWarning>
-              Updated: {new Date().toLocaleDateString()}
+              Updated: {formatDateIST(new Date())}
             </span>
           </p>
         </div>

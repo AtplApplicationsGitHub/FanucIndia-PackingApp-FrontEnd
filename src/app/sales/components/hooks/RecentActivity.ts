@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
 import { API } from "../../../../common/lib/endpoints";
 import { SalesActivity } from "../types/sales";
+import { formatDateIST } from "@/common/utils/dateTime";
 
 export interface ActivityWithMeta extends SalesActivity {
   timeAgo: string;
@@ -30,7 +31,7 @@ export function useRecentActivity() {
     if (diffInHours < 24) return `${Math.floor(diffInHours)} hour${Math.floor(diffInHours) > 1 ? "s" : ""} ago`;
     if (diffInDays < 2) return "Yesterday";
     if (diffInDays < 7) return `${Math.floor(diffInDays)} days ago`;
-    return date.toLocaleDateString();
+    return formatDateIST(date);
   };
 
   // Status styling map

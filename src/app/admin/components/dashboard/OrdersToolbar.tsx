@@ -121,7 +121,7 @@ export default function AdminOrdersToolbar({
             component="form"
             onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
-              onSearchInputChange(localSearch);
+              onSearchInputChange(localSearch.trim().replace(/\s+/g, ' '));
             }}
             sx={{
               p: "2px 4px",
