@@ -30,6 +30,14 @@ type FieldOption = keyof Lookup | OptionItem[];
 type CustomerOption = Lookup["customers"][number];
 type CustomerValue = CustomerOption | string | null;
 
+const STATUS_OPTIONS = [
+  { id: "", name: "NULL" },
+  { id: "R105", name: "R105" },
+  { id: "W105", name: "W105" },
+  { id: "F105", name: "F105" },
+  { id: "Dispatched", name: "Dispatched" },
+];
+
 function normalizeInputValue(val: unknown): string | number {
   if (val == null) return "";
   if (typeof val === "boolean") return val ? "true" : "false";
@@ -58,74 +66,79 @@ const FIELDS: {
   colSpan?: number;
   maxLength?: number;
 }[] = [
-    { key: "productId", label: "Product", type: "select", options: "products" },
-    { key: "saleOrderNumber", label: "Sale Order Number" },
-    { key: "outboundDelivery", label: "Out Bound Delivery" },
-    { key: "transferOrder", label: "Transfer Order" },
-    { key: "deliveryDate", label: "Required Date of Delivery", type: "date" },
-    {
-      key: "transporterId",
-      label: "Transporter",
-      type: "select",
-      options: "transporters",
-    },
-    {
-      key: "plantCode",
-      label: "Delivery Plant Code",
-    },
-    {
-      key: "paymentClearance",
-      label: "Payment Clearance",
-      type: "select",
-      options: [
-        { id: "true", name: "Yes" },
-        { id: "false", name: "No" },
-      ],
-    },
-    {
-      key: "salesZoneId",
-      label: "Sales Zone",
-      type: "select",
-      options: "salesZones",
-    },
-    {
-      key: "packConfigId",
-      label: "Packing Configuration",
-      type: "select",
-      options: "packConfigs",
-    },
-    {
-      key: "customerId",
-      label: "Customer",
-      type: "select",
-      options: "customers",
-    },
-    { key: "address", label: "Address" },
-    { key: "priority", label: "Priority", type: "number" },
-    // {
-    //   key: "assignedUserId",
-    //   label: "Assigned User",
-    //   type: "select",
-    //   options: "assignableUsers",
-    // },
-    {
-      key: "issueUserId",
-      label: "Issue Assigned User",
-      type: "select",
-      options: "assignableUsers",
-    },
-    {
-      key: "packingUserId",
-      label: "Pack Assigned User",
-      type: "select",
-      options: "assignableUsers",
-    },
-    { key: "status", label: "Status", disabled: true },
-    { key: "fgLocation", label: "FG Location" },
-    { key: "specialRemarks", label: "Special Remarks" },
-    { key: "additionalRemarks", label: "Additional Remarks" },
-    { key: "labelRemarks", label: "Label Remarks", maxLength: 15 },
-  ];
+  { key: "productId", label: "Product", type: "select", options: "products" },
+  { key: "saleOrderNumber", label: "Sale Order Number" },
+  { key: "outboundDelivery", label: "Out Bound Delivery" },
+  { key: "transferOrder", label: "Transfer Order" },
+  { key: "deliveryDate", label: "Required Date of Delivery", type: "date" },
+  {
+    key: "transporterId",
+    label: "Transporter",
+    type: "select",
+    options: "transporters",
+  },
+  {
+    key: "plantCode",
+    label: "Delivery Plant Code",
+  },
+  {
+    key: "paymentClearance",
+    label: "Payment Clearance",
+    type: "select",
+    options: [
+      { id: "true", name: "Yes" },
+      { id: "false", name: "No" },
+    ],
+  },
+  {
+    key: "salesZoneId",
+    label: "Sales Zone",
+    type: "select",
+    options: "salesZones",
+  },
+  {
+    key: "packConfigId",
+    label: "Packing Configuration",
+    type: "select",
+    options: "packConfigs",
+  },
+  {
+    key: "customerId",
+    label: "Customer",
+    type: "select",
+    options: "customers",
+  },
+  { key: "address", label: "Address" },
+  { key: "priority", label: "Priority", type: "number" },
+  // {
+  //   key: "assignedUserId",
+  //   label: "Assigned User",
+  //   type: "select",
+  //   options: "assignableUsers",
+  // },
+  {
+    key: "issueUserId",
+    label: "Issue Assigned User",
+    type: "select",
+    options: "assignableUsers",
+  },
+  {
+    key: "packingUserId",
+    label: "Pack Assigned User",
+    type: "select",
+    options: "assignableUsers",
+  },
+  {
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: STATUS_OPTIONS,
+  },
+  { key: "fgLocation", label: "FG Location" },
+  { key: "specialRemarks", label: "Special Remarks" },
+  { key: "additionalRemarks", label: "Additional Remarks" },
+  { key: "labelRemarks", label: "Label Remarks", maxLength: 15 },
+];
 
 const PATCHABLE_KEYS = [
   "productId",
@@ -171,8 +184,14 @@ export default function AdminOrderEditModal({
     deliveryDate: order.deliveryDate
       ? dayjs(order.deliveryDate).toISOString()
       : "",
-    issueUserId: order.issueUserId ?? (order as any).issueAssignedUserId ?? order.issueUser?.id,
-    packingUserId: order.packingUserId ?? (order as any).packingAssignedUserId ?? order.packingUser?.id,
+    issueUserId:
+      order.issueUserId ??
+      (order as any).issueAssignedUserId ??
+      order.issueUser?.id,
+    packingUserId:
+      order.packingUserId ??
+      (order as any).packingAssignedUserId ??
+      order.packingUser?.id,
   }));
   const [loading, setLoading] = useState(false);
 
@@ -191,8 +210,14 @@ export default function AdminOrderEditModal({
       deliveryDate: order.deliveryDate
         ? dayjs(order.deliveryDate).toISOString()
         : "",
-      issueUserId: order.issueUserId ?? (order as any).issueAssignedUserId ?? order.issueUser?.id,
-      packingUserId: order.packingUserId ?? (order as any).packingAssignedUserId ?? order.packingUser?.id,
+      issueUserId:
+        order.issueUserId ??
+        (order as any).issueAssignedUserId ??
+        order.issueUser?.id,
+      packingUserId:
+        order.packingUserId ??
+        (order as any).packingAssignedUserId ??
+        order.packingUser?.id,
     });
   }, [open, order]);
 
@@ -214,11 +239,11 @@ export default function AdminOrderEditModal({
       }
 
       if (key === "customerNameText") {
-  updated.customerId = null as any; 
-  if (value && String(value).trim() !== "") {
-     updated.address = "";
-  }
-}
+        updated.customerId = null as any;
+        if (value && String(value).trim() !== "") {
+          updated.address = "";
+        }
+      }
 
       return updated;
     });
@@ -260,10 +285,16 @@ export default function AdminOrderEditModal({
         case "issueUserId":
         case "packingUserId":
           if (typeof v === "string" && v.trim() !== "") {
-            const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
+            const backendKey =
+              key === "issueUserId"
+                ? "issueAssignedUserId"
+                : "packingAssignedUserId";
             (patch as any)[backendKey] = Number(v);
           } else if (typeof v === "number") {
-            const backendKey = key === "issueUserId" ? "issueAssignedUserId" : "packingAssignedUserId";
+            const backendKey =
+              key === "issueUserId"
+                ? "issueAssignedUserId"
+                : "packingAssignedUserId";
             (patch as any)[backendKey] = v;
           }
           break;
@@ -304,8 +335,15 @@ export default function AdminOrderEditModal({
           }
           break;
 
-        case "specialRemarks":
         case "status":
+          if (typeof v === "string") {
+            patch.status = v.trim() === "" ? null : v;
+          } else if (v === null) {
+            patch.status = null;
+          }
+          break;
+
+        case "specialRemarks":
         case "fgLocation":
         case "additionalRemarks":
         case "labelRemarks":
@@ -346,10 +384,13 @@ export default function AdminOrderEditModal({
       if (patch.customerId) {
         // If an existing customer was selected, inject their name into the nested object
         const matchedCust = lookup.customers.find(
-          (c) => String(c.id) === String(patch.customerId)
+          (c) => String(c.id) === String(patch.customerId),
         );
         if (matchedCust) {
-          updatedOrder.customer = { id: matchedCust.id, name: matchedCust.name } as any;
+          updatedOrder.customer = {
+            id: matchedCust.id,
+            name: matchedCust.name,
+          } as any;
         }
       } else if (patch.customerNameText || patch.customerNameText === null) {
         // If a new name was typed manually, clear the nested customer object
@@ -439,7 +480,6 @@ export default function AdminOrderEditModal({
             textAlign: "center",
             color: "secondary.main",
             letterSpacing: 0,
-
           }}
         >
           EDIT ORDER
@@ -561,7 +601,7 @@ export default function AdminOrderEditModal({
                   const value: CustomerValue =
                     selected ??
                     (form.customerNameText &&
-                      String(form.customerNameText).trim() !== ""
+                    String(form.customerNameText).trim() !== ""
                       ? String(form.customerNameText)
                       : null);
                   return (
@@ -597,17 +637,17 @@ export default function AdminOrderEditModal({
                           return String(option.id) === String(v?.id);
                         }}
                         onChange={(_, newValue: CustomerValue) => {
-  if (typeof newValue === "string") {
-    // User typed a free-text name
-    handleChange("customerNameText", newValue);
-  } else if (newValue && typeof newValue === "object") {
-    // User selected an existing lookup customer
-    handleChange("customerId", String(newValue.id));
-  } else {
-    // User completely cleared the input
-    handleChange("customerId", ""); 
-  }
-}}
+                          if (typeof newValue === "string") {
+                            // User typed a free-text name
+                            handleChange("customerNameText", newValue);
+                          } else if (newValue && typeof newValue === "object") {
+                            // User selected an existing lookup customer
+                            handleChange("customerId", String(newValue.id));
+                          } else {
+                            // User completely cleared the input
+                            handleChange("customerId", "");
+                          }
+                        }}
                         renderInput={(params) => (
                           <TextField
                             {...params}
@@ -687,7 +727,7 @@ export default function AdminOrderEditModal({
         </form>
       </DialogContent>
       <Divider />
-      <DialogActions sx={{ px: 3, py: 1,  bgcolor: "background.paper" }}>
+      <DialogActions sx={{ px: 3, py: 1, bgcolor: "background.paper" }}>
         <CommonButton
           type="submit"
           disabled={loading}
@@ -697,8 +737,6 @@ export default function AdminOrderEditModal({
           {loading ? <CircularProgress size={22} /> : "UPDATE"}
         </CommonButton>
       </DialogActions>
-
-
-    </Dialog >
+    </Dialog>
   );
 }
