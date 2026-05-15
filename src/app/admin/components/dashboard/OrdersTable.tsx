@@ -515,14 +515,7 @@ export default function AdminOrdersTable({
             if (menuRowId) onDelete(menuRowId);
             handleMenuClose();
           }}
-          sx={{
-            color: menuRow?.hasMaterialData ? "text.disabled" : "error.main",
-          }}
-          disabled={
-            menuRow?.hasMaterialData ||
-            isAssigned ||
-            menuRow?.status === "Dispatched"
-          }
+          sx={{ color: "error.main" }}
         >
           <ListItemIcon sx={{ color: "inherit" }}>
             <DeleteIcon fontSize="small" />
