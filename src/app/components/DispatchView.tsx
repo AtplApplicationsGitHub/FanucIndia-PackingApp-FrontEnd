@@ -34,7 +34,9 @@ import {
   Tabs,
   Tab,
   Chip,
+  Link as MuiLink,
 } from "@mui/material";
+import Link from "next/link";
 
 import {
   MoreVert,
@@ -94,6 +96,7 @@ interface Dispatch {
 interface DispatchSO {
   id: number;
   saleOrderNumber: string;
+  outboundDelivery?: string | null;
   salesOrder?: {
     customerNameText?: string | null;
     customer?: {
@@ -1521,14 +1524,19 @@ export default function DispatchView() {
                         }}
                       >
                         <Box>
-                          <Typography
-                            variant="body2"
-                            fontWeight="800"
-                            color={theme.palette.text.primary}
-                            sx={{ mb: 0.5 }}
+                          <MuiLink
+                            component={Link}
+                            href={`/so-search/${so.saleOrderNumber}${so.outboundDelivery ? "/" + so.outboundDelivery : ""}`}
+                            underline="hover"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: "0.875rem",
+                              mb: 0.5,
+                              display: "inline-block",
+                            }}
                           >
                             {so.saleOrderNumber}
-                          </Typography>
+                          </MuiLink>
                           <Box display="flex" alignItems="center" gap={0.5}>
                             <FileText
                               size={12}
@@ -1797,9 +1805,15 @@ export default function DispatchView() {
                   }}
                 >
                   <Box>
-                    <Typography variant="subtitle2" fontWeight="700">
+                    <MuiLink
+                      component={Link}
+                      href={`/so-search/${option.saleOrderNumber}${option.outboundDelivery ? "/" + option.outboundDelivery : ""}`}
+                      underline="hover"
+                      sx={{ fontWeight: 700, fontSize: "0.875rem" }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {option.saleOrderNumber}
-                    </Typography>
+                    </MuiLink>
                     <Typography variant="body2" color="text.secondary">
                       OBD: {option.outboundDelivery || "N/A"}
                     </Typography>
