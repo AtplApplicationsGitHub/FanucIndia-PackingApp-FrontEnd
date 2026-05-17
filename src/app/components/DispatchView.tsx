@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Box,
   TextField,
@@ -95,7 +95,10 @@ interface Dispatch {
 }
 interface DispatchSO {
   id: number;
+  dispatchId?: number;
   saleOrderNumber: string;
+  LRnumber?: string | null;
+  salesOrderId?: number;
   outboundDelivery?: string | null;
   salesOrder?: {
     customerNameText?: string | null;
@@ -104,6 +107,25 @@ interface DispatchSO {
     };
   };
 }
+
+/** One dropdown entry per sale order number (prefers row that already has LR). */
+const getUniqueDispatchSoOptions = (soList: DispatchSO[]): DispatchSO[] => {
+  const map = new Map<string, DispatchSO>();
+  for (const so of soList) {
+    const existing = map.get(so.saleOrderNumber);
+    if (!existing) {
+      map.set(so.saleOrderNumber, so);
+    } else if (!existing.LRnumber?.trim() && so.LRnumber?.trim()) {
+      map.set(so.saleOrderNumber, so);
+    }
+  }
+  return Array.from(map.values());
+};
+
+const getDispatchSoRowsForNumber = (
+  soList: DispatchSO[],
+  saleOrderNumber: string,
+): DispatchSO[] => soList.filter((s) => s.saleOrderNumber === saleOrderNumber);
 
 const AttachmentDialog = ({
   open,
@@ -535,10 +557,19 @@ export default function DispatchView() {
   const [form, setForm] = useState<{
     transporterId: Transporter | null;
     vehicleNumber: string;
+    selectedSo: DispatchSO | null;
+    lrNumber: string;
   }>({
     transporterId: null,
     vehicleNumber: "",
+    selectedSo: null,
+    lrNumber: "",
   });
+  const [editDialogSOs, setEditDialogSOs] = useState<DispatchSO[]>([]);
+  const editDialogSoOptions = useMemo(
+    () => getUniqueDispatchSoOptions(editDialogSOs),
+    [editDialogSOs],
+  );
   const [attachments, setAttachments] = useState<File[]>([]);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [transporters, setTransporters] = useState<Transporter[]>([]);
@@ -657,10 +688,26 @@ export default function DispatchView() {
     setForm({
       transporterId: null,
       vehicleNumber: "",
+      selectedSo: null,
+      lrNumber: "",
     });
+    setEditDialogSOs([]);
     setAttachments([]);
     setEditingId(null);
   };
+
+  const fetchEditDialogSOs = useCallback(async (dispatchId: number) => {
+    try {
+      const res = await fetchWithAuth(API.DISPATCH.SO(dispatchId));
+      const data: DispatchSO[] = await res.json();
+      setEditDialogSOs(data);
+      return data;
+    } catch {
+      setEditDialogSOs([]);
+      showSnackbar("Failed to load SO numbers for dispatch", "error");
+      return [];
+    }
+  }, []);
 
   const handleCreateClick = () => {
     resetForm();
@@ -682,32 +729,77 @@ export default function DispatchView() {
 
     try {
       const token = localStorage.getItem("token");
+      const authHeaders = { Authorization: `Bearer ${token}` };
+
+      if (editingId) {
+        const lrTrimmed = form.lrNumber.trim();
+
+        if (form.selectedSo) {
+          if (!lrTrimmed) {
+            showSnackbar("LR Number is required.", "error");
+            setLoading(false);
+            return;
+          }
+
+          const rowsToUpdate = getDispatchSoRowsForNumber(
+            editDialogSOs,
+            form.selectedSo.saleOrderNumber,
+          );
+
+          await Promise.all(
+            rowsToUpdate.map((so) =>
+              axios.patch(
+                API.DISPATCH.UPDATE_SO(so.id),
+                { LRnumber: lrTrimmed },
+                {
+                  headers: {
+                    ...authHeaders,
+                    "Content-Type": "application/json",
+                  },
+                },
+              ),
+            ),
+          );
+        }
+
+        const formData = new FormData();
+        if (form.transporterId) {
+          formData.append("transporterId", String(form.transporterId.id));
+        }
+        formData.append("vehicleNumber", form.vehicleNumber.trim());
+        attachments.forEach((file) => {
+          formData.append("attachments", file);
+        });
+
+        await axios.patch(API.DISPATCH.BY_ID(editingId), formData, {
+          headers: authHeaders,
+        });
+
+        const refreshedSos = await fetchEditDialogSOs(editingId);
+        if (selectedDispatch?.id === editingId) {
+          setDispatchSOs(refreshedSos);
+        }
+
+        showSnackbar("Dispatch updated successfully!");
+        handleDialogClose();
+        fetchDispatches();
+        return;
+      }
+
       const formData = new FormData();
-
-      if (form.transporterId)
+      if (form.transporterId) {
         formData.append("transporterId", String(form.transporterId.id));
-
+      }
       formData.append("vehicleNumber", form.vehicleNumber.trim());
-
       attachments.forEach((file) => {
         formData.append("attachments", file);
       });
 
-      const apiUrl = editingId
-        ? API.DISPATCH.BY_ID(editingId)
-        : API.DISPATCH.BASE;
-      const method = editingId ? "patch" : "post";
-
-      await axios({
-        method: method,
-        url: apiUrl,
-        data: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await axios.post(API.DISPATCH.BASE, formData, {
+        headers: authHeaders,
       });
 
-      showSnackbar(`Dispatch ${editingId ? "updated" : "saved"} successfully!`);
+      showSnackbar("Dispatch saved successfully!");
       handleDialogClose();
       fetchDispatches();
     } catch (error: unknown) {
@@ -823,17 +915,24 @@ export default function DispatchView() {
     setCurrentMenuId(null);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     const dispatchToEdit = dispatches.find((d) => d.id === currentMenuId);
-    if (dispatchToEdit) {
+    if (dispatchToEdit && currentMenuId) {
       const transporterName =
         dispatchToEdit.transporterName || dispatchToEdit.transporter?.name;
       const transporter =
         transporters.find((t) => t.name === transporterName) || null;
 
+      const soList = await fetchEditDialogSOs(currentMenuId);
+      const uniqueOptions = getUniqueDispatchSoOptions(soList);
+      const firstWithLr =
+        uniqueOptions.find((so) => so.LRnumber?.trim()) ?? uniqueOptions[0] ?? null;
+
       setForm({
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
+        selectedSo: firstWithLr,
+        lrNumber: firstWithLr?.LRnumber?.trim() ?? "",
       });
       setEditingId(currentMenuId);
       setAttachments([]);
@@ -1631,6 +1730,63 @@ export default function DispatchView() {
                   value={form.vehicleNumber}
                   onChange={handleVehicleChange}
                   helperText="Alphanumeric only (e.g., KA01XY1234)"
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 2,
+                }}
+              >
+                <Autocomplete
+                  options={editDialogSoOptions}
+                  getOptionLabel={(option) => option.saleOrderNumber}
+                  isOptionEqualToValue={(option, value) =>
+                    option.saleOrderNumber === value.saleOrderNumber
+                  }
+                  value={form.selectedSo}
+                  onChange={(_, value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      selectedSo: value,
+                      lrNumber: value?.LRnumber?.trim() ?? prev.lrNumber,
+                    }))
+                  }
+                  disabled={!editingId}
+                  noOptionsText={
+                    editingId
+                      ? "No SO numbers linked to this dispatch"
+                      : "Save dispatch first to link SO numbers"
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="SO Number"
+                      placeholder="Select SO number"
+                    />
+                  )}
+                />
+
+                <TextField
+                  label="LR Number"
+                  value={form.lrNumber}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      lrNumber: e.target.value.toUpperCase(),
+                    }))
+                  }
+                  disabled={!editingId || !form.selectedSo}
+                  placeholder="Enter LR number"
+                  helperText={
+                    editingId
+                      ? !form.selectedSo
+                        ? "Select an SO number first, then enter LR number"
+                        : `Updates all linked rows for ${form.selectedSo.saleOrderNumber}`
+                      : "Available when editing a dispatch"
+                  }
                 />
               </Box>
 

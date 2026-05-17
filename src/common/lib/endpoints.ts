@@ -175,10 +175,13 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
   },
   DISPATCH: { 
     BASE:                                         `${API_BASE_URL}/dispatch`,
+    /** PATCH /dispatch/:id — multipart for transporter, vehicle, attachments */
     BY_ID: (id: number) =>                        `${API_BASE_URL}/dispatch/${id}`,
     SEARCH_SO: (soNumber: string) =>              `${API_BASE_URL}/dispatch/search-so/${encodeURIComponent(soNumber)}`,
     LIST_ATTACHMENTS: (id: number) =>             `${API_BASE_URL}/dispatch/${id}/attachments`,
     SO: (id: number) =>                           `${API_BASE_URL}/dispatch/${id}/so`,
+    /** PATCH /dispatch/so/:soId — JSON { LRnumber } — use Dispatch_SO.id from GET .../so */
+    UPDATE_SO: (soId: number) =>                  `${API_BASE_URL}/dispatch/so/${soId}`,
     DELETE_SO: (soId: number) =>                  `${API_BASE_URL}/dispatch/so/${soId}`,
     PDF: (id: number) =>                          `${API_BASE_URL}/dispatch/${id}/pdf`,
     ATTACHMENT: (id: number, fileName: string) => `${API_BASE_URL}/dispatch/${id}/attachments/${encodeURIComponent(fileName)}`,
@@ -268,6 +271,11 @@ TERMINAL_USER_DASHBOARD: {
     DOWNLOAD: `${API_BASE_URL}/samba/download`,
   },
 
+};
+
+/** PATCH /dispatch/so/:soId request body */
+export type DispatchSoPatchBody = {
+  LRnumber: string;
 };
 
 let isFetchRedirecting = false;
