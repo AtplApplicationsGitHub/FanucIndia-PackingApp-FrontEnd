@@ -91,6 +91,7 @@ interface DispatchInfoData {
   transporter?: { name: string } | null;
   transporterName?: string;
   vehicleNumber: string;
+  LRnumber?: string | null;
   attachments?: { fileName: string }[];
   address: string;
 }

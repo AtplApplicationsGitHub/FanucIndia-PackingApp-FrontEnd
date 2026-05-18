@@ -34,6 +34,7 @@ import {
   Tabs,
   Tab,
   Chip,
+  Checkbox,
   Link as MuiLink,
 } from "@mui/material";
 import Link from "next/link";
@@ -122,10 +123,14 @@ const getUniqueDispatchSoOptions = (soList: DispatchSO[]): DispatchSO[] => {
   return Array.from(map.values());
 };
 
-const getDispatchSoRowsForNumber = (
-  soList: DispatchSO[],
-  saleOrderNumber: string,
-): DispatchSO[] => soList.filter((s) => s.saleOrderNumber === saleOrderNumber);
+const getSharedLrNumber = (selectedSos: DispatchSO[]): string => {
+  const lrNumbers = selectedSos
+    .map((so) => so.LRnumber?.trim())
+    .filter((lrNumber): lrNumber is string => Boolean(lrNumber));
+  const uniqueLrNumbers = Array.from(new Set(lrNumbers));
+
+  return uniqueLrNumbers.length === 1 ? uniqueLrNumbers[0] : "";
+};
 
 const AttachmentDialog = ({
   open,
@@ -557,12 +562,12 @@ export default function DispatchView() {
   const [form, setForm] = useState<{
     transporterId: Transporter | null;
     vehicleNumber: string;
-    selectedSo: DispatchSO | null;
+    selectedSos: DispatchSO[];
     lrNumber: string;
   }>({
     transporterId: null,
     vehicleNumber: "",
-    selectedSo: null,
+    selectedSos: [],
     lrNumber: "",
   });
   const [editDialogSOs, setEditDialogSOs] = useState<DispatchSO[]>([]);
@@ -688,7 +693,7 @@ export default function DispatchView() {
     setForm({
       transporterId: null,
       vehicleNumber: "",
-      selectedSo: null,
+      selectedSos: [],
       lrNumber: "",
     });
     setEditDialogSOs([]);
@@ -734,16 +739,18 @@ export default function DispatchView() {
       if (editingId) {
         const lrTrimmed = form.lrNumber.trim();
 
-        if (form.selectedSo) {
+        if (form.selectedSos.length > 0) {
           if (!lrTrimmed) {
             showSnackbar("LR Number is required.", "error");
             setLoading(false);
             return;
           }
 
-          const rowsToUpdate = getDispatchSoRowsForNumber(
-            editDialogSOs,
-            form.selectedSo.saleOrderNumber,
+          const selectedSoNumbers = new Set(
+            form.selectedSos.map((so) => so.saleOrderNumber),
+          );
+          const rowsToUpdate = editDialogSOs.filter((so) =>
+            selectedSoNumbers.has(so.saleOrderNumber),
           );
 
           await Promise.all(
@@ -923,16 +930,13 @@ export default function DispatchView() {
       const transporter =
         transporters.find((t) => t.name === transporterName) || null;
 
-      const soList = await fetchEditDialogSOs(currentMenuId);
-      const uniqueOptions = getUniqueDispatchSoOptions(soList);
-      const firstWithLr =
-        uniqueOptions.find((so) => so.LRnumber?.trim()) ?? uniqueOptions[0] ?? null;
+      await fetchEditDialogSOs(currentMenuId);
 
       setForm({
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
-        selectedSo: firstWithLr,
-        lrNumber: firstWithLr?.LRnumber?.trim() ?? "",
+        selectedSos: [],
+        lrNumber: "",
       });
       setEditingId(currentMenuId);
       setAttachments([]);
@@ -1707,7 +1711,7 @@ export default function DispatchView() {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                   gap: 2,
                   mb: 0,
                 }}
@@ -1736,22 +1740,48 @@ export default function DispatchView() {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                   gap: 2,
                 }}
               >
-                <Autocomplete
+                <Autocomplete<DispatchSO, true, false, false>
+                  multiple
+                  disableCloseOnSelect
                   options={editDialogSoOptions}
+                  sx={{
+                    minWidth: 0,
+                    width: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      minHeight: 56,
+                      maxHeight: 56,
+                      alignItems: "center",
+                      flexWrap: "nowrap",
+                      overflow: "hidden",
+                      minWidth: 0,
+                    },
+                    "& .MuiAutocomplete-inputRoot": {
+                      flexWrap: "nowrap",
+                      minWidth: 0,
+                    },
+                    "& .MuiAutocomplete-input": {
+                      minWidth: "0 !important",
+                      width: "0 !important",
+                    },
+                    "& .MuiAutocomplete-tag": {
+                      flexShrink: 0,
+                      maxWidth: 116,
+                    },
+                  }}
                   getOptionLabel={(option) => option.saleOrderNumber}
                   isOptionEqualToValue={(option, value) =>
                     option.saleOrderNumber === value.saleOrderNumber
                   }
-                  value={form.selectedSo}
+                  value={form.selectedSos}
                   onChange={(_, value) =>
                     setForm((prev) => ({
                       ...prev,
-                      selectedSo: value,
-                      lrNumber: value?.LRnumber?.trim() ?? prev.lrNumber,
+                      selectedSos: value,
+                      lrNumber: getSharedLrNumber(value),
                     }))
                   }
                   disabled={!editingId}
@@ -1760,11 +1790,76 @@ export default function DispatchView() {
                       ? "No SO numbers linked to this dispatch"
                       : "Save dispatch first to link SO numbers"
                   }
+                  renderOption={(props, option, { selected }) => {
+                    const { key, ...optionProps } = props;
+
+                    return (
+                      <Box component="li" key={key} {...optionProps}>
+                        <Checkbox
+                          checked={selected}
+                          size="small"
+                          sx={{ mr: 1, p: 0.5 }}
+                        />
+                        {option.saleOrderNumber}
+                      </Box>
+                    );
+                  }}
+                  renderValue={(selected, getItemProps) => {
+                    const visibleSos = selected.slice(0, 2);
+                    const hiddenCount = selected.length - visibleSos.length;
+
+                    return (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          flexWrap: "nowrap",
+                          gap: 0.5,
+                          py: 0.25,
+                          minWidth: 0,
+                          maxWidth: "100%",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {visibleSos.map((so, index) => {
+                          const { key, ...chipProps } = getItemProps({
+                            index,
+                          });
+
+                          return (
+                            <Chip
+                              key={key}
+                              label={so.saleOrderNumber}
+                              size="small"
+                              sx={{ flexShrink: 0 }}
+                              {...chipProps}
+                            />
+                          );
+                        })}
+                        {hiddenCount > 0 && (
+                          <Chip
+                            label={`+${hiddenCount} selected`}
+                            size="small"
+                            sx={{
+                              flexShrink: 0,
+                              bgcolor: "action.selected",
+                              color: "text.primary",
+                              "& .MuiChip-label": {
+                                fontWeight: 400,
+                              },
+                            }}
+                          />
+                        )}
+                      </Box>
+                    );
+                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="SO Number"
-                      placeholder="Select SO number"
+                      placeholder={
+                        form.selectedSos.length === 0 ? "Select SO number" : ""
+                      }
                     />
                   )}
                 />
@@ -1778,13 +1873,15 @@ export default function DispatchView() {
                       lrNumber: e.target.value.toUpperCase(),
                     }))
                   }
-                  disabled={!editingId || !form.selectedSo}
+                  disabled={!editingId || form.selectedSos.length === 0}
                   placeholder="Enter LR number"
                   helperText={
                     editingId
-                      ? !form.selectedSo
+                      ? form.selectedSos.length === 0
                         ? "Select an SO number first, then enter LR number"
-                        : `Updates all linked rows for ${form.selectedSo.saleOrderNumber}`
+                        : form.selectedSos.length === 1
+                          ? `Updates all linked rows for ${form.selectedSos[0].saleOrderNumber}`
+                          : `Updates all linked rows for ${form.selectedSos.length} selected SO numbers`
                       : "Available when editing a dispatch"
                   }
                 />

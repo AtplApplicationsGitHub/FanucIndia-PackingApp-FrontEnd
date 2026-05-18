@@ -20,6 +20,7 @@ interface DispatchInfoData {
   transporter?: { name: string } | null;
   transporterName?: string;
   vehicleNumber: string;
+  LRnumber?: string | null;
   UpdatedBy?: string;
   UpdatedDate?: string;
   vehicleEntry?: {
@@ -128,7 +129,7 @@ export default function DispatchInfo({
                   width: "40%" 
                 }}
               >
-                Updated By
+                LR Number
               </TableCell>
               <TableCell
                 sx={{ 
@@ -137,7 +138,7 @@ export default function DispatchInfo({
                   width: "40%" 
                 }}
               >
-                Updated Datetime
+                Updated By / Datetime
               </TableCell>
             </TableRow>
           </TableHead>
@@ -174,8 +175,9 @@ export default function DispatchInfo({
                 <TableCell>
                   {dispatch.transporterName || dispatch.transporter?.name || "-"}
                 </TableCell>
-                <TableCell>{dispatch.UpdatedBy || "-"}</TableCell>
+                <TableCell>{dispatch.LRnumber || "-"}</TableCell>
                 <TableCell>
+                  {dispatch.UpdatedBy || "-"} /{" "}
                   {dispatch.UpdatedDate
                     ? formatDateTimeIST(dispatch.UpdatedDate)
                     : "-"}

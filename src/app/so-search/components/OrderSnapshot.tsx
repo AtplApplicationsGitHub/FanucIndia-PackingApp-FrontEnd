@@ -33,6 +33,7 @@ interface DispatchInfoData {
   transporter?: { name: string } | null;
   transporterName?: string;
   vehicleNumber: string;
+  LRnumber?: string | null;
   UpdatedBy?: string;
   UpdatedDate?: string;
   vehicleEntry?: {
@@ -354,10 +355,10 @@ export default function OrderSnapshot({
                   dispatch.transporterName || dispatch.transporter?.name || "-"
                 }
               />
-              <KVBox label="Updated By" value={dispatch.UpdatedBy || "-"} />
+              <KVBox label="LR Number" value={dispatch.LRnumber || "-"} />
               <KVBox
-                label="Updated Datetime"
-                value={formatDateTimeIST(dispatch.UpdatedDate)}
+                label="Updated By / Datetime"
+                value={`${dispatch.UpdatedBy || "-"} / ${formatDateTimeIST(dispatch.UpdatedDate)}`}
               />
             </Box>
           ))}
