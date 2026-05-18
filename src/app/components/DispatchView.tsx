@@ -86,13 +86,15 @@ interface Transporter {
 }
 interface Dispatch {
   id: number;
-  transporter?: { name: string } | null;
+  transporterId?: number | string | null;
+  transporter?: { id?: number | string | null; name: string } | null;
   transporterName?: string | null;
   soCount: number;
   vehicleNumber: string;
-  attachments: { fileName: string }[];
+  attachments: { fileName: string }[] | null;
   UpdatedBy?: string | null;
   UpdatedDate?: string | null;
+  dispatchSOs?: DispatchSO[];
 }
 interface DispatchSO {
   id: number;
@@ -130,6 +132,98 @@ const getSharedLrNumber = (selectedSos: DispatchSO[]): string => {
   const uniqueLrNumbers = Array.from(new Set(lrNumbers));
 
   return uniqueLrNumbers.length === 1 ? uniqueLrNumbers[0] : "";
+};
+
+const getTransporterIdNumber = (
+  transporterId?: number | string | null,
+): number | null => {
+  if (transporterId === null || transporterId === undefined) return null;
+
+  const id = Number(transporterId);
+  return Number.isFinite(id) ? id : null;
+};
+
+const buildDispatchCreatePayload = (
+  transporter: Transporter | null,
+  vehicleNumber: string,
+) => ({
+  ...(transporter
+    ? {
+        transporterId: String(transporter.id),
+      }
+    : {}),
+  vehicleNumber: vehicleNumber.trim(),
+});
+
+const buildDispatchUpdatePayload = (
+  transporter: Transporter | null,
+  vehicleNumber: string,
+) => ({
+  ...(transporter
+    ? {
+        transporterId: String(transporter.id),
+        transporterName: transporter.name,
+      }
+    : {}),
+  vehicleNumber: vehicleNumber.trim(),
+});
+
+const mergeDispatchUpdate = (
+  current: Dispatch,
+  updated: Partial<Dispatch>,
+  fallbackTransporter: Transporter | null,
+): Dispatch => {
+  const transporterName =
+    updated.transporterName ??
+    updated.transporter?.name ??
+    fallbackTransporter?.name ??
+    current.transporterName ??
+    current.transporter?.name ??
+    null;
+  const transporterId =
+    updated.transporterId ??
+    updated.transporter?.id ??
+    fallbackTransporter?.id ??
+    current.transporterId ??
+    null;
+
+  return {
+    ...current,
+    ...updated,
+    transporterId,
+    transporterName,
+    transporter: updated.transporter ??
+      (transporterName
+        ? {
+            ...(current.transporter ?? {}),
+            id: transporterId,
+            name: transporterName,
+          }
+        : current.transporter),
+    soCount:
+      updated.soCount ??
+      (Array.isArray(updated.dispatchSOs)
+        ? updated.dispatchSOs.length
+        : current.soCount),
+    vehicleNumber: updated.vehicleNumber ?? current.vehicleNumber,
+    attachments:
+      updated.attachments === undefined
+        ? current.attachments
+        : updated.attachments,
+  };
+};
+
+const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
+  if (!axios.isAxiosError(error)) return fallbackMessage;
+
+  const message = error.response?.data?.message;
+  if (Array.isArray(message)) return message.join(", ");
+  if (typeof message === "string" && message.trim()) return message;
+
+  const errorText = error.response?.data?.error;
+  if (typeof errorText === "string" && errorText.trim()) return errorText;
+
+  return fallbackMessage;
 };
 
 const AttachmentDialog = ({
@@ -714,6 +808,26 @@ export default function DispatchView() {
     }
   }, []);
 
+  const syncUpdatedDispatch = useCallback(
+    (updatedDispatch: Partial<Dispatch> & { id: number }) => {
+      const applyUpdate = (dispatch: Dispatch) =>
+        mergeDispatchUpdate(dispatch, updatedDispatch, form.transporterId);
+
+      setDispatches((prev) =>
+        prev.map((dispatch) =>
+          dispatch.id === updatedDispatch.id ? applyUpdate(dispatch) : dispatch,
+        ),
+      );
+      setSelectedDispatch((prev) =>
+        prev?.id === updatedDispatch.id ? applyUpdate(prev) : prev,
+      );
+      setCurrentDispatchForAttachments((prev) =>
+        prev?.id === updatedDispatch.id ? applyUpdate(prev) : prev,
+      );
+    },
+    [form.transporterId],
+  );
+
   const handleCreateClick = () => {
     resetForm();
     setCreateDialogOpen(true);
@@ -737,6 +851,10 @@ export default function DispatchView() {
       const authHeaders = { Authorization: `Bearer ${token}` };
 
       if (editingId) {
+        const dispatchPayload = buildDispatchUpdatePayload(
+          form.transporterId,
+          form.vehicleNumber,
+        );
         const lrTrimmed = form.lrNumber.trim();
 
         if (form.selectedSos.length > 0) {
@@ -769,17 +887,35 @@ export default function DispatchView() {
           );
         }
 
-        const formData = new FormData();
-        if (form.transporterId) {
-          formData.append("transporterId", String(form.transporterId.id));
-        }
-        formData.append("vehicleNumber", form.vehicleNumber.trim());
-        attachments.forEach((file) => {
-          formData.append("attachments", file);
-        });
+        const updateResponse = await axios.patch<Partial<Dispatch>>(
+          API.DISPATCH.BY_ID(editingId),
+          dispatchPayload,
+          {
+            headers: {
+              ...authHeaders,
+              "Content-Type": "application/json",
+            },
+          },
+        );
 
-        await axios.patch(API.DISPATCH.BY_ID(editingId), formData, {
-          headers: authHeaders,
+        if (attachments.length > 0) {
+          const attachmentFormData = new FormData();
+          attachments.forEach((file) => {
+            attachmentFormData.append("attachments", file);
+          });
+
+          await axios.post(
+            `${API.DISPATCH.BASE}/${editingId}/attachments`,
+            attachmentFormData,
+            {
+              headers: authHeaders,
+            },
+          );
+        }
+
+        syncUpdatedDispatch({
+          ...updateResponse.data,
+          id: updateResponse.data.id ?? editingId,
         });
 
         const refreshedSos = await fetchEditDialogSOs(editingId);
@@ -793,11 +929,14 @@ export default function DispatchView() {
         return;
       }
 
+      const dispatchPayload = buildDispatchCreatePayload(
+        form.transporterId,
+        form.vehicleNumber,
+      );
       const formData = new FormData();
-      if (form.transporterId) {
-        formData.append("transporterId", String(form.transporterId.id));
-      }
-      formData.append("vehicleNumber", form.vehicleNumber.trim());
+      Object.entries(dispatchPayload).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
       attachments.forEach((file) => {
         formData.append("attachments", file);
       });
@@ -810,14 +949,13 @@ export default function DispatchView() {
       handleDialogClose();
       fetchDispatches();
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const errMsg =
-          error.response?.data?.message ||
-          `Failed to ${editingId ? "update" : "save"} dispatch`;
-        showSnackbar(errMsg, "error");
-      } else {
-        showSnackbar("Unexpected error occurred", "error");
-      }
+      showSnackbar(
+        getApiErrorMessage(
+          error,
+          `Failed to ${editingId ? "update" : "save"} dispatch`,
+        ),
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -927,8 +1065,19 @@ export default function DispatchView() {
     if (dispatchToEdit && currentMenuId) {
       const transporterName =
         dispatchToEdit.transporterName || dispatchToEdit.transporter?.name;
+      const transporterId = getTransporterIdNumber(
+        dispatchToEdit.transporterId ?? dispatchToEdit.transporter?.id,
+      );
       const transporter =
-        transporters.find((t) => t.name === transporterName) || null;
+        (transporterId !== null
+          ? transporters.find((t) => t.id === transporterId)
+          : undefined) ||
+        (transporterName
+          ? transporters.find((t) => t.name === transporterName)
+          : undefined) ||
+        (transporterId !== null && transporterName
+          ? { id: transporterId, name: transporterName }
+          : null);
 
       await fetchEditDialogSOs(currentMenuId);
 
@@ -1719,6 +1868,9 @@ export default function DispatchView() {
                 <Autocomplete
                   options={transporters}
                   getOptionLabel={(option) => option.name}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
                   value={form.transporterId}
                   onChange={(_, value) =>
                     setForm((prev) => ({ ...prev, transporterId: value }))
@@ -1737,155 +1889,152 @@ export default function DispatchView() {
                 />
               </Box>
 
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-                  gap: 2,
-                }}
-              >
-                <Autocomplete<DispatchSO, true, false, false>
-                  multiple
-                  disableCloseOnSelect
-                  options={editDialogSoOptions}
+              {editingId ? (
+                <Box
                   sx={{
-                    minWidth: 0,
-                    width: "100%",
-                    "& .MuiOutlinedInput-root": {
-                      minHeight: 56,
-                      maxHeight: 56,
-                      alignItems: "center",
-                      flexWrap: "nowrap",
-                      overflow: "hidden",
-                      minWidth: 0,
-                    },
-                    "& .MuiAutocomplete-inputRoot": {
-                      flexWrap: "nowrap",
-                      minWidth: 0,
-                    },
-                    "& .MuiAutocomplete-input": {
-                      minWidth: "0 !important",
-                      width: "0 !important",
-                    },
-                    "& .MuiAutocomplete-tag": {
-                      flexShrink: 0,
-                      maxWidth: 116,
-                    },
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                    gap: 2,
                   }}
-                  getOptionLabel={(option) => option.saleOrderNumber}
-                  isOptionEqualToValue={(option, value) =>
-                    option.saleOrderNumber === value.saleOrderNumber
-                  }
-                  value={form.selectedSos}
-                  onChange={(_, value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      selectedSos: value,
-                      lrNumber: getSharedLrNumber(value),
-                    }))
-                  }
-                  disabled={!editingId}
-                  noOptionsText={
-                    editingId
-                      ? "No SO numbers linked to this dispatch"
-                      : "Save dispatch first to link SO numbers"
-                  }
-                  renderOption={(props, option, { selected }) => {
-                    const { key, ...optionProps } = props;
+                >
+                  <Autocomplete<DispatchSO, true, false, false>
+                    multiple
+                    disableCloseOnSelect
+                    options={editDialogSoOptions}
+                    sx={{
+                      minWidth: 0,
+                      width: "100%",
+                      "& .MuiOutlinedInput-root": {
+                        minHeight: 56,
+                        maxHeight: 56,
+                        alignItems: "center",
+                        flexWrap: "nowrap",
+                        overflow: "hidden",
+                        minWidth: 0,
+                      },
+                      "& .MuiAutocomplete-inputRoot": {
+                        flexWrap: "nowrap",
+                        minWidth: 0,
+                      },
+                      "& .MuiAutocomplete-input": {
+                        minWidth: "0 !important",
+                        width: "0 !important",
+                      },
+                      "& .MuiAutocomplete-tag": {
+                        flexShrink: 0,
+                        maxWidth: 116,
+                      },
+                    }}
+                    getOptionLabel={(option) => option.saleOrderNumber}
+                    isOptionEqualToValue={(option, value) =>
+                      option.saleOrderNumber === value.saleOrderNumber
+                    }
+                    value={form.selectedSos}
+                    onChange={(_, value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        selectedSos: value,
+                        lrNumber: getSharedLrNumber(value),
+                      }))
+                    }
+                    noOptionsText="No SO numbers linked to this dispatch"
+                    renderOption={(props, option, { selected }) => {
+                      const { key, ...optionProps } = props;
 
-                    return (
-                      <Box component="li" key={key} {...optionProps}>
-                        <Checkbox
-                          checked={selected}
-                          size="small"
-                          sx={{ mr: 1, p: 0.5 }}
-                        />
-                        {option.saleOrderNumber}
-                      </Box>
-                    );
-                  }}
-                  renderValue={(selected, getItemProps) => {
-                    const visibleSos = selected.slice(0, 2);
-                    const hiddenCount = selected.length - visibleSos.length;
-
-                    return (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          flexWrap: "nowrap",
-                          gap: 0.5,
-                          py: 0.25,
-                          minWidth: 0,
-                          maxWidth: "100%",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {visibleSos.map((so, index) => {
-                          const { key, ...chipProps } = getItemProps({
-                            index,
-                          });
-
-                          return (
-                            <Chip
-                              key={key}
-                              label={so.saleOrderNumber}
-                              size="small"
-                              sx={{ flexShrink: 0 }}
-                              {...chipProps}
-                            />
-                          );
-                        })}
-                        {hiddenCount > 0 && (
-                          <Chip
-                            label={`+${hiddenCount} selected`}
+                      return (
+                        <Box component="li" key={key} {...optionProps}>
+                          <Checkbox
+                            checked={selected}
                             size="small"
-                            sx={{
-                              flexShrink: 0,
-                              bgcolor: "action.selected",
-                              color: "text.primary",
-                              "& .MuiChip-label": {
-                                fontWeight: 400,
-                              },
-                            }}
+                            sx={{ mr: 1, p: 0.5 }}
                           />
-                        )}
-                      </Box>
-                    );
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="SO Number"
-                      placeholder={
-                        form.selectedSos.length === 0 ? "Select SO number" : ""
-                      }
-                    />
-                  )}
-                />
+                          {option.saleOrderNumber}
+                        </Box>
+                      );
+                    }}
+                    renderValue={(selected, getItemProps) => {
+                      const visibleSos = selected.slice(0, 2);
+                      const hiddenCount = selected.length - visibleSos.length;
 
-                <TextField
-                  label="LR Number"
-                  value={form.lrNumber}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      lrNumber: e.target.value.toUpperCase(),
-                    }))
-                  }
-                  disabled={!editingId || form.selectedSos.length === 0}
-                  placeholder="Enter LR number"
-                  helperText={
-                    editingId
-                      ? form.selectedSos.length === 0
+                      return (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexWrap: "nowrap",
+                            gap: 0.5,
+                            py: 0.25,
+                            minWidth: 0,
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {visibleSos.map((so, index) => {
+                            const { key, ...chipProps } = getItemProps({
+                              index,
+                            });
+
+                            return (
+                              <Chip
+                                key={key}
+                                label={so.saleOrderNumber}
+                                size="small"
+                                sx={{ flexShrink: 0 }}
+                                {...chipProps}
+                              />
+                            );
+                          })}
+                          {hiddenCount > 0 && (
+                            <Chip
+                              label={`+${hiddenCount} selected`}
+                              size="small"
+                              sx={{
+                                flexShrink: 0,
+                                bgcolor: "action.selected",
+                                color: "text.primary",
+                                "& .MuiChip-label": {
+                                  fontWeight: 400,
+                                },
+                              }}
+                            />
+                          )}
+                        </Box>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="SO Number"
+                        placeholder={
+                          form.selectedSos.length === 0
+                            ? "Select SO number"
+                            : ""
+                        }
+                      />
+                    )}
+                  />
+
+                  <TextField
+                    label="LR Number"
+                    value={form.lrNumber}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        lrNumber: e.target.value.toUpperCase(),
+                      }))
+                    }
+                    disabled={form.selectedSos.length === 0}
+                    placeholder="Enter LR number"
+                    helperText={
+                      form.selectedSos.length === 0
                         ? "Select an SO number first, then enter LR number"
                         : form.selectedSos.length === 1
                           ? `Updates all linked rows for ${form.selectedSos[0].saleOrderNumber}`
                           : `Updates all linked rows for ${form.selectedSos.length} selected SO numbers`
-                      : "Available when editing a dispatch"
-                  }
-                />
-              </Box>
+                    }
+                  />
+                </Box>
+              ) : null}
 
               <Typography
                 variant="subtitle2"
