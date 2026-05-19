@@ -35,6 +35,7 @@ import {
   Tab,
   Chip,
   Checkbox,
+  Badge,
   Link as MuiLink,
 } from "@mui/material";
 import Link from "next/link";
@@ -1575,7 +1576,20 @@ export default function DispatchView() {
                                   handleOpenAttachmentDialog(row);
                                 }}
                               >
-                                <VisibilityIcon />
+                                <Badge
+                                  badgeContent={row.attachments?.length ?? 0}
+                                  max={99}
+                                  invisible={!row.attachments?.length}
+                                  sx={{
+                                    "& .MuiBadge-badge": {
+                                      bgcolor: "text.secondary",
+                                      color: "background.paper",
+                                      fontWeight: 600,
+                                    },
+                                  }}
+                                >
+                                  <VisibilityIcon />
+                                </Badge>
                               </IconButton>
                             </TableCell>
                           </TableRow>
