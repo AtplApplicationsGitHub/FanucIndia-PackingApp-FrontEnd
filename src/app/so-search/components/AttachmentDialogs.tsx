@@ -350,7 +350,7 @@ export default function AttachmentDialogs({
       </Dialog>
 
       <Dialog open={vehicleDialogOpen} onClose={onVehicleDialogClose} fullWidth maxWidth="md">
-        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600 }}>
+        <DialogTitle sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}>
           VEHICLE ENTRY ATTACHMENTS
           <IconButton onClick={onVehicleDialogClose} sx={{ position: "absolute", right: 8, top: 8 }}>
             <Close />

@@ -290,6 +290,7 @@ export function useAssign() {
             additionalRemarks:
               detail.additionalRemarks || item.additionalRemarks || "",
             labelRemarks: detail.labelRemarks || item.labelRemarks || "",
+            fgLocation: detail.fgLocation || item.fgLocation || null,
             materialData: detail.materialData || item.materialData || undefined,
             binCount: detail.binCount ?? item.binCount ?? 0,
           };

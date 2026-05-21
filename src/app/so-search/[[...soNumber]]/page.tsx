@@ -94,6 +94,10 @@ interface DispatchInfoData {
   LRnumber?: string | null;
   attachments?: { fileName: string }[];
   address: string;
+  vehicleEntry?: {
+    id: number;
+    attachments?: VehicleAttachment[];
+  } | null;
 }
 
 interface MaterialDetail {
@@ -121,7 +125,7 @@ interface VehicleAttachment {
 
 interface VehicleEntry {
   id: number;
-  attachments: VehicleAttachment[];
+  attachments?: VehicleAttachment[];
 }
 
 interface StatusStepperData {
@@ -213,10 +217,31 @@ export default function SoSearchPage() {
     }
   }, [searchParams]);
 
-  const handleOpenVehicleAttachments = (entry: VehicleEntry) => {
-    setVehicleAttachments(entry.attachments || []);
+  const handleOpenVehicleAttachments = async (entry: VehicleEntry) => {
     setCurrentVehicleEntryId(entry.id);
+    setVehicleAttachments([]);
     setVehicleDialogOpen(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(API.VEHICLE_ENTRY.GET_ATTACHMENTS(entry.id), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch Vehicle Entry attachments");
+      }
+
+      const attachments = await res.json();
+
+      setVehicleAttachments(Array.isArray(attachments) ? attachments : []);
+    } catch {
+      setVehicleAttachments([]);
+      setError("Failed to load Vehicle Entry attachments.");
+    }
   };
 
   const handleVehicleAttachmentAction = (
@@ -377,7 +402,7 @@ export default function SoSearchPage() {
   }, [params.soNumber, performSearch]);
 
   const handleManualSearch = () => {
-    const trimmedSo = soNumber.trim().replace(/\s+/g, ' ');
+    const trimmedSo = soNumber.trim().replace(/\s+/g, " ");
     if (trimmedSo) {
       router.push(`/so-search/${encodeURIComponent(trimmedSo)}`);
     } else {

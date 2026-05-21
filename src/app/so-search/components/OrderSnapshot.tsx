@@ -38,13 +38,13 @@ interface DispatchInfoData {
   UpdatedDate?: string;
   vehicleEntry?: {
     id: number;
-    attachments: { fileName: string }[];
+    attachments?: { fileName: string }[];
   } | null;
 }
 
 interface VehicleEntrySummary {
   id: number;
-  attachments: { fileName: string }[];
+  attachments?: { fileName: string }[];
 }
 
 interface ErpImportLogData {
@@ -60,7 +60,7 @@ interface Props {
   erpImportLogs?: ErpImportLogData[];
   onViewPackingAttachments: () => void;
   onViewDispatchAttachments?: () => void;
-  onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void;
+  onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void | Promise<void>;
   onViewPaymentAttachments?: () => void;
   hasPaymentAttachments?: boolean;
 }
@@ -332,22 +332,30 @@ export default function OrderSnapshot({
               mb={2}
             >
               <KVBox label="Vehicle Number">
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() =>
-                    dispatch.vehicleEntry &&
-                    onViewVehicleAttachments?.(dispatch.vehicleEntry)
-                  }
-                  sx={{
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    color: dispatch.vehicleEntry ? "" : "",
-                    cursor: dispatch.vehicleEntry ? "pointer" : "default",
-                  }}
-                >
-                  {dispatch.vehicleNumber}
-                </Link>
+                {dispatch.vehicleEntry ? (
+                  <Link
+                    component="button"
+                    variant="body2"
+                    onClick={() =>
+                      onViewVehicleAttachments?.(dispatch.vehicleEntry!)
+                    }
+                    underline="none"
+                    sx={{
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {dispatch.vehicleNumber || "-"}
+                  </Link>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    component="span"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {dispatch.vehicleNumber || "-"}
+                  </Typography>
+                )}
               </KVBox>
               <KVBox
                 label="Transporter"

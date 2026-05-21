@@ -496,7 +496,7 @@ export default function AssignSO() {
 
   const availableCustomers = React.useMemo(() => {
     const ordersMatchingOtherFilters = orders.filter((order) => {
-      const searchStr = searchInput.trim().replace(/\s+/g, ' ').toLowerCase();
+      const searchStr = searchInput.trim().replace(/\s+/g, " ").toLowerCase();
       const productName = (
         order.product?.name ||
         findName(lookup.products, order.productId ?? 0) ||
@@ -623,7 +623,7 @@ export default function AssignSO() {
 
   const filteredOrders = React.useMemo(() => {
     return orders.filter((order) => {
-      const searchStr = searchInput.trim().replace(/\s+/g, ' ').toLowerCase();
+      const searchStr = searchInput.trim().replace(/\s+/g, " ").toLowerCase();
 
       const productName = (
         order.product?.name ||
@@ -852,7 +852,6 @@ export default function AssignSO() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("ASSIGN_SO");
 
-    // UPDATED: Added CUSTOMER NAME after TRANSPORTER
     worksheet.columns = [
       { header: "PRODUCT", key: "product", width: 20 }, // A
       { header: "SALE ORDER NUMBER", key: "saleOrderNumber", width: 20 }, // B
@@ -860,18 +859,19 @@ export default function AssignSO() {
       { header: "TRANSFER ORDER", key: "transferOrder", width: 20 }, // D
       { header: "DELIVERY DATE", key: "deliveryDate", width: 18 }, // E
       { header: "TRANSPORTER", key: "transporter", width: 20 }, // F
-      { header: "CUSTOMER NAME", key: "customerName", width: 25 }, // G (NEW)
+      { header: "CUSTOMER NAME", key: "customerName", width: 25 }, // G
       { header: "PLANT CODE", key: "plantCode", width: 15 }, // H
       { header: "PAYMENT CLEARANCE", key: "payment", width: 18 }, // I
       { header: "PACKING CONFIG", key: "packingConfig", width: 20 }, // J
       { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 }, // K
       { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 }, // L
       { header: "LABEL REMARKS", key: "labelRemarks", width: 25 }, // M
-      { header: "PRIORITY", key: "priority", width: 12 }, // N
-      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 }, // O
-      { header: "PACKING STAGE USER", key: "packingUser", width: 20 }, // P
-      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 }, // Q
-      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 }, // R
+      { header: "FG LOCATION", key: "fgLocation", width: 25 }, // N (NEW)
+      { header: "PRIORITY", key: "priority", width: 12 }, // O
+      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 }, // P
+      { header: "PACKING STAGE USER", key: "packingUser", width: 20 }, // Q
+      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 }, // R
+      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 }, // S
     ];
 
     worksheet.getRow(1).font = { bold: true };
@@ -898,6 +898,7 @@ export default function AssignSO() {
         specialRemarks: clearHyphen(row.specialRemarks),
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
+        fgLocation: clearHyphen(typeof row.fgLocation === 'object' && row.fgLocation ? JSON.stringify(row.fgLocation) : row.fgLocation),
         priority: row.priority ?? "",
         issueUser: clearHyphen(
           findName(lookup.assignableUsers, row.issueUserId ?? 0) ||
@@ -946,14 +947,14 @@ export default function AssignSO() {
       };
 
       if (assignableUserNames.length < 255) {
-        const issueUserCell = worksheet.getCell(`O${i}`); // Was N
+        const issueUserCell = worksheet.getCell(`P${i}`); // Was N
         issueUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
           formulae: [`"${assignableUserNames}"`],
         };
 
-        const packingUserCell = worksheet.getCell(`P${i}`); // Was O
+        const packingUserCell = worksheet.getCell(`Q${i}`); // Was O
         packingUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -970,14 +971,14 @@ export default function AssignSO() {
         };
       }
 
-      const skipIssueCell = worksheet.getCell(`Q${i}`); // Was P
+      const skipIssueCell = worksheet.getCell(`R${i}`); // Was P
       skipIssueCell.dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: ['"Yes,No"'],
       };
 
-      const skipPackingCell = worksheet.getCell(`R${i}`); // Was Q
+      const skipPackingCell = worksheet.getCell(`S${i}`); // Was Q
       skipPackingCell.dataValidation = {
         type: "list",
         allowBlank: true,
