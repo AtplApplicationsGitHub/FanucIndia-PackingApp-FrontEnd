@@ -317,6 +317,7 @@ export default function FgDashboardView() {
       if (paymentFilter) params.append("payment", paymentFilter);
       if (zoneFilter) params.append("zone", zoneFilter);
       if (statusFilter) params.append("status", statusFilter);
+      params.append("hideDispatched", String(hideDispatched));
 
       params.append("page", (page + 1).toString());
       params.append("limit", rowsPerPage.toString());
@@ -342,6 +343,7 @@ export default function FgDashboardView() {
     paymentFilter,
     zoneFilter,
     statusFilter,
+    hideDispatched,
     page,
     rowsPerPage,
   ]);
@@ -392,16 +394,19 @@ export default function FgDashboardView() {
   useEffect(() => {
     if (autoRefreshMinutes <= 0) return;
 
-    const refreshTimer = window.setInterval(() => {
-      void fetchData().then(() => {
-        const refreshedAt = new Date();
-        setLastRefreshTime(refreshedAt);
-        window.localStorage.setItem(
-          LAST_REFRESH_STORAGE_KEY,
-          refreshedAt.toISOString(),
-        );
-      });
-    }, autoRefreshMinutes * 60 * 1000);
+    const refreshTimer = window.setInterval(
+      () => {
+        void fetchData().then(() => {
+          const refreshedAt = new Date();
+          setLastRefreshTime(refreshedAt);
+          window.localStorage.setItem(
+            LAST_REFRESH_STORAGE_KEY,
+            refreshedAt.toISOString(),
+          );
+        });
+      },
+      autoRefreshMinutes * 60 * 1000,
+    );
 
     return () => window.clearInterval(refreshTimer);
   }, [autoRefreshMinutes, fetchData]);
@@ -455,9 +460,7 @@ export default function FgDashboardView() {
     ? STATUS_OPTIONS.filter((status) => status !== "Dispatched")
     : STATUS_OPTIONS;
 
-  const tableRows = hideDispatched
-    ? rows.filter((row) => getStatusInfo(row).current !== "Dispatched")
-    : rows;
+  const tableRows = rows;
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -527,6 +530,7 @@ export default function FgDashboardView() {
       if (paymentFilter) params.append("payment", paymentFilter);
       if (zoneFilter) params.append("zone", zoneFilter);
       if (statusFilter) params.append("status", statusFilter);
+      params.append("hideDispatched", String(hideDispatched));
 
       // Construct export URL
       const exportUrl = `${API.FG_DASHBOARD}/export?${params.toString()}`;
@@ -580,7 +584,7 @@ export default function FgDashboardView() {
           }}
         >
           {/* Main Floating Toolbar */}
-           <Paper
+          <Paper
             elevation={2}
             sx={{
               mb: 0,
@@ -596,7 +600,13 @@ export default function FgDashboardView() {
               mx: "auto",
             }}
           >
-            <Tooltip title="Hide dispatched orders">
+            <Tooltip
+              title={
+                hideDispatched
+                  ? "Dispatched Orders are hidden"
+                  : "Dispatched Orders are visible"
+              }
+            >
               <FormControlLabel
                 label=""
                 sx={{
@@ -630,11 +640,11 @@ export default function FgDashboardView() {
                 }
               />
             </Tooltip>
-           <Box
+            <Box
               component="form"
               onSubmit={(e: React.FormEvent) => {
                 e.preventDefault();
-                setSearch(localSearch.trim().replace(/\s+/g, ' '));
+                setSearch(localSearch.trim().replace(/\s+/g, " "));
                 setPage(0);
               }}
               sx={{
@@ -1383,7 +1393,6 @@ export default function FgDashboardView() {
                   ))}
                 </Select>
               </FormControl>
-
             </Box>
           </DialogContent>
         </Dialog>
