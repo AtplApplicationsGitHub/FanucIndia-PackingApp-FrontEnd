@@ -247,6 +247,7 @@ export default function AdminMasterLookupPanel() {
 
       if (!res.ok) {
         const err = await res.json();
+        if (err.message === "") throw new Error("SILENT_ERROR");
         throw new Error(err.message || "Operation failed");
       }
 
@@ -255,7 +256,9 @@ export default function AdminMasterLookupPanel() {
       fetchData();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to save";
-      showSnackbar(message, "error");
+      if (message !== "SILENT_ERROR") {
+        showSnackbar(message, "error");
+      }
     } finally {
       setActionLoading(false);
     }
@@ -273,13 +276,12 @@ export default function AdminMasterLookupPanel() {
       const apiPath = TYPE_TO_API_PATH[deleteTarget.type];
       const res = await authFetch(
         `${API_BASE_URL}/lookup/${apiPath}/${deleteTarget.id}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
 
       if (!res.ok) {
         const err = await res.json();
+        if (err.message === "") throw new Error("SILENT_ERROR");
         throw new Error(err.message || "Failed to delete");
       }
 
@@ -287,7 +289,9 @@ export default function AdminMasterLookupPanel() {
       fetchData();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to delete";
-      showSnackbar(message, "error");
+      if (message !== "SILENT_ERROR") {
+        showSnackbar(message, "error");
+      }
     } finally {
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
@@ -324,12 +328,19 @@ export default function AdminMasterLookupPanel() {
         method: "PATCH",
         body: JSON.stringify({ value: printerIp.trim() }),
       });
-      if (!res.ok) throw new Error("Failed to save IP");
+      
+      if (!res.ok) {
+        const err = await res.json();
+        if (err.message === "") throw new Error("SILENT_ERROR");
+        throw new Error("Failed to save IP");
+      }
 
       showSnackbar("Customer Label Printer IP updated successfully!", "success");
       setIpDialogOpen(false);
-    } catch (error) {
-      showSnackbar("Failed to save configuration", "error");
+    } catch (error: any) {
+      if (error.message !== "SILENT_ERROR") {
+        showSnackbar("Failed to save configuration", "error");
+      }
     } finally {
       setActionLoading(false);
     }

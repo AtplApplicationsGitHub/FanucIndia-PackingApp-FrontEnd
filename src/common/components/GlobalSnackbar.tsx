@@ -16,7 +16,6 @@ export default function GlobalSnackbar() {
       setOpen(true);
     };
 
-    // Listen for custom events dispatched from Axios or Fetch
     window.addEventListener("show-global-message", handleGlobalMessage);
     return () => window.removeEventListener("show-global-message", handleGlobalMessage);
   }, []);
@@ -31,8 +30,8 @@ export default function GlobalSnackbar() {
       open={open}
       autoHideDuration={4000}
       onClose={handleClose}
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      sx={{ zIndex: 9999 }} // Ensure it stays on top of everything
+      anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      sx={{ zIndex: 9999 }}
     >
       <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }} variant="filled">
         {message}
