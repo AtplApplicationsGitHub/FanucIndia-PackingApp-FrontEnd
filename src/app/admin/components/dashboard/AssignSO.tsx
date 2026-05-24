@@ -46,6 +46,12 @@ type InlineEdit = {
   original: string | number | null;
 } | null;
 
+const formatDateOnly = (date: Date | null) =>
+  date ? dayjs(date).format("YYYY-MM-DD") : null;
+
+const parseStoredDateOnly = (value: string) =>
+  dayjs(value, "YYYY-MM-DD").toDate();
+
 export default function AssignSO() {
   const theme = useTheme();
   const router = useRouter();
@@ -111,9 +117,9 @@ export default function AssignSO() {
         if (parsed.customer !== undefined) setCustomerFilter(parsed.customer);
         if (parsed.pendingImport !== undefined)
           setPendingImportFilter(parsed.pendingImport);
-        if (parsed.start) setStartDate(dayjs(parsed.start).toDate());
+        if (parsed.start) setStartDate(parseStoredDateOnly(parsed.start));
         else if (parsed.start === null) setStartDate(null);
-        if (parsed.end) setEndDate(dayjs(parsed.end).toDate());
+        if (parsed.end) setEndDate(parseStoredDateOnly(parsed.end));
         else if (parsed.end === null) setEndDate(null);
         if (parsed.currentPage) setCurrentPage(parsed.currentPage);
         if (parsed.pageSize) setPageSize(parsed.pageSize);
@@ -140,8 +146,8 @@ export default function AssignSO() {
       pendingImport: pendingImportFilter,
       failedImport: failedImportFilter,
       successImport: successImportFilter,
-      start: startDate ? startDate.toISOString() : null,
-      end: endDate ? endDate.toISOString() : null,
+      start: formatDateOnly(startDate),
+      end: formatDateOnly(endDate),
       currentPage,
       pageSize,
     };
@@ -898,7 +904,11 @@ export default function AssignSO() {
         specialRemarks: clearHyphen(row.specialRemarks),
         additionalRemarks: clearHyphen(row.additionalRemarks),
         labelRemarks: clearHyphen(row.labelRemarks),
-        fgLocation: clearHyphen(typeof row.fgLocation === 'object' && row.fgLocation ? JSON.stringify(row.fgLocation) : row.fgLocation),
+        fgLocation: clearHyphen(
+          typeof row.fgLocation === "object" && row.fgLocation
+            ? JSON.stringify(row.fgLocation)
+            : row.fgLocation,
+        ),
         priority: row.priority ?? "",
         issueUser: clearHyphen(
           findName(lookup.assignableUsers, row.issueUserId ?? 0) ||

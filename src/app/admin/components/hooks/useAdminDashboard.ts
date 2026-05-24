@@ -121,9 +121,9 @@ export function useAdminDashboard() {
         if (parsed.payment !== undefined) setPaymentFilter(parsed.payment);
         if (parsed.zone !== undefined) setZoneFilter(parsed.zone);
         if (parsed.status !== undefined) setStatusFilter(parsed.status);
-        if (parsed.start) setStartDate(new Date(parsed.start));
+        if (parsed.start) setStartDate(new Date(`${parsed.start}T00:00:00`));
         else if (parsed.start === null) setStartDate(null);
-        if (parsed.end) setEndDate(new Date(parsed.end));
+        if (parsed.end) setEndDate(new Date(`${parsed.end}T00:00:00`));
         else if (parsed.end === null) setEndDate(null);
         if (parsed.currentPage) setCurrentPage(parsed.currentPage);
         if (parsed.pageSize) setPageSize(parsed.pageSize);
@@ -142,8 +142,8 @@ export function useAdminDashboard() {
       payment: paymentFilter,
       zone: zoneFilter,
       status: statusFilter,
-      start: startDate ? startDate.toISOString() : null,
-      end: endDate ? endDate.toISOString() : null,
+      start: startDate ? formatDateLocalYYYYMMDD(startDate) : null,
+      end: endDate ? formatDateLocalYYYYMMDD(endDate) : null,
       currentPage,
       pageSize,
     };
@@ -159,7 +159,6 @@ export function useAdminDashboard() {
     pageSize,
     isStatesLoaded,
   ]);
-
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -194,8 +193,8 @@ export function useAdminDashboard() {
         prev.map((o) =>
           o.saleOrderNumber === so
             ? { ...o, notificationCount: (o.notificationCount ?? 0) + 1 }
-            : o
-        )
+            : o,
+        ),
       );
     });
 
@@ -205,8 +204,8 @@ export function useAdminDashboard() {
 
       setOrders((prev) =>
         prev.map((o) =>
-          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o
-        )
+          o.saleOrderNumber === so ? { ...o, notificationCount: 0 } : o,
+        ),
       );
     });
 
@@ -218,11 +217,11 @@ export function useAdminDashboard() {
 
   const debouncedSetSearchProduct = useMemo(
     () => debounce((value: string) => setSearchProduct(value), 400),
-    []
+    [],
   );
   useEffect(
     () => () => debouncedSetSearchProduct.cancel(),
-    [debouncedSetSearchProduct]
+    [debouncedSetSearchProduct],
   );
 
   const fetchLookups = useCallback(async () => {
@@ -259,9 +258,12 @@ export function useAdminDashboard() {
         plantCodes: pc.data,
         salesZones: sz.data,
         packConfigs: pk.data,
-        assignableUsers: Array.isArray(au.data) 
-    ? au.data.map((u: any) => ({ ...u, name: u.email || u.name || "Unknown" })) 
-    : [],
+        assignableUsers: Array.isArray(au.data)
+          ? au.data.map((u: any) => ({
+              ...u,
+              name: u.email || u.name || "Unknown",
+            }))
+          : [],
         customers: c.data,
       });
     } catch {
@@ -280,7 +282,7 @@ export function useAdminDashboard() {
       const res = await axios.get(API.ADMIN.SALES_ORDERS, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
-          page: currentPage, 
+          page: currentPage,
           limit: pageSize,
           search: searchInput || undefined,
           paymentClearance: paymentFilter || undefined,
@@ -359,7 +361,7 @@ export function useAdminDashboard() {
       await axios.patch(
         API.ADMIN.SALES_ORDER_BY_ID(row.id),
         { [field]: value },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setEditingCell(null);
@@ -387,7 +389,7 @@ export function useAdminDashboard() {
 
   const handleInputKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
-    row: SalesOrder
+    row: SalesOrder,
   ) => {
     if (e.key === "Enter") saveCellEdit(row);
     else if (e.key === "Escape") cancelCellEdit();
@@ -422,7 +424,7 @@ export function useAdminDashboard() {
 
   const updateOrderModal = async (
     orderId: number,
-    patch: Partial<SalesOrder>
+    patch: Partial<SalesOrder>,
   ) => {
     setLoading(true);
     try {
@@ -501,7 +503,6 @@ export function useAdminDashboard() {
     setCurrentPage(1);
   };
 
-
   const refreshMaster = () => fetchMasterLookup(selectedMasterLookup);
 
   const fetchMasterLookup = async (type: string) => {
@@ -562,7 +563,7 @@ export function useAdminDashboard() {
 
   const onMasterEditChange = (
     key: string,
-    value: string | number | boolean | null | undefined
+    value: string | number | boolean | null | undefined,
   ) => {
     setMasterEditObj((obj) => ({ ...obj, [key]: value }));
   };
@@ -673,7 +674,7 @@ export function useAdminDashboard() {
 
   const onMasterAddChange = (
     key: string,
-    value: string | number | boolean | null | undefined
+    value: string | number | boolean | null | undefined,
   ) => {
     setMasterAddObj((obj) => ({ ...obj, [key]: value }));
   };
@@ -809,4 +810,3 @@ export function useAdminDashboard() {
     onSnackbarClose: () => setSnackbar((prev) => ({ ...prev, open: false })),
   };
 }
-

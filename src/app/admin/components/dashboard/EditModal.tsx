@@ -182,7 +182,7 @@ export default function AdminOrderEditModal({
     customerId: order.customerId,
     customerNameText: order.customerNameText ?? order.customer?.name ?? "",
     deliveryDate: order.deliveryDate
-      ? dayjs(order.deliveryDate).toISOString()
+      ? dayjs(order.deliveryDate).format("YYYY-MM-DD")
       : "",
     issueUserId:
       order.issueUserId ??
@@ -208,7 +208,7 @@ export default function AdminOrderEditModal({
       customerId: order.customerId,
       customerNameText: order.customerNameText ?? order.customer?.name ?? "",
       deliveryDate: order.deliveryDate
-        ? dayjs(order.deliveryDate).toISOString()
+        ? dayjs(order.deliveryDate).format("YYYY-MM-DD")
         : "",
       issueUserId:
         order.issueUserId ??
@@ -565,7 +565,7 @@ export default function AdminOrderEditModal({
                       value={dateObj}
                       onChange={(newValue) => {
                         if (dayjs.isDayjs(newValue) && newValue.isValid()) {
-                          handleChange(field.key, newValue.toISOString());
+                          handleChange(field.key, newValue.format("YYYY-MM-DD"));
                         } else {
                           handleChange(field.key, "");
                         }
