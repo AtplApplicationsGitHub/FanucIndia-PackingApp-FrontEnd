@@ -21,7 +21,13 @@ import {
     alpha,
     useTheme,
     CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Divider,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -29,7 +35,11 @@ import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import TableRowsIcon from "@mui/icons-material/TableRows";
-import { useCustomerSOCount, useCustomerSOByMaterial } from "@/app/admin/components/hooks/useCustomerReport";
+import {
+    useCustomerSOCount,
+    useCustomerSOByMaterial,
+    type CustomerSOByMaterialRow,
+} from "@/app/admin/components/hooks/useCustomerReport";
 import ClearIcon from "@mui/icons-material/Clear";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -47,36 +57,36 @@ function ViewToggleButton({
 }) {
     return (
         <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
-          <Button
-            onClick={() => setViewMode("table")}
-            disableRipple
-            size="small"
-            sx={{
-              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-              textTransform: "none", minWidth: "unset",
-              bgcolor: viewMode === "table" ? "background.paper" : "transparent",
-              color: viewMode === "table" ? "#D00000" : "text.secondary",
-              boxShadow: viewMode === "table" ? 1 : "none",
-              "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
-            }}
-          >
-            Table
-          </Button>
-          <Button
-            onClick={() => setViewMode("chart")}
-            disableRipple
-            size="small"
-            sx={{
-              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-              textTransform: "none", minWidth: "unset",
-              bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
-              color: viewMode === "chart" ? "#D00000" : "text.secondary",
-              boxShadow: viewMode === "chart" ? 1 : "none",
-              "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
-            }}
-          >
-            Chart
-          </Button>
+            <Button
+                onClick={() => setViewMode("table")}
+                disableRipple
+                size="small"
+                sx={{
+                    px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+                    textTransform: "none", minWidth: "unset",
+                    bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+                    color: viewMode === "table" ? "#D00000" : "text.secondary",
+                    boxShadow: viewMode === "table" ? 1 : "none",
+                    "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
+                }}
+            >
+                Table
+            </Button>
+            <Button
+                onClick={() => setViewMode("chart")}
+                disableRipple
+                size="small"
+                sx={{
+                    px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
+                    textTransform: "none", minWidth: "unset",
+                    bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+                    color: viewMode === "chart" ? "#D00000" : "text.secondary",
+                    boxShadow: viewMode === "chart" ? 1 : "none",
+                    "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
+                }}
+            >
+                Chart
+            </Button>
         </Box>
     );
 }
@@ -94,8 +104,9 @@ function SOBarChartAndTable({
     viewMode = "table",
     onToggleView,
     countColumnLabel = "SO COUNT",
+    onCountClick,
 }: {
-    rows: { customerName: string; soCount: number }[];
+    rows: { customerName: string; soCount: number; orderDetails?: { soNumber: string; requiredQuantity: number }[] }[];
     barColor: string;
     barLabel: string;
     emptyMessage: string;
@@ -107,6 +118,7 @@ function SOBarChartAndTable({
     viewMode?: "chart" | "table";
     onToggleView?: () => void;
     countColumnLabel?: string;
+    onCountClick?: (row: { customerName: string; soCount: number; orderDetails?: { soNumber: string; requiredQuantity: number }[] }) => void;
 }) {
     const theme = useTheme();
     const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -249,7 +261,14 @@ function SOBarChartAndTable({
                                         paginated.map((row, idx) => (
                                             <TableRow key={idx}>
                                                 <TableCell>{row.customerName}</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: barColor }}>
+                                                <TableCell
+                                                    onClick={() => onCountClick?.(row)}
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        color: barColor,
+                                                        cursor: onCountClick ? "pointer" : "default",
+                                                    }}
+                                                >
                                                     {row.soCount}
                                                 </TableCell>
                                             </TableRow>
@@ -510,6 +529,7 @@ function MaterialSOCountTab() {
     const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
     const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs().startOf("month"));
     const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs().endOf("month"));
+    const [selectedCustomer, setSelectedCustomer] = React.useState<CustomerSOByMaterialRow | null>(null);
 
     const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
     const toIso = toDate?.format("YYYY-MM-DD") ?? null;
@@ -641,8 +661,86 @@ function MaterialSOCountTab() {
                         countColumnLabel="QUANTITY"
                         viewMode={viewMode}
                         onToggleView={() => setViewMode(v => v === "chart" ? "table" : "chart")}
+                        onCountClick={(row) => setSelectedCustomer(row as CustomerSOByMaterialRow)}
                     />
                 )}
+
+                <Dialog
+                    open={Boolean(selectedCustomer)}
+                    onClose={() => setSelectedCustomer(null)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{ sx: { borderRadius: 2 } }}
+                >
+                    <DialogTitle
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            fontWeight: 700,
+                            fontSize: "20px",
+                            letterSpacing: 0.5,
+                            color: "error.main",
+                            pb: 1,
+                            position: "relative",
+                        }}
+                    >
+                        {selectedCustomer?.customerName} — {committedCode}
+                        <IconButton
+                            onClick={() => setSelectedCustomer(null)}
+                            size="small"
+                            sx={{ position: "absolute", right: 12 }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </DialogTitle>
+
+                    <Divider />
+
+                    <DialogContent sx={{ pt: 1 }}>
+                        <TableContainer component={Paper} elevation={0}>
+                            <Table
+                                size="small"
+                                sx={{
+                                    "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                                        backgroundColor: alpha(
+                                            theme.palette.primary.main,
+                                            theme.palette.mode === "dark" ? 0.1 : 0.25
+                                        ),
+                                    },
+                                }}
+                            >
+                                <TableHead sx={{ bgcolor: "primary.main" }}>
+                                    <TableRow>
+                                        <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
+                                            SO Number
+                                        </TableCell>
+                                        <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }} align="right">
+                                            Required Quantity
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
+
+                                <TableBody>
+                                    {selectedCustomer?.orderDetails?.length ? (
+                                        selectedCustomer.orderDetails.map((detail, index) => (
+                                            <TableRow key={`${detail.soNumber}-${index}`}>
+                                                <TableCell>{detail.soNumber}</TableCell>
+                                                <TableCell align="right">{detail.requiredQuantity}</TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={2} align="center">
+                                                No order details found.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </DialogContent>
+                </Dialog>
             </LocalizationProvider>
         </Box>
     );

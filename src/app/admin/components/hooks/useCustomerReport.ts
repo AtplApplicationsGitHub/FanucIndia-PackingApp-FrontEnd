@@ -7,9 +7,15 @@ export type CustomerSOCountRow = {
     soCount: number;
 };
 
+export type CustomerSOByMaterialOrderDetail = {
+    soNumber: string;
+    requiredQuantity: number;
+};
+
 export type CustomerSOByMaterialRow = {
     customerName: string;
     soCount: number;
+    orderDetails: CustomerSOByMaterialOrderDetail[];
 };
 
 function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
@@ -23,6 +29,12 @@ function normalizeCustomerSOByMaterialRow(item: any): CustomerSOByMaterialRow {
     return {
         customerName: item.customerName ?? "",
         soCount: item.totalQuantity ?? item.soCount ?? 0,
+        orderDetails: Array.isArray(item.orderDetails)
+            ? item.orderDetails.map((detail: any) => ({
+                soNumber: detail.soNumber ?? "-",
+                requiredQuantity: Number(detail.requiredQuantity ?? 0),
+            }))
+            : [],
     };
 }
 
