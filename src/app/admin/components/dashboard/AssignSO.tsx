@@ -865,19 +865,19 @@ export default function AssignSO() {
       { header: "TRANSFER ORDER", key: "transferOrder", width: 20 }, // D
       { header: "DELIVERY DATE", key: "deliveryDate", width: 18 }, // E
       { header: "TRANSPORTER", key: "transporter", width: 20 }, // F
-      { header: "CUSTOMER NAME", key: "customerName", width: 25 }, // G
-      { header: "PLANT CODE", key: "plantCode", width: 15 }, // H
-      { header: "PAYMENT CLEARANCE", key: "payment", width: 18 }, // I
-      { header: "PACKING CONFIG", key: "packingConfig", width: 20 }, // J
-      { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 }, // K
-      { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 }, // L
-      { header: "LABEL REMARKS", key: "labelRemarks", width: 25 }, // M
-      { header: "FG LOCATION", key: "fgLocation", width: 25 }, // N (NEW)
-      { header: "PRIORITY", key: "priority", width: 12 }, // O
-      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 }, // P
-      { header: "PACKING STAGE USER", key: "packingUser", width: 20 }, // Q
-      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 }, // R
-      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 }, // S
+      // REMOVED: { header: "CUSTOMER NAME", key: "customerName", width: 25 },
+      { header: "PLANT CODE", key: "plantCode", width: 15 }, // G (Was H)
+      { header: "PAYMENT CLEARANCE", key: "payment", width: 18 }, // H (Was I)
+      { header: "PACKING CONFIG", key: "packingConfig", width: 20 }, // I (Was J)
+      { header: "SPECIAL REMARKS", key: "specialRemarks", width: 25 }, // J
+      { header: "ADDITIONAL REMARKS", key: "additionalRemarks", width: 25 }, // K
+      { header: "LABEL REMARKS", key: "labelRemarks", width: 25 }, // L
+      { header: "FG LOCATION", key: "fgLocation", width: 25 }, // M
+      { header: "PRIORITY", key: "priority", width: 12 }, // N
+      { header: "ISSUE STAGE USER", key: "issueUser", width: 20 }, // O
+      { header: "PACKING STAGE USER", key: "packingUser", width: 20 }, // P
+      { header: "SKIP ISSUE STAGE", key: "skipIssueStage", width: 18 }, // Q
+      { header: "SKIP PACKING STAGE", key: "skipPackingStage", width: 18 }, // R
     ];
 
     worksheet.getRow(1).font = { bold: true };
@@ -897,7 +897,7 @@ export default function AssignSO() {
         transferOrder: clearHyphen(row.transferOrder),
         deliveryDate: row.deliveryDate ? formatDate(row.deliveryDate) : "",
         transporter: clearHyphen(row.transporter?.name),
-        customerName: clearHyphen(row.customerNameText || row.customer?.name), // NEW
+        // customerName: clearHyphen(row.customerNameText || row.customer?.name), // NEW
         plantCode: clearHyphen(row.plantCode),
         payment: row.paymentClearance ? "Yes" : "No",
         packingConfig: clearHyphen(row.packConfig?.configName),
@@ -927,29 +927,10 @@ export default function AssignSO() {
       lookup.assignableUsers?.map((u: any) => u.name).join(",") || "Unassigned";
     const packConfigNames =
       lookup.packConfigs?.map((p: any) => p.configName).join(",") || "Default";
-    // NEW: Extract customer names for the dropdown
-    const customerNames =
-      Array.from(
-        new Set(
-          (lookup.customers || [])
-            .map((c: any) => (c.name || "").trim())
-            .filter(Boolean),
-        ),
-      ).join(",") || "";
 
     for (let i = 2; i <= exportRows.length + 1; i++) {
-      // NEW: Customer Name Validation (Column G)
-      if (customerNames.length < 255) {
-        const custCell = worksheet.getCell(`G${i}`);
-        custCell.dataValidation = {
-          type: "list",
-          allowBlank: true,
-          formulae: [`"${customerNames}"`],
-        };
-      }
-
-      // UPDATED: Shifted all subsequent column letters by +1 due to inserting G
-      const paymentCell = worksheet.getCell(`I${i}`); // Was H
+      // Shifted payment from I to H
+      const paymentCell = worksheet.getCell(`H${i}`);
       paymentCell.dataValidation = {
         type: "list",
         allowBlank: true,
@@ -957,14 +938,14 @@ export default function AssignSO() {
       };
 
       if (assignableUserNames.length < 255) {
-        const issueUserCell = worksheet.getCell(`P${i}`); // Was N
+        const issueUserCell = worksheet.getCell(`O${i}`); // Shifted from P to O
         issueUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
           formulae: [`"${assignableUserNames}"`],
         };
 
-        const packingUserCell = worksheet.getCell(`Q${i}`); // Was O
+        const packingUserCell = worksheet.getCell(`P${i}`); // Shifted from Q to P
         packingUserCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -973,7 +954,7 @@ export default function AssignSO() {
       }
 
       if (packConfigNames.length < 255) {
-        const packCell = worksheet.getCell(`J${i}`); // Was I
+        const packCell = worksheet.getCell(`I${i}`); // Shifted from J to I
         packCell.dataValidation = {
           type: "list",
           allowBlank: true,
@@ -981,14 +962,14 @@ export default function AssignSO() {
         };
       }
 
-      const skipIssueCell = worksheet.getCell(`R${i}`); // Was P
+      const skipIssueCell = worksheet.getCell(`Q${i}`); // Shifted from R to Q
       skipIssueCell.dataValidation = {
         type: "list",
         allowBlank: true,
         formulae: ['"Yes,No"'],
       };
 
-      const skipPackingCell = worksheet.getCell(`S${i}`); // Was Q
+      const skipPackingCell = worksheet.getCell(`R${i}`); // Shifted from S to R
       skipPackingCell.dataValidation = {
         type: "list",
         allowBlank: true,

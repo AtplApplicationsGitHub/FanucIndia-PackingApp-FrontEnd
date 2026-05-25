@@ -16,7 +16,6 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 
-
 interface SalesEntryFormProps {
   initialData?: SalesOrder | null;
   lookup: LookupData;

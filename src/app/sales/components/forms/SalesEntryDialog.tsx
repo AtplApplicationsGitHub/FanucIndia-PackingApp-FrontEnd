@@ -65,7 +65,7 @@ export default function SalesEntryDialog({
             p: 1
           }}
         >
-          {initialData ? "EDIT ORDER" : "CREATE ORDER"}
+          {initialData?.id ? "EDIT ORDER" : "CREATE ORDER"}
         </Box>
         <IconButton
           aria-label="close"
@@ -99,7 +99,7 @@ export default function SalesEntryDialog({
       <Divider />
       <Box sx={{ px: 3, py: 1, display: "flex", justifyContent: "flex-end", bgcolor: "background.paper" }}>
         <CommonButton type="submit" form="sales-entry-form">
-          {initialData ? "UPDATE" : "SAVE"}
+          {initialData?.id ? "UPDATE" : "SAVE"}
         </CommonButton>
       </Box>
     </Dialog>
