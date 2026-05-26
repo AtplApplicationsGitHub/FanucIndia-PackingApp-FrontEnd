@@ -5,6 +5,7 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 export type CustomerSOCountRow = {
     customerName: string;
     soCount: number;
+    saleOrderNumbers: string[];
 };
 
 export type CustomerSOByMaterialOrderDetail = {
@@ -22,6 +23,7 @@ function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
     return {
         customerName: item.customerName ?? "",
         soCount: item.saleOrderNumberCount ?? item.soCount ?? 0,
+        saleOrderNumbers: Array.isArray(item.saleOrderNumbers) ? item.saleOrderNumbers : [],
     };
 }
 

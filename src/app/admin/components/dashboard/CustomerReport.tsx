@@ -1,31 +1,32 @@
 "use client";
 
 import * as React from "react";
+import NextLink from "next/link";
 import { BarChart } from "@mui/x-charts/BarChart";
 import {
-    Box,
-    Tab,
-    Tabs,
-    Button,
-    InputBase,
-    IconButton,
-    Typography,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TablePagination,
-    alpha,
-    useTheme,
-    CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Divider,
+  Box,
+  Tab,
+  Tabs,
+  Button,
+  InputBase,
+  IconButton,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  alpha,
+  useTheme,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -36,9 +37,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import {
-    useCustomerSOCount,
-    useCustomerSOByMaterial,
-    type CustomerSOByMaterialRow,
+  useCustomerSOCount,
+  useCustomerSOByMaterial,
+  type CustomerSOByMaterialRow,
+  type CustomerSOCountRow,
 } from "@/app/admin/components/hooks/useCustomerReport";
 import ClearIcon from "@mui/icons-material/Clear";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -49,332 +51,404 @@ import CommonButton from "@/common/components/CommonButton";
 
 // Chart - Table toggle button
 function ViewToggleButton({
-    viewMode,
-    setViewMode,
+  viewMode,
+  setViewMode,
 }: {
-    viewMode: "chart" | "table";
-    setViewMode: (mode: "chart" | "table") => void;
+  viewMode: "chart" | "table";
+  setViewMode: (mode: "chart" | "table") => void;
 }) {
-    return (
-        <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
-            <Button
-                onClick={() => setViewMode("table")}
-                disableRipple
-                size="small"
-                sx={{
-                    px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-                    textTransform: "none", minWidth: "unset",
-                    bgcolor: viewMode === "table" ? "background.paper" : "transparent",
-                    color: viewMode === "table" ? "#D00000" : "text.secondary",
-                    boxShadow: viewMode === "table" ? 1 : "none",
-                    "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
-                }}
-            >
-                Table
-            </Button>
-            <Button
-                onClick={() => setViewMode("chart")}
-                disableRipple
-                size="small"
-                sx={{
-                    px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-                    textTransform: "none", minWidth: "unset",
-                    bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
-                    color: viewMode === "chart" ? "#D00000" : "text.secondary",
-                    boxShadow: viewMode === "chart" ? 1 : "none",
-                    "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
-                }}
-            >
-                Chart
-            </Button>
-        </Box>
-    );
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        bgcolor: "action.hover",
+        borderRadius: 2,
+        p: 0.5,
+        border: "1px solid",
+        borderColor: "divider",
+      }}
+    >
+      <Button
+        onClick={() => setViewMode("table")}
+        disableRipple
+        size="small"
+        sx={{
+          px: 1.6,
+          py: 0.65,
+          fontSize: "0.875rem",
+          fontWeight: 500,
+          borderRadius: 1.5,
+          textTransform: "none",
+          minWidth: "unset",
+          bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+          color: viewMode === "table" ? "#D00000" : "text.secondary",
+          boxShadow: viewMode === "table" ? 1 : "none",
+          "&:hover": {
+            bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+            color: viewMode === "table" ? "#D00000" : "text.primary",
+          },
+        }}
+      >
+        Table
+      </Button>
+      <Button
+        onClick={() => setViewMode("chart")}
+        disableRipple
+        size="small"
+        sx={{
+          px: 1.6,
+          py: 0.65,
+          fontSize: "0.875rem",
+          fontWeight: 500,
+          borderRadius: 1.5,
+          textTransform: "none",
+          minWidth: "unset",
+          bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+          color: viewMode === "chart" ? "#D00000" : "text.secondary",
+          boxShadow: viewMode === "chart" ? 1 : "none",
+          "&:hover": {
+            bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+            color: viewMode === "chart" ? "#D00000" : "text.primary",
+          },
+        }}
+      >
+        Chart
+      </Button>
+    </Box>
+  );
 }
 
 function SOBarChartAndTable({
-    rows,
-    barColor,
-    barLabel,
-    emptyMessage,
-    page,
-    setPage,
-    rowsPerPage,
-    setRowsPerPage,
-    yAxisLabel = "SO Count",
-    viewMode = "table",
-    onToggleView,
-    countColumnLabel = "SO COUNT",
-    onCountClick,
+  rows,
+  barColor,
+  barLabel,
+  emptyMessage,
+  page,
+  setPage,
+  rowsPerPage,
+  setRowsPerPage,
+  yAxisLabel = "SO Count",
+  viewMode = "table",
+  onToggleView,
+  countColumnLabel = "SO COUNT",
+  onCountClick,
 }: {
-    rows: { customerName: string; soCount: number; orderDetails?: { soNumber: string; requiredQuantity: number }[] }[];
-    barColor: string;
-    barLabel: string;
-    emptyMessage: string;
-    page: number;
-    setPage: (p: number) => void;
-    rowsPerPage: number;
-    setRowsPerPage: (r: number) => void;
-    yAxisLabel?: string;
-    viewMode?: "chart" | "table";
-    onToggleView?: () => void;
-    countColumnLabel?: string;
-    onCountClick?: (row: { customerName: string; soCount: number; orderDetails?: { soNumber: string; requiredQuantity: number }[] }) => void;
+  rows: {
+    customerName: string;
+    soCount: number;
+    orderDetails?: { soNumber: string; requiredQuantity: number }[];
+    saleOrderNumbers?: string[];
+  }[];
+  barColor: string;
+  barLabel: string;
+  emptyMessage: string;
+  page: number;
+  setPage: (p: number) => void;
+  rowsPerPage: number;
+  setRowsPerPage: (r: number) => void;
+  yAxisLabel?: string;
+  viewMode?: "chart" | "table";
+  onToggleView?: () => void;
+  countColumnLabel?: string;
+  onCountClick?: (row: {
+    customerName: string;
+    soCount: number;
+    orderDetails?: { soNumber: string; requiredQuantity: number }[];
+    saleOrderNumbers?: string[];
+  }) => void;
 }) {
-    const theme = useTheme();
-    const lightYellow = alpha(theme.palette.primary.main, 0.25);
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
-    const paginated = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paginated = rows.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
-    if (rows.length === 0) {
-        return (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 6, textAlign: "center" }}>
-                {emptyMessage}
-            </Typography>
-        );
-    }
+  // Calculate the total sum for the current page
+  const pageTotal = paginated.reduce((sum, row) => sum + row.soCount, 0);
+
+  if (rows.length === 0) {
     return (
-        <Box>
-            {viewMode === "chart" ? (
-                /* ── Bar Chart ── */
-                <Box sx={{ height: 450, mx: -3, mb: -3 }}>
-                    <BarChart
-                        aria-label={barLabel}
-                        dataset={rows}
-                        height={400}
-                        margin={{ top: 20, right: 40, left: 60, bottom: 90 }}
-                        // xAxis={[{
-                        //     dataKey: "customerName",
-                        //     scaleType: "band",
-                        //     tickLabelStyle: {
-                        //         angle: 0,
-                        //         textAnchor: "middle",
-                        //         fontSize: 12,
-                        //     },
-                        //     colorMap: {
-                        //         type: "ordinal",
-                        //         colors: [
-                        //             "#6366F1", "#22C55E", "#F59E0B", "#EF4444",
-                        //             "#3B82F6", "#EC4899", "#14B8A6", "#8B5CF6",
-                        //             "#F97316", "#06B6D4",
-                        //         ],
-                        //     },
-                        // }]}
-                        xAxis={[{
-                            dataKey: "customerName",
-                            scaleType: "band",
-                            tickLabelStyle: {
-                                angle: 0,
-                                textAnchor: "middle",
-                                fontSize: 12,
-                            },
-                        }]}
-                        yAxis={[{ scaleType: "linear", tickMinStep: 1, label: yAxisLabel }]}
-                        series={[{
-                            dataKey: "soCount",
-                            label: barLabel,
-                            color: barColor,
-                            valueFormatter: (v: number | null) => (v ?? 0).toString(),
-                        }]}
-                        slotProps={{
-                            legend: {
-                                position: { vertical: "bottom", horizontal: "center" },
-                                sx: {
-                                    "& .MuiChartsLegend-label": { fontSize: 12, fontWeight: 600 },
-                                },
-                            },
-                        }}
-                        sx={{
-                            "& .MuiChartsAxis-tickLabel": { fill: theme.palette.text.primary },
-                            "& .MuiChartsAxis-line": { stroke: theme.palette.text.primary },
-                            "& .MuiChartsAxis-tick": { stroke: theme.palette.text.primary },
-                            "& .MuiChartsLegend-label": { fill: theme.palette.text.primary },
-                        }}
-                    />
-                </Box>
-            ) : (
-                <>
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            width: "100%",
-                            borderRadius: 2,
-                            border: "1px solid",
-                            borderColor: "divider",
-                            overflow: "hidden",
-                            bgcolor: "background.paper",
-                        }}
-                    >
-                        <TableContainer>
-                            <Table
-                                sx={{
-                                    minWidth: 400,
-                                    "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
-                                        backgroundColor: lightYellow,
-                                    },
-                                    "& .MuiTableBody-root .MuiTableRow-root:hover": {
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                                    },
-                                    "& .MuiTableCell-root": {
-                                        borderBottom: "none",
-                                        py: 1.5,
-                                        px: 2,
-                                        fontSize: "0.875rem",
-                                        whiteSpace: "nowrap",
-                                    },
-                                }}
-                            >
-                                <TableHead
-                                    sx={{
-                                        bgcolor: (t) =>
-                                            t.palette.mode === "dark" ? "#000000" : "#ffffff",
-                                    }}
-                                >
-                                    <TableRow sx={{ height: 60 }}>
-                                        {["CUSTOMER NAME", countColumnLabel].map((head) => (
-                                            <TableCell
-                                                key={head}
-                                                sx={{
-                                                    color: (t) =>
-                                                        t.palette.mode === "dark" ? "#ffffff" : "#000000",
-                                                    fontWeight: 700,
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {head}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-
-                                <TableBody>
-                                    {paginated.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={2}
-                                                align="center"
-                                                sx={{ py: 4, bgcolor: lightYellow }}
-                                            >
-                                                No records found.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        paginated.map((row, idx) => (
-                                            <TableRow key={idx}>
-                                                <TableCell>{row.customerName}</TableCell>
-                                                <TableCell
-                                                    onClick={() => onCountClick?.(row)}
-                                                    sx={{
-                                                        fontWeight: 700,
-                                                        color: barColor,
-                                                        cursor: onCountClick ? "pointer" : "default",
-                                                    }}
-                                                >
-                                                    {row.soCount}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Paper>
-
-                    <TablePagination
-                        component="div"
-                        count={rows.length}
-                        page={page}
-                        onPageChange={(_, newPage) => setPage(newPage)}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={(e) => {
-                            setRowsPerPage(parseInt(e.target.value, 10));
-                            setPage(0); 
-                        }}
-                        rowsPerPageOptions={[10, 20, 50, 100]}
-                        sx={{ bgcolor: "transparent" }}
-                    />
-                </>
-            )}
-        </Box>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ py: 6, textAlign: "center" }}
+      >
+        {emptyMessage}
+      </Typography>
     );
+  }
+  return (
+    <Box>
+      {viewMode === "chart" ? (
+        /* ── Bar Chart ── */
+        <Box sx={{ height: 450, mx: -3, mb: -3 }}>
+          <BarChart
+            aria-label={barLabel}
+            dataset={rows}
+            height={400}
+            margin={{ top: 20, right: 40, left: 60, bottom: 90 }}
+            xAxis={[
+              {
+                dataKey: "customerName",
+                scaleType: "band",
+                tickLabelStyle: {
+                  angle: 0,
+                  textAnchor: "middle",
+                  fontSize: 12,
+                },
+              },
+            ]}
+            yAxis={[{ scaleType: "linear", tickMinStep: 1, label: yAxisLabel }]}
+            series={[
+              {
+                dataKey: "soCount",
+                label: barLabel,
+                color: barColor,
+                valueFormatter: (v: number | null) => (v ?? 0).toString(),
+              },
+            ]}
+            slotProps={{
+              legend: {
+                position: { vertical: "bottom", horizontal: "center" },
+                sx: {
+                  "& .MuiChartsLegend-label": { fontSize: 12, fontWeight: 600 },
+                },
+              },
+            }}
+            sx={{
+              "& .MuiChartsAxis-tickLabel": {
+                fill: theme.palette.text.primary,
+              },
+              "& .MuiChartsAxis-line": { stroke: theme.palette.text.primary },
+              "& .MuiChartsAxis-tick": { stroke: theme.palette.text.primary },
+              "& .MuiChartsLegend-label": { fill: theme.palette.text.primary },
+            }}
+          />
+        </Box>
+      ) : (
+        <>
+          <Paper
+            elevation={0}
+            sx={{
+              width: "100%",
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              overflow: "hidden",
+              bgcolor: "background.paper",
+            }}
+          >
+            <TableContainer>
+              <Table
+                sx={{
+                  minWidth: 400,
+                  "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                    backgroundColor: lightYellow,
+                  },
+                  "& .MuiTableBody-root .MuiTableRow-root:hover": {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                  },
+                  "& .MuiTableCell-root": {
+                    borderBottom: "none",
+                    py: 1.5,
+                    px: 2,
+                    fontSize: "0.875rem",
+                    whiteSpace: "nowrap",
+                  },
+                }}
+              >
+                <TableHead
+                  sx={{
+                    bgcolor: (t) =>
+                      t.palette.mode === "dark" ? "#000000" : "#ffffff",
+                  }}
+                >
+                  <TableRow sx={{ height: 60 }}>
+                    {["CUSTOMER NAME", countColumnLabel].map((head) => (
+                      <TableCell
+                        key={head}
+                        sx={{
+                          color: (t) =>
+                            t.palette.mode === "dark" ? "#ffffff" : "#000000",
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {head}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {paginated.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        align="center"
+                        sx={{ py: 4, bgcolor: lightYellow }}
+                      >
+                        No records found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <>
+                      {paginated.map((row, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{row.customerName}</TableCell>
+                          <TableCell
+                            onClick={() => onCountClick?.(row)}
+                            sx={{
+                              fontWeight: 700,
+                              color: barColor,
+                              cursor: onCountClick ? "pointer" : "default",
+                            }}
+                          >
+                            {row.soCount}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+
+                      {/* Page Total Row aligned under the columns */}
+                      <TableRow
+                        sx={{
+                          bgcolor: (t) =>
+                            t.palette.mode === "dark"
+                              ? "rgba(0,0,0,0.2)"
+                              : "#f9fafb",
+                        }}
+                      >
+                        <TableCell
+                          align="right"
+                          sx={{ fontWeight: 600, color: "text.secondary" }}
+                        >
+                          Total
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: 800,
+                            color: barColor,
+                            fontSize: "1rem",
+                          }}
+                        >
+                          {pageTotal}
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+
+          <TablePagination
+            component="div"
+            count={rows.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50, 100]}
+            sx={{ bgcolor: "transparent" }}
+          />
+        </>
+      )}
+    </Box>
+  );
 }
 
 // TAB 1
 function TabACards() {
-    const { cards, loading, error } = useStatusCards();
+  const { cards, loading, error } = useStatusCards();
 
-    if (loading) return (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress size={28} />
-        </Box>
-    );
-
-    if (error) return (
-        <Typography color="error" sx={{ textAlign: "center", py: 4 }}>{error}</Typography>
-    );
-
-    const iconMap: Record<string, React.ReactNode> = {
-        cart: <ShoppingCartIcon sx={{ fontSize: 28, color: "#3B82F6" }} />,
-        truck: <LocalShippingIcon sx={{ fontSize: 28, color: "#22C55E" }} />,
-        alert: <WarningAmberIcon sx={{ fontSize: 28, color: "#EF4444" }} />,
-    };
-
+  if (loading)
     return (
-        <Box
-            sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                    xs: "1fr",           // 1 column on small
-                    md: "repeat(3, 1fr)" // 3 columns on full width
-                },
-                gap: 3,
-            }}
+      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
+
+  if (error)
+    return (
+      <Typography color="error" sx={{ textAlign: "center", py: 4 }}>
+        {error}
+      </Typography>
+    );
+
+  const iconMap: Record<string, React.ReactNode> = {
+    cart: <ShoppingCartIcon sx={{ fontSize: 28, color: "#3B82F6" }} />,
+    truck: <LocalShippingIcon sx={{ fontSize: 28, color: "#22C55E" }} />,
+    alert: <WarningAmberIcon sx={{ fontSize: 28, color: "#EF4444" }} />,
+  };
+
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr", // 1 column on small
+          md: "repeat(3, 1fr)", // 3 columns on full width
+        },
+        gap: 3,
+      }}
+    >
+      {cards.map((card, idx) => (
+        <Paper
+          key={idx}
+          elevation={1}
+          sx={{
+            p: 2.5,
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: (t) =>
+              t.palette.mode === "dark" ? "#4B5563" : "#E5E7EB",
+            bgcolor: (t) => (t.palette.mode === "dark" ? "#1F2933" : "#ffffff"),
+            "&:hover": { boxShadow: 3 },
+            transition: "box-shadow 0.2s",
+          }}
         >
-            {cards.map((card, idx) => (
-                <Paper
-                    key={idx}
-                    elevation={1}
-                    sx={{
-                        p: 2.5,
-                        borderRadius: 3,
-                        border: "1px solid",
-                        borderColor: (t) =>
-                            t.palette.mode === "dark" ? "#4B5563" : "#E5E7EB",
-                        bgcolor: (t) =>
-                            t.palette.mode === "dark" ? "#1F2933" : "#ffffff",
-                        "&:hover": { boxShadow: 3 },
-                        transition: "box-shadow 0.2s",
-                    }}
-                >
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        {/* Left: text */}
-                        <Box>
-                            <Typography
-                                sx={{
-                                    fontSize: "0.875rem",
-                                    fontWeight: 600,
-                                    textTransform: "uppercase",
-                                    color: (t) =>
-                                        t.palette.mode === "dark" ? "#FF6B6B" : "#D00000",
-                                    mb: 0.5,
-                                }}
-                            >
-                                {card.title}
-                            </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {/* Left: text */}
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  color: (t) =>
+                    t.palette.mode === "dark" ? "#FF6B6B" : "#D00000",
+                  mb: 0.5,
+                }}
+              >
+                {card.title}
+              </Typography>
 
-                            <Typography
-                                sx={{
-                                    fontSize: "1.25rem",
-                                    fontWeight: 700,
-                                    color: (t) =>
-                                        t.palette.mode === "dark" ? "#ffffff" : "#1F2933",
-                                    mt: 0.5,
-                                    mb: 0.5,
-                                }}
-                            >
-                                {card.value}
-                            </Typography>
+              <Typography
+                sx={{
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  color: (t) =>
+                    t.palette.mode === "dark" ? "#ffffff" : "#1F2933",
+                  mt: 0.5,
+                  mb: 0.5,
+                }}
+              >
+                {card.value}
+              </Typography>
 
-                            {/* {card.percentage !== undefined && (
+              {/* {card.percentage !== undefined && (
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
                                     <Typography
                                         sx={{
@@ -398,426 +472,801 @@ function TabACards() {
                                     </Typography>
                                 </Box>
                             )} */}
-                        </Box>
+            </Box>
 
-                        {/* Right: icon box */}
-                        <Box
-                            sx={{
-                                width: 56,
-                                height: 56,
-                                borderRadius: 3,
-                                bgcolor: (t) =>
-                                    t.palette.mode === "dark" ? "#2C3540" : "#F7F7F7",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                            }}
-                        >
-                            {iconMap[card.iconType]}
-                        </Box>
-                    </Box>
-                </Paper>
-            ))}
-        </Box>
-    );
+            {/* Right: icon box */}
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 3,
+                bgcolor: (t) =>
+                  t.palette.mode === "dark" ? "#2C3540" : "#F7F7F7",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {iconMap[card.iconType]}
+            </Box>
+          </Box>
+        </Paper>
+      ))}
+    </Box>
+  );
 }
 
 // TAB 2
 function CustomerSOCountTab() {
-    const theme = useTheme();
-    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
-    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs().startOf("month"));
-    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs().endOf("month"));
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
-    const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
-    const [cleared, setCleared] = React.useState(false);
+  const theme = useTheme();
+  const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(
+    dayjs().startOf("month"),
+  );
+  const [toDate, setToDate] = React.useState<Dayjs | null>(
+    dayjs().endOf("month"),
+  );
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
+  const [cleared, setCleared] = React.useState(false);
 
-    const fromIso = cleared ? null : (fromDate?.format("YYYY-MM-DD") ?? null);
-    const toIso = cleared ? null : (toDate?.format("YYYY-MM-DD") ?? null);
+  // Search state
+  const [searchTerm, setSearchTerm] = React.useState("");
 
-    const { rows, loading, error } = useCustomerSOCount(fromIso, toIso);
+  // State for Dialog Box
+  const [selectedCustomer, setSelectedCustomer] =
+    React.useState<CustomerSOCountRow | null>(null);
 
-    return (
-        <Box>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                    {/* Date pickers */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, justifyContent: "center" }}>
-                        <DatePicker
-                            label="From"
-                            value={fromDate}
-                            format="DD-MM-YYYY"
-                            onChange={(val) => { setFromDate(val); setPage(0); setCleared(false); }}
-                            maxDate={toDate ?? undefined}
-                            slotProps={{
-                                textField: {
-                                    size: "small",
-                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
-                                },
-                            }}
-                        />
-                        <DatePicker
-                            label="To"
-                            value={toDate}
-                            format="DD-MM-YYYY"
-                            onChange={(val) => { setToDate(val); setPage(0); setCleared(false); }}
-                            minDate={fromDate ?? undefined}
-                            slotProps={{
-                                textField: {
-                                    size: "small",
-                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
-                                },
-                            }}
-                        />
-                        <IconButton
-                            onClick={() => { setFromDate(null); setToDate(null); setPage(0); setCleared(true); }}
-                            size="small"
-                            sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}
-                        >
-                            <ClearIcon fontSize="small" />
-                        </IconButton>
+  const fromIso = cleared ? null : (fromDate?.format("YYYY-MM-DD") ?? null);
+  const toIso = cleared ? null : (toDate?.format("YYYY-MM-DD") ?? null);
 
-                    </Box>
+  const { rows, loading, error } = useCustomerSOCount(fromIso, toIso);
 
-                    {/* Toggle*/}
-                    <ViewToggleButton
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                    />
-                </Box>
-            </LocalizationProvider>
+  // Filter logic for the search bar
+  const filteredRows = React.useMemo(() => {
+    if (!searchTerm.trim()) return rows;
+    const lowerTerm = searchTerm.toLowerCase();
+    return rows.filter((r) => r.customerName.toLowerCase().includes(lowerTerm));
+  }, [rows, searchTerm]);
 
-            {loading && (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                    <CircularProgress size={28} />
-                </Box>
-            )}
-            {!loading && error && (
-                <Typography color="error" variant="body2" sx={{ py: 4, textAlign: "center" }}>
-                    {error}
-                </Typography>
-            )}
-            {!loading && !error && (
-                <SOBarChartAndTable
-                    rows={rows}
-                    barColor={chartBlue}
-                    barLabel="SO Count"
-                    emptyMessage="No data for the selected date range."
-                    page={page}
-                    setPage={setPage}
-                    rowsPerPage={rowsPerPage}
-                    setRowsPerPage={setRowsPerPage}
-                    viewMode={viewMode}
-                    onToggleView={() => setViewMode(v => v === "chart" ? "table" : "chart")}
-                />
-            )}
+  // NEW: Deduplicate SO Numbers to handle the edge case
+  const uniqueSoNumbers = React.useMemo(() => {
+    return Array.from(new Set(selectedCustomer?.saleOrderNumbers || []));
+  }, [selectedCustomer]);
+
+  return (
+    <Box>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: { xs: "center", md: "flex-start" },
+            justifyContent: "space-between",
+            mb: 3,
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+          }}
+        >
+          {/* Left spacer for true centering */}
+          <Box
+            sx={{ width: { md: 150 }, display: { xs: "none", md: "block" } }}
+          />
+
+          {/* Controls container - Centered */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flex: 1,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {/* Search Bar */}
+            <Paper
+              component="form"
+              onSubmit={(e) => e.preventDefault()}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                width: { xs: "100%", sm: 260 },
+                border: 1,
+                borderColor: (t) =>
+                  t.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.23)"
+                    : "#e0e0e0",
+                borderRadius: "4px",
+                height: 40,
+                bgcolor: "background.paper",
+                boxShadow: "none",
+              }}
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                placeholder="Search Customer..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(0); // Reset page on new search
+                }}
+              />
+              {searchTerm && (
+                <IconButton
+                  sx={{ p: "5px" }}
+                  onClick={() => {
+                    setSearchTerm("");
+                    setPage(0);
+                  }}
+                >
+                  <ClearIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              )}
+              <IconButton disabled sx={{ p: "5px" }}>
+                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+              </IconButton>
+            </Paper>
+
+            {/* Date pickers */}
+            <DatePicker
+              label="From"
+              value={fromDate}
+              format="DD-MM-YYYY"
+              onChange={(val) => {
+                setFromDate(val);
+                setPage(0);
+                setCleared(false);
+              }}
+              maxDate={toDate ?? undefined}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 160,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      fontSize: 13,
+                    },
+                  },
+                },
+              }}
+            />
+            <DatePicker
+              label="To"
+              value={toDate}
+              format="DD-MM-YYYY"
+              onChange={(val) => {
+                setToDate(val);
+                setPage(0);
+                setCleared(false);
+              }}
+              minDate={fromDate ?? undefined}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 160,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      fontSize: 13,
+                    },
+                  },
+                },
+              }}
+            />
+            <IconButton
+              onClick={() => {
+                setFromDate(null);
+                setToDate(null);
+                setPage(0);
+                setCleared(true);
+              }}
+              size="small"
+              sx={{
+                color: "text.secondary",
+                "&:hover": { color: "error.main" },
+              }}
+            >
+              <ClearIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          {/* Toggle pinned to right */}
+          <Box
+            sx={{
+              width: { md: 150 },
+              display: "flex",
+              justifyContent: { xs: "center", md: "flex-end" },
+            }}
+          >
+            <ViewToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+          </Box>
         </Box>
-    );
-}
+      </LocalizationProvider>
 
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
+      {!loading && error && (
+        <Typography
+          color="error"
+          variant="body2"
+          sx={{ py: 4, textAlign: "center" }}
+        >
+          {error}
+        </Typography>
+      )}
+      {!loading && !error && (
+        <SOBarChartAndTable
+          rows={filteredRows}
+          barColor={chartBlue}
+          barLabel="SO Count"
+          emptyMessage={
+            searchTerm
+              ? "No customers match your search."
+              : "No data for the selected date range."
+          }
+          page={page}
+          setPage={setPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          viewMode={viewMode}
+          onToggleView={() =>
+            setViewMode((v) => (v === "chart" ? "table" : "chart"))
+          }
+          onCountClick={(row) => setSelectedCustomer(row as CustomerSOCountRow)}
+        />
+      )}
+
+      {/* Dialog for displaying SO Numbers */}
+      <Dialog
+        open={Boolean(selectedCustomer)}
+        onClose={() => setSelectedCustomer(null)}
+        maxWidth="xs" // <-- NEW: Changed to 'xs' to make it a narrower, perfectly fitted box
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: "20px",
+            letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}
+        >
+          {selectedCustomer?.customerName}
+          <IconButton
+            onClick={() => setSelectedCustomer(null)}
+            size="small"
+            sx={{ position: "absolute", right: 12 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <Divider />
+
+        <DialogContent sx={{ pt: 1 }}>
+          <TableContainer component={Paper} elevation={0}>
+            <Table
+              size="small"
+              sx={{
+                "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: alpha(
+                    theme.palette.primary.main,
+                    theme.palette.mode === "dark" ? 0.1 : 0.25,
+                  ),
+                },
+              }}
+            >
+              <TableHead sx={{ bgcolor: "primary.main" }}>
+                <TableRow>
+                  {/* NEW: Removed S.No and Centered the SO Number header */}
+                  <TableCell
+                    align="center"
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
+                    SO Number
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {uniqueSoNumbers.length ? (
+                  uniqueSoNumbers.map((soNum, index) => (
+                    <TableRow key={`${soNum}-${index}`}>
+                      <TableCell align="center">
+                        {/* NEW: Hyperlink to SO Search */}
+                        <Typography
+                          component={NextLink}
+                          href={`/so-search/${soNum}`}
+                          target="_blank" // Opens in new tab to preserve dashboard state
+                          sx={{
+                            color: chartBlue,
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            "&:hover": { textDecoration: "underline" },
+                          }}
+                        >
+                          {soNum}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell align="center">No SO numbers found.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+      </Dialog>
+    </Box>
+  );
+}
 
 // TAB 3
 function MaterialSOCountTab() {
-    const theme = useTheme();
-    const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
-    const [inputValue, setInputValue] = React.useState("");
-    const [committedCode, setCommittedCode] = React.useState<string | null>(null);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
-    const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
-    const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs().startOf("month"));
-    const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs().endOf("month"));
-    const [selectedCustomer, setSelectedCustomer] = React.useState<CustomerSOByMaterialRow | null>(null);
+  const theme = useTheme();
+  const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
+  const [inputValue, setInputValue] = React.useState("");
+  const [committedCode, setCommittedCode] = React.useState<string | null>(null);
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [viewMode, setViewMode] = React.useState<"chart" | "table">("table");
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(
+    dayjs().startOf("month"),
+  );
+  const [toDate, setToDate] = React.useState<Dayjs | null>(
+    dayjs().endOf("month"),
+  );
+  const [selectedCustomer, setSelectedCustomer] =
+    React.useState<CustomerSOByMaterialRow | null>(null);
 
-    const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
-    const toIso = toDate?.format("YYYY-MM-DD") ?? null;
+  const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
+  const toIso = toDate?.format("YYYY-MM-DD") ?? null;
 
-    const { rows, loading, error, notFound, fetch: fetchByMaterial } = useCustomerSOByMaterial();
+  const {
+    rows,
+    loading,
+    error,
+    notFound,
+    fetch: fetchByMaterial,
+  } = useCustomerSOByMaterial();
 
-    const handleSearch = () => {
-        const code = inputValue.trim().replace(/\s+/g, ' ').toUpperCase();
-        if (!code) return;
-        setCommittedCode(code);
-        setPage(0);
-        fetchByMaterial(code, fromIso, toIso);
-    };
+  const handleSearch = () => {
+    const code = inputValue.trim().replace(/\s+/g, " ").toUpperCase();
+    if (!code) return;
+    setCommittedCode(code);
+    setPage(0);
+    fetchByMaterial(code, fromIso, toIso);
+  };
 
-    React.useEffect(() => {
-        if (!committedCode) return;
-        fetchByMaterial(committedCode, fromIso, toIso);
-        setPage(0);
-    }, [fromIso, toIso]);
+  React.useEffect(() => {
+    if (!committedCode) return;
+    fetchByMaterial(committedCode, fromIso, toIso);
+    setPage(0);
+  }, [fromIso, toIso]);
 
-    return (
-        <Box>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                {/* Search bar */}
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, justifyContent: "center" }}>
-                        {/* FROM date */}
-                        <DatePicker
-                            label="From"
-                            value={fromDate}
-                            format="DD-MM-YYYY"
-                            onChange={(val) => { setFromDate(val); setPage(0); }}
-                            maxDate={toDate ?? undefined}
-                            slotProps={{
-                                textField: {
-                                    size: "small",
-                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
-                                },
-                            }}
-                        />
+  // NEW: Deduplicate and aggregate quantities in case of multiple same SOs
+  const uniqueOrderDetails = React.useMemo(() => {
+    if (!selectedCustomer?.orderDetails) return [];
 
-                        {/* TO date */}
-                        <DatePicker
-                            label="To"
-                            value={toDate}
-                            format="DD-MM-YYYY"
-                            onChange={(val) => { setToDate(val); setPage(0); }}
-                            minDate={fromDate ?? undefined}
-                            slotProps={{
-                                textField: {
-                                    size: "small",
-                                    sx: { width: 160, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } },
-                                },
-                            }}
-                        />
+    const aggregatedMap = new Map<string, number>();
+    selectedCustomer.orderDetails.forEach((detail) => {
+      const currentQty = aggregatedMap.get(detail.soNumber) || 0;
+      aggregatedMap.set(detail.soNumber, currentQty + detail.requiredQuantity);
+    });
 
-                        {/* Clear dates X */}
-                        <IconButton
-                            onClick={() => { setFromDate(null); setToDate(null); setPage(0); }}
-                            size="small"
-                            sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}
-                        >
-                            <ClearIcon fontSize="small" />
-                        </IconButton>
-
-                        <Paper component="form" onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-                            sx={{
-                                p: "2px 4px", display: "flex", alignItems: "center",
-                                width: 260, border: 1,
-                                borderColor: (t) => t.palette.mode === "dark" ? "rgba(255,255,255,0.23)" : "#e0e0e0",
-                                borderRadius: "4px", height: 40, bgcolor: "background.paper", boxShadow: "none",
-                            }}
-                        >
-                            <InputBase
-                                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
-                                placeholder="e.g. MAT-001-K22"
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                inputProps={{ "aria-label": "material code search" }}
-                            />
-                            {inputValue && (
-                                <IconButton sx={{ p: "5px" }} onClick={() => { setInputValue(""); setCommittedCode(null); }}>
-                                    <ClearIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            )}
-                            <IconButton type="submit" sx={{ p: "5px" }} disabled={!inputValue.trim()}>
-                                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                            </IconButton>
-                        </Paper>
-                        <CommonButton onClick={handleSearch} disabled={!inputValue.trim()}>
-                            Search
-                        </CommonButton>
-                    </Box>
-
-                    {/* Toggle pinned to right */}
-                    <ViewToggleButton
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                    />
-                </Box>
-                {committedCode && loading && (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                        <CircularProgress size={28} />
-                    </Box>
-                )}
-                {committedCode && !loading && error && (
-                    <Typography color="error" variant="body2" sx={{ py: 4, textAlign: "center" }}>
-                        {error}
-                    </Typography>
-                )}
-                {committedCode && !loading && !error && notFound && (
-                    <Typography variant="body2" color="error" sx={{ py: 8, textAlign: "center" }}>
-                        No data found for material code{" "}
-                        <Box component="span" sx={{ fontWeight: 700 }}>{committedCode}</Box>.
-                    </Typography>
-                )}
-                {committedCode && !loading && !error && !notFound && rows.length > 0 && (
-                    <SOBarChartAndTable
-                        rows={rows}
-                        barColor={chartBlue}
-                        barLabel={`Quantity — ${committedCode}`}
-                        emptyMessage="No customers found."
-                        page={page}
-                        setPage={setPage}
-                        rowsPerPage={rowsPerPage}
-                        setRowsPerPage={setRowsPerPage}
-                        yAxisLabel="Total Quantity"
-                        countColumnLabel="QUANTITY"
-                        viewMode={viewMode}
-                        onToggleView={() => setViewMode(v => v === "chart" ? "table" : "chart")}
-                        onCountClick={(row) => setSelectedCustomer(row as CustomerSOByMaterialRow)}
-                    />
-                )}
-
-                <Dialog
-                    open={Boolean(selectedCustomer)}
-                    onClose={() => setSelectedCustomer(null)}
-                    maxWidth="sm"
-                    fullWidth
-                    PaperProps={{ sx: { borderRadius: 2 } }}
-                >
-                    <DialogTitle
-                        sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            fontWeight: 700,
-                            fontSize: "20px",
-                            letterSpacing: 0.5,
-                            color: "error.main",
-                            pb: 1,
-                            position: "relative",
-                        }}
-                    >
-                        {selectedCustomer?.customerName} — {committedCode}
-                        <IconButton
-                            onClick={() => setSelectedCustomer(null)}
-                            size="small"
-                            sx={{ position: "absolute", right: 12 }}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    </DialogTitle>
-
-                    <Divider />
-
-                    <DialogContent sx={{ pt: 1 }}>
-                        <TableContainer component={Paper} elevation={0}>
-                            <Table
-                                size="small"
-                                sx={{
-                                    "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
-                                        backgroundColor: alpha(
-                                            theme.palette.primary.main,
-                                            theme.palette.mode === "dark" ? 0.1 : 0.25
-                                        ),
-                                    },
-                                }}
-                            >
-                                <TableHead sx={{ bgcolor: "primary.main" }}>
-                                    <TableRow>
-                                        <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }}>
-                                            SO Number
-                                        </TableCell>
-                                        <TableCell sx={{ color: "primary.contrastText", fontWeight: "bold" }} align="right">
-                                            Required Quantity
-                                        </TableCell>
-                                    </TableRow>
-                                </TableHead>
-
-                                <TableBody>
-                                    {selectedCustomer?.orderDetails?.length ? (
-                                        selectedCustomer.orderDetails.map((detail, index) => (
-                                            <TableRow key={`${detail.soNumber}-${index}`}>
-                                                <TableCell>{detail.soNumber}</TableCell>
-                                                <TableCell align="right">{detail.requiredQuantity}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={2} align="center">
-                                                No order details found.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </DialogContent>
-                </Dialog>
-            </LocalizationProvider>
-        </Box>
+    return Array.from(aggregatedMap.entries()).map(
+      ([soNumber, requiredQuantity]) => ({
+        soNumber,
+        requiredQuantity,
+      }),
     );
+  }, [selectedCustomer]);
+
+  return (
+    <Box>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        {/* Search bar & Controls */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: { xs: "center", md: "flex-start" },
+            justifyContent: "space-between",
+            mb: 3,
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+          }}
+        >
+          {/* Spacer for true centering */}
+          <Box
+            sx={{ width: { md: 150 }, display: { xs: "none", md: "block" } }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flex: 1,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            {/* FROM date */}
+            <DatePicker
+              label="From"
+              value={fromDate}
+              format="DD-MM-YYYY"
+              onChange={(val) => {
+                setFromDate(val);
+                setPage(0);
+              }}
+              maxDate={toDate ?? undefined}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 160,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      fontSize: 13,
+                    },
+                  },
+                },
+              }}
+            />
+
+            {/* TO date */}
+            <DatePicker
+              label="To"
+              value={toDate}
+              format="DD-MM-YYYY"
+              onChange={(val) => {
+                setToDate(val);
+                setPage(0);
+              }}
+              minDate={fromDate ?? undefined}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 160,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      fontSize: 13,
+                    },
+                  },
+                },
+              }}
+            />
+
+            {/* Clear dates X */}
+            <IconButton
+              onClick={() => {
+                setFromDate(null);
+                setToDate(null);
+                setPage(0);
+              }}
+              size="small"
+              sx={{
+                color: "text.secondary",
+                "&:hover": { color: "error.main" },
+              }}
+            >
+              <ClearIcon fontSize="small" />
+            </IconButton>
+
+            <Paper
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+              }}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                width: 260,
+                border: 1,
+                borderColor: (t) =>
+                  t.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.23)"
+                    : "#e0e0e0",
+                borderRadius: "4px",
+                height: 40,
+                bgcolor: "background.paper",
+                boxShadow: "none",
+              }}
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                placeholder="e.g. MAT-001-K22"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                inputProps={{ "aria-label": "material code search" }}
+              />
+              {inputValue && (
+                <IconButton
+                  sx={{ p: "5px" }}
+                  onClick={() => {
+                    setInputValue("");
+                    setCommittedCode(null);
+                  }}
+                >
+                  <ClearIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              )}
+              <IconButton
+                type="submit"
+                sx={{ p: "5px" }}
+                disabled={!inputValue.trim()}
+              >
+                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+              </IconButton>
+            </Paper>
+            <CommonButton onClick={handleSearch} disabled={!inputValue.trim()}>
+              Search
+            </CommonButton>
+          </Box>
+
+          {/* Toggle pinned to right */}
+          <Box
+            sx={{
+              width: { md: 150 },
+              display: "flex",
+              justifyContent: { xs: "center", md: "flex-end" },
+            }}
+          >
+            <ViewToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+          </Box>
+        </Box>
+        {committedCode && loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress size={28} />
+          </Box>
+        )}
+        {committedCode && !loading && error && (
+          <Typography
+            color="error"
+            variant="body2"
+            sx={{ py: 4, textAlign: "center" }}
+          >
+            {error}
+          </Typography>
+        )}
+        {committedCode && !loading && !error && notFound && (
+          <Typography
+            variant="body2"
+            color="error"
+            sx={{ py: 8, textAlign: "center" }}
+          >
+            No data found for material code{" "}
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              {committedCode}
+            </Box>
+            .
+          </Typography>
+        )}
+        {committedCode &&
+          !loading &&
+          !error &&
+          !notFound &&
+          rows.length > 0 && (
+            <SOBarChartAndTable
+              rows={rows}
+              barColor={chartBlue}
+              barLabel={`Quantity — ${committedCode}`}
+              emptyMessage="No customers found."
+              page={page}
+              setPage={setPage}
+              rowsPerPage={rowsPerPage}
+              setRowsPerPage={setRowsPerPage}
+              yAxisLabel="Total Quantity"
+              countColumnLabel="QUANTITY"
+              viewMode={viewMode}
+              onToggleView={() =>
+                setViewMode((v) => (v === "chart" ? "table" : "chart"))
+              }
+              onCountClick={(row) =>
+                setSelectedCustomer(row as CustomerSOByMaterialRow)
+              }
+            />
+          )}
+
+        <Dialog
+          open={Boolean(selectedCustomer)}
+          onClose={() => setSelectedCustomer(null)}
+          maxWidth="xs" // <-- NEW: Thinned out the box
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 2 } }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontWeight: 700,
+              fontSize: "20px",
+              letterSpacing: 0.5,
+              color: "error.main",
+              pb: 1,
+              position: "relative",
+            }}
+          >
+            {selectedCustomer?.customerName}
+            <IconButton
+              onClick={() => setSelectedCustomer(null)}
+              size="small"
+              sx={{ position: "absolute", right: 12 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+
+          <Divider />
+
+          <DialogContent sx={{ pt: 1 }}>
+            <TableContainer component={Paper} elevation={0}>
+              <Table
+                size="small"
+                sx={{
+                  "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                    backgroundColor: alpha(
+                      theme.palette.primary.main,
+                      theme.palette.mode === "dark" ? 0.1 : 0.25,
+                    ),
+                  },
+                }}
+              >
+                <TableHead sx={{ bgcolor: "primary.main" }}>
+                  <TableRow>
+                    {/* NEW: Centered the headers */}
+                    <TableCell
+                      align="center"
+                      sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                    >
+                      SO Number
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                    >
+                      Quantity
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {uniqueOrderDetails.length ? (
+                    uniqueOrderDetails.map((detail, index) => (
+                      <TableRow key={`${detail.soNumber}-${index}`}>
+                        <TableCell align="center">
+                          {/* NEW: Hyperlink to SO Search */}
+                          <Typography
+                            component={NextLink}
+                            href={`/so-search/${detail.soNumber}`}
+                            target="_blank" // Opens in new tab
+                            sx={{
+                              color: chartBlue,
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              "&:hover": { textDecoration: "underline" },
+                            }}
+                          >
+                            {detail.soNumber}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 600 }}>
+                          {detail.requiredQuantity}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={2} align="center">
+                        No order details found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+        </Dialog>
+      </LocalizationProvider>
+    </Box>
+  );
 }
 
 export default function CustomerReport() {
-    const [activeTab, setActiveTab] = React.useState(0);
-    const theme = useTheme();
+  const [activeTab, setActiveTab] = React.useState(0);
+  const theme = useTheme();
 
-    return (
-        <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+  return (
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+      {/* Yellow tab bar */}
+      <Paper
+        elevation={2}
+        sx={{
+          mb: 0,
+          width: "fit-content",
+          mx: "auto",
+          borderRadius: 1,
+          bgcolor: theme.palette.primary.main,
+          overflow: "hidden",
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={(_e, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          textColor="inherit"
+          sx={{
+            minHeight: 48,
+            px: 2,
+            "& .MuiTab-root": {
+              fontWeight: 700,
+              fontSize: 14,
+              color: "#000",
+              opacity: 0.6,
+              minHeight: 48,
+              px: 3,
+              textTransform: "uppercase",
+              "&.Mui-selected": {
+                opacity: 1,
+              },
+            },
+            "& .MuiTabs-indicator": {
+              bgcolor: "#000",
+              height: 3,
+            },
+          }}
+        >
+          <Tab label="Overall Count" />
+          <Tab label="Customer vs SO" />
+          <Tab label="Customer vs Quantity" />
+        </Tabs>
+      </Paper>
 
-            {/* Yellow tab bar */}
-            <Paper
-                elevation={2}
-                sx={{
-                    mb: 0,
-                    width: "fit-content",
-                    mx: "auto",
-                    borderRadius: 1,
-                    bgcolor: theme.palette.primary.main,
-                    overflow: "hidden",
-                }}
-            >
-                <Tabs
-                    value={activeTab}
-                    onChange={(_e, val) => setActiveTab(val)}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                    allowScrollButtonsMobile
-                    textColor="inherit"
-                    sx={{
-                        minHeight: 48,
-                        px: 2,
-                        "& .MuiTab-root": {
-                            fontWeight: 700,
-                            fontSize: 14,
-                            color: "#000",
-                            opacity: 0.6,
-                            minHeight: 48,
-                            px: 3,
-                            textTransform: "uppercase",
-                            "&.Mui-selected": {
-                                opacity: 1,
-                            },
-                        },
-                        "& .MuiTabs-indicator": {
-                            bgcolor: "#000",
-                            height: 3,
-                        },
-                    }}
-                >
-                    <Tab label="Overall Count" />
-                    <Tab label="Customer vs SO" />
-                    <Tab label="Customer vs Quantity" />
-                </Tabs>
-            </Paper>
-
-            {/* Content */}
-            <Box sx={{ width: "100%", minWidth: 0, pt: 1, pb: 4, px: { xs: 2, md: 4 } }}>
-                <Paper
-                    elevation={0}
-                    sx={{
-                        width: "100%",
-                        borderRadius: 2,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        overflow: "hidden",
-                        bgcolor: "background.paper",
-                        p: 3,
-                    }}
-                >
-                    {activeTab === 0 && <TabACards />}
-                    {activeTab === 1 && <CustomerSOCountTab />}
-                    {activeTab === 2 && <MaterialSOCountTab />}
-                </Paper>
-            </Box>
-        </Box>
-    );
+      {/* Content */}
+      <Box
+        sx={{ width: "100%", minWidth: 0, pt: 1, pb: 4, px: { xs: 2, md: 4 } }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+            bgcolor: "background.paper",
+            p: 3,
+          }}
+        >
+          {activeTab === 0 && <TabACards />}
+          {activeTab === 1 && <CustomerSOCountTab />}
+          {activeTab === 2 && <MaterialSOCountTab />}
+        </Paper>
+      </Box>
+    </Box>
+  );
 }
