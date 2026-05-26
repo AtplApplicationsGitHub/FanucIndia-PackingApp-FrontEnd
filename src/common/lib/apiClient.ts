@@ -72,12 +72,11 @@ apiClient.interceptors.response.use(
         }
     }
 
-    // Reject with an empty message so local component catch blocks render nothing
-    return Promise.reject({
-      ...err,
-      code: payload?.code ?? 'INTERNAL_ERROR',
-      message: '', 
-    });
+    // Reject with the actual Error instance to prevent Next.js router crashes
+    err.message = ''; 
+    (err as any).code = payload?.code ?? 'INTERNAL_ERROR';
+    
+    return Promise.reject(err);
   }
 );
 
