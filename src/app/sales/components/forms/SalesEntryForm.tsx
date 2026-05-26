@@ -49,55 +49,48 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   const { handleSubmit, submitting, errors, alert, clearAlert } =
     useSalesForm();
 
-  const isRestrictedMode =
-    !!initialData &&
-    initialData.status === "Dispatched";
+  const isRestrictedMode = !!initialData && initialData.status === "Dispatched";
 
   useEffect(() => {
-    if (
-      lookup.products.length > 0 &&
-      lookup.transporters.length > 0 &&
-      lookup.salesZones.length > 0 &&
-      lookup.packConfigs.length > 0 &&
-      lookup.customers.length > 0
-    ) {
-      if (initialData) {
-        setForm({
-          productId: String(initialData.productId ?? ""),
-          saleOrderNumber: initialData.saleOrderNumber ?? "",
-          outboundDelivery: initialData.outboundDelivery ?? "",
-          transferOrder: initialData.transferOrder ?? "",
-          deliveryDate: initialData.deliveryDate ?? "",
-          transporterId: String(initialData.transporterId ?? ""),
-          plantCode: initialData.plantCode ?? "",
-          paymentClearance: String(initialData.paymentClearance),
-          salesZoneId: String(initialData.salesZoneId ?? ""),
-          packConfigId: String(initialData.packConfigId ?? ""),
-          customerId: String(initialData.customerId ?? ""),
-          customerName: initialData.customerId 
-            ? "" 
-            : (initialData.customerNameText ?? initialData.customer?.name ?? ""),
-          specialRemarks: initialData.specialRemarks ?? "",
-          additionalRemarks: initialData.additionalRemarks ?? "",
-          labelRemarks: initialData.labelRemarks ?? "",
-        });
-      } else {
-        if (lookup.salesZones.length === 1) {
-          setForm((prev) => ({
-            ...prev,
-            salesZoneId: String(lookup.salesZones[0].id),
-          }));
-        }
-      }
+    if (initialData) {
+      setForm({
+        productId: String(initialData.productId ?? ""),
+        saleOrderNumber: initialData.saleOrderNumber ?? "",
+        outboundDelivery: initialData.outboundDelivery ?? "",
+        transferOrder: initialData.transferOrder ?? "",
+        deliveryDate: initialData.deliveryDate
+          ? String(initialData.deliveryDate).slice(0, 10)
+          : "",
+        transporterId: String(initialData.transporterId ?? ""),
+        plantCode: initialData.plantCode ?? "",
+        paymentClearance:
+          initialData.paymentClearance === true
+            ? "true"
+            : initialData.paymentClearance === false
+              ? "false"
+              : "",
+        salesZoneId: String(initialData.salesZoneId ?? ""),
+        packConfigId: String(initialData.packConfigId ?? ""),
+        customerId: String(initialData.customerId ?? ""),
+        customerName:
+          initialData.customerNameText ??
+          initialData.customer?.name ??
+          initialData.customerName ??
+          "",
+        specialRemarks: initialData.specialRemarks ?? "",
+        additionalRemarks: initialData.additionalRemarks ?? "",
+        labelRemarks: initialData.labelRemarks ?? "",
+      });
+
+      return;
     }
-  }, [
-    initialData,
-    lookup.products,
-    lookup.transporters,
-    lookup.salesZones,
-    lookup.packConfigs,
-    lookup.customers,
-  ]);
+
+    setForm({
+      ...DEFAULT_FORM,
+      salesZoneId:
+        lookup.salesZones.length === 1 ? String(lookup.salesZones[0].id) : "",
+    });
+  }, [initialData, lookup.salesZones]);
 
   useEffect(() => {
     if (alert && alert.severity === "success") {
@@ -118,7 +111,7 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
   };
 
   return (
-    <form id="sales-entry-form"  onSubmit={onSubmit} noValidate>
+    <form id="sales-entry-form" onSubmit={onSubmit} noValidate>
       {alert && (
         <Alert
           severity={alert.severity}

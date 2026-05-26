@@ -271,9 +271,9 @@ function SalesDashboardContent() {
           }
           lookup={{
             ...lookup,
-            salesZones: lookup.salesZones.filter(
-              (zone) => zone.id === defaultZoneId,
-            ),
+            salesZones: defaultZoneId
+              ? lookup.salesZones.filter((zone) => zone.id === defaultZoneId)
+              : lookup.salesZones,
           }}
           onSuccess={() => {
             setShowForm(false);

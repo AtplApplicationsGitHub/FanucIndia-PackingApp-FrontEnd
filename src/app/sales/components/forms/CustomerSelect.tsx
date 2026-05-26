@@ -24,8 +24,11 @@ const CustomerSelect: React.FC<Props> = ({
   required = true,
   disabled,
 }) => {
-  const selectedOption = options.find((opt) => String(opt.id) === valueId) || null;
-  const value: Customer | string | null = selectedOption ?? (valueName ? valueName : null);
+  const selectedOption =
+    options.find((opt) => String(opt.id) === String(valueId)) || null;
+
+  const value: Customer | string | null =
+    selectedOption ?? (valueName ? valueName : null);
 
   return (
     <Autocomplete
@@ -34,11 +37,25 @@ const CustomerSelect: React.FC<Props> = ({
       freeSolo
       disabled={disabled}
       options={options}
-      getOptionLabel={(option) => (typeof option === "string" ? option : option?.name ?? "")}
+      getOptionLabel={(option) =>
+        typeof option === "string" ? option : option?.name ?? ""
+      }
       value={value}
       isOptionEqualToValue={(option, v) => {
-        if (typeof v === "string") return option.name === v;
+        if (typeof v === "string") {
+          return option.name === v;
+        }
+
         return String(option.id) === String(v?.id);
+      }}
+      renderOption={(props, option) => {
+        const { key, ...optionProps } = props;
+
+        return (
+          <li {...optionProps} key={String(option.id)}>
+            {option.name}
+          </li>
+        );
       }}
       onChange={(_, newValue) => {
         if (typeof newValue === "string") {
