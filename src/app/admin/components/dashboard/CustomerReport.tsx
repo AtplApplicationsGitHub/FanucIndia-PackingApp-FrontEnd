@@ -388,7 +388,7 @@ function TabACards() {
         display: "grid",
         gridTemplateColumns: {
           xs: "1fr",
-          md: "repeat(3, 1fr)", 
+          md: "repeat(3, 1fr)",
         },
         gap: 3,
       }}
@@ -507,15 +507,15 @@ function CustomerSOCountTab() {
   // NEW: Deduplicate SO Numbers + OBD to handle the composite edge case securely
   const uniqueSaleOrders = React.useMemo(() => {
     if (!selectedCustomer) return [];
-    
+
     // Check for either the old format (saleOrderNumbers) or new (saleOrderDetails)
     const source = selectedCustomer.saleOrderDetails || selectedCustomer.saleOrderNumbers || [];
-    
+
     const map = new Map<string, any>();
     source.forEach((item: any) => {
       const soNum = typeof item === 'string' ? item : (item.soNumber || item.saleOrderNumber || "-");
       const obd = typeof item === 'string' ? null : (item.outboundDelivery || item.obdNumber || null);
-      
+
       const key = `${soNum}_${obd || 'NONE'}`;
       if (!map.has(key)) {
         map.set(key, { soNumber: soNum, outboundDelivery: obd });
@@ -835,7 +835,7 @@ function CustomerSOCountTab() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center" sx={{ fontWeight: 500 }}>
-                          {detail.outboundDelivery || "-"}
+                        {detail.outboundDelivery || "-"}
                       </TableCell>
                     </TableRow>
                   ))
@@ -941,14 +941,13 @@ function MaterialSOCountTab() {
     const aggregatedMap = new Map<string, any>();
     selectedCustomer.orderDetails.forEach((detail: any) => {
       const obd = detail.outboundDelivery || detail.obdNumber || null;
-      const key = `${detail.soNumber}_${obd || 'NONE'}`;
-      
+      const key = `${detail.id}`;
       const existing = aggregatedMap.get(key) || {
-          soNumber: detail.soNumber,
-          outboundDelivery: obd,
-          requiredQuantity: 0
+        id: detail.id,
+        soNumber: detail.soNumber,
+        outboundDelivery: obd,
+        requiredQuantity: 0
       };
-      
       existing.requiredQuantity += Number(detail.requiredQuantity) || 0;
       aggregatedMap.set(key, existing);
     });
@@ -1261,9 +1260,7 @@ function MaterialSOCountTab() {
                 <TableBody>
                   {paginatedOrderDetails.length ? (
                     paginatedOrderDetails.map((detail, index) => (
-                      <TableRow
-                        key={`${detail.soNumber}-${detail.outboundDelivery}-${dialogPage}-${index}`}
-                      >
+                      <TableRow key={`${detail.id}-${dialogPage}-${index}`}>
                         <TableCell align="center">
                           <Typography
                             component={NextLink}

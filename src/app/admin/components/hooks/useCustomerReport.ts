@@ -3,8 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 export type CustomerSOCountDetail = {
+    id: number;
     soNumber: string;
     outboundDelivery: string | null;
+    source: "ACTIVE" | "ARCHIVE";
 };
 
 export type CustomerSOCountRow = {
@@ -14,6 +16,7 @@ export type CustomerSOCountRow = {
 };
 
 export type CustomerSOByMaterialOrderDetail = {
+    id: number;
     soNumber: string;
     outboundDelivery: string | null;
     requiredQuantity: number;
@@ -26,24 +29,19 @@ export type CustomerSOByMaterialRow = {
 };
 
 function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
-    // Determine the source array (handle old 'saleOrderNumbers' or new object arrays)
-    const rawDetails = Array.isArray(item.saleOrderDetails) 
-        ? item.saleOrderDetails 
-        : Array.isArray(item.saleOrderNumbers) 
-            ? item.saleOrderNumbers 
-            : [];
+    const rawDetails = Array.isArray(item.salesOrders)
+        ? item.salesOrders
+        : [];
 
     return {
         customerName: item.customerName ?? "",
         soCount: item.saleOrderNumberCount ?? item.soCount ?? 0,
-        saleOrderDetails: rawDetails.map((detail: any) => {
-            // Fallback just in case backend still sends strings
-            if (typeof detail === 'string') return { soNumber: detail, outboundDelivery: null };
-            return {
-                soNumber: detail.soNumber || detail.saleOrderNumber || "-",
-                outboundDelivery: detail.outboundDelivery || detail.obdNumber || null
-            };
-        }),
+        saleOrderDetails: rawDetails.map((detail: any) => ({
+            id: Number(detail.id),
+            soNumber: detail.saleOrderNumber || "-",
+            outboundDelivery: detail.outboundDelivery || null,
+            source: detail.source || "ACTIVE",
+        })),
     };
 }
 
@@ -53,6 +51,7 @@ function normalizeCustomerSOByMaterialRow(item: any): CustomerSOByMaterialRow {
         soCount: item.totalQuantity ?? item.soCount ?? 0,
         orderDetails: Array.isArray(item.orderDetails)
             ? item.orderDetails.map((detail: any) => ({
+                id: Number(detail.id),
                 soNumber: detail.soNumber ?? "-",
                 outboundDelivery: detail.outboundDelivery || detail.obdNumber || null,
                 requiredQuantity: Number(detail.requiredQuantity ?? 0),
