@@ -49,6 +49,7 @@ const VEHICLE_ENTRY_COLUMNS = [
 ];
 
 const ATTACHMENT_COLUMNS = ["S.NO", "File Name", "Actions"];
+const TABLE_HEADER_YELLOW = "#FFCC00";
 
 const displayValue = (value?: string | number | null) => {
   if (value === null || value === undefined || value === "") return "-";
@@ -330,8 +331,10 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
               >
                 <TableHead
                   sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                    "& .MuiTableCell-head": {
+                      bgcolor: TABLE_HEADER_YELLOW,
+                      color: "#000000",
+                    },
                   }}
                 >
                   <TableRow sx={{ height: 60 }}>
@@ -340,8 +343,6 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
                     key={label}
                     align={label === "ATTACHMENTS" ? "center" : "left"}
                     sx={{
-                      color:
-                        theme.palette.mode === "dark" ? "#ffffff" : "#000000",
                       fontWeight: 700,
                       whiteSpace: "nowrap",
                     }}

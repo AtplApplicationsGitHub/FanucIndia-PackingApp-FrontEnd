@@ -490,6 +490,27 @@ export default function FgDashboardView() {
   const lightYellow = alpha(theme.palette.primary.main, 0.15);
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
   const headerTextColor = theme.palette.mode === "dark" ? "#FFFFFF" : "#000000";
+  const dispatchInfoPillSx = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 24,
+    px: 1.25,
+    py: 0.25,
+    color: "green",
+    fontSize: "0.9rem",
+    fontWeight: 700,
+    lineHeight: 1.4,
+    whiteSpace: "nowrap",
+  };
+  const renderDispatchInfoPill = (value?: string | null) =>
+    value ? (
+      <Box component="span" sx={dispatchInfoPillSx}>
+        {value}
+      </Box>
+    ) : (
+      "-"
+    );
   const filterFieldSx = {
     bgcolor: "background.paper",
     "& .MuiInputBase-root": {
@@ -1112,12 +1133,12 @@ export default function FgDashboardView() {
 
                         {/* TRANSPORTER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          {row.transporter || "-"}
+                          {renderDispatchInfoPill(row.transporter)}
                         </TableCell>
 
                         {/* VEHICLE NUMBER */}
                         <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
-                          {row.vehicleNumber || "-"}
+                          {renderDispatchInfoPill(row.vehicleNumber)}
                         </TableCell>
 
                         {/* FG LOCATION */}
