@@ -13,6 +13,7 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -51,6 +52,7 @@ type Props = {
   onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
   selectedIds: number[];
+  onDownloadDispatchedExcel?: () => void;
 };
 
 export default function SalesDashboardToolbar({
@@ -74,6 +76,7 @@ export default function SalesDashboardToolbar({
   onEndDateChange,
   onClear,
   selectedIds,
+  onDownloadDispatchedExcel,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -263,6 +266,20 @@ export default function SalesDashboardToolbar({
           >
             <CloseIcon fontSize="small" />
           </IconButton>
+
+          {view === "dispatched" && (
+            <Tooltip title="Download Excel">
+              <IconButton
+                onClick={onDownloadDispatchedExcel}
+                sx={{
+                  color: "success.main",
+                  "&:hover": { opacity: 0.8 },
+                }}
+              >
+                <FileDownloadOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {view !== "dispatched" && (

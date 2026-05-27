@@ -147,6 +147,7 @@ export default function SalesOrdersTable({
                 "SALES ZONE",
                 "PACKING CONFIG",
                 "CUSTOMER",
+                ...(view === "dispatched" ? ["LR NUMBER"] : []),
                 "STATUS",
               ].filter((head) => !(view === "dispatched" && head === "ACTIONS"))
                 .map((head) => (
@@ -321,6 +322,15 @@ export default function SalesOrdersTable({
                         )
                         : "-")}
                   </TableCell>
+
+                  {/* ADD LR NUMBER CELL */}
+                  {view === "dispatched" && (
+                    <TableCell>
+                      {row.Dispatch_SO && row.Dispatch_SO.length > 0 
+                        ? row.Dispatch_SO.map(d => d.LRnumber).filter(Boolean).join(", ") || "-" 
+                        : "-"}
+                    </TableCell>
+                  )}
 
                   {/* SPECIAL REMARKS */}
                   {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}

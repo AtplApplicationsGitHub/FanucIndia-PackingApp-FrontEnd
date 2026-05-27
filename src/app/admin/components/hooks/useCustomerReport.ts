@@ -2,14 +2,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
+export type CustomerSOCountDetail = {
+    soNumber: string;
+    outboundDelivery: string | null;
+};
+
 export type CustomerSOCountRow = {
     customerName: string;
     soCount: number;
-    saleOrderNumbers: string[];
+    saleOrderDetails: CustomerSOCountDetail[];
 };
 
 export type CustomerSOByMaterialOrderDetail = {
     soNumber: string;
+    outboundDelivery: string | null;
     requiredQuantity: number;
 };
 
@@ -20,10 +26,24 @@ export type CustomerSOByMaterialRow = {
 };
 
 function normalizeCustomerSOCountRow(item: any): CustomerSOCountRow {
+    // Determine the source array (handle old 'saleOrderNumbers' or new object arrays)
+    const rawDetails = Array.isArray(item.saleOrderDetails) 
+        ? item.saleOrderDetails 
+        : Array.isArray(item.saleOrderNumbers) 
+            ? item.saleOrderNumbers 
+            : [];
+
     return {
         customerName: item.customerName ?? "",
         soCount: item.saleOrderNumberCount ?? item.soCount ?? 0,
-        saleOrderNumbers: Array.isArray(item.saleOrderNumbers) ? item.saleOrderNumbers : [],
+        saleOrderDetails: rawDetails.map((detail: any) => {
+            // Fallback just in case backend still sends strings
+            if (typeof detail === 'string') return { soNumber: detail, outboundDelivery: null };
+            return {
+                soNumber: detail.soNumber || detail.saleOrderNumber || "-",
+                outboundDelivery: detail.outboundDelivery || detail.obdNumber || null
+            };
+        }),
     };
 }
 
@@ -34,6 +54,7 @@ function normalizeCustomerSOByMaterialRow(item: any): CustomerSOByMaterialRow {
         orderDetails: Array.isArray(item.orderDetails)
             ? item.orderDetails.map((detail: any) => ({
                 soNumber: detail.soNumber ?? "-",
+                outboundDelivery: detail.outboundDelivery || detail.obdNumber || null,
                 requiredQuantity: Number(detail.requiredQuantity ?? 0),
             }))
             : [],

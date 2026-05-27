@@ -12,7 +12,7 @@ import {
   Button,
   Tooltip,
 } from "@mui/material";
-
+import { CalendarCheck, Download } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,15 +21,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { LookupRow } from "@/app/admin/components/types/admin";
-import { CalendarCheck } from "lucide-react";
 
-const STATUS_OPTIONS = [
-  "None",
-  "R105",
-  "W105",
-  "F105",
-  "Dispatched"
-];
+const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
 type Props = {
   searchInput: string;
@@ -48,6 +41,7 @@ type Props = {
   endDate: Date | null;
   onEndDateChange: (val: Date | null) => void;
   onClear: () => void;
+  onExport?: () => void;
   onTodayClick?: () => void;
 
   selectedIds?: number[];
@@ -73,6 +67,7 @@ export default function AdminOrdersToolbar({
   endDate,
   onEndDateChange,
   onClear,
+  onExport,
   onTodayClick,
   selectedIds = [],
 
@@ -121,7 +116,7 @@ export default function AdminOrdersToolbar({
             component="form"
             onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
-              onSearchInputChange(localSearch.trim().replace(/\s+/g, ' '));
+              onSearchInputChange(localSearch.trim().replace(/\s+/g, " "));
             }}
             sx={{
               p: "2px 4px",
@@ -129,7 +124,10 @@ export default function AdminOrdersToolbar({
               alignItems: "center",
               width: { xs: "100%", sm: 220 },
               border: 1,
-              borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : '#e0e0e0',
+              borderColor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.23)"
+                  : "#e0e0e0",
               borderRadius: "4px",
               height: 40,
               bgcolor: "background.paper",
@@ -198,7 +196,10 @@ export default function AdminOrdersToolbar({
 
           {/* Status Filter */}
           {onStatusFilterChange && (
-            <FormControl size="small" sx={{ minWidth: 140, bgcolor: "background.paper" }}>
+            <FormControl
+              size="small"
+              sx={{ minWidth: 140, bgcolor: "background.paper" }}
+            >
               <Select
                 value={statusFilter ?? ""}
                 displayEmpty
@@ -207,7 +208,9 @@ export default function AdminOrdersToolbar({
               >
                 <MenuItem value="">STATUS</MenuItem>
                 {STATUS_OPTIONS.map((status) => (
-                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -219,7 +222,7 @@ export default function AdminOrdersToolbar({
             value={startDate ? dayjs(startDate) : null}
             onChange={(val) => onStartDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
-            minDate={isArchiveView ? undefined : dayjs().subtract(3, 'day')}
+            minDate={isArchiveView ? undefined : dayjs().subtract(3, "day")}
             slotProps={{
               field: {
                 clearable: true,
@@ -242,7 +245,13 @@ export default function AdminOrdersToolbar({
             value={endDate ? dayjs(endDate) : null}
             onChange={(val) => onEndDateChange(val ? val.toDate() : null)}
             format="DD-MM-YYYY"
-            minDate={startDate ? dayjs(startDate) : (isArchiveView ? undefined : dayjs().subtract(3, 'day'))}
+            minDate={
+              startDate
+                ? dayjs(startDate)
+                : isArchiveView
+                  ? undefined
+                  : dayjs().subtract(3, "day")
+            }
             slotProps={{
               field: { clearable: true, onClear: () => onEndDateChange(null) },
               textField: {
@@ -272,6 +281,20 @@ export default function AdminOrdersToolbar({
             <CloseIcon fontSize="small" />
           </IconButton>
 
+          {onExport && (
+            <Tooltip title="Export to Excel" arrow>
+              <IconButton
+                onClick={onExport}
+                sx={{
+                  color: "#10b981", // Emerald green for Excel
+                  "&:hover": { bgcolor: "rgba(16, 185, 129, 0.1)" },
+                }}
+              >
+                <Download size={20} />
+              </IconButton>
+            </Tooltip>
+          )}
+
           {/* Today Button */}
           {onTodayClick && (
             <Tooltip
@@ -289,18 +312,20 @@ export default function AdminOrdersToolbar({
                 },
               }}
             >
-              <IconButton onClick={onTodayClick} sx={{
-                bgcolor: "#FFC107",
-                borderRadius: "90%",
-                "&:hover": { bgcolor: "#FFD100" },
-                color: "#000000",
-              }}>
+              <IconButton
+                onClick={onTodayClick}
+                sx={{
+                  bgcolor: "#FFC107",
+                  borderRadius: "90%",
+                  "&:hover": { bgcolor: "#FFD100" },
+                  color: "#000000",
+                }}
+              >
                 <CalendarCheck size={16} />
               </IconButton>
             </Tooltip>
           )}
         </Paper>
-
       </Box>
     </LocalizationProvider>
   );

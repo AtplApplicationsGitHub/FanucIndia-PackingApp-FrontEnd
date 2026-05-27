@@ -22,7 +22,7 @@ export default function SalesDashboard() {
 
   return (
     <div className="py-2 md:py-2">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <div className="max-w-480 mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}

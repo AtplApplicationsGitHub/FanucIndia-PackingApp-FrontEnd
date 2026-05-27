@@ -35,7 +35,7 @@ function AdminDashboardContent() {
   }>({ open: false, message: "", severity: "success" });
 
   const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(
-    null
+    null,
   );
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
 
@@ -84,7 +84,8 @@ function AdminDashboardContent() {
 
   // NEW: Custom function to update the tab AND the browser history URL
   const handleViewChange = (viewInput: any) => {
-    const newView = typeof viewInput === "function" ? viewInput(admin.view) : viewInput;
+    const newView =
+      typeof viewInput === "function" ? viewInput(admin.view) : viewInput;
     admin.setView(newView);
     sessionStorage.setItem("adminView", newView);
     router.push(`/admin/dashboard?view=${newView}`); // This adds it to the back button history!
@@ -92,14 +93,14 @@ function AdminDashboardContent() {
 
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" | "info" | "warning" = "success"
+    severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
     setSnackbar({ open: true, message, severity });
   };
 
   const handleSnackbarClose = (
     _event?: React.SyntheticEvent | Event,
-    reason?: string
+    reason?: string,
   ) => {
     if (reason === "clickaway") return;
     setSnackbar((prev) => ({ ...prev, open: false }));
@@ -108,14 +109,14 @@ function AdminDashboardContent() {
   const onUpdateInline = async (
     id: number,
     field: EditableField,
-    value: string | number | null
+    value: string | number | null,
   ) => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
         API.ADMIN.SALES_ORDER_BY_ID(id),
         { [field]: value },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       showSnackbar("Updated!", "success");
       await admin.fetchOrders();
@@ -140,7 +141,7 @@ function AdminDashboardContent() {
     } catch (error) {
       showSnackbar(
         "Could not check for material data. Please try again.",
-        "error"
+        "error",
       );
       console.error("Failed to check ERP materials:", error);
     }
@@ -317,7 +318,7 @@ function AdminDashboardContent() {
             </Box>
           )}
 
-          {admin.view === "master" &&
+          {admin.view === "master" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -325,8 +326,9 @@ function AdminDashboardContent() {
               style={{ padding: "0.5% 0 2rem 0" }}
             >
               <AdminMasterLookupPanel />
-            </motion.div>}
-          {admin.view === "dispatch" &&
+            </motion.div>
+          )}
+          {admin.view === "dispatch" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -334,8 +336,9 @@ function AdminDashboardContent() {
               style={{ padding: "0.5% 0 2rem 0" }}
             >
               <DispatchView />
-            </motion.div>}
-          {admin.view === "fg_dashboard" &&
+            </motion.div>
+          )}
+          {admin.view === "fg_dashboard" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -343,10 +346,10 @@ function AdminDashboardContent() {
               style={{ padding: "0.5% 0 2rem 0" }}
             >
               <FgDashboardView />
-            </motion.div>}
+            </motion.div>
+          )}
 
           {admin.view === "status_hub" && (
-
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -355,7 +358,6 @@ function AdminDashboardContent() {
             >
               <ReportPanel />
             </motion.div>
-
           )}
 
           {admin.view === "customer_report" && (
@@ -363,7 +365,11 @@ function AdminDashboardContent() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              style={{ padding: "0.5% 0 2rem 0" }}
+              style={{
+                padding: "0.5% 0 0 0",
+                height: "calc(100vh - 56px)",
+                overflow: "hidden",
+              }}
             >
               <CustomerReport />
             </motion.div>
@@ -403,7 +409,6 @@ function AdminDashboardContent() {
               {admin.error}
             </Box>
           )}
-
         </Box>
 
         <ConfirmDeleteDialog
@@ -416,7 +421,7 @@ function AdminDashboardContent() {
             } else {
               await admin.onMasterRequestDelete(
                 admin.confirmDelete.type,
-                admin.confirmDelete.id
+                admin.confirmDelete.id,
               );
             }
             admin.setConfirmDelete(null);
@@ -455,8 +460,8 @@ function AdminDashboardContent() {
               setEditOrder(null);
               admin.setOrders?.((prev: SalesOrder[]) =>
                 prev.map((o: SalesOrder) =>
-                  o.id === updatedOrder.id ? updatedOrder : o
-                )
+                  o.id === updatedOrder.id ? updatedOrder : o,
+                ),
               );
             }}
           />
@@ -482,11 +487,18 @@ function AdminDashboardContent() {
 
 export default function AdminDashboard() {
   return (
-    <Suspense fallback={
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        Loading...
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
+        >
+          Loading...
+        </Box>
+      }
+    >
       <AdminDashboardContent />
     </Suspense>
   );

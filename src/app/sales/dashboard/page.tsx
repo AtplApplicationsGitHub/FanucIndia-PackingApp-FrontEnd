@@ -72,6 +72,7 @@ function SalesDashboardContent() {
     handleUploadAttachment,
     attachmentFileInputRef,
     handleAttachmentFileChange,
+    handleDownloadDispatchedExcel,
   } = useSalesDashboard();
 
   const defaultZoneId = lookup.salesZones.find(
@@ -190,6 +191,7 @@ function SalesDashboardContent() {
                 onCreate={handleCreate}
                 onDownload={handleDownloadTemplate}
                 onDownloadBlank={handleDownloadBlankTemplate}
+                onDownloadDispatchedExcel={handleDownloadDispatchedExcel}
                 onBulkUpload={handleBulkUpload}
                 onUploadAttachment={() => {
                   if (selectedIds.length === 0) {

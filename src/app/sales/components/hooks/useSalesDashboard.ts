@@ -5,6 +5,7 @@ import { io, Socket } from "socket.io-client";
 import { API } from "@/common/lib/endpoints";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { secureDownload } from "@/common/lib/secure-download";
+import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 
 type NotificationClearedPayload = {
   salesOrderNumber: string;
@@ -85,10 +86,10 @@ export function useSalesDashboard() {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        const parsed = JSON.parse(storedUser);  
+        const parsed = JSON.parse(storedUser);
         setUserName(parsed.name || "");
         setSalesZone(parsed.salesZone || "");
-      } catch { }
+      } catch {}
     }
   }, []);
 
@@ -131,7 +132,7 @@ export function useSalesDashboard() {
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) parsedUser = JSON.parse(storedUser);
-    } catch (e) { }
+    } catch (e) {}
 
     setLookupsLoading(true);
     setError("");
@@ -158,8 +159,10 @@ export function useSalesDashboard() {
       ]);
 
       let filteredSalesZones = sz.data;
-      if (parsedUser && parsedUser.role === 'SALES' && parsedUser.salesZoneId) {
-        filteredSalesZones = sz.data.filter((zone: any) => zone.id === parsedUser.salesZoneId);
+      if (parsedUser && parsedUser.role === "SALES" && parsedUser.salesZoneId) {
+        filteredSalesZones = sz.data.filter(
+          (zone: any) => zone.id === parsedUser.salesZoneId,
+        );
       }
 
       setLookup({
@@ -293,85 +296,107 @@ export function useSalesDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, paymentFilter, statusFilter, startDate, endDate, view]);
 
-  const handleDownloadTemplate = useCallback(async (isBlank: boolean = false) => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("token");
-    try {
-      setAlert({ severity: "info", message: isBlank ? "Downloading Blank Template..." : "Downloading Template..." });
+  const handleDownloadTemplate = useCallback(
+    async (isBlank: boolean = false) => {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+      try {
+        setAlert({
+          severity: "info",
+          message: isBlank
+            ? "Downloading Blank Template..."
+            : "Downloading Template...",
+        });
 
-      const params = new URLSearchParams();
-      if (searchTerm) params.append("search", searchTerm);
-      if (paymentFilter) params.append("paymentClearance", paymentFilter);
-      if (startDate) params.append("startDate", toLocalYMD(startDate));
-      if (endDate) params.append("endDate", toLocalYMD(endDate));
+        const params = new URLSearchParams();
+        if (searchTerm) params.append("search", searchTerm);
+        if (paymentFilter) params.append("paymentClearance", paymentFilter);
+        if (startDate) params.append("startDate", toLocalYMD(startDate));
+        if (endDate) params.append("endDate", toLocalYMD(endDate));
 
-      if (isBlank) params.append("blank", "true");
+        if (isBlank) params.append("blank", "true");
 
-      if (view === "dispatched") {
-        params.append("status", "Dispatched");
-      } else if (statusFilter) {
-        params.append("status", statusFilter);
-      } else if (view === "orders") {
-        params.append("excludeStatus", "Dispatched");
+        if (view === "dispatched") {
+          params.append("status", "Dispatched");
+        } else if (statusFilter) {
+          params.append("status", statusFilter);
+        } else if (view === "orders") {
+          params.append("excludeStatus", "Dispatched");
+        }
+
+        const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
+
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error("Export failed");
+
+        const cd = res.headers.get("content-disposition") || "";
+        const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
+        const fallbackFilename = isBlank
+          ? "Blank_Sales_Orders_Template.xlsx"
+          : "Sales_Orders_Template.xlsx";
+
+        const filename =
+          (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
+          cd.match(/filename="([^"]+)"/i)?.[1] ||
+          cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
+          fallbackFilename;
+
+        const blob = await res.blob();
+        secureDownload(blob, filename);
+        setAlert({
+          severity: "success",
+          message: "Template downloaded successfully!",
+        });
+      } catch (error) {
+        setAlert({
+          severity: "error",
+          message: "Failed to download template.",
+        });
       }
-
-      const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Export failed");
-
-      const cd = res.headers.get("content-disposition") || "";
-      const mStar = cd.match(/filename\*=UTF-8''([^;]+)/i);
-      const fallbackFilename = isBlank ? "Blank_Sales_Orders_Template.xlsx" : "Sales_Orders_Template.xlsx";
-
-      const filename =
-        (mStar?.[1] ? decodeURIComponent(mStar[1]) : null) ||
-        cd.match(/filename="([^"]+)"/i)?.[1] ||
-        cd.match(/filename=([^;]+)/i)?.[1]?.trim() ||
-        fallbackFilename;
-
-      const blob = await res.blob();
-      secureDownload(blob, filename);
-      setAlert({
-        severity: "success",
-        message: "Template downloaded successfully!",
-      });
-    } catch (error) {
-      setAlert({ severity: "error", message: "Failed to download template." });
-    }
-  }, [searchTerm, paymentFilter, statusFilter, startDate, endDate, view]);
+    },
+    [searchTerm, paymentFilter, statusFilter, startDate, endDate, view],
+  );
 
   const handleBulkUpload = () => fileInputRef.current?.click();
 
   const handleUploadAttachment = () => attachmentFileInputRef.current?.click();
 
-  const handleAttachmentFileChange = useCallback(async (files: File[]) => {
-    if (files.length === 0 || selectedIds.length === 0) {
-      setAlert({ severity: "warning", message: "Please select orders and files." });
-      return;
-    }
+  const handleAttachmentFileChange = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0 || selectedIds.length === 0) {
+        setAlert({
+          severity: "warning",
+          message: "Please select orders and files.",
+        });
+        return;
+      }
 
-    try {
-      const token = localStorage.getItem("token");
-      const formData = new FormData();
-      formData.append("salesOrderIds", selectedIds.join(","));
-      files.forEach((file) => formData.append("files", file));
+      try {
+        const token = localStorage.getItem("token");
+        const formData = new FormData();
+        formData.append("salesOrderIds", selectedIds.join(","));
+        files.forEach((file) => formData.append("files", file));
 
-      await axios.post(API.SALES.ATTACHMENTS, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        await axios.post(API.SALES.ATTACHMENTS, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setAlert({ severity: "success", message: "Attachments uploaded successfully!" });
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.message || "Upload failed."
-        : "Upload failed.";
-      setAlert({ severity: "error", message });
-    }
-  }, [selectedIds]);
+        setAlert({
+          severity: "success",
+          message: "Attachments uploaded successfully!",
+        });
+      } catch (err: unknown) {
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.message || "Upload failed."
+          : "Upload failed.";
+        setAlert({ severity: "error", message });
+      }
+    },
+    [selectedIds],
+  );
 
   const handleFileChange = useCallback(async () => {
     const input = fileInputRef.current;
@@ -400,24 +425,30 @@ export function useSalesDashboard() {
       if (axios.isAxiosError(err) && err.response?.data) {
         // The backend wraps the actual errors inside a 'message' object sometimes
         const responseData = err.response.data;
-        const errorData = (responseData.message && responseData.message.errors) 
-                          ? responseData.message 
-                          : responseData;
+        const errorData =
+          responseData.message && responseData.message.errors
+            ? responseData.message
+            : responseData;
 
-        if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+        if (
+          errorData.errors &&
+          Array.isArray(errorData.errors) &&
+          errorData.errors.length > 0
+        ) {
           // If there are many errors, show the first 3 to prevent a massive popup, then indicate there are more
           const maxErrorsToShow = 3;
           const detailedErrors = errorData.errors
             .slice(0, maxErrorsToShow)
             .map((e: any) => `Row ${e.row}: ${e.errors.join(", ")}`)
             .join(" | "); // Use a pipe or separator since Snackbar doesn't handle \n well
-          
-          const extraErrors = errorData.errors.length > maxErrorsToShow 
-                              ? ` (+${errorData.errors.length - maxErrorsToShow} more errors)` 
-                              : "";
-                              
+
+          const extraErrors =
+            errorData.errors.length > maxErrorsToShow
+              ? ` (+${errorData.errors.length - maxErrorsToShow} more errors)`
+              : "";
+
           message = `Import failed: ${detailedErrors}${extraErrors}`;
-        } else if (typeof responseData.message === 'string') {
+        } else if (typeof responseData.message === "string") {
           message = responseData.message;
         } else if (errorData.message) {
           message = errorData.message;
@@ -506,6 +537,84 @@ export function useSalesDashboard() {
     return handleDownloadTemplate(true);
   }, [handleDownloadTemplate]);
 
+  const handleDownloadDispatchedExcel = async () => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("token");
+    setAlert({ severity: "info", message: "Preparing Excel download..." });
+
+    try {
+      // Fetch all matching orders by using a large limit
+      const res = await axios.get(API.SALES.CREATE_ORDER, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          search: searchTerm || undefined,
+          paymentClearance: paymentFilter || undefined,
+          status: "Dispatched",
+          startDate: startDate ? toLocalYMD(startDate) : undefined,
+          endDate: endDate ? toLocalYMD(endDate) : undefined,
+          page: 1,
+          limit: 100000,
+        },
+      });
+
+      const ordersData = res.data.orders || [];
+
+      if (ordersData.length === 0) {
+        setAlert({ severity: "warning", message: "No data to export." });
+        return;
+      }
+
+      // Format data exactly as requested
+      const excelData = ordersData.map((order: any) => ({
+        Product:
+          lookup.products.find((p) => p.id === order.productId)?.name ||
+          order.product?.name ||
+          "-",
+        "Sale Order Number": order.saleOrderNumber || "-",
+        "Outbound Delivery": order.outboundDelivery || "-",
+        "Required Date": order.deliveryDate
+          ? new Date(order.deliveryDate).toLocaleDateString("en-GB")
+          : "-",
+        Transporter:
+          lookup.transporters.find((t) => t.id === order.transporterId)?.name ||
+          order.transporter?.name ||
+          "-",
+        Payment: order.paymentClearance ? "Yes" : "No",
+        "Sales Zone":
+          lookup.salesZones.find((s) => s.id === order.salesZoneId)?.name ||
+          order.salesZone?.name ||
+          "-",
+        "Packing Config":
+          lookup.packConfigs.find((p) => p.id === order.packConfigId)
+            ?.configName ||
+          order.packConfig?.configName ||
+          "-",
+        Customer:
+          order.customerNameText ||
+          (order.customerId
+            ? lookup.customers.find((c) => c.id === order.customerId)?.name
+            : order.customer?.name) ||
+          "-",
+        "LR Number":
+          order.Dispatch_SO && order.Dispatch_SO.length > 0
+            ? order.Dispatch_SO.map((d: any) => d.LRnumber)
+                .filter(Boolean)
+                .join(", ")
+            : "-",
+        Status: order.status || "-",
+      }));
+
+      await exportToExcel(excelData, "Dispatched_Orders_Report");
+      setAlert({
+        severity: "success",
+        message: "Excel downloaded successfully!",
+      });
+    } catch (err) {
+      console.error(err);
+      setAlert({ severity: "error", message: "Failed to download Excel." });
+    }
+  };
+
   return {
     orders,
     pageSize,
@@ -537,6 +646,7 @@ export function useSalesDashboard() {
     handleLogout,
     handleDownloadTemplate: () => handleDownloadTemplate(false),
     handleDownloadBlankTemplate,
+    handleDownloadDispatchedExcel,
     handleBulkUpload,
     attachmentFileInputRef,
     handleUploadAttachment,

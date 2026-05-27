@@ -25,8 +25,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Divider,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -34,8 +34,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import TableRowsIcon from "@mui/icons-material/TableRows";
 import {
   useCustomerSOCount,
   useCustomerSOByMaterial,
@@ -48,6 +46,8 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useStatusCards } from "@/app/admin/components/hooks/useStatuscards";
 import CommonButton from "@/common/components/CommonButton";
+import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
+import { Download } from "lucide-react";
 
 // Chart - Table toggle button
 function ViewToggleButton({
@@ -130,15 +130,15 @@ function SOBarChartAndTable({
   setRowsPerPage,
   yAxisLabel = "SO Count",
   viewMode = "table",
-  onToggleView,
-  countColumnLabel = "SO COUNT",
   onCountClick,
+  countColumnLabel = "SO COUNT",
 }: {
   rows: {
     customerName: string;
     soCount: number;
-    orderDetails?: { soNumber: string; requiredQuantity: number }[];
-    saleOrderNumbers?: string[];
+    orderDetails?: any[];
+    saleOrderNumbers?: any[];
+    saleOrderDetails?: any[]; // Accommodate the updated structure
   }[];
   barColor: string;
   barLabel: string;
@@ -151,12 +151,7 @@ function SOBarChartAndTable({
   viewMode?: "chart" | "table";
   onToggleView?: () => void;
   countColumnLabel?: string;
-  onCountClick?: (row: {
-    customerName: string;
-    soCount: number;
-    orderDetails?: { soNumber: string; requiredQuantity: number }[];
-    saleOrderNumbers?: string[];
-  }) => void;
+  onCountClick?: (row: any) => void;
 }) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -392,8 +387,8 @@ function TabACards() {
       sx={{
         display: "grid",
         gridTemplateColumns: {
-          xs: "1fr", // 1 column on small
-          md: "repeat(3, 1fr)", // 3 columns on full width
+          xs: "1fr",
+          md: "repeat(3, 1fr)", 
         },
         gap: 3,
       }}
@@ -447,31 +442,6 @@ function TabACards() {
               >
                 {card.value}
               </Typography>
-
-              {/* {card.percentage !== undefined && (
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
-                                    <Typography
-                                        sx={{
-                                            fontSize: "0.875rem",
-                                            color: (t) =>
-                                                t.palette.mode === "dark" ? "#E5E7EB" : "#4B5563",
-                                        }}
-                                    >
-                                        VS LAST MONTH
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            fontSize: "0.875rem",
-                                            fontWeight: 600,
-                                            color: card.isPositive ? "#16A34A" : "#D00000",
-                                            display: "flex",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        {card.isPositive ? "↑" : "↓"} {card.percentage}
-                                    </Typography>
-                                </Box>
-                            )} */}
             </Box>
 
             {/* Right: icon box */}
@@ -497,7 +467,7 @@ function TabACards() {
   );
 }
 
-// TAB 2
+// TAB 2 (Customer vs SO)
 function CustomerSOCountTab() {
   const theme = useTheme();
   const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
@@ -517,7 +487,10 @@ function CustomerSOCountTab() {
 
   // State for Dialog Box
   const [selectedCustomer, setSelectedCustomer] =
-    React.useState<CustomerSOCountRow | null>(null);
+    React.useState<any | null>(null);
+
+  const [dialogPage, setDialogPage] = React.useState(0);
+  const [dialogRowsPerPage, setDialogRowsPerPage] = React.useState(10);
 
   const fromIso = cleared ? null : (fromDate?.format("YYYY-MM-DD") ?? null);
   const toIso = cleared ? null : (toDate?.format("YYYY-MM-DD") ?? null);
@@ -531,10 +504,52 @@ function CustomerSOCountTab() {
     return rows.filter((r) => r.customerName.toLowerCase().includes(lowerTerm));
   }, [rows, searchTerm]);
 
-  // NEW: Deduplicate SO Numbers to handle the edge case
-  const uniqueSoNumbers = React.useMemo(() => {
-    return Array.from(new Set(selectedCustomer?.saleOrderNumbers || []));
+  // NEW: Deduplicate SO Numbers + OBD to handle the composite edge case securely
+  const uniqueSaleOrders = React.useMemo(() => {
+    if (!selectedCustomer) return [];
+    
+    // Check for either the old format (saleOrderNumbers) or new (saleOrderDetails)
+    const source = selectedCustomer.saleOrderDetails || selectedCustomer.saleOrderNumbers || [];
+    
+    const map = new Map<string, any>();
+    source.forEach((item: any) => {
+      const soNum = typeof item === 'string' ? item : (item.soNumber || item.saleOrderNumber || "-");
+      const obd = typeof item === 'string' ? null : (item.outboundDelivery || item.obdNumber || null);
+      
+      const key = `${soNum}_${obd || 'NONE'}`;
+      if (!map.has(key)) {
+        map.set(key, { soNumber: soNum, outboundDelivery: obd });
+      }
+    });
+    return Array.from(map.values());
   }, [selectedCustomer]);
+
+  const paginatedSaleOrders = React.useMemo(() => {
+    return uniqueSaleOrders.slice(
+      dialogPage * dialogRowsPerPage,
+      dialogPage * dialogRowsPerPage + dialogRowsPerPage,
+    );
+  }, [uniqueSaleOrders, dialogPage, dialogRowsPerPage]);
+
+  const handleExportCustomerSO = async () => {
+    const exportData: any[] = [];
+    filteredRows.forEach((row: any) => {
+      const source = row.saleOrderDetails || row.saleOrderNumbers || [];
+      source.forEach((item: any) => {
+        const soNum = typeof item === 'string' ? item : (item.soNumber || item.saleOrderNumber || "-");
+        const obd = typeof item === 'string' ? null : (item.outboundDelivery || item.obdNumber || null);
+        exportData.push({
+          "Customer Name": row.customerName,
+          "SO Number": soNum,
+          "OBD Number": obd || "-",
+        });
+      });
+    });
+    await exportToExcel(
+      exportData,
+      `Customer_VS_SO_${dayjs().format("YYYY-MM-DD")}`,
+    );
+  };
 
   return (
     <Box>
@@ -672,6 +687,14 @@ function CustomerSOCountTab() {
             >
               <ClearIcon fontSize="small" />
             </IconButton>
+            <Tooltip title="Export to Excel">
+              <IconButton
+                onClick={handleExportCustomerSO}
+                sx={{ color: "#10b981", ml: 1 }}
+              >
+                <Download size={20} />
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {/* Toggle pinned to right */}
@@ -719,15 +742,21 @@ function CustomerSOCountTab() {
           onToggleView={() =>
             setViewMode((v) => (v === "chart" ? "table" : "chart"))
           }
-          onCountClick={(row) => setSelectedCustomer(row as CustomerSOCountRow)}
+          onCountClick={(row) => {
+            setSelectedCustomer(row);
+            setDialogPage(0);
+          }}
         />
       )}
 
-      {/* Dialog for displaying SO Numbers */}
+      {/* Dialog for displaying SO Numbers with OBD */}
       <Dialog
         open={Boolean(selectedCustomer)}
-        onClose={() => setSelectedCustomer(null)}
-        maxWidth="xs" // <-- NEW: Changed to 'xs' to make it a narrower, perfectly fitted box
+        onClose={() => {
+          setSelectedCustomer(null);
+          setDialogPage(0);
+        }}
+        maxWidth="md"
         fullWidth
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
@@ -771,26 +800,30 @@ function CustomerSOCountTab() {
             >
               <TableHead sx={{ bgcolor: "primary.main" }}>
                 <TableRow>
-                  {/* NEW: Removed S.No and Centered the SO Number header */}
                   <TableCell
                     align="center"
                     sx={{ color: "primary.contrastText", fontWeight: "bold" }}
                   >
                     SO Number
                   </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                  >
+                    Outbound Delivery
+                  </TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
-                {uniqueSoNumbers.length ? (
-                  uniqueSoNumbers.map((soNum, index) => (
-                    <TableRow key={`${soNum}-${index}`}>
+                {paginatedSaleOrders.length ? (
+                  paginatedSaleOrders.map((detail, index) => (
+                    <TableRow key={`${detail.soNumber}-${detail.outboundDelivery}-${dialogPage}-${index}`}>
                       <TableCell align="center">
-                        {/* NEW: Hyperlink to SO Search */}
                         <Typography
                           component={NextLink}
-                          href={`/so-search/${soNum}`}
-                          target="_blank" // Opens in new tab to preserve dashboard state
+                          href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? '/' + detail.outboundDelivery : ''}`}
+                          target="_blank"
                           sx={{
                             color: chartBlue,
                             fontWeight: 700,
@@ -798,26 +831,45 @@ function CustomerSOCountTab() {
                             "&:hover": { textDecoration: "underline" },
                           }}
                         >
-                          {soNum}
+                          {detail.soNumber}
                         </Typography>
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 500 }}>
+                          {detail.outboundDelivery || "-"}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell align="center">No SO numbers found.</TableCell>
+                    <TableCell colSpan={2} align="center">No SO numbers found.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={uniqueSaleOrders.length}
+            page={dialogPage}
+            onPageChange={(_, newPage) => setDialogPage(newPage)}
+            rowsPerPage={dialogRowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setDialogRowsPerPage(parseInt(e.target.value, 10));
+              setDialogPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50, 100]}
+            sx={{
+              borderTop: "1px solid",
+              borderColor: "divider",
+            }}
+          />
         </DialogContent>
       </Dialog>
     </Box>
   );
 }
 
-// TAB 3
+// TAB 3 (Customer vs Quantity)
 function MaterialSOCountTab() {
   const theme = useTheme();
   const chartBlue = theme.palette.mode === "dark" ? "#60A5FA" : "#3B82F6";
@@ -833,7 +885,10 @@ function MaterialSOCountTab() {
     dayjs().endOf("month"),
   );
   const [selectedCustomer, setSelectedCustomer] =
-    React.useState<CustomerSOByMaterialRow | null>(null);
+    React.useState<any | null>(null);
+
+  const [dialogPage, setDialogPage] = React.useState(0);
+  const [dialogRowsPerPage, setDialogRowsPerPage] = React.useState(10);
 
   const fromIso = fromDate?.format("YYYY-MM-DD") ?? null;
   const toIso = toDate?.format("YYYY-MM-DD") ?? null;
@@ -845,6 +900,25 @@ function MaterialSOCountTab() {
     notFound,
     fetch: fetchByMaterial,
   } = useCustomerSOByMaterial();
+
+  const handleExportCustomerQty = async () => {
+    const exportData: any[] = [];
+    rows.forEach((row: any) => {
+      row.orderDetails.forEach((detail: any) => {
+        const obd = detail.outboundDelivery || detail.obdNumber || null;
+        exportData.push({
+          "Customer Name": row.customerName,
+          "SO Number": detail.soNumber,
+          "OBD Number": obd || "-",
+          Quantity: detail.requiredQuantity,
+        });
+      });
+    });
+    await exportToExcel(
+      exportData,
+      `Customer_VS_Qty_${dayjs().format("YYYY-MM-DD")}`,
+    );
+  };
 
   const handleSearch = () => {
     const code = inputValue.trim().replace(/\s+/g, " ").toUpperCase();
@@ -860,23 +934,34 @@ function MaterialSOCountTab() {
     setPage(0);
   }, [fromIso, toIso]);
 
-  // NEW: Deduplicate and aggregate quantities in case of multiple same SOs
+  // NEW: Deduplicate and aggregate quantities handling SO + OBD to avoid squashing
   const uniqueOrderDetails = React.useMemo(() => {
     if (!selectedCustomer?.orderDetails) return [];
 
-    const aggregatedMap = new Map<string, number>();
-    selectedCustomer.orderDetails.forEach((detail) => {
-      const currentQty = aggregatedMap.get(detail.soNumber) || 0;
-      aggregatedMap.set(detail.soNumber, currentQty + detail.requiredQuantity);
+    const aggregatedMap = new Map<string, any>();
+    selectedCustomer.orderDetails.forEach((detail: any) => {
+      const obd = detail.outboundDelivery || detail.obdNumber || null;
+      const key = `${detail.soNumber}_${obd || 'NONE'}`;
+      
+      const existing = aggregatedMap.get(key) || {
+          soNumber: detail.soNumber,
+          outboundDelivery: obd,
+          requiredQuantity: 0
+      };
+      
+      existing.requiredQuantity += Number(detail.requiredQuantity) || 0;
+      aggregatedMap.set(key, existing);
     });
 
-    return Array.from(aggregatedMap.entries()).map(
-      ([soNumber, requiredQuantity]) => ({
-        soNumber,
-        requiredQuantity,
-      }),
-    );
+    return Array.from(aggregatedMap.values());
   }, [selectedCustomer]);
+
+  const paginatedOrderDetails = React.useMemo(() => {
+    return uniqueOrderDetails.slice(
+      dialogPage * dialogRowsPerPage,
+      dialogPage * dialogRowsPerPage + dialogRowsPerPage,
+    );
+  }, [uniqueOrderDetails, dialogPage, dialogRowsPerPage]);
 
   return (
     <Box>
@@ -1021,8 +1106,16 @@ function MaterialSOCountTab() {
               </IconButton>
             </Paper>
             <CommonButton onClick={handleSearch} disabled={!inputValue.trim()}>
-              Search
+              SEARCH
             </CommonButton>
+            <Tooltip title="Export to Excel">
+              <IconButton
+                onClick={handleExportCustomerQty}
+                sx={{ color: "#10b981", ml: 1 }}
+              >
+                <Download size={20} />
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {/* Toggle pinned to right */}
@@ -1083,16 +1176,21 @@ function MaterialSOCountTab() {
               onToggleView={() =>
                 setViewMode((v) => (v === "chart" ? "table" : "chart"))
               }
-              onCountClick={(row) =>
-                setSelectedCustomer(row as CustomerSOByMaterialRow)
-              }
+              onCountClick={(row) => {
+                setSelectedCustomer(row);
+                setDialogPage(0);
+              }}
             />
           )}
 
+        {/* Dialog for displaying Quantities with OBD */}
         <Dialog
           open={Boolean(selectedCustomer)}
-          onClose={() => setSelectedCustomer(null)}
-          maxWidth="xs" // <-- NEW: Thinned out the box
+          onClose={() => {
+            setSelectedCustomer(null);
+            setDialogPage(0);
+          }}
+          maxWidth="md"
           fullWidth
           PaperProps={{ sx: { borderRadius: 2 } }}
         >
@@ -1111,7 +1209,10 @@ function MaterialSOCountTab() {
           >
             {selectedCustomer?.customerName}
             <IconButton
-              onClick={() => setSelectedCustomer(null)}
+              onClick={() => {
+                setSelectedCustomer(null);
+                setDialogPage(0);
+              }}
               size="small"
               sx={{ position: "absolute", right: 12 }}
             >
@@ -1136,12 +1237,17 @@ function MaterialSOCountTab() {
               >
                 <TableHead sx={{ bgcolor: "primary.main" }}>
                   <TableRow>
-                    {/* NEW: Centered the headers */}
                     <TableCell
                       align="center"
                       sx={{ color: "primary.contrastText", fontWeight: "bold" }}
                     >
                       SO Number
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ color: "primary.contrastText", fontWeight: "bold" }}
+                    >
+                      Outbound Delivery
                     </TableCell>
                     <TableCell
                       align="center"
@@ -1153,15 +1259,16 @@ function MaterialSOCountTab() {
                 </TableHead>
 
                 <TableBody>
-                  {uniqueOrderDetails.length ? (
-                    uniqueOrderDetails.map((detail, index) => (
-                      <TableRow key={`${detail.soNumber}-${index}`}>
+                  {paginatedOrderDetails.length ? (
+                    paginatedOrderDetails.map((detail, index) => (
+                      <TableRow
+                        key={`${detail.soNumber}-${detail.outboundDelivery}-${dialogPage}-${index}`}
+                      >
                         <TableCell align="center">
-                          {/* NEW: Hyperlink to SO Search */}
                           <Typography
                             component={NextLink}
-                            href={`/so-search/${detail.soNumber}`}
-                            target="_blank" // Opens in new tab
+                            href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? '/' + detail.outboundDelivery : ''}`}
+                            target="_blank"
                             sx={{
                               color: chartBlue,
                               fontWeight: 700,
@@ -1172,6 +1279,9 @@ function MaterialSOCountTab() {
                             {detail.soNumber}
                           </Typography>
                         </TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 500 }}>
+                          {detail.outboundDelivery || "-"}
+                        </TableCell>
                         <TableCell align="center" sx={{ fontWeight: 600 }}>
                           {detail.requiredQuantity}
                         </TableCell>
@@ -1179,7 +1289,7 @@ function MaterialSOCountTab() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={2} align="center">
+                      <TableCell colSpan={3} align="center">
                         No order details found.
                       </TableCell>
                     </TableRow>
@@ -1187,6 +1297,22 @@ function MaterialSOCountTab() {
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePagination
+              component="div"
+              count={uniqueOrderDetails.length}
+              page={dialogPage}
+              onPageChange={(_, newPage) => setDialogPage(newPage)}
+              rowsPerPage={dialogRowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setDialogRowsPerPage(parseInt(e.target.value, 10));
+                setDialogPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50, 100]}
+              sx={{
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            />
           </DialogContent>
         </Dialog>
       </LocalizationProvider>

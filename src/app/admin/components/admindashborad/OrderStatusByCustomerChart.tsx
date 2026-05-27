@@ -171,7 +171,7 @@ export default function OrderStatusByCustomerChart({
       </div>
 
       {viewMode === "chart" ? (
-        <div className="h-[450px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
+        <div className="h-112.5 -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
           <BarChart
             dataset={chartData}
             height={380}
@@ -264,9 +264,9 @@ export default function OrderStatusByCustomerChart({
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((row) => (
+                paginatedData.map((row, index) => (
                   <tr
-                    key={row.customer}
+                    key={`${row.customer}-${page}-${index}`}
                     className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]"
                   >
                     <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">

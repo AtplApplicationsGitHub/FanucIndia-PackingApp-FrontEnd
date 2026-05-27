@@ -6,7 +6,6 @@ export type SalesOrder = {
   transferOrder: string;
   deliveryDate: string;
   transporterId: number;
-  // plantCodeId: number;
   plantCode: string;
   paymentClearance: boolean;
   salesZoneId: number;
@@ -25,6 +24,7 @@ export type SalesOrder = {
     name: string;
   } | null;
   notificationCount?: number;
+  Dispatch_SO?: { LRnumber?: string | null }[];
 };
 
 export type LookupData = {
