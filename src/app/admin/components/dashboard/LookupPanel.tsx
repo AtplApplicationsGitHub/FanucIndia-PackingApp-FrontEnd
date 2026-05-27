@@ -16,7 +16,7 @@ import {
   RefreshCcw,
   Download,
   Upload,
-  Settings
+  Settings,
 } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { authFetch } from "@/common/lib/authFetch";
@@ -28,7 +28,16 @@ import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog"
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
 import {
-  Button, Paper, useTheme, InputBase, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField
+  Button,
+  Paper,
+  useTheme,
+  InputBase,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -176,41 +185,44 @@ export default function AdminMasterLookupPanel() {
     setLocalSearch("");
   };
 
-  const getSearchKey = React.useCallback((): string => {
+  const getSearchKeys = React.useCallback((): string[] => {
     switch (selectedType) {
       case "products":
-        return "name";
+        return ["name"];
       case "transporters":
-        return "name";
+        return ["name"];
       case "plantCodes":
-        return "code";
+        return ["code"];
       case "salesZones":
-        return "name";
+        return ["name"];
       case "packConfigs":
-        return "configName";
+        return ["configName"];
       case "customers":
-        return "name";
+        return ["name", "address"];
       case "printers":
-        return "name";
+        return ["name"];
       case "materialBarcodes":
-        return "erpCode";
+        return ["erpCode"];
       case "users":
-        return "name";
+        return ["name"];
       default:
-        return "name";
+        return ["name"];
     }
   }, [selectedType]);
 
   const filteredData = React.useMemo(() => {
-    if (!searchQuery.trim()) return data;
-    const key = getSearchKey();
-    return data.filter((row) => {
-      const val = row[key];
-      return val
-        ? String(val).toLowerCase().includes(searchQuery.toLowerCase())
-        : false;
-    });
-  }, [data, searchQuery, getSearchKey]);
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return data;
+
+    const keys = getSearchKeys();
+
+    return data.filter((row) =>
+      keys.some((key) => {
+        const val = row[key];
+        return val ? String(val).toLowerCase().includes(query) : false;
+      }),
+    );
+  }, [data, searchQuery, getSearchKeys]);
 
   const openAddDialog = () => {
     setDialogMode("add");
@@ -302,7 +314,9 @@ export default function AdminMasterLookupPanel() {
   const openIpConfigDialog = async () => {
     setActionLoading(true);
     try {
-      const res = await authFetch(`${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`);
+      const res = await authFetch(
+        `${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`,
+      );
       if (res.ok) {
         const data = await res.json();
         setPrinterIp(data?.value || "");
@@ -324,18 +338,24 @@ export default function AdminMasterLookupPanel() {
     }
     setActionLoading(true);
     try {
-      const res = await authFetch(`${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`, {
-        method: "PATCH",
-        body: JSON.stringify({ value: printerIp.trim() }),
-      });
-      
+      const res = await authFetch(
+        `${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ value: printerIp.trim() }),
+        },
+      );
+
       if (!res.ok) {
         const err = await res.json();
         if (err.message === "") throw new Error("SILENT_ERROR");
         throw new Error("Failed to save IP");
       }
 
-      showSnackbar("Customer Label Printer IP updated successfully!", "success");
+      showSnackbar(
+        "Customer Label Printer IP updated successfully!",
+        "success",
+      );
       setIpDialogOpen(false);
     } catch (error: any) {
       if (error.message !== "SILENT_ERROR") {
@@ -501,12 +521,17 @@ export default function AdminMasterLookupPanel() {
           >
             <InputBase
               sx={{ ml: 1, flex: 1 }}
-              placeholder={`Search ${getSearchKey() === "erpCode"
-                ? "ERP Code"
-                : getSearchKey()
-                  .replace(/([A-Z])/g, " $1")
-                  .toLowerCase()
-                }...`}
+              placeholder={
+                selectedType === "customers"
+                  ? "Search name or address..."
+                  : `Search ${
+                      getSearchKeys()[0] === "erpCode"
+                        ? "ERP Code"
+                        : getSearchKeys()[0]
+                            .replace(/([A-Z])/g, " $1")
+                            .toLowerCase()
+                    }...`
+              }
               inputProps={{ "aria-label": "search" }}
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
@@ -543,10 +568,16 @@ export default function AdminMasterLookupPanel() {
               onChange={handleUploadBulk}
             />
           </CommonButton>
-          <CommonButton startIcon={<PlusCircle size={18} />} onClick={openAddDialog}>
+          <CommonButton
+            startIcon={<PlusCircle size={18} />}
+            onClick={openAddDialog}
+          >
             ADD NEW
           </CommonButton>
-          <CommonButton startIcon={<RefreshCcw size={18} />} onClick={fetchData}>
+          <CommonButton
+            startIcon={<RefreshCcw size={18} />}
+            onClick={fetchData}
+          >
             REFRESH
           </CommonButton>
           {selectedType === "printers" && (
@@ -630,11 +661,20 @@ export default function AdminMasterLookupPanel() {
       </Snackbar>
 
       {/* IP Configuration Dialog */}
-      <Dialog open={ipDialogOpen} onClose={() => setIpDialogOpen(false)} fullWidth maxWidth="xs">
+      <Dialog
+        open={ipDialogOpen}
+        onClose={() => setIpDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle
           sx={{
-            display: "flex", justifyContent: "center", alignItems: "center",
-            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: "20px",
+            letterSpacing: 0.5,
             color: "error.main",
             pb: 1,
             position: "relative",
