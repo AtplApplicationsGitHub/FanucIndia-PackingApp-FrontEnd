@@ -80,6 +80,7 @@ import {
 } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
 import { formatDateTimeIST } from "@/common/utils/dateTime";
+import VehicleEntries from "@/app/components/Vehicle-entries";
 
 interface Transporter {
   id: number;
@@ -690,6 +691,8 @@ export default function DispatchView() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [soLoading, setSoLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [vehicleEntriesDialogOpen, setVehicleEntriesDialogOpen] =
+    useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -1282,6 +1285,13 @@ export default function DispatchView() {
           <Box display="flex" gap={1} alignItems="center">
             <CommonButton
               variant="contained"
+              onClick={() => setVehicleEntriesDialogOpen(true)}
+              startIcon={<Truck size={16} />}
+            >
+              VEHICLE ENTRIES
+            </CommonButton>
+            <CommonButton
+              variant="contained"
               onClick={handleCreateClick}
               startIcon={<Plus size={16} />}
             >
@@ -1569,28 +1579,19 @@ export default function DispatchView() {
                               </Typography>
                             </TableCell>
                             <TableCell align="center">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenAttachmentDialog(row);
-                                }}
+                              <Tooltip
+                                title={`View attachments (${row.attachments?.length ?? 0})`}
                               >
-                                <Badge
-                                  badgeContent={row.attachments?.length ?? 0}
-                                  max={99}
-                                  invisible={!row.attachments?.length}
-                                  sx={{
-                                    "& .MuiBadge-badge": {
-                                      bgcolor: "text.secondary",
-                                      color: "background.paper",
-                                      fontWeight: 600,
-                                    },
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenAttachmentDialog(row);
                                   }}
                                 >
                                   <VisibilityIcon />
-                                </Badge>
-                              </IconButton>
+                                </IconButton>
+                              </Tooltip>
                             </TableCell>
                           </TableRow>
                         ))
@@ -2259,6 +2260,21 @@ export default function DispatchView() {
           }}
           showSnackbar={showSnackbar}
         />
+
+        <Dialog
+          open={vehicleEntriesDialogOpen}
+          onClose={() => setVehicleEntriesDialogOpen(false)}
+          fullWidth
+          maxWidth="xl"
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              overflow: "hidden",
+            },
+          }}
+        >
+          <VehicleEntries onClose={() => setVehicleEntriesDialogOpen(false)} />
+        </Dialog>
 
         <Menu
           anchorEl={menuAnchor}
