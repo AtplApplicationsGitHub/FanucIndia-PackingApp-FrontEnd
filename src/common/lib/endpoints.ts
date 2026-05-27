@@ -195,10 +195,16 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
 
   // Endpoints for Vehicle Entry Module
   VEHICLE_ENTRY: {
-    CREATE:                                       `${API_BASE_URL}/vehicle-entry`,
-    UPLOAD_ATTACHMENTS: (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
-    GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
-    DOWNLOAD_ATTACHMENT: (id: string | number, fileName: string) => `${API_BASE_URL}/vehicle-entry/${id}/attachments/${encodeURIComponent(fileName)}`,
+    BASE:                                         `${API_BASE_URL}/dispatch/vehicle-entries`,
+    LIST:                                         `${API_BASE_URL}/dispatch/vehicle-entries`,
+    GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/dispatch/vehicle-entries/${id}/attachments`,
+    DOWNLOAD_ATTACHMENT: (id: string | number, fileName: string) => `${API_BASE_URL}/dispatch/vehicle-entries/${id}/attachments/${encodeURIComponent(fileName)}`,
+    MOBILE: {
+      CREATE:                                       `${API_BASE_URL}/vehicle-entry`,
+      UPLOAD_ATTACHMENTS: (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
+      GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/vehicle-entry/${id}/attachments`,
+      DOWNLOAD_ATTACHMENT: (id: string | number, fileName: string) => `${API_BASE_URL}/vehicle-entry/${id}/attachments/${encodeURIComponent(fileName)}`,
+    },
   },
   ERP_MATERIAL_FILES: {
     BASE:                    `${API_BASE_URL}/v1/erp-material-files`,
