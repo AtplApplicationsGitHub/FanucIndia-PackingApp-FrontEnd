@@ -395,7 +395,10 @@ export function useAdminDashboard() {
     else if (e.key === "Escape") cancelCellEdit();
   };
 
-  const onOrderDelete = async (id: number) => {
+  const onOrderDelete = async (
+    id: number,
+    password?: string,
+  ): Promise<boolean> => {
     setDeleteLoading(true);
     setDeleteError(null);
 
@@ -403,8 +406,15 @@ export function useAdminDashboard() {
       const token = localStorage.getItem("token");
       await axios.delete(API.ADMIN.SALES_ORDER_BY_ID(id), {
         headers: { Authorization: `Bearer ${token}` },
+        data: { password },
       });
       fetchOrders();
+      setSnackbar({
+        open: true,
+        message: "Order deleted successfully",
+        severity: "success",
+      });
+      return true;
     } catch (error: unknown) {
       let message = "Delete failed.";
       if (axios.isAxiosError(error)) {
@@ -417,6 +427,8 @@ export function useAdminDashboard() {
         message = error.message;
       }
       setDeleteError(message);
+      setSnackbar({ open: true, message, severity: "error" });
+      return false;
     } finally {
       setDeleteLoading(false);
     }

@@ -177,7 +177,7 @@ function AdminDashboardContent() {
         open={adminSnackbar.open}
         autoHideDuration={6000}
         onClose={handleAdminSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleAdminSnackbarClose}
@@ -302,8 +302,8 @@ function AdminDashboardContent() {
                     rowCount={admin.totalOrders}
                     setCurrentPage={admin.setCurrentPage}
                     setPageSize={admin.setPageSize}
-                    onDelete={(id: number) =>
-                      admin.setConfirmDelete({ type: "orders", id })
+                    onDelete={(id: number, password?: string) =>
+                      admin.onOrderDelete(id, password)
                     }
                     onUpdateInline={onUpdateInline}
                     onOpenChat={handleOpenChat}

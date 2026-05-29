@@ -56,7 +56,7 @@ type Props = {
   rowCount: number;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: number, password?: string) => Promise<boolean>;
   onUpdateInline: (
     id: number,
     field: InlineEditField,
@@ -85,8 +85,11 @@ export default function AdminOrdersTable({
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
-  // --- INLINE EDIT STATE & LOGIC ---
   const [inlineEdit, setInlineEdit] = React.useState<InlineEdit>(null);
+  const [deleteTargetId, setDeleteTargetId] = React.useState<number | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleInlineSave = async (overrideValue?: string | number | null) => {
     if (!inlineEdit) return;
@@ -276,7 +279,9 @@ export default function AdminOrdersTable({
                 <TableRow key={row.id}>
                   {/* ACTIONS, NOTIFICATIONS, ERP DATA */}
                   <TableCell sx={{ whiteSpace: "nowrap", width: "1%" }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
                       <IconButton
                         onClick={(e) => handleMenuOpen(e, row.id)}
                         size="small"
@@ -330,7 +335,7 @@ export default function AdminOrdersTable({
                   <TableCell>
                     <MuiLink
                       component={Link}
-                      href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? '/' + row.outboundDelivery : ''}`}
+                      href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
                       underline="hover"
                       sx={{ fontWeight: 500 }}
                     >
@@ -361,8 +366,14 @@ export default function AdminOrdersTable({
                           borderRadius: "16px",
                           border: "1px solid",
                           borderColor: alpha(theme.palette.success.main, 0.5),
-                          backgroundColor: alpha(theme.palette.success.main, 0.1),
-                          color: theme.palette.mode === "dark" ? "#ffffff" : theme.palette.success.dark,
+                          backgroundColor: alpha(
+                            theme.palette.success.main,
+                            0.1,
+                          ),
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#ffffff"
+                              : theme.palette.success.dark,
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           minWidth: "50px",
@@ -381,7 +392,10 @@ export default function AdminOrdersTable({
                           border: "1px solid",
                           borderColor: alpha(theme.palette.error.main, 0.5),
                           backgroundColor: alpha(theme.palette.error.main, 0.1),
-                          color: theme.palette.mode === "dark" ? "#ffffff" : theme.palette.error.main,
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#ffffff"
+                              : theme.palette.error.main,
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           minWidth: "50px",
@@ -417,11 +431,20 @@ export default function AdminOrdersTable({
                       if (!row.status) return <Box>-</Box>;
                       let colorMain = theme.palette.grey[500];
                       let label = row.status;
-                      if (row.status === "R105") { colorMain = "#3b82f6"; label = "R105"; }
-                      else if (row.status === "W105") { colorMain = "#eab308"; label = "W105"; }
-                      else if (row.status === "F105") { colorMain = "#8b5cf6"; label = "F105"; }
-                      else if (row.status === "Dispatched") { colorMain = "#10b981"; label = "Dispatched"; }
-                      
+                      if (row.status === "R105") {
+                        colorMain = "#3b82f6";
+                        label = "R105";
+                      } else if (row.status === "W105") {
+                        colorMain = "#eab308";
+                        label = "W105";
+                      } else if (row.status === "F105") {
+                        colorMain = "#8b5cf6";
+                        label = "F105";
+                      } else if (row.status === "Dispatched") {
+                        colorMain = "#10b981";
+                        label = "Dispatched";
+                      }
+
                       return (
                         <Box
                           sx={{
@@ -433,11 +456,16 @@ export default function AdminOrdersTable({
                             border: "1px solid",
                             borderColor: alpha(colorMain, 0.5),
                             backgroundColor: alpha(colorMain, 0.1),
-                            color: theme.palette.mode === "dark" ? "#ffffff" : (colorMain === "#eab308" ? "#b45309" : colorMain),
+                            color:
+                              theme.palette.mode === "dark"
+                                ? "#ffffff"
+                                : colorMain === "#eab308"
+                                  ? "#b45309"
+                                  : colorMain,
                             fontSize: "0.75rem",
                             fontWeight: 600,
                             minWidth: "50px",
-                            whiteSpace: "nowrap"
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {label}
@@ -445,8 +473,6 @@ export default function AdminOrdersTable({
                       );
                     })()}
                   </TableCell>
-
-
 
                   {/* SPECIAL REMARKS */}
                   {/* <TableCell>{row.specialRemarks || "-"}</TableCell> */}
@@ -512,7 +538,7 @@ export default function AdminOrdersTable({
 
         <MenuItem
           onClick={() => {
-            if (menuRowId) onDelete(menuRowId);
+            if (menuRowId) setDeleteTargetId(menuRowId);
             handleMenuClose();
           }}
           sx={{ color: "error.main" }}
@@ -561,6 +587,28 @@ export default function AdminOrdersTable({
         title="Confirm Archive"
         description={`Are you sure you want to archive Sales Order ${soNumberToProcess}? This will move the data to archives.`}
         loading={isArchiveLoading}
+      />
+
+      {/* DELETE ORDER CONFIRM DIALOG */}
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTargetId)}
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={async (password) => {
+          if (deleteTargetId) {
+            setIsDeleting(true); // Start spinner
+            const success = await onDelete(deleteTargetId, password);
+            setIsDeleting(false); // Stop spinner
+
+            if (success) {
+              setDeleteTargetId(null); // Only close if the password was correct!
+            }
+          }
+        }}
+        title="Confirm Order Deletion"
+        description="Are you sure you want to delete this order? Please enter the Super Password to confirm."
+        requirePassword={true}
+        confirmText="DELETE"
+        loading={isDeleting} // Connect the spinner to the button
       />
     </Box>
   );
