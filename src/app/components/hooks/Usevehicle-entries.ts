@@ -61,7 +61,7 @@ const getRowsFromResponse = (payload: VehicleEntryResponse): VehicleEntry[] => {
   );
 };
 
-export function useVehicleEntries() {
+export function useVehicleEntries(selectedDate?: string) {
   const [rows, setRows] = useState<VehicleEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,7 +71,16 @@ export function useVehicleEntries() {
     setError("");
 
     try {
-      const response = await fetchWithAuth(API.VEHICLE_ENTRY.LIST);
+      const response = await fetchWithAuth(
+        API.VEHICLE_ENTRY.LIST(
+          selectedDate
+            ? {
+                startDate: selectedDate,
+                endDate: selectedDate,
+              }
+            : undefined,
+        ),
+      );
       if (!response.ok) throw new Error("Failed to load vehicle entries");
 
       const payload = (await response.json()) as VehicleEntryResponse;
@@ -82,7 +91,7 @@ export function useVehicleEntries() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchVehicleEntries();

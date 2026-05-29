@@ -196,7 +196,13 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
   // Endpoints for Vehicle Entry Module
   VEHICLE_ENTRY: {
     BASE:                                         `${API_BASE_URL}/dispatch/vehicle-entries`,
-    LIST:                                         `${API_BASE_URL}/dispatch/vehicle-entries`,
+    LIST: (params?: { startDate?: string; endDate?: string }) => {
+      const query = new URLSearchParams();
+      if (params?.startDate) query.set("startDate", params.startDate);
+      if (params?.endDate) query.set("endDate", params.endDate);
+      const qs = query.toString();
+      return `${API_BASE_URL}/dispatch/vehicle-entries${qs ? "?" + qs : ""}`;
+    },
     GET_ATTACHMENTS:    (id: string | number) =>  `${API_BASE_URL}/dispatch/vehicle-entries/${id}/attachments`,
     DOWNLOAD_ATTACHMENT: (id: string | number, fileName: string) => `${API_BASE_URL}/dispatch/vehicle-entries/${id}/attachments/${encodeURIComponent(fileName)}`,
     MOBILE: {

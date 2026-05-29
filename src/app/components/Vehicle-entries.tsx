@@ -23,6 +23,10 @@ import {
   useTheme,
 } from "@mui/material";
 import { Close, Download, Visibility } from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs, { type Dayjs } from "dayjs";
 import {
   useVehicleEntries,
   useVehicleEntryAttachments,
@@ -54,6 +58,14 @@ const TABLE_HEADER_YELLOW = "#FFCC00";
 const displayValue = (value?: string | number | null) => {
   if (value === null || value === undefined || value === "") return "-";
   return String(value);
+};
+
+const getTodayDateValue = () => {
+  const today = new Date();
+  const localToday = new Date(
+    today.getTime() - today.getTimezoneOffset() * 60_000,
+  );
+  return localToday.toISOString().slice(0, 10);
 };
 
 const getUserName = (value?: string | number | VehicleEntryUser | null) => {
@@ -157,7 +169,8 @@ const StatusChip = ({ status }: { status: string }) => {
 export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
-  const { rows, loading, error } = useVehicleEntries();
+  const [selectedDate, setSelectedDate] = useState(getTodayDateValue);
+  const { rows, loading, error } = useVehicleEntries(selectedDate);
   const {
     attachments,
     loading: attachmentsLoading,
@@ -184,6 +197,13 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDateChange = (value: Dayjs | null) => {
+    const nextDate =
+      value && value.isValid() ? value.format("YYYY-MM-DD") : getTodayDateValue();
+    setSelectedDate(nextDate);
     setPage(0);
   };
 
@@ -238,15 +258,16 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
   };
 
   return (
-    <>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ width: "100%", bgcolor: "background.paper" }}>
         <Box
           sx={{
-            minHeight: 60,
+            minHeight: { xs: 112, sm: 68 },
             px: 2.25,
             py: 1.5,
             color: theme.palette.primary.contrastText,
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             alignItems: "center",
             justifyContent: "center",
             gap: 2,
@@ -268,6 +289,37 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           >
             VEHICLE ENTRIES
           </Typography>
+          <DatePicker
+            label="DATE"
+            value={dayjs(selectedDate)}
+            onChange={handleDateChange}
+            format="DD-MM-YYYY"
+            slotProps={{
+              field: {
+                clearable: true,
+                onClear: () => handleDateChange(null),
+              },
+              textField: {
+                size: "small",
+                variant: "outlined",
+                sx: {
+                  width: { xs: 180, sm: 185 },
+                  flex: "0 0 auto",
+                  position: { xs: "static", sm: "absolute" },
+                  right: onClose ? 52 : 16,
+                  top: { sm: "50%" },
+                  transform: { sm: "translateY(-50%)" },
+                  "& .MuiInputBase-root": {
+                    height: 40,
+                    fontSize: "13px",
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "12px",
+                  },
+                },
+              },
+            }}
+          />
           {onClose ? (
             <IconButton
               aria-label="Close vehicle entries"
@@ -604,6 +656,6 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           </TableContainer>
         </DialogContent>
       </Dialog>
-    </>
+    </LocalizationProvider>
   );
 }

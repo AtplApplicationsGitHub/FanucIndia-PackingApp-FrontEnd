@@ -5,6 +5,7 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 export type FgStorageReportRow = {
     fgLocation: string | null;
     saleOrderNumber: string;
+    user: string;
     outboundDelivery: string;
     LastUpdatedBy: string;
     dateTime: string;
@@ -14,7 +15,8 @@ export type FgStorageReportRow = {
 function normalizeRow(item: any): FgStorageReportRow {
     return {
         fgLocation: item.fgLocation ?? null,
-        saleOrderNumber: item.saleOrderNumber ?? "",
+        saleOrderNumber: item.saleOrderNumber ?? item.salesOrderNumber ?? "",
+        user: item.user ?? item.LastUpdatedBy ?? "-",
         outboundDelivery: item.outboundDelivery ?? "",
         LastUpdatedBy: item.LastUpdatedBy === "Unknown" ? "-" : (item.LastUpdatedBy ?? "-"),
         dateTime: item.dateTime ?? "",
