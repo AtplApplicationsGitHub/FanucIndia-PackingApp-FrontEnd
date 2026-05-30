@@ -138,6 +138,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
     SIGNUP:              `${API_BASE_URL}/auth/signup`,
     CHECK_EMAIL:         (email: string) =>
                          `${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`,
+    CHECK_SESSION:       `${API_BASE_URL}/auth/check-session`,
   },
   USER_DASHBOARD: {
     ORDERS:                                                `${API_BASE_URL}/user-dashboard/orders`,

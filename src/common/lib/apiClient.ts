@@ -5,6 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import Cookies from "js-cookie";
 
 export const apiClient = axios.create({
   withCredentials: true,
@@ -44,8 +45,12 @@ apiClient.interceptors.response.use(
     if (isSessionError && !isLoginRequest && typeof window !== 'undefined') {
         if (!isRedirecting) {
             isRedirecting = true;
+
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+
+            Cookies.remove("token");
+            Cookies.remove("role");
             
             window.dispatchEvent(new CustomEvent('show-global-message', { 
                 detail: { message: errorMessage, severity: 'error' } 
@@ -55,24 +60,19 @@ apiClient.interceptors.response.use(
                 window.location.href = '/login?reason=session-expired';
             }, 3000); 
         }
-        // Swallow the promise completely so it halts execution
         return new Promise(() => {});
     }
 
     if (typeof window !== 'undefined' && !isLoginRequest) {
-        // Fire the global snackbar
         window.dispatchEvent(new CustomEvent('show-global-message', { 
             detail: { message: errorMessage, severity: 'error' } 
         }));
 
-        // SCRUB the error message from the response data.
-        // This prevents the local components from rendering the ugly text at the bottom.
         if (err.response && err.response.data && typeof err.response.data === 'object') {
             (err.response.data as any).message = '';
         }
     }
 
-    // Reject with the actual Error instance to prevent Next.js router crashes
     err.message = ''; 
     (err as any).code = payload?.code ?? 'INTERNAL_ERROR';
     
