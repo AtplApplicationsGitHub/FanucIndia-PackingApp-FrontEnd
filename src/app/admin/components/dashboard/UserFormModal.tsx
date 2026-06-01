@@ -40,6 +40,7 @@ export interface UserSubmitData {
   accessPickPack?: boolean;
   accessLabelPrint?: boolean;
   accessMaterialFgTransfer?: boolean;
+  accessManualFgLocation?: boolean;
   accessMaterialDispatch?: boolean;
   accessVehicleEntry?: boolean;
   accessLocationAccuracy?: boolean;
@@ -60,6 +61,7 @@ const MOBILE_MODULES = [
   { label: "Pick & Pack", key: "accessPickPack" },
   { label: "Customer Label Print", key: "accessLabelPrint" },
   { label: "Material FG/Transfer", key: "accessMaterialFgTransfer" },
+  { label: "Manual FG Location", key: "accessManualFgLocation" },
   { label: "Material Dispatch", key: "accessMaterialDispatch" },
   { label: "Vehicle Entry", key: "accessVehicleEntry" },
   { label: "Location Accuracy", key: "accessLocationAccuracy" },
@@ -228,6 +230,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       if (editingUser.accessPickPack) currentAccess.push("accessPickPack");
       if (editingUser.accessLabelPrint) currentAccess.push("accessLabelPrint");
       if (editingUser.accessMaterialFgTransfer) currentAccess.push("accessMaterialFgTransfer");
+      if (editingUser.accessManualFgLocation) currentAccess.push("accessManualFgLocation");
       if (editingUser.accessMaterialDispatch) currentAccess.push("accessMaterialDispatch");
       if (editingUser.accessVehicleEntry) currentAccess.push("accessVehicleEntry");
       if (editingUser.accessLocationAccuracy) currentAccess.push("accessLocationAccuracy");
@@ -264,6 +267,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       accessPickPack: false,
       accessLabelPrint: false,
       accessMaterialFgTransfer: false,
+      accessManualFgLocation: false,
       accessMaterialDispatch: false,
       accessVehicleEntry: false,
       accessLocationAccuracy: false,
@@ -284,6 +288,7 @@ const AdminUserFormModal: React.FC<Props> = ({
       payload.accessPickPack = selectedModules.includes("accessPickPack");
       payload.accessLabelPrint = selectedModules.includes("accessLabelPrint");
       payload.accessMaterialFgTransfer = selectedModules.includes("accessMaterialFgTransfer");
+      payload.accessManualFgLocation = selectedModules.includes("accessManualFgLocation");
       payload.accessMaterialDispatch = selectedModules.includes("accessMaterialDispatch");
       payload.accessVehicleEntry = selectedModules.includes("accessVehicleEntry");
       payload.accessLocationAccuracy = selectedModules.includes("accessLocationAccuracy");

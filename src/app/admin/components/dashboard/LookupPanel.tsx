@@ -171,7 +171,7 @@ function SuperPasswordDialog({
           position: "relative",
         }}
       >
-        SUPER PASSWORD
+        SUPER ADMIN PASSWORD
         <IconButton
           aria-label="close"
           onClick={onClose}

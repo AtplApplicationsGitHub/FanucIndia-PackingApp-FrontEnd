@@ -98,6 +98,7 @@ export interface User {
   accessPickPack?: boolean;
   accessLabelPrint?: boolean;
   accessMaterialFgTransfer?: boolean;
+  accessManualFgLocation?: boolean;
   accessMaterialDispatch?: boolean;
   accessVehicleEntry?: boolean;
   accessLocationAccuracy?: boolean;

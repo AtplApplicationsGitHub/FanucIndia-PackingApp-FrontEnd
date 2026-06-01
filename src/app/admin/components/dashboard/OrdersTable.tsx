@@ -605,7 +605,7 @@ export default function AdminOrdersTable({
           }
         }}
         title="Confirm Order Deletion"
-        description="Are you sure you want to delete this order? Please enter the Super Password to confirm."
+        description="Are you sure you want to delete this order? Please enter the Super Admin Password to confirm."
         requirePassword={true}
         confirmText="DELETE"
         loading={isDeleting} // Connect the spinner to the button
