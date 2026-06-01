@@ -169,8 +169,12 @@ const StatusChip = ({ status }: { status: string }) => {
 export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
-  const [selectedDate, setSelectedDate] = useState(getTodayDateValue);
-  const { rows, loading, error } = useVehicleEntries(selectedDate);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    getTodayDateValue,
+  );
+  const { rows, loading, error } = useVehicleEntries(
+    selectedDate ?? undefined,
+  );
   const {
     attachments,
     loading: attachmentsLoading,
@@ -202,7 +206,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
 
   const handleDateChange = (value: Dayjs | null) => {
     const nextDate =
-      value && value.isValid() ? value.format("YYYY-MM-DD") : getTodayDateValue();
+      value && value.isValid() ? value.format("YYYY-MM-DD") : null;
     setSelectedDate(nextDate);
     setPage(0);
   };
@@ -291,7 +295,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           </Typography>
           <DatePicker
             label="DATE"
-            value={dayjs(selectedDate)}
+            value={selectedDate ? dayjs(selectedDate) : null}
             onChange={handleDateChange}
             format="DD-MM-YYYY"
             slotProps={{
