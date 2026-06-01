@@ -69,7 +69,7 @@ const allMenuItems = [
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
   { label: "DISPATCH", icon: <Truck className="mr-1 h-4 w-4" />, value: "dispatch" },
   { label: "FG DASHBOARD", icon: <Grid className="mr-1 h-4 w-4" />, value: "fg_dashboard" },
-  // { label: "FG-LOCATION", icon: <MapPin className="mr-1 h-4 w-4" />, value: "fg_location" },
+  { label: "FG-LOCATION", icon: <MapPin className="mr-1 h-4 w-4" />, value: "fg_location" },  
 ];
 
 const REPORTS_MENU = [

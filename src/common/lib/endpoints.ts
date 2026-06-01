@@ -234,6 +234,7 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
   FG_DASHBOARD:              `${API_BASE_URL}/fg-dashboard`,
   FG_STORAGE: {
     MOBILE_ASSIGN_LOCATION:  `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
+    MANUAL_LIST:             `${API_BASE_URL}/manual-fg-storage/list`,
   },
   DASHBOARD: {
     SALES_KPIS:              `${API_BASE_URL}/dashboard/sales-kpis`,

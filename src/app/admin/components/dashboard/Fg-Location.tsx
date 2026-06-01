@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import Box from "@mui/material/Box";
 import {
   alpha,
-  Box,
+  CircularProgress,
+  IconButton,
+  InputBase,
   Link as MuiLink,
   Paper,
   Table,
@@ -17,59 +19,237 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useFgStorageReport } from "@/app/admin/components/hooks/useFgStorageReport";
-import { formatDateTimeIST } from "@/common/utils/dateTime";
+import ClearIcon from "@mui/icons-material/Clear";
+import SearchIcon from "@mui/icons-material/Search";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import Link from "next/link";
+import {
+  ManualFgStorageRow,
+  useManualFgStorageList,
+} from "@/app/admin/components/hooks/UserFg-Location";
+import { formatDateTimeIST, getISTDateKey } from "@/common/utils/dateTime";
 
 function formatDate(iso: string) {
   if (!iso || iso === "-") return "-";
-  try {
-    return formatDateTimeIST(iso);
-  } catch {
-    return iso;
-  }
+  return formatDateTimeIST(iso);
+}
+
+function matchesSearch(row: ManualFgStorageRow, search: string) {
+  const term = search.trim().toLowerCase();
+  if (!term) return true;
+
+  return [
+    row.salesOrderNumber,
+    row.fgLocation,
+    row.user,
+    row.dateTime,
+    formatDate(row.dateTime),
+  ].some((value) => value.toLowerCase().includes(term));
+}
+
+function matchesDate(row: ManualFgStorageRow, selectedDateKey: string) {
+  if (!selectedDateKey) return true;
+  return getISTDateKey(row.dateTime) === selectedDateKey;
 }
 
 export default function FgLocation() {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
 
+  const [searchInput, setSearchInput] = React.useState("");
+  const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  const { rows, totalCount, loading, error } = useFgStorageReport(
-    page,
-    rowsPerPage,
-    "",
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(
+    () => new Date(),
   );
+
+  const { rows, loading, error } = useManualFgStorageList();
+
+  const selectedDateKey = React.useMemo(
+    () => getISTDateKey(selectedDate),
+    [selectedDate],
+  );
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [search, selectedDateKey]);
+
+  const filteredRows = React.useMemo(
+    () =>
+      rows.filter(
+        (row) =>
+          matchesDate(row, selectedDateKey) && matchesSearch(row, search),
+      ),
+    [rows, search, selectedDateKey],
+  );
+
+  const visibleRows = React.useMemo(
+    () =>
+      filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [filteredRows, page, rowsPerPage],
+  );
+
+  const applySearch = () => {
+    setSearch(searchInput.trim().replace(/\s+/g, " "));
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearch("");
+  };
 
   return (
     <Box
       sx={{
         width: "100%",
         minWidth: 0,
-        pt: 1,
+        pt: 0,
         pb: 4,
-        px: { xs: 2, md: 4 },
+        px: { xs: 1, sm: 2, md: 4 },
       }}
     >
-      <Paper
-        elevation={0}
+      <Box
         sx={{
           width: "100%",
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden",
-          bgcolor: "background.paper",
+          mb: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
         }}
       >
+        <Paper
+          elevation={2}
+          sx={{
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            width: { xs: "100%", md: "auto" },
+            display: "flex",
+            flexDirection: { xs: "column", lg: "row" },
+            alignItems: { xs: "stretch", lg: "center" },
+            gap: 2,
+            px: { xs: 1.5, sm: 2, md: 3 },
+            py: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: { xs: "wrap", sm: "nowrap" },
+              gap: 1.25,
+              alignItems: "center",
+              justifyContent: "center",
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                width: { xs: "100%", lg: "auto" },
+                flex: { lg: "0 1 260px" },
+                minWidth: { lg: 220 },
+                maxWidth: { lg: 280 },
+              }}
+            >
+              <Box
+                component="form"
+                onSubmit={(e: React.FormEvent) => {
+                  e.preventDefault();
+                  applySearch();
+                }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: 1,
+                  minWidth: 0,
+                  p: "2px 4px",
+                  border: 1,
+                  borderColor: (t) =>
+                    t.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.23)"
+                      : "#e0e0e0",
+                  borderRadius: "4px",
+                  height: 40,
+                  bgcolor: "background.paper",
+                }}
+              >
+                <InputBase
+                  sx={{ ml: 1, flex: 1, fontSize: "13px" }}
+                  placeholder="Search"
+                  inputProps={{ "aria-label": "search manual fg storage" }}
+                  value={searchInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchInput(value);
+                    if (value === "") setSearch("");
+                  }}
+                />
+                {searchInput && (
+                  <IconButton
+                    sx={{ p: "5px" }}
+                    aria-label="clear"
+                    onClick={handleClearSearch}
+                  >
+                    <ClearIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                )}
+                <IconButton
+                  type="submit"
+                  sx={{ p: "5px" }}
+                  aria-label="search"
+                >
+                  <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                </IconButton>
+              </Box>
+            </Box>
+
+            <DatePicker
+              label="DATE"
+              value={selectedDate ? dayjs(selectedDate) : null}
+              onChange={(value) =>
+                setSelectedDate(value ? value.toDate() : null)
+              }
+              format="DD-MM-YYYY"
+              slotProps={{
+                field: {
+                  clearable: true,
+                  onClear: () => setSelectedDate(null),
+                },
+                textField: {
+                  size: "small",
+                  variant: "outlined",
+                  sx: {
+                    width: { xs: "100%", sm: 150, md: 160, lg: 185 },
+                    flex: "0 0 auto",
+                    minWidth: { xs: "100%", sm: 160 },
+                    "& .MuiInputBase-root": {
+                      height: 40,
+                      fontSize: "13px",
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "12px",
+                    },
+                  },
+                },
+              }}
+            />
+          </Box>
+        </Paper>
+      </Box>
+
+      <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden" }}>
         {error && (
           <Typography color="error" variant="body2" sx={{ px: 3, pt: 1 }}>
             {error}
           </Typography>
         )}
 
-        <TableContainer>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
           <Table
             sx={{
               minWidth: 650,
@@ -81,8 +261,8 @@ export default function FgLocation() {
               },
               "& .MuiTableCell-root": {
                 borderBottom: "none",
-                py: 1.5,
-                px: 2,
+                py: 0.5,
+                px: 1,
                 fontSize: "0.875rem",
                 whiteSpace: "nowrap",
               },
@@ -96,7 +276,7 @@ export default function FgLocation() {
             >
               <TableRow sx={{ height: 60 }}>
                 {[
-                  "SALES ORDER NUMBER",
+                  "SALE ORDER NUMBER",
                   "FG LOCATION",
                   "USER",
                   "DATE & TIME",
@@ -120,10 +300,10 @@ export default function FgLocation() {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    Loading...
+                    <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
-              ) : rows.length === 0 ? (
+              ) : visibleRows.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={4}
@@ -134,19 +314,17 @@ export default function FgLocation() {
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((row, index) => (
-                  <TableRow
-                    key={`${row.saleOrderNumber}-${row.dateTime}-${index}`}
-                  >
+                visibleRows.map((row) => (
+                  <TableRow key={row.id}>
                     <TableCell>
-                      {row.saleOrderNumber ? (
+                      {row.salesOrderNumber ? (
                         <MuiLink
                           component={Link}
-                          href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
+                          href={`/so-search/${row.salesOrderNumber}`}
                           underline="hover"
                           sx={{ fontWeight: 500 }}
                         >
-                          {row.saleOrderNumber}
+                          {row.salesOrderNumber}
                         </MuiLink>
                       ) : (
                         "-"
@@ -163,21 +341,25 @@ export default function FgLocation() {
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
 
-      <TablePagination
-        component="div"
-        count={totalCount}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={(e) => {
-          setRowsPerPage(parseInt(e.target.value, 10));
-          setPage(0);
-        }}
-        rowsPerPageOptions={[10, 20, 50, 100]}
-        sx={{ bgcolor: "transparent" }}
-      />
+        <TablePagination
+          component="div"
+          count={filteredRows.length}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[10, 20, 50, 100]}
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+          }}
+        />
+      </Box>
     </Box>
   );
 }

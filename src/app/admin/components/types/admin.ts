@@ -105,6 +105,7 @@ export interface User {
   accessPutAway?: boolean;
   accessErpBarcode?: boolean;
   accessAttachment?: boolean;
+  accessManualFgLocation?: boolean;
 }
 
 export interface AdminKpisResponse {
