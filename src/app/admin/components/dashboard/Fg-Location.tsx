@@ -16,6 +16,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -24,7 +25,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import {
+  downloadManualFgLocationExcel,
   ManualFgStorageRow,
   useManualFgStorageList,
 } from "@/app/admin/components/hooks/UserFg-Location";
@@ -35,17 +38,11 @@ function formatDate(iso: string) {
   return formatDateTimeIST(iso);
 }
 
-function matchesSearch(row: ManualFgStorageRow, search: string) {
+function matchesSalesOrder(row: ManualFgStorageRow, search: string) {
   const term = search.trim().toLowerCase();
   if (!term) return true;
 
-  return [
-    row.salesOrderNumber,
-    row.fgLocation,
-    row.user,
-    row.dateTime,
-    formatDate(row.dateTime),
-  ].some((value) => value.toLowerCase().includes(term));
+  return row.salesOrderNumber.toLowerCase().includes(term);
 }
 
 function matchesDate(row: ManualFgStorageRow, selectedDateKey: string) {
@@ -64,13 +61,18 @@ export default function FgLocation() {
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(
     () => new Date(),
   );
-
-  const { rows, loading, error } = useManualFgStorageList();
+  const [downloadingExcel, setDownloadingExcel] = React.useState(false);
+  const [downloadError, setDownloadError] = React.useState<string | null>(null);
 
   const selectedDateKey = React.useMemo(
     () => getISTDateKey(selectedDate),
     [selectedDate],
   );
+
+  const { rows, loading, error } = useManualFgStorageList({
+    date: selectedDateKey || undefined,
+    salesOrderNumber: search || undefined,
+  });
 
   React.useEffect(() => {
     setPage(0);
@@ -80,7 +82,7 @@ export default function FgLocation() {
     () =>
       rows.filter(
         (row) =>
-          matchesDate(row, selectedDateKey) && matchesSearch(row, search),
+          matchesDate(row, selectedDateKey) && matchesSalesOrder(row, search),
       ),
     [rows, search, selectedDateKey],
   );
@@ -98,6 +100,27 @@ export default function FgLocation() {
   const handleClearSearch = () => {
     setSearchInput("");
     setSearch("");
+  };
+
+  const handleDownloadExcel = async () => {
+    setDownloadError(null);
+    setDownloadingExcel(true);
+
+    try {
+      await downloadManualFgLocationExcel({
+        date: selectedDateKey || undefined,
+        salesOrderNumber: search || undefined,
+      });
+    } catch (err) {
+      console.error("Failed to download manual FG location Excel", err);
+      setDownloadError(
+        err instanceof Error
+          ? err.message
+          : "Failed to download manual FG location Excel",
+      );
+    } finally {
+      setDownloadingExcel(false);
+    }
   };
 
   return (
@@ -211,14 +234,17 @@ export default function FgLocation() {
             <DatePicker
               label="DATE"
               value={selectedDate ? dayjs(selectedDate) : null}
-              onChange={(value) =>
-                setSelectedDate(value ? value.toDate() : null)
-              }
+              onChange={(value) => {
+                setSelectedDate(value?.isValid() ? value.toDate() : null);
+              }}
               format="DD-MM-YYYY"
               slotProps={{
                 field: {
                   clearable: true,
-                  onClear: () => setSelectedDate(null),
+                  onClear: () => {
+                    setSelectedDate(null);
+                    setPage(0);
+                  },
                 },
                 textField: {
                   size: "small",
@@ -238,14 +264,39 @@ export default function FgLocation() {
                 },
               }}
             />
+
+            <Tooltip title="Download Excel">
+              <span>
+                <IconButton
+                  onClick={handleDownloadExcel}
+                  disabled={downloadingExcel}
+                  sx={{
+                    color: "#10b981",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1,
+                    height: 40,
+                    width: 40,
+                    flex: "0 0 auto",
+                  }}
+                  aria-label="download excel"
+                >
+                  {downloadingExcel ? (
+                    <CircularProgress size={18} />
+                  ) : (
+                    <Download size={20} />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
           </Box>
         </Paper>
       </Box>
 
       <Box sx={{ width: "100%", borderRadius: 2, overflow: "hidden" }}>
-        {error && (
+        {(error || downloadError) && (
           <Typography color="error" variant="body2" sx={{ px: 3, pt: 1 }}>
-            {error}
+            {error || downloadError}
           </Typography>
         )}
 

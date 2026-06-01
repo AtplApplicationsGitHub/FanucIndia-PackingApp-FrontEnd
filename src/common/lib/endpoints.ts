@@ -1,5 +1,20 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+export type ManualFgLocationQuery = {
+  date?: string;
+  salesOrderNumber?: string;
+};
+
+function buildManualFgLocationQuery(params?: ManualFgLocationQuery) {
+  const query = new URLSearchParams();
+  if (params?.date) query.set("date", params.date);
+  if (params?.salesOrderNumber) {
+    query.set("salesOrderNumber", params.salesOrderNumber);
+  }
+  const qs = query.toString();
+  return qs ? `?${qs}` : "";
+}
+
 export const API = {
   LOOKUP: {
     PRODUCTS:                                   `${API_BASE_URL}/lookup/products`,
@@ -234,7 +249,10 @@ CUSTOMER_SO_BY_MATERIAL: (materialCode: string, fromDate?: string | null, toDate
   FG_DASHBOARD:              `${API_BASE_URL}/fg-dashboard`,
   FG_STORAGE: {
     MOBILE_ASSIGN_LOCATION:  `${API_BASE_URL}/fg-storage/assign-location`, // Endpoint for mobile assign location
-    MANUAL_LIST:             `${API_BASE_URL}/manual-fg-storage/list`,
+    MANUAL_LIST: (params?: ManualFgLocationQuery) =>
+      `${API_BASE_URL}/manual-fg-location/list${buildManualFgLocationQuery(params)}`,
+    MANUAL_DOWNLOAD_EXCEL: (params?: ManualFgLocationQuery) =>
+      `${API_BASE_URL}/manual-fg-location/download-excel${buildManualFgLocationQuery(params)}`,
   },
   DASHBOARD: {
     SALES_KPIS:              `${API_BASE_URL}/dashboard/sales-kpis`,
