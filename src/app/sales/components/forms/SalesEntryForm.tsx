@@ -142,7 +142,10 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           label="Out Bound Delivery"
           name="outboundDelivery"
           value={form.outboundDelivery}
-          onChange={onChange}
+          onChange={(field, value) => {
+            const numericValue = value.replace(/\D/g, "");
+            onChange(field, numericValue);
+          }}
           error={errors.outboundDelivery}
           disabled={isRestrictedMode}
         />

@@ -39,9 +39,6 @@ export const useSalesForm = (onSuccess?: () => void) => {
 
     const newErrors: Record<string, string> = {};
 
-    // if (!form.productId) {
-    //   newErrors.productId = "Product is required";
-    // }
     if (!form.saleOrderNumber) {
       newErrors.saleOrderNumber = "Sale Order Number is required";
     } else if (String(form.saleOrderNumber).length < 10) {
@@ -49,6 +46,8 @@ export const useSalesForm = (onSuccess?: () => void) => {
     }
     if (!form.outboundDelivery) {
       newErrors.outboundDelivery = "Out Bound Delivery is required";
+    } else if (!/^\d+$/.test(form.outboundDelivery)) {
+      newErrors.outboundDelivery = "Out Bound Delivery must contain only numbers";
     }
     
     if (!form.deliveryDate) {

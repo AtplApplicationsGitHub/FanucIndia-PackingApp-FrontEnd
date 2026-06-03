@@ -223,7 +223,12 @@ export default function AdminOrderEditModal({
 
   const handleChange = (key: keyof SalesOrder, value: unknown) => {
     setForm((prev) => {
-      const updated = { ...prev, [key]: value };
+      let processedValue = value;
+      if (key === "outboundDelivery" && typeof value === "string") {
+        processedValue = value.replace(/\D/g, "");
+      }
+
+      const updated = { ...prev, [key]: processedValue };
 
       if (key === "customerId") {
         updated.customerNameText = "";
@@ -257,6 +262,15 @@ export default function AdminOrderEditModal({
       setSnackbar({
         open: true,
         message: "Sale Order Number must be at least 10 characters long.",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (form.outboundDelivery && !/^\d+$/.test(String(form.outboundDelivery))) {
+      setSnackbar({
+        open: true,
+        message: "Out Bound Delivery must contain only numbers.",
         severity: "error",
       });
       return;
@@ -565,7 +579,10 @@ export default function AdminOrderEditModal({
                       value={dateObj}
                       onChange={(newValue) => {
                         if (dayjs.isDayjs(newValue) && newValue.isValid()) {
-                          handleChange(field.key, newValue.format("YYYY-MM-DD"));
+                          handleChange(
+                            field.key,
+                            newValue.format("YYYY-MM-DD"),
+                          );
                         } else {
                           handleChange(field.key, "");
                         }

@@ -28,6 +28,7 @@ import packageJson from "../../../package.json";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 import { API_BASE_URL } from "@/common/lib/endpoints";
+import axios from "axios";
 
 interface ApkDetails {
   appName: string;
@@ -45,11 +46,24 @@ type LoginSuccessPayload = {
 };
 
 function getErrorMessage(err: unknown): string {
-  if (typeof err === "string") return err;
-  if (err && typeof err === "object") {
-    const maybe = err as { message?: unknown };
-    if (typeof maybe.message === "string") return maybe.message;
+  if (axios.isAxiosError(err)) {
+    const backendMessage = err.response?.data?.message;
+
+    if (Array.isArray(backendMessage)) {
+      return backendMessage[0];
+    }
+    if (typeof backendMessage === "string") {
+      return backendMessage;
+    }
+    return err.message;
   }
+
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  if (typeof err === "string") return err;
+
   return "Something went wrong.";
 }
 
@@ -88,12 +102,16 @@ export default function LoginContent() {
 
   useEffect(() => {
     const fetchApkInfo = async () => {
-        try {
-          const baseUrl = API_BASE_URL;
-          const [dispatchRes, pickPackRes] = await Promise.all([
-            apiClient.get<ApkDetails>(`${baseUrl}/app-update/dispatch/latest-version`).catch(() => null),
-            apiClient.get<ApkDetails>(`${baseUrl}/app-update/pick-pack/latest-version`).catch(() => null),
-          ]);
+      try {
+        const baseUrl = API_BASE_URL;
+        const [dispatchRes, pickPackRes] = await Promise.all([
+          apiClient
+            .get<ApkDetails>(`${baseUrl}/app-update/dispatch/latest-version`)
+            .catch(() => null),
+          apiClient
+            .get<ApkDetails>(`${baseUrl}/app-update/pick-pack/latest-version`)
+            .catch(() => null),
+        ]);
 
         setApkInfo({
           dispatch: dispatchRes?.data || null,
@@ -111,17 +129,24 @@ export default function LoginContent() {
     if (searchParams.get("loggedout") === "1") {
       setLoggedOutSnackbar(true);
     }
-    
+
     const reason = searchParams.get("reason");
     if (reason === "session-expired") {
-      setAlertMessage("Your session was revoked because this account was accessed from another device. Please log in again.");
+      setAlertMessage(
+        "Your session was revoked because this account was accessed from another device. Please log in again.",
+      );
     } else if (reason === "inactivity") {
-      setAlertMessage("Your session expired due to inactivity. Please log in again.");
+      setAlertMessage(
+        "Your session expired due to inactivity. Please log in again.",
+      );
     }
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get("loggedout") === "1" || searchParams.get("reason") === "session-expired") {
+    if (
+      searchParams.get("loggedout") === "1" ||
+      searchParams.get("reason") === "session-expired"
+    ) {
       return;
     }
 
@@ -131,7 +156,7 @@ export default function LoginContent() {
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as User;
-        
+
         if (user.role === "ADMIN") {
           router.replace("/admin/dashboard");
         } else if (user.role === "SALES") {
@@ -265,7 +290,7 @@ export default function LoginContent() {
                 fontWeight: 600,
                 fontSize: "0.75rem",
                 lineHeight: 1,
-                mb: "2px", 
+                mb: "2px",
               }}
             >
               v{packageJson.version}
@@ -319,24 +344,30 @@ export default function LoginContent() {
             >
               <MenuItem
                 component="a"
-                href={apkInfo.pickPack?.downloadUrl || `${process.env.NEXT_PUBLIC_API_URL}/app-update/pick-pack/download`}
+                href={
+                  apkInfo.pickPack?.downloadUrl ||
+                  `${process.env.NEXT_PUBLIC_API_URL}/app-update/pick-pack/download`
+                }
                 onClick={handleApkClose}
                 sx={{ py: 1.5 }}
               >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      sx={{ color: "text.primary", textTransform: "capitalize" }}
-                    >
-                      {apkInfo.pickPack?.appName || "Pick & Pack APK"}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-                      {apkInfo.pickPack?.latestVersion 
-                        ? `Version ${apkInfo.pickPack.latestVersion}` 
-                        : "Latest Version"}
-                    </Typography>
-                  </Box>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ color: "text.primary", textTransform: "capitalize" }}
+                  >
+                    {apkInfo.pickPack?.appName || "Pick & Pack APK"}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary", display: "block" }}
+                  >
+                    {apkInfo.pickPack?.latestVersion
+                      ? `Version ${apkInfo.pickPack.latestVersion}`
+                      : "Latest Version"}
+                  </Typography>
+                </Box>
                 <ListItemIcon sx={{ minWidth: "auto", ml: 2 }}>
                   <Download size={20} color="#1976d2" />
                 </ListItemIcon>
@@ -346,24 +377,30 @@ export default function LoginContent() {
 
               <MenuItem
                 component="a"
-                href={apkInfo.dispatch?.downloadUrl || `${process.env.NEXT_PUBLIC_API_URL}/app-update/dispatch/download`}
+                href={
+                  apkInfo.dispatch?.downloadUrl ||
+                  `${process.env.NEXT_PUBLIC_API_URL}/app-update/dispatch/download`
+                }
                 onClick={handleApkClose}
                 sx={{ py: 1.5 }}
               >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      sx={{ color: "text.primary", textTransform: "capitalize" }}
-                    >
-                      {apkInfo.dispatch?.appName || "Dispatch APK"}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-                      {apkInfo.dispatch?.latestVersion 
-                        ? `Version ${apkInfo.dispatch.latestVersion}` 
-                        : "Latest Version"}
-                    </Typography>
-                  </Box>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ color: "text.primary", textTransform: "capitalize" }}
+                  >
+                    {apkInfo.dispatch?.appName || "Dispatch APK"}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary", display: "block" }}
+                  >
+                    {apkInfo.dispatch?.latestVersion
+                      ? `Version ${apkInfo.dispatch.latestVersion}`
+                      : "Latest Version"}
+                  </Typography>
+                </Box>
                 <ListItemIcon sx={{ minWidth: "auto", ml: 2 }}>
                   <Download size={20} color="#1976d2" />
                 </ListItemIcon>
@@ -371,8 +408,8 @@ export default function LoginContent() {
             </Menu>
           </Box>
         </Toolbar>
-        
-        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
+
+        <Box sx={{ position: "absolute", top: 16, right: 16, zIndex: 1000 }}>
           <UserMenu variant="minimal" />
         </Box>
       </AppBar>
