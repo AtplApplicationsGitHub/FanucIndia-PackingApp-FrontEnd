@@ -282,7 +282,7 @@ export default function AssignOrdersToolbar({
                 maxWidth: { lg: 280 },
               }}
             >
-              <IconButton onClick={handleMenuOpen}>
+              <IconButton onClick={handleMenuOpen} title="Actions">
                 <ListIcon />
               </IconButton>
               <Box
