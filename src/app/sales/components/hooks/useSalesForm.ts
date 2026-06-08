@@ -43,6 +43,8 @@ export const useSalesForm = (onSuccess?: () => void) => {
       newErrors.saleOrderNumber = "Sale Order Number is required";
     } else if (String(form.saleOrderNumber).length < 10) {
       newErrors.saleOrderNumber = "Minimum 10 characters required";
+    } else if (!/^\d+$/.test(form.saleOrderNumber)) {
+      newErrors.saleOrderNumber = "Sale Order Number must contain only numbers";
     }
     if (!form.outboundDelivery) {
       newErrors.outboundDelivery = "Out Bound Delivery is required";

@@ -134,7 +134,10 @@ const SalesEntryForm: React.FC<SalesEntryFormProps> = ({
           label="Sale Order Number"
           name="saleOrderNumber"
           value={form.saleOrderNumber}
-          onChange={onChange}
+          onChange={(field, value) => {
+            const numericValue = value.replace(/\D/g, "");
+            onChange(field, numericValue);
+          }}
           error={errors.saleOrderNumber}
           disabled={isRestrictedMode}
         />

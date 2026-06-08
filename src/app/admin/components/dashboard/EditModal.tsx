@@ -224,7 +224,10 @@ export default function AdminOrderEditModal({
   const handleChange = (key: keyof SalesOrder, value: unknown) => {
     setForm((prev) => {
       let processedValue = value;
-      if (key === "outboundDelivery" && typeof value === "string") {
+      if (
+        (key === "outboundDelivery" || key === "saleOrderNumber") &&
+        typeof value === "string"
+      ) {
         processedValue = value.replace(/\D/g, "");
       }
 
@@ -262,6 +265,15 @@ export default function AdminOrderEditModal({
       setSnackbar({
         open: true,
         message: "Sale Order Number must be at least 10 characters long.",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (form.saleOrderNumber && !/^\d+$/.test(String(form.saleOrderNumber))) {
+      setSnackbar({
+        open: true,
+        message: "Sale Order Number must contain only numbers.",
         severity: "error",
       });
       return;
