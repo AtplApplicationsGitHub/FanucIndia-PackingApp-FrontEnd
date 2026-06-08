@@ -76,10 +76,7 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   materialBarcodes: "material-barcodes",
 };
 
-type MasterLookupKey =
-  | keyof typeof TYPE_TO_API_PATH
-  | "users"
-  | "superPassword";
+type MasterLookupKey = keyof typeof TYPE_TO_API_PATH | "users";
 
 const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Products", key: "products" },
@@ -91,7 +88,6 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Printers", key: "printers" },
   { label: "Material Barcode", key: "materialBarcodes" },
   { label: "Users", key: "users" },
-  { label: "SUPER PASSWORD", key: "superPassword" },
 ];
 
 const TYPE_TO_SHEET_NAME: Record<string, string> = {
@@ -104,113 +100,6 @@ const TYPE_TO_SHEET_NAME: Record<string, string> = {
   printers: "Printers",
   materialBarcodes: "Material Barcodes",
 };
-
-function SuperPasswordDialog({
-  open,
-  onClose,
-  showSnackbar,
-}: {
-  open: boolean;
-  onClose: () => void;
-  showSnackbar: (msg: string, sev: AlertColor) => void;
-}) {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // Clear inputs whenever the dialog opens/closes
-  useEffect(() => {
-    if (open) {
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-  }, [open]);
-
-  // Dynamic Validation Logic
-  const passwordMismatch =
-    confirmPassword.length > 0 && newPassword !== confirmPassword;
-  const isSubmitDisabled =
-    !newPassword || !confirmPassword || passwordMismatch || loading;
-
-  const handleUpdate = async () => {
-    if (passwordMismatch) return;
-    setLoading(true);
-    try {
-      const res = await authFetch(
-        `${API_BASE_URL}/admin/sales-orders/super-password`,
-        {
-          method: "POST",
-          body: JSON.stringify({ password: newPassword }),
-        },
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to update password");
-      }
-      showSnackbar("Super Password updated successfully!", "success");
-      onClose(); // Close the modal upon success
-    } catch (error: any) {
-      showSnackbar(error.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontWeight: 700,
-          fontSize: "20px",
-          letterSpacing: 0.5,
-          color: "error.main",
-          pb: 1,
-          position: "relative",
-        }}
-      >
-        SUPER ADMIN PASSWORD
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          size="small"
-          sx={{ position: "absolute", right: 12 }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box display="flex" flexDirection="column" gap={3} mt={1}>
-          <TextField
-            label="New Password"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            fullWidth
-            size="small"
-          />
-          <TextField
-            label="Retype New Password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            fullWidth
-            size="small"
-            error={passwordMismatch} // Turns red if mismatch
-            helperText={passwordMismatch ? "Passwords do not match" : ""} // Shows error text
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: "flex-end" }}>
-        <CommonButton onClick={handleUpdate} disabled={isSubmitDisabled}>
-          {loading ? "UPDATING..." : "UPDATE"}
-        </CommonButton>
-      </DialogActions>
-    </Dialog>
-  );
-}
 
 export default function AdminMasterLookupPanel() {
   const theme = useTheme();
@@ -235,7 +124,6 @@ export default function AdminMasterLookupPanel() {
 
   const [ipDialogOpen, setIpDialogOpen] = useState(false);
   const [printerIp, setPrinterIp] = useState("");
-  const [superPasswordDialogOpen, setSuperPasswordDialogOpen] = useState(false);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -268,12 +156,7 @@ export default function AdminMasterLookupPanel() {
   );
 
   const fetchData = React.useCallback(async () => {
-    if (
-      !selectedType ||
-      selectedType === "users" ||
-      selectedType === "superPassword"
-    )
-      return;
+    if (!selectedType || selectedType === "users") return;
     setLoading(true);
     setError("");
     try {
@@ -297,10 +180,6 @@ export default function AdminMasterLookupPanel() {
     event: React.SyntheticEvent,
     newValue: MasterLookupKey,
   ) => {
-    if (newValue === "superPassword") {
-      setSuperPasswordDialogOpen(true);
-      return;
-    }
     setSelectedType(newValue);
     setSearchQuery("");
     setLocalSearch("");
@@ -621,7 +500,7 @@ export default function AdminMasterLookupPanel() {
       </Box>
 
       {/* 2. Action Buttons (Moved Below Tabs - Hidden for Users as it has its own) */}
-      {selectedType !== "users" && selectedType !== "superPassword" && (
+      {selectedType !== "users" && (
         <Box
           sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 1.5 }}
         >
@@ -834,12 +713,6 @@ export default function AdminMasterLookupPanel() {
           </CommonButton>
         </DialogActions>
       </Dialog>
-
-      <SuperPasswordDialog
-        open={superPasswordDialogOpen}
-        onClose={() => setSuperPasswordDialogOpen(false)}
-        showSnackbar={showSnackbar}
-      />
     </Box>
   );
 }
