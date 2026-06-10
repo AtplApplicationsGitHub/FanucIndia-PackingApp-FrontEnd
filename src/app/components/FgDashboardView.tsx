@@ -474,13 +474,13 @@ export default function FgDashboardView() {
   };
 
   const columns = [
-    { id: "saleOrderNumber", label: "SALE ORDER NUMBER", width: 90 },
-    { id: "outboundDelivery", label: "OUT BOUND DELIVERY	", width: 130 },
+    { id: "saleOrderNumber", label: "SO", width: 90 },
+    { id: "outboundDelivery", label: "OBD", width: 90 },
     { id: "customerName", label: "CUSTOMER NAME", width: 180 },
     { id: "salesZone", label: "SALES ZONE", width: 90 },
     { id: "deliveryDate", label: "REQUIRED DATE", width: 120 },
     { id: "progress", label: "STAGE STATUS ", width: 250 },
-    { id: "payment", label: "PAYMENT", width: 60 },
+    { id: "payment", label: "PAY", width: 60 },
     { id: "transporter", label: "TRANSPORTER", width: 110 },
     { id: "vehicleNumber", label: "VEHICLE NUMBER", width: 120 },
     { id: "fgLocation", label: "FG LOCATION", width: 120 },
@@ -596,10 +596,10 @@ export default function FgDashboardView() {
         <Box
           sx={{
             width: "100%",
-            mt: 1,
+            mt: 0,
             px: 1,
             pb: 0,
-            mb: 2.5,
+            mb: 1,
             display: "flex",
             justifyContent: "center",
           }}
@@ -615,7 +615,7 @@ export default function FgDashboardView() {
               display: "flex",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 2,
+              gap: 1,
               px: 2,
               py: 1.5,
               mx: "auto",
@@ -631,10 +631,10 @@ export default function FgDashboardView() {
               <FormControlLabel
                 label=""
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 30,
+                  height: 30,
                   m: 0,
-                  px: 0,
+                  p: 0,
                   justifyContent: "center",
                   borderRadius: 1,
                   bgcolor: "transparent",
@@ -669,7 +669,7 @@ export default function FgDashboardView() {
                 setPage(0);
               }}
               sx={{
-                p: "2px 4px",
+                p: "1px 2px",
                 display: "flex",
                 alignItems: "center",
                 width: { xs: "100%", sm: 220 },
@@ -855,8 +855,8 @@ export default function FgDashboardView() {
                 flex: { xs: "1 1 100%", lg: "0 0 auto" },
                 flexWrap: "nowrap",
                 flexShrink: 0,
-                gap: 0.9,
-                px: 1.25,
+                gap: 0.5,
+                px: 1,
                 border: "1px solid",
                 borderColor: alpha(theme.palette.primary.main, 0.16),
                 borderRadius: 1,
@@ -924,7 +924,7 @@ export default function FgDashboardView() {
           <TableContainer>
             <Table size="small" stickyHeader>
               <TableHead>
-                <TableRow sx={{ height: 60 }}>
+                <TableRow sx={{ height: 50 }}>
                   {columns.map((col) => (
                     <TableCell
                       key={col.id}
@@ -969,7 +969,7 @@ export default function FgDashboardView() {
                         }}
                       >
                         {/* SO NUMBER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell sx={{ whiteSpace: "nowrap", px: 1, py: 0 }}>
                           <MuiLink
                             component={Link}
                             href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
@@ -1001,13 +1001,13 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* STAGE STATUS (progress) */}
-                        <TableCell sx={{ px: 1 }}>
+                        <TableCell sx={{ px: 1, py: 0 }}>
                           {(() => {
                             const { percent, current, next, color } =
                               getStatusInfo(row);
                             return (
                               <Box
-                                sx={{ width: "100%", minWidth: 220, py: 0.5 }}
+                                sx={{ width: "100%", minWidth: 220, py: 0.25 }}
                               >
                                 <Box
                                   sx={{
@@ -1152,7 +1152,7 @@ export default function FgDashboardView() {
                             : "-"}
                         </TableCell>
                         {/* REMARKS */}
-                        <TableCell sx={{ px: 1, maxWidth: 200 }}>
+                        <TableCell sx={{ px: 1,  maxWidth: 200 }}>
                           {(() => {
                             const special = row.specialRemarks || "";
                             const additional = row.additionalRemarks || "";
