@@ -419,7 +419,7 @@ export default function AdminMasterLookupPanel() {
         alignItems: "center",
       }}
     >
-      {/* 1. Centered Tabs with Action Button on Right (Responsive) */}
+      {/* 1. Centered Tabs with Action Button on Right */}
       <Box
         sx={{
           width: "100%",
@@ -472,34 +472,9 @@ export default function AdminMasterLookupPanel() {
             ))}
           </Tabs>
         </Paper>
-
-        {selectedType === "users" && (
-          <Box
-            sx={{
-              position: { xs: "static", lg: "absolute" },
-              right: { lg: 20 },
-              top: { lg: "50%" },
-              transform: { lg: "translateY(-50%)" },
-              mt: { xs: 1.5, lg: 0 },
-              width: { xs: "100%", lg: "auto" },
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <CommonButton
-              startIcon={<Plus size={18} />}
-              onClick={() => {
-                setEditingUser(null);
-                setModalOpen(true);
-              }}
-            >
-              NEW USER
-            </CommonButton>
-          </Box>
-        )}
       </Box>
 
-      {/* 2. Action Buttons (Moved Below Tabs - Hidden for Users as it has its own) */}
+      {/* 2. Action Buttons */}
       {selectedType !== "users" && (
         <Box
           sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 1.5 }}
@@ -536,13 +511,13 @@ export default function AdminMasterLookupPanel() {
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            {localSearch && ( // <--- Check localSearch instead
+            {localSearch && ( 
               <IconButton
                 sx={{ p: "10px" }}
                 aria-label="clear"
                 onClick={() => {
-                  setLocalSearch(""); // <--- Clear local state
-                  setSearchQuery(""); // <--- Clear actual filter
+                  setLocalSearch(""); 
+                  setSearchQuery(""); 
                 }}
               >
                 <ClearIcon />

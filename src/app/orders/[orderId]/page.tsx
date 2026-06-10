@@ -104,7 +104,7 @@ export default function MaterialDataPage() {
     id: null,
     role: null,
     name: "",
-    salesZone: ""
+    salesZone: "",
   });
 
   useEffect(() => {
@@ -112,7 +112,16 @@ export default function MaterialDataPage() {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setCurrentUser({ id: user.id, role: user.role, name: user.name || "", salesZone: user.salesZone || "", });
+        setCurrentUser({
+          id: user.id,
+          role: user.role,
+          name: user.name || "",
+          salesZone: user.salesZone || "",
+        });
+        const savedPrinter = localStorage.getItem(`printer_pref_${user.id}`);
+        if (savedPrinter) {
+          setSelectedPrinter(Number(savedPrinter));
+        }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
       }
@@ -190,7 +199,9 @@ export default function MaterialDataPage() {
   // Group Filter State
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
-  const [selectedClassification, setSelectedClassification] = useState<string | null>(null);
+  const [selectedClassification, setSelectedClassification] = useState<
+    string | null
+  >(null);
 
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   const [showAll, setShowAll] = useState(false);
@@ -232,9 +243,9 @@ export default function MaterialDataPage() {
         prev.map((row) =>
           row.id === id
             ? {
-              ...row,
-              remarks: updatedMaterial ? updatedMaterial.Remarks : remarks,
-            }
+                ...row,
+                remarks: updatedMaterial ? updatedMaterial.Remarks : remarks,
+              }
             : row,
         ),
       );
@@ -313,7 +324,14 @@ export default function MaterialDataPage() {
       }
     }
     return rows;
-  }, [localRows, showAll, allIssued, selectedGroup, selectedClassification, isOrderFullyComplete]);
+  }, [
+    localRows,
+    showAll,
+    allIssued,
+    selectedGroup,
+    selectedClassification,
+    isOrderFullyComplete,
+  ]);
 
   const showBulkButton = useMemo(() => {
     if (!selectedGroup) return false;
@@ -786,15 +804,26 @@ export default function MaterialDataPage() {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{
-            display: "flex", justifyContent: "center", alignItems: "center",
-            fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
-            color: "error.main",
-            pb: 1,
-            position: "relative",
-          }}>
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontWeight: 700,
+              fontSize: "20px",
+              letterSpacing: 0.5,
+              color: "error.main",
+              pb: 1,
+              position: "relative",
+            }}
+          >
             PRINT ORDER LABEL
-            <IconButton onClick={() => setPrintDialogOpen(false)} size="small" disabled={isPrinting} sx={{ position: "absolute", right: 12 }}>
+            <IconButton
+              onClick={() => setPrintDialogOpen(false)}
+              size="small"
+              disabled={isPrinting}
+              sx={{ position: "absolute", right: 12 }}
+            >
               <CloseIcon fontSize="small" />
             </IconButton>
           </DialogTitle>
@@ -807,9 +836,16 @@ export default function MaterialDataPage() {
               <Select
                 value={selectedPrinter}
                 label="Printer"
-                onChange={(e) =>
-                  setSelectedPrinter(e.target.value as number | "")
-                }
+                onChange={(e) => {
+                  const val = e.target.value as number | "";
+                  setSelectedPrinter(val);
+                  if (val !== "" && currentUser.id) {
+                    localStorage.setItem(
+                      `printer_pref_${currentUser.id}`,
+                      String(val),
+                    );
+                  }
+                }}
               >
                 <MenuItem value="">
                   <em>None</em>
@@ -838,11 +874,8 @@ export default function MaterialDataPage() {
               fullWidth
             />
           </DialogContent>
-          <DialogActions sx={{  px: 3, pb: 2, }}>
-            <CommonButton
-              onClick={handlePrintSubmit}
-              disabled={isPrinting}
-            >
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <CommonButton onClick={handlePrintSubmit} disabled={isPrinting}>
               {isPrinting ? "PRINTING..." : "PRINT"}
             </CommonButton>
           </DialogActions>

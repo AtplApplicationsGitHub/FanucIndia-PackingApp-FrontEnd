@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { User } from "@/app/admin/components/types/admin";
 
 type APIErrorResponse = {
@@ -14,8 +14,7 @@ function getErrorMessage(e: unknown, fallback: string): string {
     if (typeof data?.message === "string") return data.message;
     if (typeof data?.error === "string") return data.error;
     if (data && typeof data === "object") {
-      const msg =
-        (data.message !== undefined ? data.message : data.error);
+      const msg = data.message !== undefined ? data.message : data.error;
       if (typeof msg === "string") return msg;
       if (msg !== undefined) return JSON.stringify(msg);
       return fallback;
@@ -31,8 +30,8 @@ function getErrorMessage(e: unknown, fallback: string): string {
 export function useAdminUsers(
   showSnackbar: (
     msg: string,
-    severity: "success" | "error" | "info" | "warning"
-  ) => void
+    severity: "success" | "error" | "info" | "warning",
+  ) => void,
 ) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,26 +39,30 @@ export function useAdminUsers(
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get<User[]>(API.ADMIN.USERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data || []);
-    } catch (e) {
-      const message = getErrorMessage(e, "Failed to fetch users.");
-      setError(message);
-      showSnackbar(String(message), "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showSnackbar]);
+  const fetchUsers = useCallback(
+    async (search?: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get<User[]>(API.ADMIN.USERS, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { search },
+        });
+        setUsers(res.data || []);
+      } catch (e) {
+        const message = getErrorMessage(e, "Failed to fetch users.");
+        setError(message);
+        showSnackbar(String(message), "error");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showSnackbar],
+  );
 
   const createUser = async (
-    data: Omit<User, "id" | "createdAt" | "updatedAt"> & { password: string }
+    data: Omit<User, "id" | "createdAt" | "updatedAt"> & { password: string },
   ) => {
     setLoading(true);
     try {
@@ -82,7 +85,7 @@ export function useAdminUsers(
     id: number,
     data: Partial<Omit<User, "id" | "createdAt" | "updatedAt">> & {
       password?: string;
-    }
+    },
   ) => {
     setLoading(true);
     try {
@@ -119,7 +122,7 @@ export function useAdminUsers(
       ) {
         showSnackbar(
           "Cannot delete this user because they have existing sales orders.",
-          "error"
+          "error",
         );
       } else {
         showSnackbar(message, "error");

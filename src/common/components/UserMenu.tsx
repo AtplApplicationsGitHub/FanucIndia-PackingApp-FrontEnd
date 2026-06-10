@@ -11,7 +11,8 @@ import {
   Divider,
   CircularProgress,
   useTheme,
-  Avatar, Tooltip,
+  Avatar,
+  Tooltip,
 } from "@mui/material";
 import {
   Settings,
@@ -51,7 +52,6 @@ export default function UserMenu({
   const [loading, setLoading] = useState(false);
   const [, setDetectedRole] = useState<UserRole | undefined>(userRole);
 
-
   useEffect(() => {
     if (userRole) {
       setDetectedRole(userRole);
@@ -61,7 +61,9 @@ export default function UserMenu({
         try {
           const userObj = JSON.parse(stored);
           if (userObj.role) setDetectedRole(userObj.role as UserRole);
-        } catch (e) { console.error("Role detection failed", e); }
+        } catch (e) {
+          console.error("Role detection failed", e);
+        }
       }
     }
   }, [userRole]);
@@ -92,6 +94,15 @@ export default function UserMenu({
   const handleLogout = async () => {
     setLoading(true);
     try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          if (user?.id) {
+            localStorage.removeItem(`printer_pref_${user.id}`);
+          }
+        } catch {}
+      }
       await logoutUser();
       router.replace("/login?loggedout=1");
     } finally {
@@ -112,8 +123,11 @@ export default function UserMenu({
             p: "4px 4px",
             borderRadius: 1,
             // Use dark hover for minimal variant, light hover for full variant
-            "&:hover": { 
-              bgcolor: variant === "minimal" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.15)" 
+            "&:hover": {
+              bgcolor:
+                variant === "minimal"
+                  ? "rgba(0,0,0,0.05)"
+                  : "rgba(255,255,255,0.15)",
             },
           }}
         >
@@ -122,11 +136,15 @@ export default function UserMenu({
               sx={{
                 width: 34,
                 height: 34,
-                bgcolor: variant === "minimal" ? "transparent" : "rgba(0,0,0,0.25)",
+                bgcolor:
+                  variant === "minimal" ? "transparent" : "rgba(0,0,0,0.25)",
                 color: variant === "minimal" ? "#000000" : "white",
                 fontWeight: 700,
                 fontSize: 13,
-                border: variant === "minimal" ? "2px solid rgba(0,0,0,0.6)" : "2px solid rgba(255,255,255,0.6)",
+                border:
+                  variant === "minimal"
+                    ? "2px solid rgba(0,0,0,0.6)"
+                    : "2px solid rgba(255,255,255,0.6)",
               }}
             >
               {username
@@ -138,9 +156,15 @@ export default function UserMenu({
                 .toUpperCase()}
             </Avatar>
           ) : (
-            <Settings size={22} color={variant === "minimal" ? "#000000" : "white"} />
+            <Settings
+              size={22}
+              color={variant === "minimal" ? "#000000" : "white"}
+            />
           )}
-          <ChevronDown size={16} color={variant === "minimal" ? "#000000" : "white"} />
+          <ChevronDown
+            size={16}
+            color={variant === "minimal" ? "#000000" : "white"}
+          />
         </Box>
       </Tooltip>
 
@@ -199,16 +223,31 @@ export default function UserMenu({
         anchorOrigin={{ vertical: "top", horizontal: "left" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem onClick={() => handleThemeSelect("light")} selected={mode === "light"}>
-          <ListItemIcon><Sun size={18} /></ListItemIcon>
+        <MenuItem
+          onClick={() => handleThemeSelect("light")}
+          selected={mode === "light"}
+        >
+          <ListItemIcon>
+            <Sun size={18} />
+          </ListItemIcon>
           <ListItemText>LIGHT</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleThemeSelect("dark")} selected={mode === "dark"}>
-          <ListItemIcon><Moon size={18} /></ListItemIcon>
+        <MenuItem
+          onClick={() => handleThemeSelect("dark")}
+          selected={mode === "dark"}
+        >
+          <ListItemIcon>
+            <Moon size={18} />
+          </ListItemIcon>
           <ListItemText>DARK</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleThemeSelect("system")} selected={mode === "system"}>
-          <ListItemIcon><Monitor size={18} /></ListItemIcon>
+        <MenuItem
+          onClick={() => handleThemeSelect("system")}
+          selected={mode === "system"}
+        >
+          <ListItemIcon>
+            <Monitor size={18} />
+          </ListItemIcon>
           <ListItemText>SYSTEM</ListItemText>
         </MenuItem>
       </Menu>
@@ -217,7 +256,6 @@ export default function UserMenu({
         open={resetDialogOpen}
         onClose={() => setResetDialogOpen(false)}
       />
-
     </Box>
   );
 }

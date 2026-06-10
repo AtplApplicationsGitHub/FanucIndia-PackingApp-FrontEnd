@@ -3,15 +3,28 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-export function useInactivityLogout(timeoutMinutes: number = 120, isEnabled: boolean = true) {
+export function useInactivityLogout(
+  timeoutMinutes: number = 120,
+  isEnabled: boolean = true,
+) {
   const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const logout = useCallback(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user?.id) {
+          localStorage.removeItem(`printer_pref_${user.id}`);
+        }
+      } catch {}
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
-    
+    localStorage.removeItem("user");
+
     router.push("/login?reason=inactivity");
   }, [router]);
 
@@ -31,7 +44,13 @@ export function useInactivityLogout(timeoutMinutes: number = 120, isEnabled: boo
       return;
     }
 
-    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
 
     resetTimer();
 
