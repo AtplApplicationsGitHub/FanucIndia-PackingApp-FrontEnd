@@ -73,6 +73,7 @@ function SalesDashboardContent() {
     attachmentFileInputRef,
     handleAttachmentFileChange,
     handleDownloadDispatchedExcel,
+    handleBulkUpdateRequiredDate,
   } = useSalesDashboard();
 
   const defaultZoneId = lookup.salesZones.find(
@@ -216,6 +217,7 @@ function SalesDashboardContent() {
                 endDate={endDate}
                 onEndDateChange={setEndDate}
                 selectedIds={selectedIds}
+                onBulkUpdateRequiredDate={handleBulkUpdateRequiredDate}
               />
 
               <SalesOrdersTable

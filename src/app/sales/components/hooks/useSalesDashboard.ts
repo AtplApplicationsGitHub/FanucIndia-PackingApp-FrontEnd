@@ -6,6 +6,7 @@ import { API } from "@/common/lib/endpoints";
 import { SalesOrder, LookupData } from "@/app/sales/components/types/sales";
 import { secureDownload } from "@/common/lib/secure-download";
 import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
+import dayjs from "dayjs";
 
 type NotificationClearedPayload = {
   salesOrderNumber: string;
@@ -615,6 +616,38 @@ export function useSalesDashboard() {
     }
   };
 
+  const handleBulkUpdateRequiredDate = useCallback(
+    async (date: Date) => {
+      if (selectedIds.length === 0) return;
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+
+      try {
+        setAlert({ severity: "info", message: "Updating dates..." });
+        await axios.put(
+          `${API.SALES.CREATE_ORDER}/bulk/delivery-date`, // Using the endpoint we created in the backend
+          {
+            salesOrderIds: selectedIds,
+            deliveryDate: dayjs(date).format("YYYY-MM-DD"),
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        setAlert({
+          severity: "success",
+          message: "Required Dates updated successfully!",
+        });
+        fetchOrders(); // Refresh the table
+      } catch (err: any) {
+        setAlert({
+          severity: "error",
+          message: err.response?.data?.message || "Failed to update dates.",
+        });
+      }
+    },
+    [selectedIds, fetchOrders],
+  );
+
   return {
     orders,
     pageSize,
@@ -669,5 +702,6 @@ export function useSalesDashboard() {
     setEndDate,
     handleClearFilters,
     updateFileInputRef,
+    handleBulkUpdateRequiredDate,
   };
 }

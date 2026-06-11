@@ -73,6 +73,7 @@ export default function AssignSO() {
     fetchDynamicCounts,
     refresh,
     downloadFailedErpData,
+    bulkUpdateRequiredDate,
   } = useAssign();
 
   const [pageSize, setPageSize] = React.useState(10);
@@ -1318,6 +1319,22 @@ export default function AssignSO() {
                 setCurrentPage(1);
               }}
               onDownloadFailedErpData={handleDownloadFailedErpData}
+              onBulkUpdateRequiredDate={async (date) => {
+                try {
+                  await bulkUpdateRequiredDate(selectedIds, date);
+                  setSnackbar({
+                    open: true,
+                    message: `Required Date updated for ${selectedIds.length} orders`,
+                    severity: "success",
+                  });
+                } catch (err: any) {
+                  setSnackbar({
+                    open: true,
+                    message: err.message || "Failed to update date",
+                    severity: "error",
+                  });
+                }
+              }}
             />
           </Box>
 

@@ -100,6 +100,7 @@ type Props = {
   onDownloadFailedErpData?: () => void;
   successImportFilter?: boolean;
   onSuccessImportClick?: () => void;
+  onBulkUpdateRequiredDate?: (date: Date) => Promise<void>;
 };
 
 export default function AssignOrdersToolbar({
@@ -125,7 +126,13 @@ export default function AssignOrdersToolbar({
   onDownloadErpData,
   onExcelExport,
   onExcelImport,
-  statusCounts = { R105: 0, W105: 0, PendingImport: 0, ErpImportFailed: 0, ErpSuccessUpload: 0 },
+  statusCounts = {
+    R105: 0,
+    W105: 0,
+    PendingImport: 0,
+    ErpImportFailed: 0,
+    ErpSuccessUpload: 0,
+  },
   failedImportFilter = false,
   onFailedImportClick,
   onDownloadFailedErpData,
@@ -138,6 +145,7 @@ export default function AssignOrdersToolbar({
   customers = [],
   onOpenSambaView,
   onTodayClick,
+  onBulkUpdateRequiredDate,
 }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -173,6 +181,9 @@ export default function AssignOrdersToolbar({
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const [assignPriority, setAssignPriority] = useState<string>("");
+
+  const [requiredDateDialogOpen, setRequiredDateDialogOpen] = useState(false);
+  const [bulkRequiredDate, setBulkRequiredDate] = useState<Date | null>(null);
 
   const [localSearch, setLocalSearch] = useState(searchInput);
   React.useEffect(() => {
@@ -589,11 +600,14 @@ export default function AssignOrdersToolbar({
                     cursor: "pointer",
                     transition: "all 0.2s ease-in-out",
                     "&:hover": { bgcolor: "#dcfce7" },
-                  }}>
-                  < Box sx={{ color: "#16a34a", display: "flex" }}>
+                  }}
+                >
+                  <Box sx={{ color: "#16a34a", display: "flex" }}>
                     <CheckCircleOutlineIcon sx={{ fontSize: 20 }} />
                   </Box>
-                  <Typography sx={{ fontWeight: 700, color: "#16a34a", fontSize: "14px" }}>
+                  <Typography
+                    sx={{ fontWeight: 700, color: "#16a34a", fontSize: "14px" }}
+                  >
                     {statusCounts.ErpSuccessUpload ?? 0}
                   </Typography>
                 </Box>
@@ -692,7 +706,7 @@ export default function AssignOrdersToolbar({
               </Box>
             </Box>
           </Box>
-        </Paper >
+        </Paper>
 
         <Menu
           id="actions-menu"
@@ -847,6 +861,20 @@ export default function AssignOrdersToolbar({
             </ListItemIcon>
             <ListItemText
               primary="BULK ACTIONS"
+              primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
+            />
+          </MenuItem>
+
+          <MenuItem
+            onClick={() =>
+              handleActionClick(() => setRequiredDateDialogOpen(true))
+            }
+          >
+            <ListItemIcon>
+              <CalendarCheck size={20} color="#1976d2" />
+            </ListItemIcon>
+            <ListItemText
+              primary="REQUIRED DATE"
               primaryTypographyProps={{ fontSize: "14px", fontWeight: 500 }}
             />
           </MenuItem>
@@ -1129,7 +1157,109 @@ export default function AssignOrdersToolbar({
             Please select Order(s)
           </Alert>
         </Snackbar>
-      </Box >
-    </LocalizationProvider >
+      </Box>
+
+      {/* Bulk Required Date Dialog */}
+      <Dialog
+        open={requiredDateDialogOpen}
+        onClose={() => {
+          setRequiredDateDialogOpen(false);
+          setBulkRequiredDate(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: "background.paper",
+            backgroundImage: "none",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "8px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: 20,
+            textAlign: "center",
+            letterSpacing: 0,
+            color: "secondary.main",
+            p: 1.5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+          }}
+        >
+          BULK REQUIRED DATE
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 16,
+              fontWeight: 400,
+              color: "text.secondary",
+              ml: 1,
+            }}
+          >
+            · {selectedIds.length}{" "}
+            {selectedIds.length === 1 ? "order" : "orders"}
+          </Typography>
+          <IconButton
+            onClick={() => {
+              setRequiredDateDialogOpen(false);
+              setBulkRequiredDate(null);
+            }}
+            size="small"
+            sx={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent
+          sx={{ bgcolor: "background.paper", pt: "24px !important" }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <DatePicker
+              label="Required Date"
+              value={bulkRequiredDate ? dayjs(bulkRequiredDate) : null}
+              onChange={(val) => setBulkRequiredDate(val ? val.toDate() : null)}
+              format="DD-MM-YYYY"
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  size: "medium",
+                  InputProps: { sx: { fontSize: "14px" } },
+                },
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <Divider />
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <CommonButton
+            variant="contained"
+            disableElevation
+            disabled={!bulkRequiredDate}
+            onClick={async () => {
+              if (bulkRequiredDate && onBulkUpdateRequiredDate) {
+                await onBulkUpdateRequiredDate(bulkRequiredDate);
+              }
+              setRequiredDateDialogOpen(false);
+              setBulkRequiredDate(null);
+            }}
+          >
+            SUBMIT
+          </CommonButton>
+        </DialogActions>
+      </Dialog>
+    </LocalizationProvider>
   );
 }

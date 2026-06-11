@@ -761,6 +761,34 @@ export function useAssign() {
     [fetchData],
   );
 
+  const bulkUpdateRequiredDate = useCallback(
+    async (orderIds: number[], date: Date) => {
+      try {
+        const response = await fetchWithAuth(API.ADMIN.BULK_ASSIGN, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ 
+            salesOrderIds: orderIds, 
+            deliveryDate: dayjs(date).format("YYYY-MM-DD") 
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update required date");
+        }
+
+        await fetchData(true);
+        return true;
+      } catch (err: any) {
+        console.error("Failed to update required date", err);
+        throw new Error(err.message || "Failed to update required date");
+      }
+    },
+    [fetchData],
+  );
+
   const downloadErpData = useCallback(async (saleOrderNumbers: string[]) => {
     try {
       const response = await fetchWithAuth(
@@ -833,5 +861,6 @@ export function useAssign() {
     dynamicCounts,
     fetchDynamicCounts,
     downloadFailedErpData,
+    bulkUpdateRequiredDate,
   };
 }
