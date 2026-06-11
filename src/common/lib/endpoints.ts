@@ -55,11 +55,13 @@ export const API = {
     search?: string;
     page?: number;
     limit?: number;
+    ageFilter?:string;
 }) => {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.page)   query.set('page',   String(params.page));
   if (params?.limit)  query.set('limit',  String(params.limit));
+  if (params?.ageFilter) query.set('ageFilter', params.ageFilter);
   const qs = query.toString();
   return `${API_BASE_URL}/reports/sales-order/fg-storage-report${qs ? '?' + qs : ''}`;
 },  
