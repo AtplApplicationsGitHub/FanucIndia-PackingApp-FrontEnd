@@ -513,6 +513,7 @@ export default function FgDashboardView() {
     );
   const filterFieldSx = {
     bgcolor: "background.paper",
+    flexShrink: 0,
     "& .MuiInputBase-root": {
       height: 40,
       borderRadius: 1,
@@ -611,10 +612,11 @@ export default function FgDashboardView() {
               mb: 0,
               borderRadius: 2,
               bgcolor: "background.paper",
-              width: "fit-content",
+              width: "100%",
               display: "flex",
               alignItems: "center",
-              flexWrap: "wrap",
+              flexWrap: { xs: "wrap", sm: "nowrap" },
+              overflowX: { xs: "visible", sm: "auto" },
               gap: 1,
               px: 2,
               py: 1.5,
@@ -673,6 +675,7 @@ export default function FgDashboardView() {
                 display: "flex",
                 alignItems: "center",
                 width: { xs: "100%", sm: 220 },
+                flexShrink: 0, 
                 border: 1,
                 borderColor: (theme) =>
                   theme.palette.mode === "dark"
@@ -707,7 +710,6 @@ export default function FgDashboardView() {
                 <SearchIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </Box>
-
             {/* Payment Filter */}
             <FormControl
               size="small"
@@ -727,7 +729,6 @@ export default function FgDashboardView() {
                 <MenuItem value="false">No</MenuItem>
               </Select>
             </FormControl>
-
             {/* Zone Filter */}
             <FormControl
               size="small"
@@ -750,7 +751,6 @@ export default function FgDashboardView() {
                 ))}
               </Select>
             </FormControl>
-
             {/* Status Filter */}
             <FormControl
               size="small"
@@ -773,9 +773,8 @@ export default function FgDashboardView() {
                 ))}
               </Select>
             </FormControl>
-
             <DatePicker
-              label="DELIVERY DATE"
+              label="DATE"
               value={date ? dayjs(date) : null}
               onChange={(newValue) => {
                 setDate(newValue ? newValue.toDate() : null);
@@ -785,20 +784,19 @@ export default function FgDashboardView() {
               minDate={dayjs().subtract(3, "day")}
               slotProps={{
                 field: {
-                  clearable: true,
-                  onClear: () => setDate(null),
+                  clearable: false,
                 },
                 textField: {
                   size: "small",
                   variant: "outlined",
                   sx: {
                     ...filterFieldSx,
-                    minWidth: { xs: "100%", sm: 220, lg: 205 },
+                    width: { xs: "100%", sm: 190 },
+                    minWidth: { xs: "100%", sm: 190 },
                   },
                 },
               }}
             />
-
             {/* Clear Button (Icon Only) */}
             <Tooltip title="Clear Filters">
               <IconButton
@@ -814,7 +812,6 @@ export default function FgDashboardView() {
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-
             {/* 3. ADD THIS: Export Button next to the Clear button */}
             <Tooltip title="Export to Excel">
               <IconButton
@@ -832,7 +829,6 @@ export default function FgDashboardView() {
                 <FileDownloadOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-
             <Divider
               orientation="vertical"
               flexItem
@@ -841,20 +837,20 @@ export default function FgDashboardView() {
                 display: { xs: "none", lg: "block" },
               }}
             />
-
             <Box
               component="button"
               type="button"
               onClick={() => setAutoRefreshDialogOpen(true)}
               sx={{
-                ml: { xs: 0, lg: 0.25 },
+                ml: 0,
+                mt: { xs: 1, sm: 0 },
                 height: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: { xs: "center", sm: "flex-end" },
-                flex: { xs: "1 1 100%", lg: "0 0 auto" },
-                flexWrap: "nowrap",
+                width: { xs: "100%", sm: "auto" },
                 flexShrink: 0,
+                flexWrap: "nowrap",
                 gap: 0.5,
                 px: 1,
                 border: "1px solid",
@@ -922,7 +918,16 @@ export default function FgDashboardView() {
 
         <Paper sx={{ width: "100%", overflow: "hidden", borderRadius: 2 }}>
           <TableContainer>
-            <Table size="small" stickyHeader>
+            <Table
+              size="small"
+              stickyHeader
+              sx={{
+                "& .MuiTableCell-root": {
+                  fontSize: { xs: "0.8rem", xl: "1.05rem" },
+                  py: { xs: 0, xl: 1 },
+                },
+              }}
+            >
               <TableHead>
                 <TableRow sx={{ height: 50 }}>
                   {columns.map((col) => (
@@ -1152,7 +1157,7 @@ export default function FgDashboardView() {
                             : "-"}
                         </TableCell>
                         {/* REMARKS */}
-                        <TableCell sx={{ px: 1,  maxWidth: 200 }}>
+                        <TableCell sx={{ px: 1, maxWidth: 200 }}>
                           {(() => {
                             const special = row.specialRemarks || "";
                             const additional = row.additionalRemarks || "";

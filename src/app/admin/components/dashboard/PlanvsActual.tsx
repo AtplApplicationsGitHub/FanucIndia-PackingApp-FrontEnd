@@ -331,13 +331,14 @@ export default function ReportPage() {
           <Paper
             elevation={2}
             sx={{
-              maxWidth: 1200,
+              width: { xs: "100%", md: "fit-content" },
+              maxWidth: { xs: "100%", md: 1200 },
+              mx: "auto",
               borderRadius: 2,
               bgcolor: "background.paper",
-              width: "fit-content", 
               display: "flex",
-              flexDirection: { xs: "column", lg: "row" },
-              alignItems: { xs: "stretch", lg: "center" },
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "stretch", sm: "center" },
               gap: 2,
               px: { xs: 1.5, sm: 2 },
               py: 1.5,
@@ -350,7 +351,7 @@ export default function ReportPage() {
                 flexWrap: "wrap",
                 gap: 1.5,
                 alignItems: "center",
-                flex: 1,
+                flex: "0 1 auto",
                 justifyContent: "flex-start",
               }}
             >
@@ -398,6 +399,7 @@ export default function ReportPage() {
                 size="small"
                 sx={{
                   minWidth: 100,
+                  width: { xs: "100%", sm: "auto" }, // ADD THIS
                   bgcolor: "background.paper",
                   flexShrink: 0,
                 }}
@@ -422,6 +424,7 @@ export default function ReportPage() {
                 size="small"
                 sx={{
                   minWidth: 100,
+                  width: { xs: "100%", sm: "auto" }, // ADD THIS
                   bgcolor: "background.paper",
                   flexShrink: 0,
                 }}
@@ -449,6 +452,7 @@ export default function ReportPage() {
                 size="small"
                 sx={{
                   minWidth: 100,
+                  width: { xs: "100%", sm: "auto" }, // ADD THIS
                   bgcolor: "background.paper",
                   flexShrink: 0,
                 }}
@@ -475,7 +479,8 @@ export default function ReportPage() {
               <FormControl
                 size="small"
                 sx={{
-                  minWidth: 120,
+                  minWidth: 100,
+                  width: { xs: "100%", sm: "auto" }, // ADD THIS
                   bgcolor: "background.paper",
                   flexShrink: 0,
                 }}
@@ -514,6 +519,7 @@ export default function ReportPage() {
                     variant: "outlined",
                     sx: {
                       minWidth: 160,
+                      width: { xs: "100%", sm: 160 }, // ADD THIS, change minWidth-only
                       flexShrink: 0,
                       bgcolor: "background.paper",
                       "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
