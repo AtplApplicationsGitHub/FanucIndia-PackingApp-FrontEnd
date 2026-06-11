@@ -30,8 +30,9 @@ import {
   downloadManualFgLocationExcel,
   ManualFgStorageRow,
   useManualFgStorageList,
-} from "@/app/admin/components/hooks/UserFg-Location";
+} from "@/app/admin/components/hooks/useManualFg";
 import { formatDateTimeIST, getISTDateKey } from "@/common/utils/dateTime";
+import CloseIcon from "@mui/icons-material/Close";
 
 function formatDate(iso: string) {
   if (!iso || iso === "-") return "-";
@@ -58,33 +59,27 @@ export default function FgLocation() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [selectedDate, setSelectedDate] = React.useState<Date | null>(
-    () => new Date(),
-  );
+  const [fromDate, setFromDate] = React.useState<Date | null>(new Date());
+  const [toDate, setToDate] = React.useState<Date | null>(new Date());
   const [downloadingExcel, setDownloadingExcel] = React.useState(false);
   const [downloadError, setDownloadError] = React.useState<string | null>(null);
 
-  const selectedDateKey = React.useMemo(
-    () => getISTDateKey(selectedDate),
-    [selectedDate],
-  );
+  const fromDateKey = React.useMemo(() => getISTDateKey(fromDate), [fromDate]);
+  const toDateKey = React.useMemo(() => getISTDateKey(toDate), [toDate]);
 
   const { rows, loading, error } = useManualFgStorageList({
-    date: selectedDateKey || undefined,
+    fromDate: fromDateKey || undefined,
+    toDate: toDateKey || undefined,
     salesOrderNumber: search || undefined,
   });
 
   React.useEffect(() => {
     setPage(0);
-  }, [search, selectedDateKey]);
+  }, [search, fromDateKey, toDateKey]);
 
   const filteredRows = React.useMemo(
-    () =>
-      rows.filter(
-        (row) =>
-          matchesDate(row, selectedDateKey) && matchesSalesOrder(row, search),
-      ),
-    [rows, search, selectedDateKey],
+    () => rows.filter((row) => matchesSalesOrder(row, search)),
+    [rows, search],
   );
 
   const visibleRows = React.useMemo(
@@ -108,7 +103,8 @@ export default function FgLocation() {
 
     try {
       await downloadManualFgLocationExcel({
-        date: selectedDateKey || undefined,
+        fromDate: fromDateKey || undefined,
+        toDate: toDateKey || undefined,
         salesOrderNumber: search || undefined,
       });
     } catch (err) {
@@ -221,28 +217,24 @@ export default function FgLocation() {
                     <ClearIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 )}
-                <IconButton
-                  type="submit"
-                  sx={{ p: "5px" }}
-                  aria-label="search"
-                >
+                <IconButton type="submit" sx={{ p: "5px" }} aria-label="search">
                   <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
                 </IconButton>
               </Box>
             </Box>
 
             <DatePicker
-              label="DATE"
-              value={selectedDate ? dayjs(selectedDate) : null}
+              label="FROM DATE"
+              value={fromDate ? dayjs(fromDate) : null}
               onChange={(value) => {
-                setSelectedDate(value?.isValid() ? value.toDate() : null);
+                setFromDate(value?.isValid() ? value.toDate() : null);
               }}
               format="DD-MM-YYYY"
               slotProps={{
                 field: {
                   clearable: true,
                   onClear: () => {
-                    setSelectedDate(null);
+                    setFromDate(null);
                     setPage(0);
                   },
                 },
@@ -250,20 +242,58 @@ export default function FgLocation() {
                   size: "small",
                   variant: "outlined",
                   sx: {
-                    width: { xs: "100%", sm: 150, md: 160, lg: 185 },
+                    width: { xs: "100%", sm: 170, md: 180, lg: 190 },
                     flex: "0 0 auto",
-                    minWidth: { xs: "100%", sm: 160 },
-                    "& .MuiInputBase-root": {
-                      height: 40,
-                      fontSize: "13px",
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "12px",
-                    },
+                    "& .MuiInputBase-root": { height: 40, fontSize: "13px" },
+                    "& .MuiInputLabel-root": { fontSize: "12px" },
                   },
                 },
               }}
             />
+
+            <DatePicker
+              label="TO DATE"
+              value={toDate ? dayjs(toDate) : null}
+              onChange={(value) => {
+                setToDate(value?.isValid() ? value.toDate() : null);
+              }}
+              format="DD-MM-YYYY"
+              minDate={fromDate ? dayjs(fromDate) : undefined}
+              slotProps={{
+                field: {
+                  clearable: true,
+                  onClear: () => {
+                    setToDate(null);
+                    setPage(0);
+                  },
+                },
+                textField: {
+                  size: "small",
+                  variant: "outlined",
+                  sx: {
+                    width: { xs: "100%", sm: 170, md: 180, lg: 190 },
+                    flex: "0 0 auto",
+                    "& .MuiInputBase-root": { height: 40, fontSize: "13px" },
+                    "& .MuiInputLabel-root": { fontSize: "12px" },
+                  },
+                },
+              }}
+            />
+            <IconButton
+              onClick={() => {
+                setFromDate(null);
+                setToDate(null);
+                setPage(0);
+              }}
+              title="Clear Filters"
+              sx={{
+                color: "text.secondary",
+                flex: "0 0 auto",
+                "&:hover": { color: "error.main" },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
 
             <Tooltip title="Download Excel">
               <span>
@@ -300,7 +330,11 @@ export default function FgLocation() {
           </Typography>
         )}
 
-        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0 }}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ borderRadius: 0 }}
+        >
           <Table
             sx={{
               minWidth: 650,
@@ -312,7 +346,7 @@ export default function FgLocation() {
               },
               "& .MuiTableCell-root": {
                 borderBottom: "none",
-                py: 0.5,
+                py: 1,
                 px: 1,
                 fontSize: "0.875rem",
                 whiteSpace: "nowrap",
@@ -325,7 +359,7 @@ export default function FgLocation() {
                   t.palette.mode === "dark" ? "#000000" : "#ffffff",
               }}
             >
-              <TableRow sx={{ height: 60 }}>
+              <TableRow sx={{ height: 50 }}>
                 {[
                   "SALE ORDER NUMBER",
                   "FG LOCATION",

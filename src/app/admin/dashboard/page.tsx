@@ -24,7 +24,7 @@ import ReportPanel from "../components/dashboard/PlanvsActual";
 import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
-import FgLocation from "@/app/admin/components/dashboard/Fg-Location";
+import FgLocation from "@/app/admin/components/dashboard/ManualFg";
 
 function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -350,7 +350,7 @@ function AdminDashboardContent() {
             </motion.div>
           )}
 
-          {admin.view === "fg_location" && (
+          {admin.view === "manual_fg" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}

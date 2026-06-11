@@ -90,7 +90,9 @@ function getExcelFilename(filters: ManualFgLocationQuery) {
 export async function downloadManualFgLocationExcel(
   filters: ManualFgLocationQuery = {},
 ) {
-  const res = await fetchWithAuth(API.FG_STORAGE.MANUAL_DOWNLOAD_EXCEL(filters));
+  const res = await fetchWithAuth(
+    API.FG_STORAGE.MANUAL_DOWNLOAD_EXCEL(filters),
+  );
 
   if (res.status === 401 || res.status === 403) {
     if (typeof window !== "undefined") window.location.href = "/login";
@@ -103,57 +105,59 @@ export async function downloadManualFgLocationExcel(
   secureDownload(blob, getDownloadFilename(res, getExcelFilename(filters)));
 }
 
-export function useManualFgStorageList(
-  filters: ManualFgLocationQuery = {},
-) {
+export function useManualFgStorageList(filters: ManualFgLocationQuery = {}) {
   const [rows, setRows] = useState<ManualFgStorageRow[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const date = filters.date;
+  const fromDate = filters.fromDate;
+  const toDate = filters.toDate;
   const salesOrderNumber = filters.salesOrderNumber?.trim() || undefined;
 
-  const fetchData = useCallback(async (isSilent = false) => {
-    if (isSilent) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const res = await fetchWithAuth(
-        API.FG_STORAGE.MANUAL_LIST({ date, salesOrderNumber }),
-      );
-
-      if (res.status === 401 || res.status === 403) {
-        if (typeof window !== "undefined") window.location.href = "/login";
-        return;
+  const fetchData = useCallback(
+    async (isSilent = false) => {
+      if (isSilent) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
 
-      if (!res.ok) throw new Error("Failed to fetch manual FG location list");
+      try {
+        const res = await fetchWithAuth(
+          API.FG_STORAGE.MANUAL_LIST({ fromDate, toDate, salesOrderNumber }),
+        );
 
-      const json = (await res.json()) as ManualFgStorageResponse;
-      const data = extractRows(json);
-      const normalizedRows = data.map((item) =>
-        normalizeRow(item as Record<string, any>),
-      );
+        if (res.status === 401 || res.status === 403) {
+          if (typeof window !== "undefined") window.location.href = "/login";
+          return;
+        }
 
-      setRows(normalizedRows);
-      setTotalCount(extractCount(json, normalizedRows.length));
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load manual FG location list",
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [date, salesOrderNumber]);
+        if (!res.ok) throw new Error("Failed to fetch manual FG location list");
+
+        const json = (await res.json()) as ManualFgStorageResponse;
+        const data = extractRows(json);
+        const normalizedRows = data.map((item) =>
+          normalizeRow(item as Record<string, any>),
+        );
+
+        setRows(normalizedRows);
+        setTotalCount(extractCount(json, normalizedRows.length));
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load manual FG location list",
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [fromDate, toDate, salesOrderNumber],
+  );
 
   useEffect(() => {
     fetchData();

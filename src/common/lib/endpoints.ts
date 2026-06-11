@@ -2,12 +2,16 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export type ManualFgLocationQuery = {
   date?: string;
+  fromDate?: string;
+  toDate?: string;
   salesOrderNumber?: string;
 };
 
 function buildManualFgLocationQuery(params?: ManualFgLocationQuery) {
   const query = new URLSearchParams();
   if (params?.date) query.set("date", params.date);
+  if (params?.fromDate) query.set("fromDate", params.fromDate);
+  if (params?.toDate) query.set("toDate", params.toDate);
   if (params?.salesOrderNumber) {
     query.set("salesOrderNumber", params.salesOrderNumber);
   }

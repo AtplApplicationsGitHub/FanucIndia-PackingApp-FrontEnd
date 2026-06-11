@@ -48,7 +48,7 @@ export type ViewType =
   | "manage"
   | "dispatch"
   | "fg_dashboard"
-  | "fg_location"
+  | "manual_fg"
   | "assignso"
   | "status_hub"
   | "customer_report"
@@ -75,11 +75,11 @@ const REPORTS_MENU = [
   { label: "STATUS HUB", value: "status_hub", icon: <Activity size={16} /> },
   { label: "CUSTOMER REPORT", value: "customer_report", icon: <Users size={16} /> },
   { label: "FG STORAGE", value: "fg_report", icon: <Boxes size={16} /> },
-  { label: "MANUAL FG", value: "fg_location", icon: <MapPin size={16} /> },
+  { label: "MANUAL FG", value: "manual_fg", icon: <MapPin size={16} /> },
   { label: "ARCHIVED DATA", value: "archived", icon: <ArchiveIcon size={16} /> },
 ];
 
-const REPORT_VALUES = ["status_hub", "customer_report", "fg_location", "fg_report", "archived"];
+const REPORT_VALUES = ["status_hub", "customer_report", "manual_fg", "fg_report", "archived"];
 const MAX_VISIBLE_ITEMS = 8;
 
 // All items for the mobile drawer (flat list)
