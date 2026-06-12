@@ -282,27 +282,15 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           }}
         >
           VEHICLE ENTRIES
-          {onClose ? (
-            <IconButton
-              aria-label="Close vehicle entries"
-              onClick={onClose}
-              size="small"
-              sx={{
-                position: "absolute",
-                right: 12,
-                color: "text.secondary", // FIX: "text.secondary" ensures the X is perfectly visible in Dark and Light mode
-              }}
-            >
-              <Close fontSize="small" />
-            </IconButton>
-          ) : null}
-        </DialogTitle>
-        <Divider />
-
-        {/* 2. MAIN DIALOG CONTENT WRAPPER */}
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          {/* 3. CLEAN FILTER BAR MOVED ABOVE TABLE */}
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <Box
+            sx={{
+              position: "absolute",
+              right: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
             <DatePicker
               label="DATE"
               value={selectedDate ? dayjs(selectedDate) : null}
@@ -329,7 +317,23 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
                 },
               }}
             />
+            {onClose ? (
+              <IconButton
+                aria-label="Close vehicle entries"
+                onClick={onClose}
+                size="small"
+                sx={{ color: "text.secondary" }}
+              >
+                <Close fontSize="small" />
+              </IconButton>
+            ) : null}
           </Box>
+        </DialogTitle>
+        <Divider />
+
+        {/* 2. MAIN DIALOG CONTENT WRAPPER */}
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          {/* 3. CLEAN FILTER BAR MOVED ABOVE TABLE */}
 
           {error ? (
             <Alert severity="error" sx={{ borderRadius: 1, mb: 2 }}>
@@ -347,12 +351,12 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
                 component={Paper}
                 elevation={0}
                 sx={{
-                  borderRadius: 1, // Added slight border radius
+                  borderRadius: 1,
                   width: "100%",
                   maxHeight: "65vh",
                   overflowX: "auto",
                   border: "1px solid",
-                  borderColor: "divider", // Match standard table borders
+                  borderColor: "divider",
                 }}
               >
                 <Table
