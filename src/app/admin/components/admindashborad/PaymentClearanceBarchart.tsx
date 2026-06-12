@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
-import { Table, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Box, Button } from "@mui/material";
 
 type ChartDatum = {
@@ -38,7 +38,7 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
           <h3 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
             Payment Clearance by Sales Zone
           </h3>
-          <div className="w-full h-[340px] md:h-[420px] flex items-center justify-center">
+          <div className="w-full h-85 md:h-105 flex items-center justify-center">
             <div className="text-[#4B5563] dark:text-[#E5E7EB] flex items-center gap-3">
               <BarChart3 className="w-6 h-6 animate-spin" />
               Loading chart data...
@@ -55,7 +55,7 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
         <h3 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B] mb-2">
           Payment Clearance by Sales Zone
         </h3>
-        <div className="w-full h-[340px] md:h-[420px] flex items-center justify-center text-[#D00000] dark:text-[#FF6B6B]">
+        <div className="w-full h-85 md:h-105 flex items-center justify-center text-[#D00000] dark:text-[#FF6B6B]">
           Error loading data: {String(error)}
         </div>
       </div>
@@ -120,8 +120,7 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
               }
             `}
           </style>
-          {/* FIXED: Added negative margins and specific height wrapper to contain legend inside card */}
-          <div className="h-[450px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
+          <div className="h-112.5 -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
             <BarChart
               aria-label="Payment clearance by sales zone"
               dataset={data}
@@ -196,8 +195,6 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
           </div>
         </>
       ) : (
-        /* Table View */
-        /* FIXED: Added negative margins to flush table with card bottom/sides */
         <div className="overflow-x-auto -mx-6 -mb-6 mt-4">
           <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
             <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">

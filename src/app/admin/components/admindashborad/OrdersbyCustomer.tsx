@@ -1,5 +1,3 @@
-// app/admin/components/OrdersByCustomer.tsx
-import React from "react";
 import { useOrdersByCustomer } from "../hooks/useOrdersbyCustomer";
 
 type Customer = {

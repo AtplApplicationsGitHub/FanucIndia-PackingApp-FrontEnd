@@ -473,19 +473,19 @@ export default function FgDashboardView() {
     setPage(0);
   };
 
-  const columns = [
-    { id: "saleOrderNumber", label: "SO", width: 90 },
-    { id: "outboundDelivery", label: "OBD", width: 90 },
-    { id: "customerName", label: "CUSTOMER NAME", width: 180 },
-    { id: "salesZone", label: "SALES ZONE", width: 90 },
-    { id: "deliveryDate", label: "REQUIRED DATE", width: 120 },
-    { id: "progress", label: "STAGE STATUS ", width: 250 },
-    { id: "payment", label: "PAY", width: 60 },
-    { id: "transporter", label: "TRANSPORTER", width: 110 },
-    { id: "vehicleNumber", label: "VEHICLE NUMBER", width: 120 },
-    { id: "fgLocation", label: "FG LOCATION", width: 120 },
-    { id: "specialRemarks", label: "REMARKS", width: 150 },
-    { id: "salesUser", label: "SALES USER", width: 110 },
+  const columns: { id: string; label: string; width: number; align?: "left" | "center" | "right" }[] = [
+    { id: "saleOrderNumber", label: "SO", width: 90, align: "center" },
+    { id: "outboundDelivery", label: "OBD", width: 90, align: "center" },
+    { id: "customerName", label: "CUSTOMER NAME", width: 180, align: "left" },
+    { id: "salesZone", label: "SALES ZONE", width: 90, align: "center" },
+    { id: "deliveryDate", label: "REQUIRED DATE", width: 120, align: "center" },
+    { id: "progress", label: "STAGE STATUS ", width: 300, align: "left" },
+    { id: "payment", label: "PAY", width: 60, align: "center" },
+    { id: "transporter", label: "TRANSPORTER", width: 110, align: "center" },
+    { id: "vehicleNumber", label: "VEHICLE NUMBER", width: 120, align: "center" },
+    { id: "fgLocation", label: "FG LOCATION", width: 120, align: "center" },
+    { id: "specialRemarks", label: "REMARKS", width: 150, align: "left" },
+    { id: "salesUser", label: "SALES USER", width: 110, align: "left" },
   ];
   const lightYellow = alpha(theme.palette.primary.main, 0.15);
   const headerBgColor = theme.palette.mode === "dark" ? "#000000" : "#FFFFFF";
@@ -593,7 +593,15 @@ export default function FgDashboardView() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ width: "100%", p: { xs: 1, sm: 2 }, boxSizing: "border-box" }}>
+      <Box
+        sx={{
+          width: "100%",
+          px: { xs: 1, sm: 2 },
+          pb: { xs: 1, sm: 2 },
+          pt: 0,
+          boxSizing: "border-box",
+        }}
+      >
         <Box
           sx={{
             width: "100%",
@@ -675,7 +683,7 @@ export default function FgDashboardView() {
                 display: "flex",
                 alignItems: "center",
                 width: { xs: "100%", sm: 220 },
-                flexShrink: 0, 
+                flexShrink: 0,
                 border: 1,
                 borderColor: (theme) =>
                   theme.palette.mode === "dark"
@@ -923,8 +931,8 @@ export default function FgDashboardView() {
               stickyHeader
               sx={{
                 "& .MuiTableCell-root": {
-                  fontSize: { xs: "0.8rem", xl: "1.05rem" },
-                  py: { xs: 0, xl: 1 },
+                  fontSize: "0.85rem",
+                  py: 0.5,
                 },
               }}
             >
@@ -933,6 +941,7 @@ export default function FgDashboardView() {
                   {columns.map((col) => (
                     <TableCell
                       key={col.id}
+                      align={col.align || "left"}
                       sx={{
                         backgroundColor: headerBgColor,
                         color: headerTextColor,
@@ -974,7 +983,7 @@ export default function FgDashboardView() {
                         }}
                       >
                         {/* SO NUMBER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1, py: 0 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1, py: 0 }}>
                           <MuiLink
                             component={Link}
                             href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
@@ -986,7 +995,7 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* OBD */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.outboundDelivery || "-"}
                         </TableCell>
 
@@ -996,12 +1005,12 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* SALES ZONE */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.salesZone}
                         </TableCell>
 
                         {/* REQUIRED DATE */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {formatDate(row.deliveryDate)}
                         </TableCell>
 
@@ -1012,30 +1021,69 @@ export default function FgDashboardView() {
                               getStatusInfo(row);
                             return (
                               <Box
-                                sx={{ width: "100%", minWidth: 220, py: 0.25 }}
+                                sx={{ width: "100%", minWidth: 280, py: 0.5 }}
                               >
+                                {/* TOP ROW: Current Stage, Date/Time, and Next Stage */}
                                 <Box
                                   sx={{
                                     display: "flex",
+                                    justifyContent: "space-between",
                                     alignItems: "center",
-                                    flexWrap: "wrap",
-                                    gap: 0.5,
-                                    mb: 0,
+                                    mb: 0.5,
+                                    gap: 1,
                                   }}
                                 >
-                                  <Typography
-                                    variant="caption"
-                                    fontWeight={700}
-                                    color="text.primary"
+                                  <Box
                                     sx={{
-                                      fontSize: "0.75rem",
-                                      whiteSpace: "nowrap",
-                                      lineHeight: 1,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
                                     }}
                                   >
-                                    {current}
-                                  </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      fontWeight={700}
+                                      sx={{
+                                        fontSize: "0.75rem",
+                                        lineHeight: 1,
+                                        color: "text.primary",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {current}
+                                    </Typography>
+                                    {row.updatedDate && (
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: "text.secondary",
+                                          fontSize: "0.65rem",
+                                          lineHeight: 1,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        • {formatDateTimeIST(row.updatedDate)}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                  {next && (
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        color: "text.secondary",
+                                        fontSize: "0.65rem",
+                                        lineHeight: 1,
+                                        fontWeight: 500,
+                                        whiteSpace: "nowrap",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {next}
+                                    </Typography>
+                                  )}
                                 </Box>
+
+                                {/* BOTTOM ROW: Progress Bar & Percentage Text */}
                                 <Box
                                   sx={{
                                     display: "flex",
@@ -1048,70 +1096,36 @@ export default function FgDashboardView() {
                                       variant="determinate"
                                       value={percent}
                                       sx={{
-                                        height: 8,
-                                        borderRadius: 4,
+                                        height: 6,
+                                        borderRadius: 3,
                                         backgroundColor: alpha(color, 0.15),
                                         "& .MuiLinearProgress-bar": {
                                           backgroundColor: color,
-                                          borderRadius: 4,
-                                          boxShadow: `0 0 8px ${alpha(color, 0.4)}`,
+                                          borderRadius: 3,
                                         },
                                       }}
                                     />
                                   </Box>
-                                  <Box
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={700}
                                     sx={{
-                                      backgroundColor: alpha(color, 0.1),
                                       color: color,
-                                      px: 1,
-                                      py: 0.25,
-                                      borderRadius: "12px",
-                                      fontWeight: 500,
-                                      fontSize: "0.75rem",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      border: `1px solid ${alpha(color, 0.2)}`,
+                                      fontSize: "0.7rem",
+                                      minWidth: 28,
+                                      textAlign: "right",
                                     }}
                                   >
                                     {percent}%
-                                  </Box>
+                                  </Typography>
                                 </Box>
-                                {next && (
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: "text.primary",
-                                      fontSize: "0.75rem",
-                                      whiteSpace: "nowrap",
-                                      fontWeight: 500,
-                                      lineHeight: 1,
-                                    }}
-                                  >
-                                    {next}
-                                  </Typography>
-                                )}
-                                {row.updatedDate && (
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: "text.secondary",
-                                      fontSize: "0.7rem",
-                                      whiteSpace: "nowrap",
-                                      lineHeight: 1,
-                                      ml: 1,
-                                    }}
-                                  >
-                                    {" "}
-                                    {formatDateTimeIST(row.updatedDate)}
-                                  </Typography>
-                                )}
                               </Box>
                             );
                           })()}
                         </TableCell>
 
                         {/* PAYMENT */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {Array.isArray(row.attachments) &&
                           row.attachments.length > 0 ? (
                             <MuiLink
@@ -1137,17 +1151,17 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* TRANSPORTER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {renderDispatchInfoPill(row.transporter)}
                         </TableCell>
 
                         {/* VEHICLE NUMBER */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {renderDispatchInfoPill(row.vehicleNumber)}
                         </TableCell>
 
                         {/* FG LOCATION */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
                           {row.fgLocation
                             ? typeof row.fgLocation === "string"
                               ? row.fgLocation

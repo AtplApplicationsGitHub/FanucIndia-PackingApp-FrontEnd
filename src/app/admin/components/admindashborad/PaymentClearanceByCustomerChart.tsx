@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Table as TableIcon, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { TablePagination } from "@mui/material";
 import { usePaymentClearanceByCustomer } from "../hooks/usePaymentClearanceByCustomer";
 import { Box, Button } from "@mui/material";
 
-// --- ADDED LOCAL INTERFACE ---
 interface CustomerPaymentClearance {
   customerName: string;
   paymentCleared: number;
@@ -27,7 +26,6 @@ export default function PaymentClearanceByCustomerChart({
     usePaymentClearanceByCustomer(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
-  // Pagination State
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -42,7 +40,6 @@ export default function PaymentClearanceByCustomerChart({
     pending: item.paymentPending,
   }));
 
-  // Apply Pagination Slice
   const paginatedData = chartData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage,

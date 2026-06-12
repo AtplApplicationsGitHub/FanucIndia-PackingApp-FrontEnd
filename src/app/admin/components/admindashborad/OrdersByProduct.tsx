@@ -1,5 +1,3 @@
-// components/OrdersByProduct.tsx
-import React from "react";
 import { useOrdersByProduct, OrderByProduct } from "../hooks/useOrdersByProduct";
 
 function formatNumber(n: number): string {

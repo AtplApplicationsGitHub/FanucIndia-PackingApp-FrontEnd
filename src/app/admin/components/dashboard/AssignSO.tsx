@@ -1319,18 +1319,22 @@ export default function AssignSO() {
                 setCurrentPage(1);
               }}
               onDownloadFailedErpData={handleDownloadFailedErpData}
-              onBulkUpdateRequiredDate={async (date) => {
+              onBulkUpdateRequiredDate={async (date, paymentClearance) => {
                 try {
-                  await bulkUpdateRequiredDate(selectedIds, date);
+                  await bulkUpdateRequiredDate(
+                    selectedIds,
+                    date,
+                    paymentClearance,
+                  );
                   setSnackbar({
                     open: true,
-                    message: `Required Date updated for ${selectedIds.length} orders`,
+                    message: `Order(s) updated for ${selectedIds.length} orders`,
                     severity: "success",
                   });
                 } catch (err: any) {
                   setSnackbar({
                     open: true,
-                    message: err.message || "Failed to update date",
+                    message: err.message || "Failed to update orders",
                     severity: "error",
                   });
                 }

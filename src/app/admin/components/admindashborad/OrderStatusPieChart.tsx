@@ -1,17 +1,15 @@
 "use client";
 
-import React from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { CircularProgress } from "@mui/material";
 import { useOrderOverallStatus } from "../hooks/useOrderStatusPieChart";
 
-// Finalized Colors - Updated to match new palette
 const COLORS = {
-  toBeIssued: "#FF6B6B", // Vibrant coral red
-  assigned: "#3B82F6", // Professional blue
-  issued: "#D97706", // Dark Amber
-  packed: "#6C5CE7", // Purple
-  dispatched: "#00B894", // Emerald green
+  toBeIssued: "#FF6B6B", 
+  assigned: "#3B82F6", 
+  issued: "#D97706", 
+  packed: "#6C5CE7", 
+  dispatched: "#00B894", 
 };
 
 interface Props {
@@ -24,7 +22,7 @@ export default function OrderStatusPieChart({ selectedDate, displayDate }: Props
 
   if (loading) {
     return (
-      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
+      <div className="w-full max-w-225 mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-125 flex items-center justify-center font-sans">
         <CircularProgress className="text-[#FFD200]" />
         <span className="ml-3 text-[#4B5563] dark:text-[#E5E7EB]">
           Loading chart...
@@ -35,7 +33,7 @@ export default function OrderStatusPieChart({ selectedDate, displayDate }: Props
 
   if (error || !data) {
     return (
-      <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-[500px] flex items-center justify-center font-sans">
+      <div className="w-full max-w-225 mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full min-h-125 flex items-center justify-center font-sans">
         <p className="text-[#D00000] dark:text-red-400">Error: {error || "No data"}</p>
       </div>
     );
@@ -83,7 +81,7 @@ export default function OrderStatusPieChart({ selectedDate, displayDate }: Props
   const hasData = chartData.length > 0;
 
   return (
-    <div className="w-full max-w-[900px] mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans">
+    <div className="w-full max-w-225 mx-auto bg-white dark:bg-[#1F2933] rounded-xl p-6 shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full flex flex-col font-sans">
       <div className="mb-5">
         <h2 className="text-base font-semibold uppercase tracking-wider text-[#D00000] dark:text-[#FF6B6B]">
           Overall Order Status Count ({displayDate})
@@ -95,7 +93,7 @@ export default function OrderStatusPieChart({ selectedDate, displayDate }: Props
         </p>
       </div>
 
-      <div className="flex-1 relative min-h-[320px] w-full text-gray-700 dark:text-gray-200">
+      <div className="flex-1 relative min-h-80 w-full text-gray-700 dark:text-gray-200">
         {hasData ? (
           <PieChart
             series={[

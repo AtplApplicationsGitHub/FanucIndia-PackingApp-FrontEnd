@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   Box,
@@ -100,7 +98,10 @@ type Props = {
   onDownloadFailedErpData?: () => void;
   successImportFilter?: boolean;
   onSuccessImportClick?: () => void;
-  onBulkUpdateRequiredDate?: (date: Date) => Promise<void>;
+  onBulkUpdateRequiredDate?: (
+    date: Date | null,
+    paymentClearance?: boolean | null,
+  ) => Promise<void>;
 };
 
 export default function AssignOrdersToolbar({
@@ -184,6 +185,9 @@ export default function AssignOrdersToolbar({
 
   const [requiredDateDialogOpen, setRequiredDateDialogOpen] = useState(false);
   const [bulkRequiredDate, setBulkRequiredDate] = useState<Date | null>(null);
+  const [bulkPaymentStatus, setBulkPaymentStatus] = useState<
+    "" | "true" | "false"
+  >("");
 
   const [localSearch, setLocalSearch] = useState(searchInput);
   React.useEffect(() => {
@@ -1165,6 +1169,7 @@ export default function AssignOrdersToolbar({
         onClose={() => {
           setRequiredDateDialogOpen(false);
           setBulkRequiredDate(null);
+          setBulkPaymentStatus("");
         }}
         maxWidth="xs"
         fullWidth
@@ -1209,6 +1214,7 @@ export default function AssignOrdersToolbar({
             onClick={() => {
               setRequiredDateDialogOpen(false);
               setBulkRequiredDate(null);
+              setBulkPaymentStatus("");
             }}
             size="small"
             sx={{
@@ -1240,6 +1246,27 @@ export default function AssignOrdersToolbar({
                 },
               }}
             />
+
+            <FormControl fullWidth size="medium">
+              <Select
+                value={bulkPaymentStatus}
+                displayEmpty
+                onChange={(e) =>
+                  setBulkPaymentStatus(e.target.value as "" | "true" | "false")
+                }
+                sx={{ fontSize: "14px" }}
+              >
+                <MenuItem value="" sx={{ fontSize: "14px" }}>
+                  Payment Status
+                </MenuItem>
+                <MenuItem value="true" sx={{ fontSize: "14px" }}>
+                  Yes
+                </MenuItem>
+                <MenuItem value="false" sx={{ fontSize: "14px" }}>
+                  No
+                </MenuItem>
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <Divider />
@@ -1247,13 +1274,19 @@ export default function AssignOrdersToolbar({
           <CommonButton
             variant="contained"
             disableElevation
-            disabled={!bulkRequiredDate}
+            disabled={!bulkRequiredDate && bulkPaymentStatus === ""}
             onClick={async () => {
-              if (bulkRequiredDate && onBulkUpdateRequiredDate) {
-                await onBulkUpdateRequiredDate(bulkRequiredDate);
+              if (onBulkUpdateRequiredDate) {
+                await onBulkUpdateRequiredDate(
+                  bulkRequiredDate,
+                  bulkPaymentStatus === ""
+                    ? null
+                    : bulkPaymentStatus === "true",
+                );
               }
               setRequiredDateDialogOpen(false);
               setBulkRequiredDate(null);
+              setBulkPaymentStatus("");
             }}
           >
             SUBMIT

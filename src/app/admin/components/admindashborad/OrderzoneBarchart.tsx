@@ -1,9 +1,8 @@
-// components/charts/OrderStatusByZone.tsx
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Table, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { useOrderZoneBarChart, ZoneStatus } from "../hooks/useOrderzoneBarchart";
 import { Box, Button } from "@mui/material";
 
@@ -16,16 +15,14 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
   const { data, loading, error, refetch } = useOrderZoneBarChart(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
-  // Finalized Colors - Updated to match new palette
   const COLORS = {
-    toBeIssued: "#FF6B6B", // Vibrant coral red
-    assigned: "#3B82F6", // Professional blue
-    issued: "#D97706", // Dark Amber
-    packed: "#6C5CE7", // Purple
-    dispatched: "#00B894", // Emerald green
+    toBeIssued: "#FF6B6B",
+    assigned: "#3B82F6",
+    issued: "#D97706",
+    packed: "#6C5CE7",
+    dispatched: "#00B894",
   };
 
-  // Transform API data (business logic unchanged)
   const chartData = (data || [])
     .map((item: ZoneStatus) => ({
       zone: item.zoneName,
@@ -133,7 +130,7 @@ export default function OrderStatusByZone({ selectedDate, displayDate }: Props) 
             `}
           </style>
 
-          <div className="h-[450px] -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
+          <div className="h-112.5 -mx-6 -mb-6 text-gray-700 dark:text-gray-200">
             <BarChart
               aria-label="Order status by sales zone"
               dataset={chartData}

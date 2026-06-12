@@ -1,4 +1,3 @@
-import React from "react";
 import { useUpcomingOrders } from "../hooks/useUpcomingOrders";
 import { RefreshCw, Calendar, AlertCircle } from "lucide-react";
 
@@ -8,7 +7,7 @@ export default function UpcomingOrdersCard() {
   if (loading) {
     return (
       <div className="w-full">
-        <div className="rounded-2xl bg-white dark:bg-slate-800 shadow-lg p-6 min-h-[455px] border border-slate-100 dark:border-slate-700">
+        <div className="rounded-2xl bg-white dark:bg-slate-800 shadow-lg p-6 min-h-113.75 border border-slate-100 dark:border-slate-700">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-40 mb-2 animate-pulse" />
@@ -36,7 +35,7 @@ export default function UpcomingOrdersCard() {
 
   return (
     <div className="w-full">
-      <div className="rounded-xl bg-white dark:bg-[#1F2933] shadow-sm p-6 min-h-[500px] border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all duration-300">
+      <div className="rounded-xl bg-white dark:bg-[#1F2933] shadow-sm p-6 min-h-125 border border-[#E5E7EB] dark:border-[#4B5563] hover:shadow-md transition-all duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>

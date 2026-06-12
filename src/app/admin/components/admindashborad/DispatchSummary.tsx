@@ -1,5 +1,3 @@
-// app/admin/components/admindashboard/DispatchSummary.tsx
-import React from "react";
 import { useDispatchSummary } from "../hooks/useDispatchSummary";
 import { Clock, CheckCircle, ClipboardCheck } from "lucide-react";
 import { formatDateIST } from "@/common/utils/dateTime";
@@ -13,7 +11,7 @@ export default function DispatchSummary() {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] w-full min-h-[543px] flex flex-col">
+      <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] w-full min-h-135.75 flex flex-col">
 
         {/* Header */}
         <div className="px-6 pt-6">

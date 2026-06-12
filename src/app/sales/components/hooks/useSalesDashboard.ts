@@ -50,8 +50,8 @@ export function useSalesDashboard() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [salesZone, setSalesZone] = useState("");
   const [alert, setAlert] = useState<{
@@ -61,11 +61,38 @@ export function useSalesDashboard() {
 
   const [view, setViewInternal] = useState<SalesDashboardView>("home");
 
-  // Filter states
-  const [paymentFilter, setPaymentFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [ordersSearchTerm, setOrdersSearchTerm] = useState("");
+  const [ordersPaymentFilter, setOrdersPaymentFilter] = useState("");
+  const [ordersStatusFilter, setOrdersStatusFilter] = useState("");
+  const [ordersStartDate, setOrdersStartDate] = useState<Date | null>(
+    new Date(),
+  );
+  const [ordersEndDate, setOrdersEndDate] = useState<Date | null>(new Date());
+
+  const [dispSearchTerm, setDispSearchTerm] = useState("");
+  const [dispPaymentFilter, setDispPaymentFilter] = useState("");
+  const [dispStatusFilter, setDispStatusFilter] = useState("");
+  const [dispStartDate, setDispStartDate] = useState<Date | null>(new Date());
+  const [dispEndDate, setDispEndDate] = useState<Date | null>(new Date());
+
+  const isDisp = view === "dispatched";
+
+  const searchTerm = isDisp ? dispSearchTerm : ordersSearchTerm;
+  const setSearchTerm = isDisp ? setDispSearchTerm : setOrdersSearchTerm;
+
+  const paymentFilter = isDisp ? dispPaymentFilter : ordersPaymentFilter;
+  const setPaymentFilter = isDisp
+    ? setDispPaymentFilter
+    : setOrdersPaymentFilter;
+
+  const statusFilter = isDisp ? dispStatusFilter : ordersStatusFilter;
+  const setStatusFilter = isDisp ? setDispStatusFilter : setOrdersStatusFilter;
+
+  const startDate = isDisp ? dispStartDate : ordersStartDate;
+  const setStartDate = isDisp ? setDispStartDate : setOrdersStartDate;
+
+  const endDate = isDisp ? dispEndDate : ordersEndDate;
+  const setEndDate = isDisp ? setDispEndDate : setOrdersEndDate;
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -75,7 +102,6 @@ export function useSalesDashboard() {
     setEndDate(null);
   };
 
-  // On initial load, check session storage for a saved view
   useEffect(() => {
     const savedView = sessionStorage.getItem(
       "salesDashboardView",
@@ -98,6 +124,8 @@ export function useSalesDashboard() {
   const setView = (newView: SalesDashboardView) => {
     sessionStorage.setItem("salesDashboardView", newView);
     setViewInternal(newView);
+    setOrders([]); // Instantly clear the table to avoid flickering old data
+    setCurrentPage(1); // Reset pagination to page 1 on tab switch
   };
 
   useEffect(() => {
@@ -292,6 +320,7 @@ export function useSalesDashboard() {
   useEffect(() => {
     if (view === "orders" || view === "dispatched") {
       setCurrentPage(1);
+      setOrders([]); // Clear stale data instantly when filters change
       fetchOrders(1, pageSize);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -617,31 +646,35 @@ export function useSalesDashboard() {
   };
 
   const handleBulkUpdateRequiredDate = useCallback(
-    async (date: Date) => {
+    async (date: Date | null, paymentClearance?: boolean | null) => {
       if (selectedIds.length === 0) return;
       if (typeof window === "undefined") return;
       const token = localStorage.getItem("token");
 
       try {
-        setAlert({ severity: "info", message: "Updating dates..." });
+        setAlert({ severity: "info", message: "Updating orders..." });
+
+        const payload: Record<string, any> = { salesOrderIds: selectedIds };
+        if (date) payload.deliveryDate = dayjs(date).format("YYYY-MM-DD");
+        if (paymentClearance !== null && paymentClearance !== undefined) {
+          payload.paymentClearance = paymentClearance;
+        }
+
         await axios.put(
-          `${API.SALES.CREATE_ORDER}/bulk/delivery-date`, // Using the endpoint we created in the backend
-          {
-            salesOrderIds: selectedIds,
-            deliveryDate: dayjs(date).format("YYYY-MM-DD"),
-          },
+          `${API.SALES.CREATE_ORDER}/bulk/delivery-date`,
+          payload,
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
         setAlert({
           severity: "success",
-          message: "Required Dates updated successfully!",
+          message: "Orders updated successfully!",
         });
-        fetchOrders(); // Refresh the table
+        fetchOrders();
       } catch (err: any) {
         setAlert({
           severity: "error",
-          message: err.response?.data?.message || "Failed to update dates.",
+          message: err.response?.data?.message || "Failed to update orders.",
         });
       }
     },

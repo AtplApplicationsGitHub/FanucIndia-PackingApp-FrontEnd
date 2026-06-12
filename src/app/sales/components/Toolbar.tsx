@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -63,7 +61,10 @@ type Props = {
   onClear: () => void;
   selectedIds: number[];
   onDownloadDispatchedExcel?: () => void;
-  onBulkUpdateRequiredDate?: (date: Date) => Promise<void>;
+  onBulkUpdateRequiredDate?: (
+    date: Date | null,
+    paymentClearance?: boolean | null,
+  ) => Promise<void>;
 };
 
 export default function SalesDashboardToolbar({
@@ -95,6 +96,9 @@ export default function SalesDashboardToolbar({
 
   const [requiredDateDialogOpen, setRequiredDateDialogOpen] = useState(false);
   const [bulkRequiredDate, setBulkRequiredDate] = useState<Date | null>(null);
+  const [bulkPaymentStatus, setBulkPaymentStatus] = useState<
+    "" | "true" | "false"
+  >("");
 
   const [localSearch, setLocalSearch] = useState(searchValue);
   useEffect(() => {
@@ -489,6 +493,26 @@ export default function SalesDashboardToolbar({
                 },
               }}
             />
+            <FormControl fullWidth size="medium">
+              <Select
+                value={bulkPaymentStatus}
+                displayEmpty
+                onChange={(e) =>
+                  setBulkPaymentStatus(e.target.value as "" | "true" | "false")
+                }
+                sx={{ fontSize: "14px" }}
+              >
+                <MenuItem value="" sx={{ fontSize: "14px" }}>
+                  Payment Status
+                </MenuItem>
+                <MenuItem value="true" sx={{ fontSize: "14px" }}>
+                  Yes
+                </MenuItem>
+                <MenuItem value="false" sx={{ fontSize: "14px" }}>
+                  No
+                </MenuItem>
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <Divider />
@@ -496,13 +520,19 @@ export default function SalesDashboardToolbar({
           <CommonButton
             variant="contained"
             disableElevation
-            disabled={!bulkRequiredDate}
+            disabled={!bulkRequiredDate && bulkPaymentStatus === ""}
             onClick={async () => {
-              if (bulkRequiredDate && onBulkUpdateRequiredDate) {
-                await onBulkUpdateRequiredDate(bulkRequiredDate);
+              if (onBulkUpdateRequiredDate) {
+                await onBulkUpdateRequiredDate(
+                  bulkRequiredDate,
+                  bulkPaymentStatus === ""
+                    ? null
+                    : bulkPaymentStatus === "true",
+                );
               }
               setRequiredDateDialogOpen(false);
               setBulkRequiredDate(null);
+              setBulkPaymentStatus("");
             }}
           >
             SUBMIT

@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Table as TableIcon, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { TablePagination } from "@mui/material";
 import { useOrderStatusByCustomer } from "../hooks/useOrderStatusByCustomer";
 import { Box, Button } from "@mui/material";
 
-// --- ADDED LOCAL INTERFACE ---
 interface CustomerOrderStatus {
   customerName: string;
   toBeIssuedCount: number;
@@ -30,7 +29,6 @@ export default function OrderStatusByCustomerChart({
     useOrderStatusByCustomer(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("table");
 
-  // Pagination State
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
