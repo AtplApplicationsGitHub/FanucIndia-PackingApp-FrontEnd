@@ -21,7 +21,8 @@ export type UserDashboardView =
   | "home"
   | "pick_pack"
   | "dispatch"
-  | "fg_dashboard";
+  | "fg_dashboard"
+  | "status_hub";
 
 export function useUserDashboard() {
   const [userName, setUserName] = useState<string>("");

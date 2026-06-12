@@ -10,13 +10,13 @@ import { useUserDashboard } from "@/app/user/hooks/useUserDashboard";
 import DispatchView from "@/app/components/DispatchView";
 import FgDashboardView from "@/app/components/FgDashboardView";
 import axios from "axios";
-import { API } from '@/common/lib/endpoints';
+import { API } from "@/common/lib/endpoints";
 import { SalesOrder } from "@/app/admin/components/types/admin";
 import ErpUploadDialog from "@/app/admin/components/dashboard/ErpUploadDialog";
 import UserDashboardMain from "@/app/user/components/UserdashboardMain";
 import SoChatDrawer from "@/app/components/SoChatDrawer";
 import { useTheme } from "@mui/material";
-
+import ReportPage from "@/app/admin/components/dashboard/PlanvsActual";
 
 function UserDashboardContent() {
   const theme = useTheme();
@@ -33,7 +33,9 @@ function UserDashboardContent() {
     fetchOrders,
   } = useUserDashboard();
 
-  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(null);
+  const [erpUploadOrder, setErpUploadOrder] = React.useState<SalesOrder | null>(
+    null,
+  );
   const [isErpUploadOpen, setIsErpUploadOpen] = React.useState(false);
   const [chatOpen, setChatOpen] = React.useState(false);
   const [chatSoNumber, setChatSoNumber] = React.useState<string | null>(null);
@@ -48,12 +50,14 @@ function UserDashboardContent() {
         setView(urlView);
         sessionStorage.setItem("userDashboardView", urlView);
       }
-    } else {
-      if (view !== "home") {
-        setView("home");
-        sessionStorage.setItem("userDashboardView", "home");
-      }
+    //   else {
+    //   if (view !== "home") {
+    //     setView("home");
+    //     sessionStorage.setItem("userDashboardView", "home");
+    //   }
+    // }
     }
+    
   }, [searchParams]);
 
   // Custom function to update the tab AND the browser history URL
@@ -86,14 +90,14 @@ function UserDashboardContent() {
 
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" | "info" | "warning" = "success"
+    severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
     setAlert({ message, severity });
   };
 
   const handleDetailedViewClick = async (order: SalesOrder) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await axios.get(API.ADMIN.ERP_MATERIALS_BY_ORDER(order.id), {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -105,7 +109,10 @@ function UserDashboardContent() {
         setIsErpUploadOpen(true);
       }
     } catch (error) {
-      showSnackbar('Could not check for material data. Please try again.', 'error');
+      showSnackbar(
+        "Could not check for material data. Please try again.",
+        "error",
+      );
       console.error("Failed to check ERP materials:", error);
     }
   };
@@ -118,7 +125,7 @@ function UserDashboardContent() {
 
   const handleSnackbarClose = (
     _event?: React.SyntheticEvent | Event,
-    reason?: string
+    reason?: string,
   ) => {
     if (reason === "clickaway") return;
     setAlert(null);
@@ -134,7 +141,7 @@ function UserDashboardContent() {
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity={alert?.severity || 'info'}
+          severity={alert?.severity || "info"}
           sx={{ width: "100%" }}
         >
           {alert?.message}
@@ -174,7 +181,6 @@ function UserDashboardContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
               style={{ padding: "1rem" }}
-
             >
               <Paper
                 elevation={0}
@@ -219,6 +225,16 @@ function UserDashboardContent() {
             <FgDashboardView />
           </motion.div>
         )}
+        {view === "status_hub" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <ReportPage />
+          </motion.div>
+        )}
 
         {error && (
           <Box
@@ -255,7 +271,18 @@ function UserDashboardContent() {
 
 export default function UserDashboard() {
   return (
-    <Suspense fallback={<Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center">Loading...</Box>}>
+    <Suspense
+      fallback={
+        <Box
+          minHeight="100vh"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          Loading...
+        </Box>
+      }
+    >
       <UserDashboardContent />
     </Suspense>
   );

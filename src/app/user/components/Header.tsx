@@ -15,7 +15,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { Package, Truck, Grid, BarChart3, ArrowLeft, Menu as MenuIcon, X } from "lucide-react";
+import { Package, Truck, Grid, BarChart3, ArrowLeft, Menu as MenuIcon, X, Activity as ActivityIcon } from "lucide-react";
 import { UserDashboardView } from "@/app/user/hooks/useUserDashboard";
 import { useTheme } from "@mui/material";
 import Image from "next/image";
@@ -35,6 +35,8 @@ const menuItems = [
   { label: "PICK & PACK", icon: <Package className="mr-1 h-4 w-4" />, value: "pick_pack" },
   { label: "DISPATCH", icon: <Truck className="mr-1 h-4 w-4" />, value: "dispatch" },
   { label: "FG DASHBOARD", icon: <Grid className="mr-1 h-4 w-4" />, value: "fg_dashboard" },
+  { label: "STATUS HUB", icon: <ActivityIcon className="mr-1 h-4 w-4" />, value: "status_hub" }, // ADD THIS
+
 ];
 
 export default function UserDashboardHeader({ userName, view, setView, showBackButton }: Props) {
