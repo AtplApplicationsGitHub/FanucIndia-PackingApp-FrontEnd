@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   Alert,
@@ -21,6 +19,7 @@ import {
   Typography,
   alpha,
   useTheme,
+  Divider,
 } from "@mui/material";
 import { Close, Download, Visibility } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -172,9 +171,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(
     getTodayDateValue,
   );
-  const { rows, loading, error } = useVehicleEntries(
-    selectedDate ?? undefined,
-  );
+  const { rows, loading, error } = useVehicleEntries(selectedDate ?? undefined);
   const {
     attachments,
     loading: attachmentsLoading,
@@ -263,24 +260,17 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ width: "100%", bgcolor: "background.paper" }}>
-        <Box
+      <Box
+        sx={{
+          width: "100%",
+          bgcolor: "background.paper",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* 1. STANDARDIZED DIALOG TITLE */}
+        <DialogTitle
           sx={{
-            minHeight: { xs: 112, sm: 68 },
-            px: 2.25,
-            py: 1.5,
-            color: theme.palette.primary.contrastText,
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            position: "relative",
-          }}
-        >
-          <Typography
-            component="h2"
-             sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -290,40 +280,8 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
             pb: 1,
             position: "relative",
           }}
-          >
-            VEHICLE ENTRIES
-          </Typography>
-          <DatePicker
-            label="DATE"
-            value={selectedDate ? dayjs(selectedDate) : null}
-            onChange={handleDateChange}
-            format="DD-MM-YYYY"
-            slotProps={{
-              field: {
-                clearable: true,
-                onClear: () => handleDateChange(null),
-              },
-              textField: {
-                size: "small",
-                variant: "outlined",
-                sx: {
-                  width: { xs: 180, sm: 185 },
-                  flex: "0 0 auto",
-                  position: { xs: "static", sm: "absolute" },
-                  right: onClose ? 52 : 16,
-                  top: { sm: "50%" },
-                  transform: { sm: "translateY(-50%)" },
-                  "& .MuiInputBase-root": {
-                    height: 40,
-                    fontSize: "13px",
-                  },
-                  "& .MuiInputLabel-root": {
-                    fontSize: "12px",
-                  },
-                },
-              },
-            }}
-          />
+        >
+          VEHICLE ENTRIES
           {onClose ? (
             <IconButton
               aria-label="Close vehicle entries"
@@ -332,167 +290,205 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
               sx={{
                 position: "absolute",
                 right: 12,
-                color: theme.palette.primary.contrastText,
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.contrastText, 0.16),
-                },
+                color: "text.secondary", // FIX: "text.secondary" ensures the X is perfectly visible in Dark and Light mode
               }}
             >
               <Close fontSize="small" />
             </IconButton>
           ) : null}
-        </Box>
+        </DialogTitle>
+        <Divider />
 
-        {error ? (
-          <Alert severity="error" sx={{ borderRadius: 0 }}>
-            {error}
-          </Alert>
-        ) : null}
-
-        {loading && rows.length === 0 ? (
-          <Box display="flex" justifyContent="center" p={4}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <TableContainer
-              component={Paper}
-              elevation={0}
-              sx={{
-                borderRadius: 0,
-                width: "100%",
-                maxHeight: "70vh",
-                overflowX: "auto",
+        {/* 2. MAIN DIALOG CONTENT WRAPPER */}
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          {/* 3. CLEAN FILTER BAR MOVED ABOVE TABLE */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <DatePicker
+              label="DATE"
+              value={selectedDate ? dayjs(selectedDate) : null}
+              onChange={handleDateChange}
+              format="DD-MM-YYYY"
+              slotProps={{
+                field: {
+                  clearable: true,
+                  onClear: () => handleDateChange(null),
+                },
+                textField: {
+                  size: "small",
+                  variant: "outlined",
+                  sx: {
+                    width: { xs: "100%", sm: 200 },
+                    "& .MuiInputBase-root": {
+                      height: 40,
+                      fontSize: "13px",
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "12px",
+                    },
+                  },
+                },
               }}
-            >
-              <Table
-                stickyHeader
+            />
+          </Box>
+
+          {error ? (
+            <Alert severity="error" sx={{ borderRadius: 1, mb: 2 }}>
+              {error}
+            </Alert>
+          ) : null}
+
+          {loading && rows.length === 0 ? (
+            <Box display="flex" justifyContent="center" p={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              <TableContainer
+                component={Paper}
+                elevation={0}
                 sx={{
-                  minWidth: 650,
+                  borderRadius: 1, // Added slight border radius
                   width: "100%",
-                  "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
-                    backgroundColor: lightYellow,
-                  },
-                  "& .MuiTableBody-root .MuiTableRow-root:hover": {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                  },
-                  "& .MuiTableCell-root": {
-                    borderBottom: "none",
-                    py: 0.5,
-                    px: 1,
-                    fontSize: "0.875rem",
-                    whiteSpace: "nowrap",
-                  },
+                  maxHeight: "65vh",
+                  overflowX: "auto",
+                  border: "1px solid",
+                  borderColor: "divider", // Match standard table borders
                 }}
               >
-                <TableHead
+                <Table
+                  stickyHeader
                   sx={{
-                    "& .MuiTableCell-head": {
-                      bgcolor: TABLE_HEADER_YELLOW,
-                      color: "#000000",
+                    minWidth: 650,
+                    width: "100%",
+                    "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                      backgroundColor: lightYellow,
+                    },
+                    "& .MuiTableBody-root .MuiTableRow-root:hover": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                    },
+                    "& .MuiTableCell-root": {
+                      borderBottom: "none",
+                      py: 0.5,
+                      px: 1,
+                      fontSize: "0.875rem",
+                      whiteSpace: "nowrap",
                     },
                   }}
                 >
-                  <TableRow sx={{ height: 60 }}>
-                {VEHICLE_ENTRY_COLUMNS.map((label) => (
-                  <TableCell
-                    key={label}
-                    align={label === "ATTACHMENTS" ? "center" : "left"}
+                  <TableHead
                     sx={{
-                      fontWeight: 700,
-                      whiteSpace: "nowrap",
+                      "& .MuiTableCell-head": {
+                        bgcolor: TABLE_HEADER_YELLOW,
+                        color: "#000000",
+                      },
                     }}
                   >
-                    {label}
-                  </TableCell>
-                ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-              {rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={VEHICLE_ENTRY_COLUMNS.length}
-                    align="center"
-                    sx={{ py: 4 }}
-                  >
-                    <Typography color="text.secondary">
-                      No vehicle entries found.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                visibleRows.map((entry) => {
-                  const status = displayValue(
-                    entry.dispatchStatus ?? entry.status,
-                  );
-                  const attachmentCount = entry.attachments?.length ?? 0;
-
-                  return (
-                    <TableRow
-                      key={entry.id}
-                      hover
-                      sx={{
-                        "&:last-child td": { borderBottom: 0 },
-                      }}
-                    >
-                      <TableCell sx={{ fontWeight: 700 }}>
-                        {displayValue(entry.vehicleNumber)}
-                      </TableCell>
-                      <TableCell>
-                        {displayValue(entry.transporterName)}
-                      </TableCell>
-                      <TableCell>
-                        {displayValue(entry.customerName)}
-                      </TableCell>
-                      <TableCell>{displayValue(entry.driverNumber)}</TableCell>
-                      <TableCell>
-                        {getUserName(entry.createdUser ?? entry.createdBy)}
-                      </TableCell>
-                      <TableCell>
-                        <StatusChip status={status} />
-                      </TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {formatCreatedDate(entry.createdAt)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip
-                          title={`View attachments (${attachmentCount})`}
+                    <TableRow sx={{ height: 50 }}>
+                      {VEHICLE_ENTRY_COLUMNS.map((label) => (
+                        <TableCell
+                          key={label}
+                          align={label === "ATTACHMENTS" ? "center" : "left"}
+                          sx={{
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}
                         >
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenAttachments(entry)}
-                          >
-                            <Visibility fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
+                          {label}
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  );
-                })
-              )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {rows.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={VEHICLE_ENTRY_COLUMNS.length}
+                          align="center"
+                          sx={{ py: 4 }}
+                        >
+                          <Typography color="text.secondary">
+                            No vehicle entries found.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      visibleRows.map((entry) => {
+                        const status = displayValue(
+                          entry.dispatchStatus ?? entry.status,
+                        );
+                        const attachmentCount = entry.attachments?.length ?? 0;
 
-            <TablePagination
-              rowsPerPageOptions={[10, 25, 50]}
-              component="div"
-              count={rows.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              sx={{
-                borderTop: "1px solid",
-                borderColor: "divider",
-                bgcolor: "background.paper",
-              }}
-            />
-          </>
-        )}
+                        return (
+                          <TableRow
+                            key={entry.id}
+                            hover
+                            sx={{
+                              "&:last-child td": { borderBottom: 0 },
+                            }}
+                          >
+                            <TableCell sx={{ fontWeight: 700 }}>
+                              {displayValue(entry.vehicleNumber)}
+                            </TableCell>
+                            <TableCell>
+                              {displayValue(entry.transporterName)}
+                            </TableCell>
+                            <TableCell>
+                              {displayValue(entry.customerName)}
+                            </TableCell>
+                            <TableCell>
+                              {displayValue(entry.driverNumber)}
+                            </TableCell>
+                            <TableCell>
+                              {getUserName(
+                                entry.createdUser ?? entry.createdBy,
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <StatusChip status={status} />
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {formatCreatedDate(entry.createdAt)}
+                            </TableCell>
+                            <TableCell align="center">
+                              <Tooltip
+                                title={`View attachments (${attachmentCount})`}
+                              >
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleOpenAttachments(entry)}
+                                >
+                                  <Visibility fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                }}
+              />
+            </>
+          )}
+        </DialogContent>
       </Box>
 
+      {/* Attachments Dialog (Leave as is) */}
       <Dialog
         open={attachmentDialogOpen}
         onClose={handleCloseAttachments}
@@ -630,26 +626,26 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
                             gap: 1,
                           }}
                         >
-                        <Tooltip title="View attachment">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              handleAttachmentAction(attachment, "view")
-                            }
-                          >
-                            <Visibility fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Download attachment">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              handleAttachmentAction(attachment, "download")
-                            }
-                        >
-                          <Download fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          <Tooltip title="View attachment">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleAttachmentAction(attachment, "view")
+                              }
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Download attachment">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleAttachmentAction(attachment, "download")
+                              }
+                            >
+                              <Download fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </Box>
                       </TableCell>
                     </TableRow>

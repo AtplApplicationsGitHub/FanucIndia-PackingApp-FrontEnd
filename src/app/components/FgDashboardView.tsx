@@ -473,7 +473,12 @@ export default function FgDashboardView() {
     setPage(0);
   };
 
-  const columns: { id: string; label: string; width: number; align?: "left" | "center" | "right" }[] = [
+  const columns: {
+    id: string;
+    label: string;
+    width: number;
+    align?: "left" | "center" | "right";
+  }[] = [
     { id: "saleOrderNumber", label: "SO", width: 90, align: "center" },
     { id: "outboundDelivery", label: "OBD", width: 90, align: "center" },
     { id: "customerName", label: "CUSTOMER NAME", width: 180, align: "left" },
@@ -482,7 +487,12 @@ export default function FgDashboardView() {
     { id: "progress", label: "STAGE STATUS ", width: 300, align: "left" },
     { id: "payment", label: "PAY", width: 60, align: "center" },
     { id: "transporter", label: "TRANSPORTER", width: 110, align: "center" },
-    { id: "vehicleNumber", label: "VEHICLE NUMBER", width: 120, align: "center" },
+    {
+      id: "vehicleNumber",
+      label: "VEHICLE NUMBER",
+      width: 120,
+      align: "center",
+    },
     { id: "fgLocation", label: "FG LOCATION", width: 120, align: "center" },
     { id: "specialRemarks", label: "REMARKS", width: 150, align: "left" },
     { id: "salesUser", label: "SALES USER", width: 110, align: "left" },
@@ -497,7 +507,7 @@ export default function FgDashboardView() {
     minHeight: 24,
     px: 1.25,
     py: 0.25,
-    color: "green",
+    color: theme.palette.mode === "dark" ? "#4ADE80" : "#16A34A",
     fontSize: "0.9rem",
     fontWeight: 700,
     lineHeight: 1.4,
@@ -620,9 +630,10 @@ export default function FgDashboardView() {
               mb: 0,
               borderRadius: 2,
               bgcolor: "background.paper",
-              width: "100%",
+              width: { xs: "100%", xl: "fit-content" }, // FIX: Shrink-wraps the content on large screens
               display: "flex",
               alignItems: "center",
+              justifyContent: { xs: "flex-start", xl: "center" },
               flexWrap: { xs: "wrap", sm: "nowrap" },
               overflowX: { xs: "visible", sm: "auto" },
               gap: 1,
@@ -837,14 +848,6 @@ export default function FgDashboardView() {
                 <FileDownloadOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{
-                mx: 0,
-                display: { xs: "none", lg: "block" },
-              }}
-            />
             <Box
               component="button"
               type="button"
@@ -983,7 +986,10 @@ export default function FgDashboardView() {
                         }}
                       >
                         {/* SO NUMBER */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1, py: 0 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1, py: 0 }}
+                        >
                           <MuiLink
                             component={Link}
                             href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
@@ -995,22 +1001,31 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* OBD */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {row.outboundDelivery || "-"}
                         </TableCell>
 
                         {/* CUSTOMER NAME */}
-                        <TableCell sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell align="left" sx={{ whiteSpace: "nowrap", pr: 1, pl: 2 }}>
                           {row.customerName}
                         </TableCell>
 
                         {/* SALES ZONE */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {row.salesZone}
                         </TableCell>
 
                         {/* REQUIRED DATE */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {formatDate(row.deliveryDate)}
                         </TableCell>
 
@@ -1125,7 +1140,10 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* PAYMENT */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {Array.isArray(row.attachments) &&
                           row.attachments.length > 0 ? (
                             <MuiLink
@@ -1151,17 +1169,26 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* TRANSPORTER */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {renderDispatchInfoPill(row.transporter)}
                         </TableCell>
 
                         {/* VEHICLE NUMBER */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {renderDispatchInfoPill(row.vehicleNumber)}
                         </TableCell>
 
                         {/* FG LOCATION */}
-                        <TableCell align="center" sx={{ whiteSpace: "nowrap", px: 1 }}>
+                        <TableCell
+                          align="center"
+                          sx={{ whiteSpace: "nowrap", px: 1 }}
+                        >
                           {row.fgLocation
                             ? typeof row.fgLocation === "string"
                               ? row.fgLocation

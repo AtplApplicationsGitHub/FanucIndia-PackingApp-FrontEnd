@@ -14,11 +14,11 @@ import {
   Typography,
   alpha,
   useTheme,
-  InputAdornment,
   IconButton,
   InputBase,
   Link as MuiLink,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -29,7 +29,6 @@ import { formatDateTimeIST } from "@/common/utils/dateTime";
 import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 import { Download } from "lucide-react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 function formatDate(iso: string) {
   if (!iso || iso === "-") return "-";
@@ -113,18 +112,25 @@ export default function FgStorageReportPanel() {
     <Box
       sx={{ width: "100%", minWidth: 0, pt: 1, pb: 4, px: { xs: 2, md: 4 } }}
     >
-      <Box
+      {/* --- NEW MODERN TOOLBAR --- */}
+      <Paper
+        elevation={2}
         sx={{
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          width: { xs: "100%", xl: "fit-content" }, // Shrink-wraps on giant screens
           display: "flex",
-          alignItems: "flex-end",
-          gap: 1.5,
-          mb: 2,
-          flexWrap: "wrap",
-          justifyContent: "center",
-          pl: { xs: 0, md: 30 },
+          alignItems: "center",
+          justifyContent: { xs: "flex-start", xl: "center" }, // Centers perfectly
+          flexWrap: { xs: "wrap", xl: "nowrap" },
+          gap: 2,
+          px: 2.5,
+          py: 1.5,
+          mx: "auto",
         }}
       >
-        {/* Search Bar */}
+        {/* 1. SEARCH BAR (Matches OrdersToolbar exactly) */}
         <Box
           component="form"
           onSubmit={(e: React.FormEvent) => {
@@ -135,14 +141,14 @@ export default function FgStorageReportPanel() {
             p: "2px 4px",
             display: "flex",
             alignItems: "center",
-            width: { xs: "100%", sm: 300 },
+            width: { xs: "100%", sm: 280 }, // Slightly wider than 220 to fit the placeholder
             border: 1,
             borderColor: (theme) =>
               theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.23)"
+                ? "rgba(255, 255, 255, 0.23)"
                 : "#e0e0e0",
-            borderRadius: "4px",
-            height: 40,
+            borderRadius: "4px", // Standard square corners
+            height: 40, // Standard height
             bgcolor: "background.paper",
             flexShrink: 0,
           }}
@@ -172,122 +178,133 @@ export default function FgStorageReportPanel() {
             <SearchIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Box>
-        {/* Export Button */}
+
+        <Divider
+          orientation="vertical"
+          flexItem
+          sx={{ display: { xs: "none", xl: "block" }, mx: 0.5 }}
+        />
+
+        {/* 2. REDESIGNED AGE FILTER PILLS */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            {
+              label: "0–3 Months",
+              value: "0-3",
+              count: ageCounts.age0to3Months,
+              color: "#F59E0B",
+            },
+            {
+              label: "3–6 Months",
+              value: "3-6",
+              count: ageCounts.age3to6Months,
+              color: "#F59E0B",
+            },
+            {
+              label: "6–12 Months",
+              value: "6-12",
+              count: ageCounts.age6to12Months,
+              color: "#F59E0B",
+            },
+            {
+              label: "> 12 Months",
+              value: ">12",
+              count: ageCounts.ageAbove12Months,
+              color: "#F59E0B",
+            },
+          ].map((card) => {
+            const isActive = ageFilter === card.value;
+            return (
+              <Box
+                key={card.value}
+                onClick={() => setAgeFilter(isActive ? null : card.value)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  px: 2,
+                  py: 1,
+                  borderRadius: "24px", // Capsule shape
+                  border: "1px solid",
+                  borderColor: isActive ? card.color : "divider",
+                  bgcolor: isActive ? alpha(card.color, 0.1) : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    bgcolor: alpha(card.color, 0.05),
+                    borderColor: card.color,
+                  },
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: isActive ? card.color : "text.secondary",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {card.label}
+                </Typography>
+                <Box
+                  sx={{
+                    minWidth: 24,
+                    height: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    px: 1,
+                    borderRadius: "12px",
+                    bgcolor: isActive
+                      ? card.color
+                      : alpha(theme.palette.text.primary, 0.08),
+                    color: isActive ? "#fff" : "text.primary",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  {card.count}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+
+        <Divider
+          orientation="vertical"
+          flexItem
+          sx={{ display: { xs: "none", xl: "block" }, mx: 0.5 }}
+        />
+
+        {/* 3. EXPORT BUTTON */}
         <Tooltip title="Export to Excel">
           <IconButton
             onClick={handleExport}
             sx={{
-              color: "#10b981",
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 1,
-              height: 40,
-              width: 40,
+              color: "#10B981",
+              bgcolor: alpha("#10B981", 0.1),
+              borderRadius: 2,
+              height: 42,
+              width: 42,
               flexShrink: 0,
+              transition: "all 0.2s",
+              "&:hover": {
+                bgcolor: alpha("#10B981", 0.2),
+              },
             }}
           >
             <Download size={20} />
           </IconButton>
         </Tooltip>
-
-        {/* Age Filter KPI Cards */}
-        {[
-          {
-            label: "0–3 months",
-            value: "0-3",
-            count: ageCounts.age0to3Months,
-            bg: "#E1F5EE",
-            color: "#085041",
-            iconColor: "#0F6E56",
-            border: "#9FE1CB",
-          },
-          {
-            label: "3–6 months",
-            value: "3-6",
-            count: ageCounts.age3to6Months,
-            bg: "#E6F1FB",
-            color: "#0C447C",
-            iconColor: "#185FA5",
-            border: "#B5D4F4",
-          },
-          {
-            label: "6–12 months",
-            value: "6-12",
-            count: ageCounts.age6to12Months,
-            bg: "#FAEEDA",
-            color: "#633806",
-            iconColor: "#854F0B",
-            border: "#FAC775",
-          },
-          {
-            label: "12+ months",
-            value: ">12",
-            count: ageCounts.ageAbove12Months,
-            bg: "#EEEDFE",
-            color: "#3C3489",
-            iconColor: "#534AB7",
-            border: "#CECBF6",
-          },
-        ].map((card) => {
-          const isActive = ageFilter === card.value;
-          return (
-            <Box
-              key={card.value}
-              onClick={() => setAgeFilter(isActive ? null : card.value)}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                px: 1,
-                py: 1,
-                borderRadius: "8px",
-                border: `1px solid ${isActive ? card.iconColor : card.border}`,
-                bgcolor: card.bg,
-                cursor: "pointer",
-                userSelect: "none",
-                minWidth: 50,
-                outline: isActive ? `2px solid ${card.iconColor}` : "none",
-                outlineOffset: "2px",
-                transition: "all 0.15s",
-                "&:hover": { opacity: 0.85 },
-              }}
-            >
-              {/* Icon + Number row */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  mb: "1px",
-                }}
-              >
-                <AccessTimeIcon sx={{ fontSize: 14, color: card.iconColor }} />
-                <Typography
-                  sx={{
-                    fontSize: "1.1rem",
-                    fontWeight: 700,
-                    color: card.color,
-                    lineHeight: 0.5,
-                  }}
-                >
-                  {card.count}
-                </Typography>
-              </Box>
-              {/* Label */}
-              <Typography
-                sx={{
-                  fontSize: "0.72rem",
-                  fontWeight: 500,
-                  color: card.color,
-                  lineHeight: 1,
-                }}
-              >
-                {card.label}
-              </Typography>
-            </Box>
-          );
-        })}
-      </Box>
+      </Paper>
+      {/* --- END MODERN TOOLBAR --- */}
       <Paper
         elevation={0}
         sx={{
