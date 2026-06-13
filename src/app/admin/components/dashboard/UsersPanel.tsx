@@ -1,17 +1,10 @@
 import React, { useEffect } from "react";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import { Plus } from "lucide-react";
 import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
 import AdminUsersTable from "@/app/admin/components/dashboard/UsersTable";
 import AdminUserFormModal, {
   UserSubmitData,
 } from "@/app/admin/components/dashboard/UserFormModal";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import { Search } from "lucide-react";
-import CommonButton from "@/common/components/CommonButton";
 
 interface AdminManageUsersPanelProps {
   showSnackbar: (
@@ -19,14 +12,16 @@ interface AdminManageUsersPanelProps {
     severity: "success" | "error" | "info" | "warning",
   ) => void;
   usersState: ReturnType<typeof useAdminUsers>;
+  searchQuery: string; // <--- ADDED: Listens to the Toolbar in LookupPanel
 }
 
 const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
   showSnackbar,
   usersState,
+  searchQuery, // <--- ADDED
 }) => {
-  const [inputValue, setInputValue] = React.useState("");
-  const [search, setSearch] = React.useState("");
+  // REMOVED: local inputValue and search states
+
   const {
     users,
     loading,
@@ -40,9 +35,10 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
     setModalOpen,
   } = usersState;
 
+  // UPDATED: Now fetches users based on the centralized Toolbar search
   useEffect(() => {
-    fetchUsers(search);
-  }, [fetchUsers, search]);
+    fetchUsers(searchQuery);
+  }, [fetchUsers, searchQuery]);
 
   const onEdit = (userId: number) => {
     const user = users.find((u) => u.id === userId) || null;
@@ -63,39 +59,8 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
 
   return (
     <Box p={0} sx={{ width: "100%" }}>
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{ mb: 2, justifyContent: "center" }}
-        alignItems="center"
-      >
-        <TextField
-          size="small"
-          placeholder="Search by name, email or zone..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") setSearch(inputValue);
-          }}
-          sx={{ width: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={16} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <CommonButton
-          startIcon={<Plus size={18} />}
-          onClick={() => {
-            setEditingUser(null);
-            setModalOpen(true);
-          }}
-        >
-          NEW USER
-        </CommonButton>
-      </Stack>
+      {/* REMOVED: The entire <Stack> with the duplicate search and button */}
+
       <AdminUsersTable
         users={users}
         loading={loading}

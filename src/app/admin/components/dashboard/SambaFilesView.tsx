@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
@@ -32,7 +31,6 @@ import FolderZipIcon from "@mui/icons-material/FolderZip";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import ListIcon from "@mui/icons-material/List";
 import { RefreshCcw } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { fetchWithAuth, API } from "../../../../common/lib/endpoints";
@@ -111,11 +109,13 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
       fetchDbLogs();
     } else {
       fetchFiles(activeTab);
-      setSelectedFiles([]);
-      setSearch("");
-      setPage(0);
     }
-  }, [activeTab, selectedDate]);
+
+    setSelectedFiles([]);
+    setSearch("");
+    setSearchStr("");
+    setPage(0);
+  }, [activeTab]);
 
   const fetchDbLogs = async () => {
     setLoading(true);
@@ -132,16 +132,6 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (activeTab !== "LOGS") {
-      fetchFiles(activeTab);
-      setSelectedFiles([]);
-      setSearch("");
-      setSearchStr("");
-      setPage(0);
-    }
-  }, [activeTab]);
-
   const handleCheckSambaStatus = async () => {
     setSftpStatus("LOADING");
     try {
@@ -152,13 +142,6 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
       setSftpStatus("DOWN");
     }
   };
-
-  useEffect(() => {
-    fetchFiles(activeTab);
-    setSelectedFiles([]);
-    setSearch("");
-    setPage(0);
-  }, [activeTab]);
 
   const fetchFiles = async (folder: string) => {
     setLoading(true);

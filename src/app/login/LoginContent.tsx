@@ -191,7 +191,6 @@ export default function LoginContent() {
       password: data.password.replace(/\s+/g, ""),
     };
 
-    // [Step 1] Capture previous user from LocalStorage before overwriting
     const prevUserStr =
       typeof window !== "undefined" ? localStorage.getItem("user") : null;
     let prevEmail = "";
@@ -200,7 +199,6 @@ export default function LoginContent() {
         const prevUser = JSON.parse(prevUserStr);
         prevEmail = prevUser.email || "";
       } catch {
-        // ignore parsing error
       }
     }
 
@@ -211,8 +209,6 @@ export default function LoginContent() {
       );
       const { accessToken, user } = res.data;
 
-      // [Step 2] Check if user changed. If so, clear view state.
-      // This ensures a new/different user always lands on the Dashboard.
       if (user.email !== prevEmail) {
         sessionStorage.removeItem("adminView");
         sessionStorage.removeItem("salesDashboardView");
@@ -227,11 +223,11 @@ export default function LoginContent() {
 
       setTimeout(() => {
         if (user.role === "ADMIN") {
-          window.location.replace("/admin/dashboard");
+          router.replace("/admin/dashboard");
         } else if (user.role === "SALES") {
-          window.location.replace("/sales/dashboard");
+          router.replace("/sales/dashboard");
         } else if (user.role === "USER") {
-          window.location.replace("/user/dashboard");
+          router.replace("/user/dashboard");
         } else {
           setErrorMsg("Unknown user role.");
           setSuccessMsg("");

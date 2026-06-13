@@ -38,6 +38,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Tooltip,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -474,14 +476,27 @@ export default function AdminMasterLookupPanel() {
         </Paper>
       </Box>
 
-      {/* 2. Action Buttons */}
-      {selectedType !== "users" && (
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 1.5 }}
+      {/* 2. Modern Action Toolbar (Universal for all tabs) */}
+      <Box
+        sx={{ display: "flex", width: "100%", justifyContent: "center", mb: 2 }}
+      >
+        <Paper
+          elevation={2}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 1,
+            px: 1.5,
+            py: 1,
+            borderRadius: 2,
+            bgcolor: "background.paper",
+          }}
         >
-          <Paper
+          {/* Search Bar (Always Visible) */}
+          <Box
             component="form"
-            onSubmit={(e) => {
+            onSubmit={(e: React.FormEvent) => {
               e.preventDefault();
               setSearchQuery(localSearch);
             }}
@@ -489,82 +504,142 @@ export default function AdminMasterLookupPanel() {
               p: "2px 4px",
               display: "flex",
               alignItems: "center",
-              width: { xs: "100%", sm: 250 },
-              border: `1px solid ${theme.palette.divider}`,
-              boxShadow: "none",
+              width: { xs: "100%", sm: 280 },
+              border: 1,
+              borderColor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.23)"
+                  : "#e0e0e0",
+              borderRadius: "4px",
+              height: 40,
+              bgcolor: "background.paper",
+              mr: 1,
             }}
           >
             <InputBase
-              sx={{ ml: 1, flex: 1 }}
+              sx={{ ml: 1, flex: 1, fontSize: "14px" }}
               placeholder={
-                selectedType === "customers"
-                  ? "Search name or address..."
-                  : `Search ${
-                      getSearchKeys()[0] === "erpCode"
-                        ? "ERP Code"
-                        : getSearchKeys()[0]
-                            .replace(/([A-Z])/g, " $1")
-                            .toLowerCase()
-                    }...`
+                selectedType === "users"
+                  ? "Search users..."
+                  : selectedType === "customers"
+                    ? "Search name or address..."
+                    : `Search ${
+                        getSearchKeys()[0] === "erpCode"
+                          ? "ERP Code"
+                          : getSearchKeys()[0]
+                              .replace(/([A-Z])/g, " $1")
+                              .toLowerCase()
+                      }...`
               }
               inputProps={{ "aria-label": "search" }}
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
-            {localSearch && ( 
+            {localSearch && (
               <IconButton
-                sx={{ p: "10px" }}
+                sx={{ p: "5px" }}
                 aria-label="clear"
                 onClick={() => {
-                  setLocalSearch(""); 
-                  setSearchQuery(""); 
+                  setLocalSearch("");
+                  setSearchQuery("");
                 }}
               >
-                <ClearIcon />
+                <ClearIcon sx={{ fontSize: 20 }} />
               </IconButton>
             )}
-            <IconButton type="submit" sx={{ p: "10px" }} aria-label="search">
-              <SearchIcon />
+            <IconButton type="submit" sx={{ p: "5px" }} aria-label="search">
+              <SearchIcon sx={{ fontSize: 20 }} />
             </IconButton>
-          </Paper>
-          <CommonButton
-            startIcon={<CloudDownload size={18} />}
-            onClick={handleDownloadBulk}
-          >
-            DOWNLOAD TEMPLATE
-          </CommonButton>
-          <CommonButton component="label" startIcon={<CloudUpload size={18} />}>
-            UPLOAD BULK
-            <input
-              type="file"
-              hidden
-              accept=".xlsx"
-              ref={fileInputRef}
-              onChange={handleUploadBulk}
-            />
-          </CommonButton>
-          <CommonButton
-            startIcon={<PlusCircle size={18} />}
-            onClick={openAddDialog}
-          >
-            ADD NEW
-          </CommonButton>
-          <CommonButton
-            startIcon={<RefreshCcw size={18} />}
-            onClick={fetchData}
-          >
-            REFRESH
-          </CommonButton>
-          {selectedType === "printers" && (
-            <CommonButton
-              startIcon={<Settings size={18} />}
-              onClick={openIpConfigDialog}
-            >
-              CUSTOMER LABEL IP
-            </CommonButton>
+          </Box>
+
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ mx: 0.5, display: { xs: "none", sm: "block" } }}
+          />
+
+          {/* Master-Specific Actions (Hidden for Users Tab) */}
+          {selectedType !== "users" && (
+            <>
+              <Tooltip title="Download Template" arrow>
+                <IconButton
+                  onClick={handleDownloadBulk}
+                  sx={{ color: "#10b981" }}
+                >
+                  <Download size={20} />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Upload Bulk Excel" arrow>
+                <IconButton component="label" sx={{ color: "#3b82f6" }}>
+                  <Upload size={20} />
+                  <input
+                    type="file"
+                    hidden
+                    accept=".xlsx"
+                    ref={fileInputRef}
+                    onChange={handleUploadBulk}
+                  />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Refresh Data" arrow>
+                <IconButton
+                  onClick={fetchData}
+                  sx={{
+                    color: "text.secondary",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  <RefreshCcw size={20} />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
-        </Box>
-      )}
+
+          {/* Add New Button (Always Visible) */}
+          <Tooltip
+            title={selectedType === "users" ? "Add New User" : "Add New Record"}
+            arrow
+          >
+            <IconButton
+              onClick={() => {
+                if (selectedType === "users") {
+                  setEditingUser(null);
+                  setModalOpen(true); // <--- Triggers the User Modal instead of Master Modal
+                } else {
+                  openAddDialog();
+                }
+              }}
+              sx={{
+                color: "text.secondary",
+                "&:hover": { color: "primary.main" },
+              }}
+            >
+              <PlusCircle size={20} />
+            </IconButton>
+          </Tooltip>
+
+          {/* Printer-only Actions */}
+          {selectedType === "printers" && (
+            <>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ mx: 0.5, display: { xs: "none", sm: "block" } }}
+              />
+              <Tooltip title="Customer Label IP Settings" arrow>
+                <IconButton
+                  onClick={openIpConfigDialog}
+                  sx={{ color: "error.main" }}
+                >
+                  <Settings size={20} />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+        </Paper>
+      </Box>
 
       {/* 3. Table or Users Panel */}
       <Box sx={{ width: "100%" }}>
@@ -572,6 +647,7 @@ export default function AdminMasterLookupPanel() {
           <AdminManageUsersPanel
             showSnackbar={showSnackbar}
             usersState={usersState}
+            searchQuery={searchQuery}
           />
         ) : (
           <>

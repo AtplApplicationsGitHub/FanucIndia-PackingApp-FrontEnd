@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Download as DownloadIcon } from "lucide-react";
 import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
@@ -37,6 +37,7 @@ import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { TableChart } from "@mui/icons-material";
 import { useReport, ReportRow } from "@/app/admin/components/hooks/useReport";
+import type { Theme } from "@mui/material/styles";
 
 type StageKey =
   | "erpImport"
@@ -74,9 +75,9 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
   const pendingText = isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.42)";
   const pendingBg = isDark ? "rgba(255,255,255,0.05)" : "#f2f2ed";
   const pendingLine = isDark ? "rgba(255,255,255,0.14)" : "#d8d6c7";
-  const circleSize = 22;
-  const nodeWidth = 44;
-  const connectorWidth = 12;
+  const circleSize = 20;
+  const nodeWidth = 36;
+  const connectorWidth = 10;
   return (
     <Box
       sx={{
@@ -133,13 +134,13 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
                   boxShadow: isDone ? `0 0 0 2px ${GREEN}18` : "none",
                 }}
               >
-                <CheckIcon sx={{ fontSize: 12 }} />
+                <CheckIcon sx={{ fontSize: 11 }} />
               </Box>
               <Box sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.2 }}>
                 <Typography
                   sx={{
                     color: labelColor,
-                    fontSize: "7.5px",
+                    fontSize: "7px",
                     fontWeight: isDone ? 700 : 500,
                     lineHeight: 1.1,
                     maxWidth: nodeWidth,
@@ -173,19 +174,264 @@ function StageStepper({ stages }: { stages: Record<StageKey, boolean> }) {
     </Box>
   );
 }
-type GroupedRows = { customerName: string; rows: ReportRow[] }[];
+type GroupedRows = {
+  customerName: string;
+  salesZone: string;
+  rows: ReportRow[];
+}[];
+
+function PaymentBadge({
+  paid,
+  theme,
+  isDark,
+}: {
+  paid: boolean;
+  theme: Theme;
+  isDark: boolean;
+}) {
+  const palette = paid ? theme.palette.success : theme.palette.error;
+  return (
+    <Box
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "3px 10px",
+        borderRadius: "16px",
+        border: "1px solid",
+        borderColor: alpha(palette.main, 0.5),
+        backgroundColor: alpha(palette.main, 0.1),
+        color: isDark ? "#ffffff" : paid ? palette.dark : palette.main,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        minWidth: "50px",
+      }}
+    >
+      {paid ? "Yes" : "No"}
+    </Box>
+  );
+}
+
+function SectionTable({
+  items,
+  columns,
+  theme,
+  isDark,
+  lightYellow,
+}: {
+  items: RenderItem[];
+  columns: { id: string; label: string; width: number; headerPl?: number }[];
+  theme: Theme;
+  isDark: boolean;
+  lightYellow: string;
+}) {
+  return (
+    <TableContainer
+      component={Paper}
+      elevation={0}
+      sx={{ borderRadius: 2, overflowX: "auto", flex: "1 1 0", minWidth: 0 }}
+    >
+      <Table
+        sx={{
+          minWidth: 580,
+          tableLayout: "fixed",
+          "& .MuiTableBody-root .MuiTableRow-root:hover": {
+            backgroundColor: alpha(theme.palette.primary.main, 0.2),
+          },
+          "& .MuiTableCell-root": {
+            borderBottom: "none",
+            py: 0.5,
+            px: 1,
+            fontSize: "0.875rem",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          },
+        }}
+      >
+        <TableHead
+          sx={{
+            bgcolor: (t) => (t.palette.mode === "dark" ? "#000000" : "#ffffff"),
+          }}
+        >
+          <TableRow sx={{ height: 52 }}>
+            {columns.map((col) => (
+              <TableCell
+                key={col.id}
+                sx={{
+                  width: col.width,
+                  minWidth: col.width,
+                  color: (t) => (t.palette.mode === "dark" ? "#ffffff" : "#000000"),
+                  fontWeight: 700,
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.05em",
+                  whiteSpace: "nowrap",
+                  ...(col.id === "stages" && { fontSize: "0.7rem" }),
+                  ...(col.headerPl !== undefined && { pl: col.headerPl }),
+                }}
+              >
+                {col.label}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {items.map((item) => {
+            if (item.type === "header") {
+              return (
+                <TableRow
+                  key={item.key}
+                  sx={{
+                    bgcolor: lightYellow,
+                    "&:hover": { bgcolor: lightYellow },
+                  }}
+                >
+                  <TableCell
+                    colSpan={columns.length}
+                    sx={{ py: 1, borderBottom: "1px solid #E0E0E0" }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <TableChart
+                        sx={{
+                          color: isDark ? "#FFF" : "#D00000",
+                          fontSize: 20,
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 700,
+                          color: isDark ? "#FFF" : "#D00000",
+                        }}
+                      >
+                        {item.customerName} - {item.salesZone}
+                        {item.continued
+                          ? " (contd.)"
+                          : ` (${item.count} order${item.count !== 1 ? "s" : ""})`}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            }
+
+            const row = item.row;
+            return (
+              <TableRow
+                key={item.key}
+                sx={{
+                  backgroundColor: "background.paper",
+                  "&:hover": {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                  },
+                }}
+              >
+                <TableCell>
+                  <MuiLink
+                    component={Link}
+                    href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
+                    underline="hover"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {row.saleOrderNumber}
+                  </MuiLink>
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: isDark ? "rgba(255,255,255,0.65)" : "text.secondary",
+                    fontWeight: 500,
+                  }}
+                >
+                  {row.outboundDelivery}
+                </TableCell>
+                <TableCell>
+                  <PaymentBadge
+                    paid={row.paymentClearance}
+                    theme={theme}
+                    isDark={isDark}
+                  />
+                </TableCell>
+                <TableCell
+                  sx={{ py: 1.5, overflow: "visible", whiteSpace: "normal" }}
+                >
+                  <StageStepper stages={row.stages} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
 
 function groupRowsByCustomer(rows: ReportRow[]): GroupedRows {
-  const map = new Map<string, ReportRow[]>();
+  const map = new Map<
+    string,
+    { customerName: string; salesZone: string; rows: ReportRow[] }
+  >();
   for (const row of rows) {
-    const key = row.customerNameText;
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(row);
+    const key = `${row.customerNameText}__${row.salesZone}`;
+    if (!map.has(key)) {
+      map.set(key, {
+        customerName: row.customerNameText,
+        salesZone: row.salesZone,
+        rows: [],
+      });
+    }
+    map.get(key)!.rows.push(row);
   }
-  return Array.from(map.entries()).map(([customerName, rows]) => ({
-    customerName,
-    rows,
-  }));
+  return Array.from(map.values());
+}
+
+type FlatRow = { customerName: string; salesZone: string; row: ReportRow };
+
+function flattenGroups(groups: GroupedRows): FlatRow[] {
+  const flat: FlatRow[] = [];
+  for (const g of groups) {
+    for (const row of g.rows) {
+      flat.push({ customerName: g.customerName, salesZone: g.salesZone, row });
+    }
+  }
+  return flat;
+}
+
+type RenderItem =
+  | {
+      type: "header";
+      key: string;
+      customerName: string;
+      salesZone: string;
+      count: number;
+      continued: boolean;
+    }
+  | { type: "row"; key: string; row: ReportRow };
+
+function buildColumnItems(
+  flatRows: FlatRow[],
+  prevGroupKey: string | null,
+  groupCountMap: Map<string, number>,
+): RenderItem[] {
+  const items: RenderItem[] = [];
+  let lastKey: string | null = null;
+  for (const fr of flatRows) {
+    const key = `${fr.customerName}__${fr.salesZone}`;
+    if (key !== lastKey) {
+      const continued = items.length === 0 && key === prevGroupKey;
+      items.push({
+        type: "header",
+        key: `${key}__hdr__${items.length}`,
+        customerName: fr.customerName,
+        salesZone: fr.salesZone,
+        count: groupCountMap.get(key) ?? 0,
+        continued,
+      });
+      lastKey = key;
+    }
+    items.push({ type: "row", key: `row__${fr.row.rowIndex}`, row: fr.row });
+  }
+  return items;
 }
 
 export default function ReportPage() {
@@ -200,7 +446,7 @@ export default function ReportPage() {
   const [customerFilter, setCustomerFilter] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const { rows, loading, error, lookup, totalCount } = useReport({
     search: searchInput || undefined,
@@ -213,6 +459,19 @@ export default function ReportPage() {
     limit: pageSize,
   });
   const groupedRows = useMemo(() => groupRowsByCustomer(rows), [rows]);
+
+  const AUTO_PAGE_INTERVAL_MS = 15000;
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    if (totalPages <= 1) return;
+
+    const timer = setInterval(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, AUTO_PAGE_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+  }, [totalCount, pageSize]);
 
   function handleClear() {
     setSearchInput("");
@@ -304,17 +563,15 @@ export default function ReportPage() {
 
   // Column Names
   const COLUMNS = [
-    { id: "so", label: "SALE ORDER NUMBER", width: 160 },
-    { id: "obd", label: "OUT BOUND DELIVERY", width: 170 },
-    { id: "customer", label: "CUSTOMER NAME", width: 160 },
-    { id: "zone", label: "SALES ZONE", width: 100 },
-    { id: "payment", label: "PAYMENT", width: 90 },
-    { id: "stages", label: "STATUS TIMELINE", width: 380 },
+    { id: "so", label: "SO", width: 120 },
+    { id: "obd", label: "OBD", width: 120 },
+    { id: "payment", label: "PAY", width: 70 },
+    { id: "stages", label: "STATUS", width: 310, headerPl: 1 },
   ];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+      <Box sx={{ bgcolor: "background.default" }}>
         {/* TOOLBAR */}
         <Box
           sx={{
@@ -322,246 +579,243 @@ export default function ReportPage() {
             mt: 1,
             px: { xs: 1, sm: 2 },
             display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            alignItems: "center",
             justifyContent: "center",
           }}
         >
           <Paper
             elevation={2}
             sx={{
-              width: { xs: "100%", md: "fit-content" },
-              maxWidth: { xs: "100%", md: 1200 },
+              width: "fit-content",
+              maxWidth: "100%",
               mx: "auto",
               borderRadius: 2,
               bgcolor: "background.paper",
               display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "stretch", sm: "center" },
-              gap: 2,
-              px: { xs: 1.5, sm: 2 },
-              py: 1.5,
+              flexWrap: "nowrap",
+              alignItems: "center",
+              gap: 1.5,
+              px: 2,
+              py: 1,
+              overflowX: "auto",
+              "&::-webkit-scrollbar": { height: 6 },
             }}
           >
-            {/* Filters */}
+            {/* Search */}
+            <Box
+              component="form"
+              onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                flexShrink: 0,
+                width: 160,
+                border: 1,
+                borderColor: isDark ? "rgba(255,255,255,0.23)" : "#e0e0e0",
+                borderRadius: "4px",
+                height: 40,
+                bgcolor: "background.paper",
+              }}
+            >
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: "14px" }}
+                placeholder="Search"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setCurrentPage(0);
+                }}
+              />
+              {searchInput && (
+                <IconButton
+                  sx={{ p: "5px" }}
+                  onClick={() => setSearchInput("")}
+                >
+                  <ClearIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+              <IconButton type="button" sx={{ p: "5px" }}>
+                <SearchIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
+
+            {/* Payment */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 90, flexShrink: 0, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={paymentFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setPaymentFilter(e.target.value);
+                  setCurrentPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">PAYMENT</MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Zone */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 110, flexShrink: 0, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={zoneFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setZoneFilter(e.target.value);
+                  setCurrentPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">SALES ZONE</MenuItem>
+                {lookup.salesZones.map((z) => (
+                  <MenuItem key={z.id} value={String(z.id)}>
+                    {z.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Status */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 90, flexShrink: 0, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={statusFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">STATUS</MenuItem>
+                {["R105", "W105", "F105", "Dispatched"].map((s) => (
+                  <MenuItem key={s} value={s}>
+                    {s}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Customer */}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 110, flexShrink: 0, bgcolor: "background.paper" }}
+            >
+              <Select
+                value={customerFilter}
+                displayEmpty
+                onChange={(e) => {
+                  setCustomerFilter(e.target.value);
+                  setCurrentPage(0);
+                }}
+                sx={{ height: 40, fontSize: "14px" }}
+              >
+                <MenuItem value="">CUSTOMER</MenuItem>
+                {lookup.customers.map((c) => (
+                  <MenuItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Date */}
+            <DatePicker
+              label="DATE"
+              value={startDate ? dayjs(startDate) : null}
+              onChange={(val) => {
+                setStartDate(val ? val.toDate() : null);
+                setCurrentPage(0);
+              }}
+              format="DD-MM-YYYY"
+              minDate={dayjs().subtract(3, "day")}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  variant: "outlined",
+                  sx: {
+                    width: 155,
+                    flexShrink: 0,
+                    bgcolor: "background.paper",
+                    "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
+                  },
+                },
+              }}
+            />
+
+            {/* Clear + Export */}
             <Box
               sx={{
                 display: "flex",
-                flexWrap: "wrap",
-                gap: 1.5,
                 alignItems: "center",
-                flex: "0 1 auto",
-                justifyContent: "flex-start",
+                gap: 0.5,
+                flexShrink: 0,
               }}
             >
-              {/* Search */}
-              <Box
-                component="form"
-                onSubmit={(e: React.FormEvent) => e.preventDefault()}
+              <IconButton
+                onClick={handleClear}
+                title="Clear Filters"
                 sx={{
-                  p: "2px 4px",
-                  display: "flex",
-                  alignItems: "center",
-                  flexShrink: 0,
-                  width: { xs: "100%", sm: 180 },
-                  border: 1,
-                  borderColor: isDark ? "rgba(255,255,255,0.23)" : "#e0e0e0",
-                  borderRadius: "4px",
-                  height: 40,
-                  bgcolor: "background.paper",
+                  color: "text.secondary",
+                  "&:hover": { color: "error.main" },
                 }}
               >
-                <InputBase
-                  sx={{ ml: 1, flex: 1, fontSize: "14px" }}
-                  placeholder="Search"
-                  value={searchInput}
-                  onChange={(e) => {
-                    setSearchInput(e.target.value);
-                    setCurrentPage(0);
-                  }}
-                />
-                {searchInput && (
-                  <IconButton
-                    sx={{ p: "5px" }}
-                    onClick={() => setSearchInput("")}
-                  >
-                    <ClearIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                )}
-                <IconButton type="button" sx={{ p: "5px" }}>
-                  <SearchIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Box>
+                <CloseIcon fontSize="small" />
+              </IconButton>
 
-              {/* Payment */}
-              <FormControl
-                size="small"
-                sx={{
-                  minWidth: 100,
-                  width: { xs: "100%", sm: "auto" }, // ADD THIS
-                  bgcolor: "background.paper",
-                  flexShrink: 0,
-                }}
-              >
-                <Select
-                  value={paymentFilter}
-                  displayEmpty
-                  onChange={(e) => {
-                    setPaymentFilter(e.target.value);
-                    setCurrentPage(0);
-                  }}
-                  sx={{ height: 40, fontSize: "14px" }}
-                >
-                  <MenuItem value="">PAYMENT</MenuItem>
-                  <MenuItem value="true">Yes</MenuItem>
-                  <MenuItem value="false">No</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Zone */}
-              <FormControl
-                size="small"
-                sx={{
-                  minWidth: 100,
-                  width: { xs: "100%", sm: "auto" }, // ADD THIS
-                  bgcolor: "background.paper",
-                  flexShrink: 0,
-                }}
-              >
-                <Select
-                  value={zoneFilter}
-                  displayEmpty
-                  onChange={(e) => {
-                    setZoneFilter(e.target.value);
-                    setCurrentPage(0);
-                  }}
-                  sx={{ height: 40, fontSize: "14px" }}
-                >
-                  <MenuItem value="">SALES ZONE</MenuItem>
-                  {lookup.salesZones.map((z) => (
-                    <MenuItem key={z.id} value={String(z.id)}>
-                      {z.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Status */}
-              <FormControl
-                size="small"
-                sx={{
-                  minWidth: 100,
-                  width: { xs: "100%", sm: "auto" }, // ADD THIS
-                  bgcolor: "background.paper",
-                  flexShrink: 0,
-                }}
-              >
-                <Select
-                  value={statusFilter}
-                  displayEmpty
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setCurrentPage(0);
-                  }}
-                  sx={{ height: 40, fontSize: "14px" }}
-                >
-                  <MenuItem value="">STATUS</MenuItem>
-                  {["R105", "W105", "F105", "Dispatched"].map((s) => (
-                    <MenuItem key={s} value={s}>
-                      {s}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Customer */}
-              <FormControl
-                size="small"
-                sx={{
-                  minWidth: 100,
-                  width: { xs: "100%", sm: "auto" }, // ADD THIS
-                  bgcolor: "background.paper",
-                  flexShrink: 0,
-                }}
-              >
-                <Select
-                  value={customerFilter}
-                  displayEmpty
-                  onChange={(e) => {
-                    setCustomerFilter(e.target.value);
-                    setCurrentPage(0);
-                  }}
-                  sx={{ height: 40, fontSize: "14px" }}
-                >
-                  <MenuItem value="">CUSTOMER</MenuItem>
-                  {lookup.customers.map((c) => (
-                    <MenuItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Date */}
-              <DatePicker
-                label="DATE"
-                value={startDate ? dayjs(startDate) : null}
-                onChange={(val) => {
-                  setStartDate(val ? val.toDate() : null);
-                  setCurrentPage(0);
-                }}
-                format="DD-MM-YYYY"
-                minDate={dayjs().subtract(3, "day")}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    variant: "outlined",
-                    sx: {
-                      minWidth: 160,
-                      width: { xs: "100%", sm: 160 }, // ADD THIS, change minWidth-only
-                      flexShrink: 0,
-                      bgcolor: "background.paper",
-                      "& .MuiInputBase-root": { height: 40, fontSize: "14px" },
-                    },
-                  },
-                }}
-              />
-
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  flexShrink: 0,
-                }}
-              >
-                {/* Clear all */}
+              <Tooltip title="Export to Excel" arrow>
                 <IconButton
-                  onClick={handleClear}
-                  title="Clear Filters"
+                  onClick={handleExport}
                   sx={{
-                    color: "text.secondary",
-                    "&:hover": { color: "error.main" },
+                    color: "#10b981",
+                    "&:hover": { bgcolor: "rgba(16, 185, 129, 0.1)" },
                   }}
                 >
-                  <CloseIcon fontSize="small" />
+                  <DownloadIcon size={20} />
                 </IconButton>
-
-                {/* Export to Excel Button */}
-                <Tooltip title="Export to Excel" arrow>
-                  <IconButton
-                    onClick={handleExport}
-                    sx={{
-                      color: "#10b981",
-                      "&:hover": { bgcolor: "rgba(16, 185, 129, 0.1)" },
-                    }}
-                  >
-                    <DownloadIcon size={20} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+              </Tooltip>
             </Box>
+
+            {/* Pagination */}
+            <TablePagination
+              component="div"
+              count={totalCount}
+              page={currentPage}
+              onPageChange={(_, p) => setCurrentPage(p)}
+              rowsPerPage={pageSize}
+              onRowsPerPageChange={(e) => {
+                setPageSize(parseInt(e.target.value, 10));
+                setCurrentPage(0);
+              }}
+              rowsPerPageOptions={[20, 40, 60, 100]}
+              sx={{
+                flexShrink: 0,
+                // ml: "auto",
+                ".MuiTablePagination-toolbar": {
+                  minHeight: 40,
+                  paddingLeft: 0,
+                  flexWrap: "nowrap",
+                },
+                ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                  {
+                    fontSize: "0.75rem",
+                    marginBottom: 0,
+                    whiteSpace: "nowrap",
+                  },
+                ".MuiTablePagination-select": {
+                  fontSize: "0.75rem",
+                },
+              }}
+            />
           </Paper>
         </Box>
 
@@ -572,256 +826,81 @@ export default function ReportPage() {
               <Typography color="error">{error}</Typography>
             </Box>
           )}
-          <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{ borderRadius: 2, overflowX: "auto" }}
-          >
-            <Table
+
+          {groupedRows.length === 0 ? (
+            <Box
               sx={{
-                minWidth: 980,
-                tableLayout: "fixed",
-                "& .MuiTableBody-root .MuiTableRow-root:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                },
-                "& .MuiTableCell-root": {
-                  borderBottom: "none",
-                  py: 0.5,
-                  px: 1,
-                  fontSize: "0.875rem",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                },
+                textAlign: "center",
+                py: 6,
+                bgcolor: "background.paper",
+                borderRadius: 2,
               }}
             >
-              <TableHead
+              <AssessmentOutlinedIcon
                 sx={{
-                  bgcolor: (theme) =>
-                    theme.palette.mode === "dark" ? "#000000" : "#ffffff",
+                  fontSize: 40,
+                  color: "text.disabled",
+                  mb: 1,
+                  display: "block",
+                  mx: "auto",
                 }}
-              >
-                <TableRow sx={{ height: 52 }}>
-                  {COLUMNS.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={{
-                        width: col.width,
-                        minWidth: col.width,
-                        color: (theme) =>
-                          theme.palette.mode === "dark" ? "#ffffff" : "#000000",
-                        fontWeight: 700,
-                        fontSize: "0.75rem",
-                        letterSpacing: "0.05em",
-                        whiteSpace: "nowrap",
-                        ...(col.id === "stages" && {
-                          fontSize: "0.7rem",
-                        }),
-                      }}
-                    >
-                      {col.label}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
+              />
+              <Typography variant="body2" color="text.secondary">
+                No report data found.
+              </Typography>
+            </Box>
+          ) : (
+            (() => {
+              const flat = flattenGroups(groupedRows);
+              const leftCapacity = Math.ceil(pageSize / 2);
+              const splitAt = Math.min(leftCapacity, flat.length);
+              const leftFlat = flat.slice(0, splitAt);
+              const rightFlat = flat.slice(splitAt);
 
-              <TableBody>
-                {groupedRows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                      <AssessmentOutlinedIcon
-                        sx={{
-                          fontSize: 40,
-                          color: "text.disabled",
-                          mb: 1,
-                          display: "block",
-                          mx: "auto",
-                        }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        No report data found.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  groupedRows.map((group) => {
-                    return (
-                      <React.Fragment key={group.customerName}>
-                        {/* GROUP HEADER ROW */}
-                        <TableRow
-                          sx={{
-                            bgcolor: lightYellow,
-                            "&:hover": { bgcolor: lightYellow },
-                          }}
-                        >
-                          <TableCell
-                            colSpan={6}
-                            sx={{ py: 1, borderBottom: "1px solid #E0E0E0" }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <TableChart
-                                sx={{
-                                  color: isDark ? "#FFF" : "#D00000",
-                                  fontSize: 20,
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontWeight: 700,
-                                  color: isDark ? "#FFF" : "#D00000",
-                                }}
-                              >
-                                {group.customerName} ({group.rows.length} order
-                                {group.rows.length !== 1 ? "s" : ""})
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                        {group.rows.map((row) => (
-                          <TableRow
-                            key={row.rowIndex}
-                            sx={{
-                              backgroundColor: "background.paper",
-                              "&:hover": {
-                                backgroundColor: alpha(
-                                  theme.palette.primary.main,
-                                  0.2,
-                                ),
-                              },
-                            }}
-                          >
-                            <TableCell>
-                              <MuiLink
-                                component={Link}
-                                href={`/so-search/${row.saleOrderNumber}${row.outboundDelivery ? "/" + row.outboundDelivery : ""}`}
-                                underline="hover"
-                                sx={{ fontWeight: 500 }}
-                              >
-                                {row.saleOrderNumber}
-                              </MuiLink>
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                color: isDark
-                                  ? "rgba(255,255,255,0.65)"
-                                  : "text.secondary",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {row.outboundDelivery}
-                            </TableCell>
-                            <TableCell
-                              sx={{ fontWeight: 500, fontSize: "0.8rem" }}
-                            >
-                              {row.customerNameText}
-                            </TableCell>
-                            <TableCell
-                              sx={{ fontWeight: 500, fontSize: "0.8rem" }}
-                            >
-                              {row.salesZone}
-                            </TableCell>
-                            <TableCell>
-                              {row.paymentClearance ? (
-                                <Box
-                                  sx={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "3px 10px",
-                                    borderRadius: "16px",
-                                    border: "1px solid",
-                                    borderColor: alpha(
-                                      theme.palette.success.main,
-                                      0.5,
-                                    ),
-                                    backgroundColor: alpha(
-                                      theme.palette.success.main,
-                                      0.1,
-                                    ),
-                                    color:
-                                      theme.palette.mode === "dark"
-                                        ? "#ffffff"
-                                        : theme.palette.success.dark,
-                                    fontSize: "0.75rem",
-                                    fontWeight: 600,
-                                    minWidth: "50px",
-                                  }}
-                                >
-                                  Yes
-                                </Box>
-                              ) : (
-                                <Box
-                                  sx={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "3px 10px",
-                                    borderRadius: "16px",
-                                    border: "1px solid",
-                                    borderColor: alpha(
-                                      theme.palette.error.main,
-                                      0.5,
-                                    ),
-                                    backgroundColor: alpha(
-                                      theme.palette.error.main,
-                                      0.1,
-                                    ),
-                                    color:
-                                      theme.palette.mode === "dark"
-                                        ? "#ffffff"
-                                        : theme.palette.error.main,
-                                    fontSize: "0.75rem",
-                                    fontWeight: 600,
-                                    minWidth: "50px",
-                                  }}
-                                >
-                                  No
-                                </Box>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                py: 1.5,
-                                overflow: "visible",
-                                whiteSpace: "normal",
-                              }}
-                            >
-                              <StageStepper stages={row.stages} />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              const groupCountMap = new Map<string, number>();
+              groupedRows.forEach((g) =>
+                groupCountMap.set(
+                  `${g.customerName}__${g.salesZone}`,
+                  g.rows.length,
+                ),
+              );
 
-          <TablePagination
-            component="div"
-            count={totalCount}
-            page={currentPage}
-            onPageChange={(_, p) => setCurrentPage(p)}
-            rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setCurrentPage(0);
-            }}
-            rowsPerPageOptions={[10, 20, 50, 100]}
-            sx={{
-              borderTop: "1px solid",
-              borderColor: "divider",
-              bgcolor: "background.paper",
-            }}
-          />
+              const leftItems = buildColumnItems(leftFlat, null, groupCountMap);
+              const lastLeftKey = leftFlat.length
+                ? `${leftFlat[leftFlat.length - 1].customerName}__${leftFlat[leftFlat.length - 1].salesZone}`
+                : null;
+              const rightItems = buildColumnItems(
+                rightFlat,
+                lastLeftKey,
+                groupCountMap,
+              );
+
+              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    flexWrap: { xs: "wrap", lg: "nowrap" },
+                  }}
+                >
+                  <SectionTable
+                    items={leftItems}
+                    columns={COLUMNS}
+                    theme={theme}
+                    isDark={isDark}
+                    lightYellow={lightYellow}
+                  />
+                  <SectionTable
+                    items={rightItems}
+                    columns={COLUMNS}
+                    theme={theme}
+                    isDark={isDark}
+                    lightYellow={lightYellow}
+                  />
+                </Box>
+              );
+            })()
+          )}
         </Box>
       </Box>
     </LocalizationProvider>

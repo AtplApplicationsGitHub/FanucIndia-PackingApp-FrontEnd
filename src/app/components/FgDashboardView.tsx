@@ -479,7 +479,7 @@ export default function FgDashboardView() {
     width: number;
     align?: "left" | "center" | "right";
   }[] = [
-    { id: "saleOrderNumber", label: "SO", width: 90, align: "center" },
+    { id: "saleOrderNumber", label: "SO NUMBER", width: 90, align: "center" },
     { id: "outboundDelivery", label: "OBD", width: 90, align: "center" },
     { id: "customerName", label: "CUSTOMER NAME", width: 180, align: "left" },
     { id: "salesZone", label: "SALES ZONE", width: 90, align: "center" },

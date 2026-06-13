@@ -45,7 +45,9 @@ const AdminUsersTable: React.FC<Props> = ({
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [menuRowId, setMenuRowId] = React.useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [pendingDeleteUserId, setPendingDeleteUserId] = React.useState<number | null>(null);
+  const [pendingDeleteUserId, setPendingDeleteUserId] = React.useState<
+    number | null
+  >(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
 
   // Pagination State
@@ -54,7 +56,7 @@ const AdminUsersTable: React.FC<Props> = ({
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    rowId: number
+    rowId: number,
   ) => {
     setAnchorEl(event.currentTarget);
     setMenuRowId(rowId);
@@ -91,7 +93,9 @@ const AdminUsersTable: React.FC<Props> = ({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -99,89 +103,141 @@ const AdminUsersTable: React.FC<Props> = ({
   // Calculate visible rows for the current page
   const visibleRows = React.useMemo(
     () => users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [users, page, rowsPerPage]
+    [users, page, rowsPerPage],
   );
 
   return (
     <Box sx={{ width: "100%" }}>
-      <TableContainer
-        component={Paper}
+      {/* 1. UNIFIED PAPER WRAPPER (Matches LookupCrudTable) */}
+      <Paper
         sx={{
-          borderRadius: 2,
+          width: "100%",
           overflow: "hidden",
           border: `1px solid ${theme.palette.divider}`,
-          boxShadow: 0,
+          borderRadius: 2,
         }}
       >
-        <Table size="small">
-          <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Zone</TableCell>
-              <TableCell sx={{ fontWeight: "bold", color: theme.palette.primary.contrastText }}>Created</TableCell>
-              <TableCell align="center" sx={{ fontWeight: "bold", width: 100, color: theme.palette.primary.contrastText }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.length === 0 ? (
+        <TableContainer>
+          <Table size="small">
+            <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No users found.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              visibleRows.map((row, index) => (
-                <TableRow
-                  key={row.id}
+                <TableCell
                   sx={{
-                    // Alternating row colors
-                    backgroundColor: index % 2 === 0 ? "inherit" : lightYellow,
-                    "&:hover": {
-                      backgroundColor: alpha(theme.palette.action.hover, 0.05),
-                    },
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
                   }}
                 >
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell sx={{ textTransform: "capitalize" }}>
-                    {row.role.toLowerCase()}
-                  </TableCell>
-                  <TableCell>
-                    {row.salesZone?.name ?? "-"}
-                  </TableCell>
-                  <TableCell>
-                    {row.createdAt ? formatDateTimeIST(row.createdAt) : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      onClick={(e) => handleMenuOpen(e, row.id)}
-                      size="small"
-                      aria-label="actions"
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
+                  Name
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  Email
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  Role
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  Zone
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  Created
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: "bold",
+                    width: 100,
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  Actions
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No users found.
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                visibleRows.map((row, index) => (
+                  <TableRow
+                    key={row.id}
+                    sx={{
+                      // Alternating row colors matching LookupCrudTable
+                      backgroundColor:
+                        index % 2 === 1
+                          ? alpha(theme.palette.primary.main, 0.2)
+                          : "inherit",
+                      "&:hover": {
+                        backgroundColor: alpha(
+                          theme.palette.action.hover,
+                          0.05,
+                        ),
+                      },
+                    }}
+                  >
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.email}</TableCell>
+                    <TableCell sx={{ textTransform: "capitalize" }}>
+                      {row.role.toLowerCase()}
+                    </TableCell>
+                    <TableCell>{row.salesZone?.name ?? "-"}</TableCell>
+                    <TableCell>
+                      {row.createdAt ? formatDateTimeIST(row.createdAt) : "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        onClick={(e) => handleMenuOpen(e, row.id)}
+                        size="small"
+                        aria-label="actions"
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 20]}
-        component="div"
-        count={users.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+        {/* 2. PAGINATION NOW INSIDE THE PAPER WRAPPER */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 20]}
+          component="div"
+          count={users.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
 
+      {/* Menus and Dialogs remain exactly the same */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
