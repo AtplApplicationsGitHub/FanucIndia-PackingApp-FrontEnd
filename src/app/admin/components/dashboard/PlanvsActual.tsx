@@ -23,6 +23,12 @@ import {
   TablePagination,
   alpha,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  TextField,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -218,12 +224,14 @@ function SectionTable({
   theme,
   isDark,
   lightYellow,
+  handleOpenRemarks,
 }: {
   items: RenderItem[];
   columns: { id: string; label: string; width: number; headerPl?: number }[];
   theme: Theme;
   isDark: boolean;
   lightYellow: string;
+  handleOpenRemarks: (special: string, additional: string) => void;
 }) {
   return (
     <TableContainer
@@ -261,7 +269,8 @@ function SectionTable({
                 sx={{
                   width: col.width,
                   minWidth: col.width,
-                  color: (t) => (t.palette.mode === "dark" ? "#ffffff" : "#000000"),
+                  color: (t) =>
+                    t.palette.mode === "dark" ? "#ffffff" : "#000000",
                   fontWeight: 700,
                   fontSize: "0.75rem",
                   letterSpacing: "0.05em",
@@ -351,6 +360,43 @@ function SectionTable({
                     theme={theme}
                     isDark={isDark}
                   />
+                </TableCell>
+                <TableCell
+                  sx={{ whiteSpace: "normal", wordWrap: "break-word" }}
+                >
+                  {row.vehicleNumber}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    whiteSpace: "normal",
+                    wordWrap: "break-word",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {row.remarks &&
+                  row.remarks.length > 15 &&
+                  row.remarks !== "-" ? (
+                    <span
+                      onClick={() =>
+                        handleOpenRemarks(
+                          row.specialRemarks,
+                          row.additionalRemarks,
+                        )
+                      }
+                      style={{
+                        color:
+                          theme.palette.mode === "dark"
+                            ? theme.palette.primary.main
+                            : "#0000FF",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {row.remarks.substring(0, 15)}...
+                    </span>
+                  ) : (
+                    row.remarks
+                  )}
                 </TableCell>
                 <TableCell
                   sx={{ py: 1.5, overflow: "visible", whiteSpace: "normal" }}
@@ -448,6 +494,22 @@ export default function ReportPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
+  const [openRemarks, setOpenRemarks] = React.useState(false);
+  const [currentRemarks, setCurrentRemarks] = React.useState({
+    special: "",
+    additional: "",
+  });
+
+  const handleOpenRemarks = (special: string, additional: string) => {
+    setCurrentRemarks({ special: special || "", additional: additional || "" });
+    setOpenRemarks(true);
+  };
+
+  const handleCloseRemarks = () => {
+    setOpenRemarks(false);
+    setCurrentRemarks({ special: "", additional: "" });
+  };
+
   const { rows, loading, error, lookup, totalCount } = useReport({
     search: searchInput || undefined,
     payment: paymentFilter || undefined,
@@ -525,7 +587,9 @@ export default function ReportPage() {
             "CUSTOMER NAME": order.customerName || "-",
             "SALES ZONE": order.salesZone || "-",
             PAYMENT: order.paymentClearance ? "Yes" : "No",
-            // The 7 separate columns for Status Timeline
+            VEHICLE: order.vehicleNumber || "-",
+            "SPECIAL REMARKS": order.specialRemarks || "-",
+            "ADDITIONAL REMARKS": order.additionalRemarks || "-",
             ERP:
               order.isErpImported === true || order.isErpImported === 1
                 ? "Yes"
@@ -561,12 +625,13 @@ export default function ReportPage() {
     }
   };
 
-  // Column Names
   const COLUMNS = [
-    { id: "so", label: "SO", width: 120 },
-    { id: "obd", label: "OBD", width: 120 },
-    { id: "payment", label: "PAY", width: 70 },
-    { id: "stages", label: "STATUS", width: 310, headerPl: 1 },
+    { id: "so", label: "SO", width: 85 },
+    { id: "obd", label: "OBD", width: 85 },
+    { id: "payment", label: "PAY", width: 50 },
+    { id: "vehicle", label: "VEHICLE", width: 90 },
+    { id: "remarks", label: "REMARKS", width: 100 },
+    { id: "stages", label: "STATUS", width: 280, headerPl: 1 },
   ];
 
   return (
@@ -889,6 +954,7 @@ export default function ReportPage() {
                     theme={theme}
                     isDark={isDark}
                     lightYellow={lightYellow}
+                    handleOpenRemarks={handleOpenRemarks}
                   />
                   <SectionTable
                     items={rightItems}
@@ -896,12 +962,72 @@ export default function ReportPage() {
                     theme={theme}
                     isDark={isDark}
                     lightYellow={lightYellow}
+                    handleOpenRemarks={handleOpenRemarks}
                   />
                 </Box>
               );
             })()
           )}
         </Box>
+        {/* REMARKS DIALOG */}
+        <Dialog
+          open={openRemarks}
+          onClose={handleCloseRemarks}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 2 } }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontWeight: 700,
+              fontSize: "20px",
+              letterSpacing: 0.5,
+              color: "error.main",
+              pb: 1,
+              position: "relative",
+            }}
+          >
+            REMARKS
+            <IconButton
+              aria-label="close"
+              onClick={handleCloseRemarks}
+              size="small"
+              sx={{ position: "absolute", right: 12 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+          <Divider />
+          <DialogContent
+            sx={{
+              pt: 3,
+              pb: 4,
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
+            <TextField
+              label="Special Remarks"
+              value={currentRemarks.special || "-"}
+              fullWidth
+              multiline
+              minRows={2}
+              InputProps={{ readOnly: true }}
+            />
+            <TextField
+              label="Additional Remarks"
+              value={currentRemarks.additional || "-"}
+              fullWidth
+              multiline
+              minRows={2}
+              InputProps={{ readOnly: true }}
+            />
+          </DialogContent>
+        </Dialog>
       </Box>
     </LocalizationProvider>
   );

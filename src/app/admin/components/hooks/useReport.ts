@@ -18,6 +18,10 @@ export type ReportRow = {
     paymentClearance: boolean;
     status: string;
     stages: Record<StageKey, boolean>;
+    vehicleNumber: string;
+    remarks: string;
+    specialRemarks: string;
+    additionalRemarks: string;
 };
 
 export type ReportLookup = {
@@ -58,6 +62,10 @@ function mapToReportRow(item: any, index: number): ReportRow {
         paymentClearance: item.paymentClearance ?? false,
         status: item.status ?? "N/A",
         stages: stagesFromStepper,
+        vehicleNumber: item.vehicleNumber ?? "-",
+        remarks: item.remarks ?? "-",
+        specialRemarks: item.specialRemarks ?? "",
+        additionalRemarks: item.additionalRemarks ?? "",
     };
 }
 
