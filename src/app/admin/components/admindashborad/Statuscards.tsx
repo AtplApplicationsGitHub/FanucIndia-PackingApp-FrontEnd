@@ -88,21 +88,21 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
   // Row 1 — 7 cards
   const topRowCards: MiniCardProps[] = [
     {
-      title: "To Be Dispatched",
+      title: "To Dispatch",
       value: dispatch?.ordersToBeDispatched,
       loading: dispatchLoading,
       error: dispatchError,
       accentColor: "border-l-blue-500",
     },
     {
-      title: "Ready to Dispatch",
+      title: "Ready",
       value: dispatch?.readyForDispatchToday,
       loading: dispatchLoading,
       error: dispatchError,
       accentColor: "border-l-amber-500",
     },
     {
-      title: "Dispatched Today",
+      title: "Dispatched",
       value: dispatch?.ordersDispatchedToday,
       loading: dispatchLoading,
       error: dispatchError,
