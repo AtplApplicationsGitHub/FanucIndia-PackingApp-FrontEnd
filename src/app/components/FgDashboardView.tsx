@@ -484,7 +484,7 @@ export default function FgDashboardView() {
     { id: "customerName", label: "CUSTOMER NAME", width: 180, align: "left" },
     { id: "salesZone", label: "ZONE", width: 70, align: "center" },
     { id: "deliveryDate", label: "DATE", width: 120, align: "center" },
-    { id: "progress", label: "STAGE STATUS", width: 300, align: "center" },
+    { id: "progress", label: "STATUS", width: 260, align: "center" },
     { id: "payment", label: "PAY", width: 60, align: "center" },
     { id: "transporter", label: "TRANSPORTER", width: 110, align: "center" },
     {
@@ -1032,23 +1032,21 @@ export default function FgDashboardView() {
                           {formatDate(row.deliveryDate)}
                         </TableCell>
 
-                        {/* STAGE STATUS (progress) */}
+                        {/* STAGE STATUS (progress) — compact 2-line */}
                         <TableCell sx={{ px: 1, py: 0 }}>
                           {(() => {
                             const { percent, current, next, color } =
                               getStatusInfo(row);
                             return (
-                              <Box
-                                sx={{ width: "100%", minWidth: 280, py: 0.5 }}
-                              >
-                                {/* TOP ROW: Current Stage, Date/Time, and Next Stage */}
+                              <Box sx={{ width: "100%", minWidth: 260, py: 0.25 }}>
+                                {/* LINE 1: Current Stage, Time, Next Stage */}
                                 <Box
                                   sx={{
                                     display: "flex",
                                     justifyContent: "space-between",
                                     alignItems: "center",
-                                    mb: 0.5,
-                                    gap: 1,
+                                    mb: 0.25,
+                                    gap: 0.5,
                                   }}
                                 >
                                   <Box
@@ -1056,14 +1054,16 @@ export default function FgDashboardView() {
                                       display: "flex",
                                       alignItems: "center",
                                       gap: 0.5,
+                                      minWidth: 0,
+                                      overflow: "hidden",
                                     }}
                                   >
                                     <Typography
                                       variant="caption"
                                       fontWeight={700}
                                       sx={{
-                                        fontSize: "0.75rem",
-                                        lineHeight: 1,
+                                        fontSize: "0.7rem",
+                                        lineHeight: 1.2,
                                         color: "text.primary",
                                         whiteSpace: "nowrap",
                                       }}
@@ -1075,8 +1075,8 @@ export default function FgDashboardView() {
                                         variant="caption"
                                         sx={{
                                           color: "text.secondary",
-                                          fontSize: "0.65rem",
-                                          lineHeight: 1,
+                                          fontSize: "0.6rem",
+                                          lineHeight: 1.2,
                                           whiteSpace: "nowrap",
                                         }}
                                       >
@@ -1089,24 +1089,24 @@ export default function FgDashboardView() {
                                       variant="caption"
                                       sx={{
                                         color: "text.secondary",
-                                        fontSize: "0.65rem",
-                                        lineHeight: 1,
+                                        fontSize: "0.6rem",
+                                        lineHeight: 1.2,
                                         fontWeight: 500,
                                         whiteSpace: "nowrap",
                                         flexShrink: 0,
                                       }}
                                     >
-                                      {next}
+                                      → {next}
                                     </Typography>
                                   )}
                                 </Box>
 
-                                {/* BOTTOM ROW: Progress Bar & Percentage Text */}
+                                {/* LINE 2: Progress Bar & Percentage */}
                                 <Box
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 1,
+                                    gap: 0.5,
                                   }}
                                 >
                                   <Box sx={{ flexGrow: 1 }}>
@@ -1114,12 +1114,12 @@ export default function FgDashboardView() {
                                       variant="determinate"
                                       value={percent}
                                       sx={{
-                                        height: 6,
-                                        borderRadius: 3,
+                                        height: 4,
+                                        borderRadius: 2,
                                         backgroundColor: alpha(color, 0.15),
                                         "& .MuiLinearProgress-bar": {
                                           backgroundColor: color,
-                                          borderRadius: 3,
+                                          borderRadius: 2,
                                         },
                                       }}
                                     />
@@ -1129,9 +1129,11 @@ export default function FgDashboardView() {
                                     fontWeight={700}
                                     sx={{
                                       color: color,
-                                      fontSize: "0.7rem",
-                                      minWidth: 28,
+                                      fontSize: "0.6rem",
+                                      lineHeight: 1.2,
+                                      minWidth: 24,
                                       textAlign: "right",
+                                      flexShrink: 0,
                                     }}
                                   >
                                     {percent}%
