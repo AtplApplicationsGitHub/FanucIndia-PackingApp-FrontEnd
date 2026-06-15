@@ -934,8 +934,8 @@ export default function FgDashboardView() {
               stickyHeader
               sx={{
                 "& .MuiTableCell-root": {
-                  fontSize: "clamp(0.85rem, 0.9vw, 1.3rem)",
-                  py: "clamp(4px, 0.5vw, 12px)",
+                  fontSize: "0.85rem",
+                  py: 0.5,
                 },
               }}
             >
@@ -1062,7 +1062,7 @@ export default function FgDashboardView() {
                                       variant="caption"
                                       fontWeight={700}
                                       sx={{
-                                        fontSize: "clamp(0.7rem, 0.75vw, 1.1rem)",
+                                        fontSize: "0.7rem",
                                         lineHeight: 1.2,
                                         color: "text.primary",
                                         whiteSpace: "nowrap",
@@ -1075,7 +1075,7 @@ export default function FgDashboardView() {
                                         variant="caption"
                                         sx={{
                                           color: "text.secondary",
-                                          fontSize: "clamp(0.6rem, 0.65vw, 1rem)",
+                                          fontSize: "0.6rem",
                                           lineHeight: 1.2,
                                           whiteSpace: "nowrap",
                                         }}
@@ -1089,7 +1089,7 @@ export default function FgDashboardView() {
                                       variant="caption"
                                       sx={{
                                         color: "text.secondary",
-                                        fontSize: "clamp(0.6rem, 0.65vw, 1rem)",
+                                        fontSize: "0.6rem",
                                         lineHeight: 1.2,
                                         fontWeight: 500,
                                         whiteSpace: "nowrap",
@@ -1114,7 +1114,7 @@ export default function FgDashboardView() {
                                       variant="determinate"
                                       value={percent}
                                       sx={{
-                                        height: "clamp(4px, 0.35vw, 8px)",
+                                        height: 4,
                                         borderRadius: 2,
                                         backgroundColor: alpha(color, 0.15),
                                         "& .MuiLinearProgress-bar": {
@@ -1129,9 +1129,9 @@ export default function FgDashboardView() {
                                     fontWeight={700}
                                     sx={{
                                       color: color,
-                                      fontSize: "clamp(0.6rem, 0.65vw, 1rem)",
+                                      fontSize: "0.6rem",
                                       lineHeight: 1.2,
-                                      minWidth: "clamp(24px, 2.5vw, 40px)",
+                                      minWidth: 24,
                                       textAlign: "right",
                                       flexShrink: 0,
                                     }}
