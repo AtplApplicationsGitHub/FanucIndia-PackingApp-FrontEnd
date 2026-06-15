@@ -17,10 +17,10 @@ import {
   Paper,
   useTheme,
   alpha,
+  CircularProgress,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Pencil, Trash2 } from "lucide-react";
-import { format } from "date-fns";
 import { User } from "@/app/admin/components/types/admin";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import { formatDateTimeIST } from "@/common/utils/dateTime";
@@ -35,6 +35,7 @@ interface Props {
 
 const AdminUsersTable: React.FC<Props> = ({
   users,
+  loading,
   onEdit,
   onDelete,
   currentUserId,
@@ -174,7 +175,13 @@ const AdminUsersTable: React.FC<Props> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <CircularProgress size={24} />
+                  </TableCell>
+                </TableRow>
+              ) : users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">

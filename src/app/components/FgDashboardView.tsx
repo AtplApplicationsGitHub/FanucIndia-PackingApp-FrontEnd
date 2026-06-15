@@ -479,12 +479,12 @@ export default function FgDashboardView() {
     width: number;
     align?: "left" | "center" | "right";
   }[] = [
-    { id: "saleOrderNumber", label: "SO NUMBER", width: 90, align: "center" },
+    { id: "saleOrderNumber", label: "SO", width: 90, align: "center" },
     { id: "outboundDelivery", label: "OBD", width: 90, align: "center" },
     { id: "customerName", label: "CUSTOMER NAME", width: 180, align: "left" },
-    { id: "salesZone", label: "SALES ZONE", width: 90, align: "center" },
-    { id: "deliveryDate", label: "REQUIRED DATE", width: 120, align: "center" },
-    { id: "progress", label: "STAGE STATUS ", width: 300, align: "left" },
+    { id: "salesZone", label: "ZONE", width: 70, align: "center" },
+    { id: "deliveryDate", label: "DATE", width: 120, align: "center" },
+    { id: "progress", label: "STAGE STATUS", width: 300, align: "center" },
     { id: "payment", label: "PAY", width: 60, align: "center" },
     { id: "transporter", label: "TRANSPORTER", width: 110, align: "center" },
     {
@@ -525,7 +525,7 @@ export default function FgDashboardView() {
     bgcolor: "background.paper",
     flexShrink: 0,
     "& .MuiInputBase-root": {
-      height: 40,
+      height: 36,
       borderRadius: 1,
       fontSize: "14px",
       transition: "border-color 0.2s ease, box-shadow 0.2s ease",
@@ -539,8 +539,8 @@ export default function FgDashboardView() {
     },
   };
   const toolbarIconButtonSx = {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: 1,
     color: "text.secondary",
     "&:hover": {
@@ -630,7 +630,7 @@ export default function FgDashboardView() {
               mb: 0,
               borderRadius: 2,
               bgcolor: "background.paper",
-              width: { xs: "100%", xl: "fit-content" }, // FIX: Shrink-wraps the content on large screens
+              width: { xs: "100%", xl: "fit-content" },
               display: "flex",
               alignItems: "center",
               justifyContent: { xs: "flex-start", xl: "center" },
@@ -638,7 +638,7 @@ export default function FgDashboardView() {
               overflowX: { xs: "visible", sm: "auto" },
               gap: 1,
               px: 2,
-              py: 1.5,
+              py: 0.75,
               mx: "auto",
             }}
           >
@@ -701,7 +701,7 @@ export default function FgDashboardView() {
                     ? "rgba(255, 255, 255, 0.23)"
                     : "#e0e0e0",
                 borderRadius: "4px",
-                height: 40,
+                height: 36,
                 bgcolor: "background.paper",
               }}
             >
@@ -741,7 +741,7 @@ export default function FgDashboardView() {
                   setPaymentFilter(e.target.value);
                   setPage(0);
                 }}
-                sx={{ height: 40, fontSize: "14px" }}
+                sx={{ height: 36, fontSize: "14px" }}
               >
                 <MenuItem value="">PAYMENT</MenuItem>
                 <MenuItem value="true">Yes</MenuItem>
@@ -760,7 +760,7 @@ export default function FgDashboardView() {
                   setZoneFilter(e.target.value);
                   setPage(0);
                 }}
-                sx={{ height: 40, fontSize: "14px" }}
+                sx={{ height: 36, fontSize: "14px" }}
               >
                 <MenuItem value="">SALES ZONE</MenuItem>
                 {salesZones.map((zone) => (
@@ -782,7 +782,7 @@ export default function FgDashboardView() {
                   setStatusFilter(e.target.value);
                   setPage(0);
                 }}
-                sx={{ height: 40, fontSize: "14px" }}
+                sx={{ height: 36, fontSize: "14px" }}
               >
                 <MenuItem value="">STATUS</MenuItem>
                 {statusOptions.map((status) => (
@@ -855,7 +855,7 @@ export default function FgDashboardView() {
               sx={{
                 ml: 0,
                 mt: { xs: 1, sm: 0 },
-                height: 40,
+                height: 36,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: { xs: "center", sm: "flex-end" },
@@ -1009,7 +1009,10 @@ export default function FgDashboardView() {
                         </TableCell>
 
                         {/* CUSTOMER NAME */}
-                        <TableCell align="left" sx={{ whiteSpace: "nowrap", pr: 1, pl: 2 }}>
+                        <TableCell
+                          align="left"
+                          sx={{ whiteSpace: "nowrap", pr: 1, pl: 2 }}
+                        >
                           {row.customerName}
                         </TableCell>
 

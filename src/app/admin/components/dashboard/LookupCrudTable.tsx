@@ -16,6 +16,7 @@ import {
   alpha,
   Typography,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -29,6 +30,7 @@ type Props = {
   explicitKeys?: string[];
   onEdit: (row: LookupRow) => void;
   onRequestDelete: (id: number) => void;
+  loading?: boolean;
 };
 
 const LookupCrudTable: React.FC<Props> = ({
@@ -36,6 +38,7 @@ const LookupCrudTable: React.FC<Props> = ({
   explicitKeys,
   onEdit,
   onRequestDelete,
+  loading,
 }) => {
   const theme = useTheme();
 
@@ -115,7 +118,17 @@ const LookupCrudTable: React.FC<Props> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.length === 0 && (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={keys.length + 1}
+                  align="center"
+                  sx={{ py: 4 }}
+                >
+                  <CircularProgress size={24} />
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={keys.length + 1}
@@ -127,7 +140,7 @@ const LookupCrudTable: React.FC<Props> = ({
                   </Typography>
                 </TableCell>
               </TableRow>
-            )}
+            ) : null}
             {visibleRows.map((row, index) => (
               <TableRow
                 key={row.id}

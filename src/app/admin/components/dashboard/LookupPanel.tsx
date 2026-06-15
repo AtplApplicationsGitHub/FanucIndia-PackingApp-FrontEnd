@@ -2,17 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Box from "@mui/material/Box";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
 import {
-  CloudDownload,
-  CloudUpload,
   PlusCircle,
-  Plus,
   RefreshCcw,
   Download,
   Upload,
@@ -28,7 +22,6 @@ import LookupFormDialog from "@/app/admin/components/dashboard/LookupFormDialog"
 import { API_BASE_URL, API } from "@/common/lib/endpoints";
 import { secureDownload } from "@/common/lib/secure-download";
 import {
-  Button,
   Paper,
   useTheme,
   InputBase,
@@ -40,6 +33,9 @@ import {
   TextField,
   Tooltip,
   Divider,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -47,7 +43,6 @@ import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
 import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
 import CommonButton from "@/common/components/CommonButton";
 
-// UPDATED: Products removed "code"
 const SCHEMA_KEYS: Record<string, string[]> = {
   products: ["id", "name"],
   transporters: ["id", "name"],
@@ -126,6 +121,7 @@ export default function AdminMasterLookupPanel() {
 
   const [ipDialogOpen, setIpDialogOpen] = useState(false);
   const [printerIp, setPrinterIp] = useState("");
+  const [ipFetching, setIpFetching] = useState(false);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -178,10 +174,7 @@ export default function AdminMasterLookupPanel() {
     fetchData();
   }, [fetchData]);
 
-  const handleTabChange = (
-    event: React.SyntheticEvent,
-    newValue: MasterLookupKey,
-  ) => {
+  const handleTypeChange = (newValue: MasterLookupKey) => {
     setSelectedType(newValue);
     setSearchQuery("");
     setLocalSearch("");
@@ -313,24 +306,28 @@ export default function AdminMasterLookupPanel() {
     }
   };
 
-  const openIpConfigDialog = async () => {
-    setActionLoading(true);
-    try {
-      const res = await authFetch(
-        `${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setPrinterIp(data?.value || "");
-      } else {
-        setPrinterIp(""); // Default if it doesn't exist yet
+  const openIpConfigDialog = () => {
+    setIpDialogOpen(true);
+    setPrinterIp("");
+    setIpFetching(true);
+
+    (async () => {
+      try {
+        const res = await authFetch(
+          `${API_BASE_URL}/lookup/config/CUSTOMER_LABEL_PRINTER_IP`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setPrinterIp(data?.value || "");
+        } else {
+          setPrinterIp("");
+        }
+      } catch (error) {
+        showSnackbar("Failed to fetch current IP config", "error");
+      } finally {
+        setIpFetching(false);
       }
-      setIpDialogOpen(true);
-    } catch (error) {
-      showSnackbar("Failed to fetch current IP config", "error");
-    } finally {
-      setActionLoading(false);
-    }
+    })();
   };
 
   const savePrinterIp = async () => {
@@ -421,61 +418,6 @@ export default function AdminMasterLookupPanel() {
         alignItems: "center",
       }}
     >
-      {/* 1. Centered Tabs with Action Button on Right */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          position: "relative",
-          mb: 2,
-        }}
-      >
-        <Paper
-          elevation={2}
-          sx={{
-            width: { xs: "100%", md: "80%" },
-            borderRadius: 1,
-            bgcolor: theme.palette.primary.main,
-            overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-            px: 2,
-          }}
-        >
-          <Tabs
-            value={selectedType}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            textColor="inherit"
-            sx={{
-              minHeight: 48,
-              "& .MuiTab-root": {
-                fontWeight: 700,
-                fontSize: 14,
-                color: "#000",
-                opacity: 0.6,
-                minHeight: 48,
-                "&.Mui-selected": {
-                  opacity: 1,
-                },
-              },
-              "& .MuiTabs-indicator": {
-                bgcolor: "#000",
-                height: 3,
-              },
-            }}
-          >
-            {MASTER_LOOKUP_OPTIONS.map((option) => (
-              <Tab key={option.key} label={option.label} value={option.key} />
-            ))}
-          </Tabs>
-        </Paper>
-      </Box>
-
       {/* 2. Modern Action Toolbar (Universal for all tabs) */}
       <Box
         sx={{ display: "flex", width: "100%", justifyContent: "center", mb: 2 }}
@@ -620,6 +562,28 @@ export default function AdminMasterLookupPanel() {
             </IconButton>
           </Tooltip>
 
+          {/* Master Type Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <Select
+              value={selectedType}
+              onChange={(e) =>
+                handleTypeChange(e.target.value as MasterLookupKey)
+              }
+              sx={{
+                height: 40,
+                fontSize: "14px",
+                fontWeight: 600,
+                "& .MuiSelect-select": { py: 0.75 },
+              }}
+            >
+              {MASTER_LOOKUP_OPTIONS.map((option) => (
+                <MenuItem key={option.key} value={option.key}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           {/* Printer-only Actions */}
           {selectedType === "printers" && (
             <>
@@ -651,11 +615,7 @@ export default function AdminMasterLookupPanel() {
           />
         ) : (
           <>
-            {loading ? (
-              <Box display="flex" justifyContent="center" py={8}>
-                <CircularProgress />
-              </Box>
-            ) : error ? (
+            {error ? (
               <Alert severity="error">{error}</Alert>
             ) : (
               <LookupCrudTable
@@ -663,6 +623,7 @@ export default function AdminMasterLookupPanel() {
                 explicitKeys={SCHEMA_KEYS[selectedType]}
                 onEdit={openEditDialog}
                 onRequestDelete={(id) => handleRequestDelete(id)}
+                loading={loading}
               />
             )}
           </>
@@ -751,15 +712,18 @@ export default function AdminMasterLookupPanel() {
               type="text"
               fullWidth
               variant="outlined"
-              placeholder="Printer IP Address"
+              placeholder={ipFetching ? "Loading..." : "Printer IP Address"}
               value={printerIp}
               onChange={(e) => setPrinterIp(e.target.value)}
-              disabled={actionLoading}
+              disabled={actionLoading || ipFetching}
             />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 2, pb: 1, gap: 1 }}>
-          <CommonButton onClick={savePrinterIp} disabled={actionLoading}>
+          <CommonButton
+            onClick={savePrinterIp}
+            disabled={actionLoading || ipFetching}
+          >
             {actionLoading ? "SAVING..." : "SAVE"}
           </CommonButton>
         </DialogActions>
