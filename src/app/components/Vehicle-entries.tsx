@@ -297,10 +297,6 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
               onChange={handleDateChange}
               format="DD-MM-YYYY"
               slotProps={{
-                field: {
-                  clearable: true,
-                  onClear: () => handleDateChange(null),
-                },
                 textField: {
                   size: "small",
                   variant: "outlined",

@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -106,20 +104,8 @@ export default function OperatorStatsTable({
     });
 
   return (
-    <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 2 }}>
-      <CardContent sx={{ height: "100%", p: 0 }}>
-        <Box
-          sx={{
-            p: 2,
-            borderBottom: 1,
-            borderColor: "divider",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
-          }}
-        >
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] h-full chart-no-focus">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Operator Productivity ({dayjs(selectedDate).format("D MMM YYYY")})
           </h2>
@@ -195,7 +181,7 @@ export default function OperatorStatsTable({
               Packing
             </Button>
           </Box>
-        </Box>
+      </div>
 
         {loading ? (
           <Box
@@ -426,7 +412,6 @@ export default function OperatorStatsTable({
             }}
           />
         )}
-      </CardContent>
 
       {/* Orders List Dialog */}
       <Dialog
@@ -566,6 +551,6 @@ export default function OperatorStatsTable({
           </Box>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }

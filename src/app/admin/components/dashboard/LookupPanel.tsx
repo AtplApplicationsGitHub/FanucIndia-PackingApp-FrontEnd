@@ -435,6 +435,28 @@ export default function AdminMasterLookupPanel() {
             bgcolor: "background.paper",
           }}
         >
+          {/* Master Type Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <Select
+              value={selectedType}
+              onChange={(e) =>
+                handleTypeChange(e.target.value as MasterLookupKey)
+              }
+              sx={{
+                height: 40,
+                fontSize: "14px",
+                fontWeight: 600,
+                "& .MuiSelect-select": { py: 0.75 },
+              }}
+            >
+              {MASTER_LOOKUP_OPTIONS.map((option) => (
+                <MenuItem key={option.key} value={option.key}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           {/* Search Bar (Always Visible) */}
           <Box
             component="form"
@@ -561,28 +583,6 @@ export default function AdminMasterLookupPanel() {
               <PlusCircle size={20} />
             </IconButton>
           </Tooltip>
-
-          {/* Master Type Dropdown */}
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <Select
-              value={selectedType}
-              onChange={(e) =>
-                handleTypeChange(e.target.value as MasterLookupKey)
-              }
-              sx={{
-                height: 40,
-                fontSize: "14px",
-                fontWeight: 600,
-                "& .MuiSelect-select": { py: 0.75 },
-              }}
-            >
-              {MASTER_LOOKUP_OPTIONS.map((option) => (
-                <MenuItem key={option.key} value={option.key}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
 
           {/* Printer-only Actions */}
           {selectedType === "printers" && (
