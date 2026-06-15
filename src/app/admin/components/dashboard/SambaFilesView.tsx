@@ -44,6 +44,7 @@ type FileRow = {
 };
 
 const TABS = ["ACTIVE", "ARCHIVE", "ERROR", "LOGS"];
+const FETCH_TABS = ["ACTIVE", "ARCHIVE", "ERROR"];
 
 export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   const theme = useTheme();
@@ -61,7 +62,6 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     ERROR: [],
     LOGS: [],
   });
-  const [files, setFiles] = useState<FileRow[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -87,14 +87,19 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     setLoading(true);
     try {
       const results = await Promise.all(
-        TABS.map((folder) =>
+        FETCH_TABS.map((folder) =>
           fetchWithAuth(`${API.SAMBA.FILES}?folder=${folder}`)
             .then((res) => (res.ok ? res.json() : []))
             .catch(() => []),
         ),
       );
-      const newFilesByTab: Record<string, FileRow[]> = {};
-      TABS.forEach((tab, index) => {
+      const newFilesByTab: Record<string, FileRow[]> = {
+        ACTIVE: [],
+        ARCHIVE: [],
+        ERROR: [],
+        LOGS: [],
+      };
+      FETCH_TABS.forEach((tab, index) => {
         newFilesByTab[tab] = results[index];
       });
       setFilesByTab(newFilesByTab);
@@ -107,10 +112,7 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     if (activeTab === "LOGS") {
       fetchDbLogs();
-    } else {
-      fetchFiles(activeTab);
     }
-
     setSelectedFiles([]);
     setSearch("");
     setSearchStr("");
@@ -141,17 +143,6 @@ export default function SambaFilesView({ onBack }: { onBack: () => void }) {
     } catch (e) {
       setSftpStatus("DOWN");
     }
-  };
-
-  const fetchFiles = async (folder: string) => {
-    setLoading(true);
-    try {
-      const res = await fetchWithAuth(`${API.SAMBA.FILES}?folder=${folder}`);
-      if (res.ok) setFiles(await res.json());
-    } catch (error) {
-      console.error("Failed to fetch files", error);
-    }
-    setLoading(false);
   };
 
   const handleDownload = async (filenames: string[]) => {
