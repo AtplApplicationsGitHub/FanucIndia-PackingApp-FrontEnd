@@ -6,6 +6,11 @@ import { useErpImportCounts } from "../hooks/useErpImportCounts";
 import { useBacklogCount } from "../hooks/useBacklogCount";
 import { useBinCounts } from "../hooks/useBinCounts";
 import BacklogOrdersDialog from "./BacklogOrdersDialog";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 interface MiniCardProps {
   title: string;
@@ -14,6 +19,7 @@ interface MiniCardProps {
   error?: string | null;
   accentColor?: string;
   onClick?: () => void;
+  headerIcon?: React.ReactNode;
 }
 
 const MiniCard = ({
@@ -23,33 +29,36 @@ const MiniCard = ({
   error,
   accentColor = "border-l-gray-300 dark:border-l-gray-600",
   onClick,
+  headerIcon,
 }: MiniCardProps) => (
   <div
     onClick={onClick}
-    className={`bg-white dark:bg-[#1F2933] rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] border-l-4 ${accentColor} px-3 py-2.5 hover:shadow-md transition-all ${
+    className={`relative bg-white dark:bg-white rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#E5E7EB] border-l-4 ${accentColor} px-3 py-2.5 hover:shadow-md transition-all ${
       onClick ? "cursor-pointer hover:ring-2 hover:ring-purple-300" : ""
     }`}
   >
-    <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] truncate">
+    <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#6B7280] pr-5">
       {title}
     </p>
     {error ? (
-      <p className="text-xs font-semibold text-[#D00000] dark:text-red-400 mt-1">
+      <p className="text-xs font-semibold text-[#D00000] dark:text-[#D00000] mt-1">
         Error
       </p>
     ) : (
-      <p className="text-lg sm:text-xl font-bold text-[#1F2933] dark:text-white mt-1">
-        {loading ? "..." : value ?? 0}
+      <p className="text-lg sm:text-xl font-bold text-[#1F2933] dark:text-[#1F2933] mt-1">
+        {loading ? "..." : (value ?? 0)}
       </p>
     )}
+    {headerIcon && <div className="absolute top-2 right-2">{headerIcon}</div>}
   </div>
 );
 
 interface StatusCardsProps {
   selectedDate: string;
+  onDateChange: (date: string) => void;
 }
 
-const StatusCards = ({ selectedDate }: StatusCardsProps) => {
+const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
   const {
     data: dispatch,
     loading: dispatchLoading,
@@ -100,29 +109,21 @@ const StatusCards = ({ selectedDate }: StatusCardsProps) => {
       accentColor: "border-l-emerald-500",
     },
     {
-      title: "Backlog Orders",
-      value: backlog?.totalBacklog,
-      loading: backlogLoading,
-      error: backlogError,
-      accentColor: "border-l-purple-500",
-      onClick: () => setBacklogDialogOpen(true),
-    },
-    {
-      title: "Awaiting for Import",
+      title: "Awaiting",
       value: erpCounts?.PendingImport,
       loading: erpLoading,
       error: erpError,
       accentColor: "border-l-yellow-500",
     },
     {
-      title: "ERP Import Successful",
+      title: "Imported",
       value: erpCounts?.ErpSuccessUpload,
       loading: erpLoading,
       error: erpError,
       accentColor: "border-l-green-500",
     },
     {
-      title: "ERP Import Failed",
+      title: "Failed",
       value: erpCounts?.ErpImportFailed,
       loading: erpLoading,
       error: erpError,
@@ -133,38 +134,89 @@ const StatusCards = ({ selectedDate }: StatusCardsProps) => {
   // Row 2 — Bin count breakdown (3 cards)
   const binRowCards: MiniCardProps[] = [
     {
-      title: "Orders with 1 Bin",
+      title: "1 Bin",
       value: binCounts?.oneBinCount,
       loading: binLoading,
       error: binError,
       accentColor: "border-l-sky-500",
     },
     {
-      title: "Orders with 2-3 Bins",
+      title: "2-3 Bins",
       value: binCounts?.twoToThreeBinCount,
       loading: binLoading,
       error: binError,
       accentColor: "border-l-indigo-500",
     },
     {
-      title: "Orders with 4+ Bins",
+      title: "≥ 4 Bins",
       value: binCounts?.fourPlusBinCount,
       loading: binLoading,
       error: binError,
       accentColor: "border-l-fuchsia-500",
     },
+    {
+      title: "Backlog",
+      value: backlog?.totalBacklog,
+      loading: backlogLoading,
+      error: backlogError,
+      accentColor: "border-l-purple-500",
+      onClick: () => setBacklogDialogOpen(true),
+    },
   ];
+  const DateCard = ({
+    selectedDate,
+    onDateChange,
+  }: {
+    selectedDate: string;
+    onDateChange: (date: string) => void;
+  }) => (
+    <div className="relative bg-blue-50 dark:bg-blue-950 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 border-l-4 border-l-blue-600 px-3 py-2.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-blue-700 dark:text-blue-300">
+          Dashboard Date
+        </p>
+      </div>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <DatePicker
+          value={selectedDate ? dayjs(selectedDate) : null}
+          onChange={(newValue) => {
+            if (newValue) onDateChange(newValue.format("YYYY-MM-DD"));
+          }}
+          minDate={dayjs().subtract(3, "day")}
+          maxDate={dayjs().add(5, "day")}
+          format="DD-MM-YYYY"
+          slots={{ openPickerIcon: CalendarMonthIcon }}
+          slotProps={{
+            textField: {
+              variant: "standard",
+              sx: {
+                mt: 0.5,
+                "& .MuiInputBase-input": {
+                  fontSize: { xs: "1.125rem", sm: "1.25rem" },
+                  fontWeight: 700,
+                  color: "inherit",
+                  padding: 0,
+                },
+                "& .MuiInput-underline:before": { display: "none" },
+                "& .MuiInput-underline:after": { display: "none" },
+                "& .MuiInputAdornment-root": { ml: 0.5 },
+                "& .MuiIconButton-root": { p: 0.25 },
+                "& .MuiSvgIcon-root": { fontSize: 18, color: "inherit" },
+              },
+            },
+          }}
+        />
+      </LocalizationProvider>
+    </div>
+  );
+
+  const allCards: MiniCardProps[] = [...topRowCards, ...binRowCards];
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        {topRowCards.map((card, idx) => (
-          <MiniCard key={idx} {...card} />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {binRowCards.map((card, idx) => (
+      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-11 gap-3">
+        <DateCard selectedDate={selectedDate} onDateChange={onDateChange} />
+        {allCards.map((card, idx) => (
           <MiniCard key={idx} {...card} />
         ))}
       </div>

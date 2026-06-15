@@ -80,15 +80,12 @@ export default function PaymentClearanceByCustomerChart({
   }
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Payment Clearance by Customer ({displayDate})
           </h2>
-          <p className="text-sm text-[#4B5563] dark:text-[#E5E7EB] mt-1">
-            Cleared vs Pending payments
-          </p>
         </div>
 
         <Box
@@ -97,7 +94,6 @@ export default function PaymentClearanceByCustomerChart({
             alignItems: "center",
             bgcolor: "action.hover",
             borderRadius: 2,
-            p: 0.5,
             border: "1px solid",
             borderColor: "divider",
           }}
@@ -198,24 +194,24 @@ export default function PaymentClearanceByCustomerChart({
           />
         </div>
       ) : (
-        <div className="overflow-x-auto -mx-6 mt-4">
+        <div className="overflow-x-auto -mx-5 mt-2">
           <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
             <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
               <tr>
-                <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
+                <th className="px-3 py-2 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-4 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
+                <th className="px-3 py-2 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
                   Total
                 </th>
                 <th
-                  className="px-6 py-4 text-center font-semibold"
+                  className="px-3 py-2 text-center font-semibold"
                   style={{ color: COLORS.cleared }}
                 >
                   Payment Cleared
                 </th>
                 <th
-                  className="px-6 py-4 text-center font-semibold"
+                  className="px-3 py-2 text-center font-semibold"
                   style={{ color: COLORS.pending }}
                 >
                   Payment Pending
@@ -227,7 +223,7 @@ export default function PaymentClearanceByCustomerChart({
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-6 py-8 text-center text-gray-500"
+                    className="px-3 py-8 text-center text-gray-500"
                   >
                     No data available
                   </td>
@@ -238,20 +234,20 @@ export default function PaymentClearanceByCustomerChart({
                     key={`${row.customer}-${page}-${index}`}
                     className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]"
                   >
-                    <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
+                    <td className="px-3 py-2 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
                       {row.customer}
                     </td>
-                    <td className="px-6 py-4 text-center font-extrabold text-[#7C3AED] dark:text-[#C4B5FD]">
+                    <td className="px-3 py-2 text-center font-extrabold text-[#7C3AED] dark:text-[#C4B5FD]">
                       {row.total}
                     </td>
                     <td
-                      className="px-6 py-4 text-center font-bold"
+                      className="px-3 py-2 text-center font-bold"
                       style={{ color: COLORS.cleared }}
                     >
                       {row.cleared}
                     </td>
                     <td
-                      className="px-6 py-4 text-center font-bold"
+                      className="px-3 py-2 text-center font-bold"
                       style={{ color: COLORS.pending }}
                     >
                       {row.pending}
