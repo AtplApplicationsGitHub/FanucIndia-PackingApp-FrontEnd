@@ -33,19 +33,19 @@ const MiniCard = ({
 }: MiniCardProps) => (
   <div
     onClick={onClick}
-    className={`relative bg-white dark:bg-white rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#E5E7EB] border-l-4 ${accentColor} px-3 py-2.5 hover:shadow-md transition-all ${
+    className={`relative bg-white dark:bg-[#1F2933] rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] border-l-4 ${accentColor} px-3 py-2.5 hover:shadow-md transition-all ${
       onClick ? "cursor-pointer hover:ring-2 hover:ring-purple-300" : ""
     }`}
   >
-    <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#6B7280] pr-5">
+    <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] pr-5 truncate">
       {title}
     </p>
     {error ? (
-      <p className="text-xs font-semibold text-[#D00000] dark:text-[#D00000] mt-1">
+      <p className="text-xs font-semibold text-[#D00000] dark:text-[#FF6B6B] mt-1">
         Error
       </p>
     ) : (
-      <p className="text-lg sm:text-xl font-bold text-[#1F2933] dark:text-[#1F2933] mt-1">
+      <p className="text-lg sm:text-xl font-bold text-[#1F2933] dark:text-white mt-1">
         {loading ? "..." : (value ?? 0)}
       </p>
     )}
@@ -92,42 +92,42 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
       value: dispatch?.ordersToBeDispatched,
       loading: dispatchLoading,
       error: dispatchError,
-      accentColor: "border-l-blue-500",
+      accentColor: "border-l-blue-500 dark:border-l-blue-400",
     },
     {
       title: "Ready to Dispatch",
       value: dispatch?.readyForDispatchToday,
       loading: dispatchLoading,
       error: dispatchError,
-      accentColor: "border-l-amber-500",
+      accentColor: "border-l-amber-500 dark:border-l-amber-400",
     },
     {
       title: "Dispatched Today",
       value: dispatch?.ordersDispatchedToday,
       loading: dispatchLoading,
       error: dispatchError,
-      accentColor: "border-l-emerald-500",
+      accentColor: "border-l-emerald-500 dark:border-l-emerald-400",
     },
     {
       title: "Awaiting",
       value: erpCounts?.PendingImport,
       loading: erpLoading,
       error: erpError,
-      accentColor: "border-l-yellow-500",
+      accentColor: "border-l-yellow-500 dark:border-l-yellow-400",
     },
     {
       title: "Imported",
       value: erpCounts?.ErpSuccessUpload,
       loading: erpLoading,
       error: erpError,
-      accentColor: "border-l-green-500",
+      accentColor: "border-l-green-500 dark:border-l-green-400",
     },
     {
       title: "Failed",
       value: erpCounts?.ErpImportFailed,
       loading: erpLoading,
       error: erpError,
-      accentColor: "border-l-red-500",
+      accentColor: "border-l-red-500 dark:border-l-red-400",
     },
   ];
 
@@ -138,28 +138,28 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
       value: binCounts?.oneBinCount,
       loading: binLoading,
       error: binError,
-      accentColor: "border-l-sky-500",
+      accentColor: "border-l-sky-500 dark:border-l-sky-400",
     },
     {
       title: "2-3 Bins",
       value: binCounts?.twoToThreeBinCount,
       loading: binLoading,
       error: binError,
-      accentColor: "border-l-indigo-500",
+      accentColor: "border-l-indigo-500 dark:border-l-indigo-400",
     },
     {
       title: "≥ 4 Bins",
       value: binCounts?.fourPlusBinCount,
       loading: binLoading,
       error: binError,
-      accentColor: "border-l-fuchsia-500",
+      accentColor: "border-l-fuchsia-500 dark:border-l-fuchsia-400",
     },
     {
       title: "Backlog",
       value: backlog?.totalBacklog,
       loading: backlogLoading,
       error: backlogError,
-      accentColor: "border-l-purple-500",
+      accentColor: "border-l-purple-500 dark:border-l-purple-400",
       onClick: () => setBacklogDialogOpen(true),
     },
   ];
@@ -170,9 +170,9 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
     selectedDate: string;
     onDateChange: (date: string) => void;
   }) => (
-    <div className="relative bg-blue-50 dark:bg-blue-950 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 border-l-4 border-l-blue-600 px-3 py-2.5">
+    <div className="relative min-w-0 bg-white dark:bg-[#1F2933] rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] border-l-4 border-l-teal-500 dark:border-l-teal-400 px-3 py-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-blue-700 dark:text-blue-300">
+        <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] truncate">
           Dashboard Date
         </p>
       </div>
@@ -184,24 +184,31 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
           }}
           minDate={dayjs().subtract(3, "day")}
           maxDate={dayjs().add(5, "day")}
-          format="DD-MM-YYYY"
+          format="DD-MM-YY"
           slots={{ openPickerIcon: CalendarMonthIcon }}
           slotProps={{
             textField: {
               variant: "standard",
+              InputProps: { disableUnderline: true },
               sx: {
                 mt: 0.5,
-                "& .MuiInputBase-input": {
-                  fontSize: { xs: "1.125rem", sm: "1.25rem" },
-                  fontWeight: 700,
-                  color: "inherit",
-                  padding: 0,
+                minWidth: 0,
+                "& .MuiInputBase-root": {
+                  width: "100%",
                 },
-                "& .MuiInput-underline:before": { display: "none" },
-                "& .MuiInput-underline:after": { display: "none" },
+                "& .MuiInputBase-input": {
+                  fontSize: { xs: "0.85rem", sm: "1rem", md: "1.25rem" },
+                  fontWeight: 700,
+                  color: (theme) => theme.palette.text.primary,
+                  padding: 0,
+                  width: "100%",
+                },
                 "& .MuiInputAdornment-root": { ml: 0.5 },
                 "& .MuiIconButton-root": { p: 0.25 },
-                "& .MuiSvgIcon-root": { fontSize: 18, color: "inherit" },
+                "& .MuiSvgIcon-root": {
+                  fontSize: 18,
+                  color: (theme) => theme.palette.text.secondary,
+                },
               },
             },
           }}
