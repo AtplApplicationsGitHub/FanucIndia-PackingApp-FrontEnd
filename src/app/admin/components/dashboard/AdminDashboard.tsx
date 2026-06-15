@@ -48,28 +48,34 @@ export default function AdminDashboard() {
           </Typography>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
-              open={datePickerOpen}
-              onClose={() => setDatePickerOpen(false)}
-              enableAccessibleFieldDOMStructure={false}
               value={selectedDate ? dayjs(selectedDate) : null}
               onChange={(newValue) => {
                 if (newValue) {
                   setSelectedDate(newValue.format("YYYY-MM-DD"));
                 }
-                setDatePickerOpen(false);
               }}
               minDate={dayjs().subtract(3, "day")}
               maxDate={dayjs().add(5, "day")}
-              slots={{
-                textField: () => (
-                  <IconButton
-                    size="small"
-                    onClick={() => setDatePickerOpen(true)}
-                    sx={{ color: "text.secondary", p: 0.5 }}
-                  >
-                    <CalendarMonthIcon fontSize="small" />
-                  </IconButton>
-                ),
+              format="DD-MMM-YYYY"
+              slots={{ openPickerIcon: CalendarMonthIcon }}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 40,
+                    "& .MuiInputBase-input": {
+                      display: "none",
+                      width: 0,
+                      padding: 0,
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      border: "none",
+                    },
+                    "& .MuiInputAdornment-root": {
+                      ml: 0,
+                    },
+                  },
+                },
               }}
             />
           </LocalizationProvider>
