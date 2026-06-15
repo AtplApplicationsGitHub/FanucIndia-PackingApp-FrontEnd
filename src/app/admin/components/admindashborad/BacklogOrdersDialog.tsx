@@ -54,17 +54,17 @@ export default function BacklogOrdersDialog({
   const handleViewOrder = (so: string, obd: string) => {
     onClose();
     router.push(
-      `/so-search/${encodeURIComponent(so)}/${encodeURIComponent(obd)}`
+      `/so-search/${encodeURIComponent(so)}/${encodeURIComponent(obd)}`,
     );
   };
 
   const rows = (breakdown || []).flatMap((day) =>
-    day.orders.map((order) => ({ ...order, dayLabel: day.dayLabel }))
+    day.orders.map((order) => ({ ...order, dayLabel: day.dayLabel })),
   );
 
   const paginatedRows = rows.slice(
     page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
+    page * rowsPerPage + rowsPerPage,
   );
 
   return (
@@ -76,9 +76,20 @@ export default function BacklogOrdersDialog({
       PaperProps={{ sx: { maxHeight: 480 } }}
     >
       <DialogTitle
-        sx={{ color: "secondary.main", fontWeight: 600, textAlign: "center" }}
+        sx={{
+          fontWeight: 700,
+          fontSize: 20,
+          textAlign: "center",
+          letterSpacing: 0,
+          color: "secondary.main",
+          p: 1.5,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        }}
       >
-        BACKLOG ORDERS
+        BACKLOG
         <IconButton
           onClick={onClose}
           sx={{ position: "absolute", right: 8, top: 8 }}
@@ -152,7 +163,7 @@ export default function BacklogOrdersDialog({
                         onClick={() =>
                           handleViewOrder(
                             order.saleOrderNumber,
-                            order.outboundDelivery
+                            order.outboundDelivery,
                           )
                         }
                         sx={{
