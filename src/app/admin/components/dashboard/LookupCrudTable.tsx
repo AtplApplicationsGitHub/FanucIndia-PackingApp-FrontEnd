@@ -38,31 +38,51 @@ const LookupCrudTable: React.FC<Props> = ({
   onRequestDelete,
 }) => {
   const theme = useTheme();
-  
+
   // Columns
-  const keys = explicitKeys && explicitKeys.length > 0 
-    ? explicitKeys 
-    : (data[0] ? Object.keys(data[0]).filter(k => !['createdAt','updatedAt'].includes(k)) : []);
+  const keys =
+    explicitKeys && explicitKeys.length > 0
+      ? explicitKeys
+      : data[0]
+        ? Object.keys(data[0]).filter(
+            (k) => !["createdAt", "updatedAt"].includes(k),
+          )
+        : [];
 
   // Pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const visibleRows = data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const visibleRows = data.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
-  const formatValue = (key: string, value: string | number | boolean | null | undefined) => {
+  const formatValue = (
+    key: string,
+    value: string | number | boolean | null | undefined,
+  ) => {
     if (typeof value === "boolean") return value ? "Yes" : "No";
     return value;
   };
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+    <Paper
+      sx={{
+        width: "100%",
+        overflow: "hidden",
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <TableContainer>
         <Table stickyHeader size="small">
           <TableHead>
@@ -97,8 +117,14 @@ const LookupCrudTable: React.FC<Props> = ({
           <TableBody>
             {data.length === 0 && (
               <TableRow>
-                <TableCell colSpan={keys.length + 1} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">No items found.</Typography>
+                <TableCell
+                  colSpan={keys.length + 1}
+                  align="center"
+                  sx={{ py: 4 }}
+                >
+                  <Typography color="text.secondary">
+                    No items found.
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -107,13 +133,14 @@ const LookupCrudTable: React.FC<Props> = ({
                 key={row.id}
                 hover
                 sx={{
-                  backgroundColor: index % 2 === 1 ? alpha(theme.palette.primary.main, 0.2) : "inherit",
+                  backgroundColor:
+                    index % 2 === 1
+                      ? alpha(theme.palette.primary.main, 0.2)
+                      : "inherit",
                 }}
               >
                 {keys.map((key) => (
-                  <TableCell key={key}>
-                    {formatValue(key, row[key])}
-                  </TableCell>
+                  <TableCell key={key}>{formatValue(key, row[key])}</TableCell>
                 ))}
                 <TableCell align="center">
                   <Box display="flex" justifyContent="center" gap={1}>
@@ -143,7 +170,7 @@ const LookupCrudTable: React.FC<Props> = ({
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
+        rowsPerPageOptions={[10, 20, 50, 100]}
         component="div"
         count={data.length}
         rowsPerPage={rowsPerPage}

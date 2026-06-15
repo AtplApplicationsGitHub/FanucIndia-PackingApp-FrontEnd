@@ -4,12 +4,13 @@ import { useState } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { usePaymentClearanceBarchart } from "../hooks/usePaymentClearanceBarchart";
 import { BarChart3 } from "lucide-react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, TablePagination } from "@mui/material";
 
 type ChartDatum = {
   zone: string;
   cleared: number;
   pending: number;
+  total?: number;
 };
 
 interface Props {
@@ -23,12 +24,27 @@ const formatNumber = (n: number | string) => {
   return num.toLocaleString();
 };
 
-export default function PaymentClearanceByZone({ selectedDate, displayDate }: Props) {
-  const { data: rawData, loading, error } = usePaymentClearanceBarchart(selectedDate);
+export default function PaymentClearanceByZone({
+  selectedDate,
+  displayDate,
+}: Props) {
+  const {
+    data: rawData,
+    loading,
+    error,
+  } = usePaymentClearanceBarchart(selectedDate);
   const [viewMode, setViewMode] = useState<"chart" | "table">("table");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const data = ((rawData as unknown as ChartDatum[]) ?? []).filter(
-    (item) => item.cleared > 0 || item.pending > 0
+  const data = ((rawData as unknown as ChartDatum[]) ?? [])
+    .map((item) => ({ ...item, total: item.cleared + item.pending }))
+    .filter((item) => item.cleared > 0 || item.pending > 0)
+    .sort((a, b) => (b.total ?? 0) - (a.total ?? 0));
+
+  const paginatedData = data.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
   );
 
   if (loading) {
@@ -75,18 +91,38 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
           </p>
         </div>
 
-        <Box sx={{ display: "flex", alignItems: "center", bgcolor: "action.hover", borderRadius: 2, p: 0.5, border: "1px solid", borderColor: "divider" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "action.hover",
+            borderRadius: 2,
+            p: 0.5,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
           <Button
             onClick={() => setViewMode("table")}
             disableRipple
             size="small"
             sx={{
-              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-              textTransform: "none", minWidth: "unset",
-              bgcolor: viewMode === "table" ? "background.paper" : "transparent",
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor:
+                viewMode === "table" ? "background.paper" : "transparent",
               color: viewMode === "table" ? "#D00000" : "text.secondary",
               boxShadow: viewMode === "table" ? 1 : "none",
-              "&:hover": { bgcolor: viewMode === "table" ? "background.paper" : "transparent", color: viewMode === "table" ? "#D00000" : "text.primary" },
+              "&:hover": {
+                bgcolor:
+                  viewMode === "table" ? "background.paper" : "transparent",
+                color: viewMode === "table" ? "#D00000" : "text.primary",
+              },
             }}
           >
             Table
@@ -96,12 +132,22 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
             disableRipple
             size="small"
             sx={{
-              px: 1.6, py: 0.65, fontSize: "0.875rem", fontWeight: 500, borderRadius: 1.5,
-              textTransform: "none", minWidth: "unset",
-              bgcolor: viewMode === "chart" ? "background.paper" : "transparent",
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor:
+                viewMode === "chart" ? "background.paper" : "transparent",
               color: viewMode === "chart" ? "#D00000" : "text.secondary",
               boxShadow: viewMode === "chart" ? 1 : "none",
-              "&:hover": { bgcolor: viewMode === "chart" ? "background.paper" : "transparent", color: viewMode === "chart" ? "#D00000" : "text.primary" },
+              "&:hover": {
+                bgcolor:
+                  viewMode === "chart" ? "background.paper" : "transparent",
+                color: viewMode === "chart" ? "#D00000" : "text.primary",
+              },
             }}
           >
             Chart
@@ -132,7 +178,7 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
                   scaleType: "band",
                   tickLabelStyle: {
                     angle: 0,
-                    textAnchor: 'middle',
+                    textAnchor: "middle",
                     fontSize: 12,
                   },
                 },
@@ -174,20 +220,20 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
                       fill: "currentColor",
                     },
                     "& .MuiChartsLegend-label": {
-                       fill: "currentColor",
+                      fill: "currentColor",
                     },
                   },
                 },
               }}
               sx={{
                 "& .MuiChartsAxis-tickLabel": {
-                   fill: "currentColor !important"
+                  fill: "currentColor !important",
                 },
                 "& .MuiChartsAxis-line": {
-                  stroke: "currentColor !important"
+                  stroke: "currentColor !important",
                 },
                 "& .MuiChartsAxis-tick": {
-                  stroke: "currentColor !important"
+                  stroke: "currentColor !important",
                 },
               }}
               className="dark:text-[#E5E7EB] text-[#4B5563]"
@@ -195,12 +241,15 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
           </div>
         </>
       ) : (
-        <div className="overflow-x-auto -mx-6 -mb-6 mt-4">
+        <div className="overflow-x-auto -mx-6 mt-4">
           <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
             <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
                   Zone
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
+                  Total
                 </th>
                 <th
                   className="px-6 py-4 text-center font-semibold"
@@ -217,27 +266,61 @@ export default function PaymentClearanceByZone({ selectedDate, displayDate }: Pr
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
-              {data.map((row) => (
-                <tr key={row.zone} className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]">
-                  <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
-                    {row.zone}
-                  </td>
+              {paginatedData.length === 0 ? (
+                <tr>
                   <td
-                    className="px-6 py-4 text-center font-bold"
-                    style={{ color: "#00B894" }}
+                    colSpan={4}
+                    className="px-6 py-8 text-center text-gray-500"
                   >
-                    {formatNumber(row.cleared)}
-                  </td>
-                  <td
-                    className="px-6 py-4 text-center font-bold"
-                    style={{ color: "#FF6B6B" }}
-                  >
-                    {formatNumber(row.pending)}
+                    No data available
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedData.map((row) => (
+                  <tr
+                    key={row.zone}
+                    className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]"
+                  >
+                    <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
+                      {row.zone}
+                    </td>
+                    <td className="px-6 py-4 text-center font-extrabold text-[#7C3AED] dark:text-[#C4B5FD]">
+                      {formatNumber(row.total ?? 0)}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-center font-bold"
+                      style={{ color: "#00B894" }}
+                    >
+                      {formatNumber(row.cleared)}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-center font-bold"
+                      style={{ color: "#FF6B6B" }}
+                    >
+                      {formatNumber(row.pending)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+        </div>
+      )}
+      {viewMode === "table" && (
+        <div className="flex justify-end pt-2 border-t border-[#E5E7EB] dark:border-[#4B5563] mt-2">
+          <TablePagination
+            component="div"
+            count={data.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50, 100]}
+            sx={{ color: "text.primary" }}
+          />
         </div>
       )}
     </div>

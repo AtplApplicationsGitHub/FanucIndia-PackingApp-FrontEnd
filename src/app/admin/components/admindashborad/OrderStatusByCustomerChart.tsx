@@ -40,14 +40,24 @@ export default function OrderStatusByCustomerChart({
     dispatched: "#00B894",
   };
 
-  const chartData = (data || []).map((item: CustomerOrderStatus) => ({
-    customer: item.customerName,
-    toBeIssued: item.toBeIssuedCount,
-    assigned: item.r105Count,
-    issued: item.w105Count,
-    packed: item.f105Count,
-    dispatched: item.dispatchedCount,
-  }));
+  const chartData = (data || [])
+    .map((item: CustomerOrderStatus) => {
+      const toBeIssued = item.toBeIssuedCount;
+      const assigned = item.r105Count;
+      const issued = item.w105Count;
+      const packed = item.f105Count;
+      const dispatched = item.dispatchedCount;
+      return {
+        customer: item.customerName,
+        total: toBeIssued + assigned + issued + packed + dispatched,
+        toBeIssued,
+        assigned,
+        issued,
+        packed,
+        dispatched,
+      };
+    })
+    .sort((a, b) => b.total - a.total);
 
   // Apply Pagination Slice
   const paginatedData = chartData.slice(
@@ -219,6 +229,9 @@ export default function OrderStatusByCustomerChart({
                 <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
                   Customer
                 </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
+                  Total
+                </th>
                 <th
                   className="px-6 py-4 text-center font-semibold"
                   style={{ color: COLORS.toBeIssued }}
@@ -255,7 +268,7 @@ export default function OrderStatusByCustomerChart({
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     No data available
@@ -269,6 +282,9 @@ export default function OrderStatusByCustomerChart({
                   >
                     <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
                       {row.customer}
+                    </td>
+                    <td className="px-6 py-4 text-center font-extrabold text-[#7C3AED] dark:text-[#C4B5FD]">
+                      {row.total}
                     </td>
                     <td
                       className="px-6 py-4 text-center font-bold"

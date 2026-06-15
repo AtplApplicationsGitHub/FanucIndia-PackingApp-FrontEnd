@@ -34,11 +34,14 @@ export default function PaymentClearanceByCustomerChart({
     pending: "#FF6B6B",
   };
 
-  const chartData = (data || []).map((item: CustomerPaymentClearance) => ({
-    customer: item.customerName,
-    cleared: item.paymentCleared,
-    pending: item.paymentPending,
-  }));
+  const chartData = (data || [])
+    .map((item: CustomerPaymentClearance) => ({
+      customer: item.customerName,
+      total: item.paymentCleared + item.paymentPending,
+      cleared: item.paymentCleared,
+      pending: item.paymentPending,
+    }))
+    .sort((a, b) => b.total - a.total);
 
   const paginatedData = chartData.slice(
     page * rowsPerPage,
@@ -202,6 +205,9 @@ export default function PaymentClearanceByCustomerChart({
                 <th className="px-6 py-4 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
                   Customer
                 </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
+                  Total
+                </th>
                 <th
                   className="px-6 py-4 text-center font-semibold"
                   style={{ color: COLORS.cleared }}
@@ -220,7 +226,7 @@ export default function PaymentClearanceByCustomerChart({
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     No data available
@@ -234,6 +240,9 @@ export default function PaymentClearanceByCustomerChart({
                   >
                     <td className="px-6 py-4 font-medium text-[#1F2933] dark:text-[#E5E7EB]">
                       {row.customer}
+                    </td>
+                    <td className="px-6 py-4 text-center font-extrabold text-[#7C3AED] dark:text-[#C4B5FD]">
+                      {row.total}
                     </td>
                     <td
                       className="px-6 py-4 text-center font-bold"
