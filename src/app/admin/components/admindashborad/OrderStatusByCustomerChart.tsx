@@ -367,7 +367,7 @@ export default function OrderStatusByCustomerChart({
               setRowsPerPage(parseInt(e.target.value, 10));
               setPage(0);
             }}
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[10, 20, 50, 100]}
             sx={{ color: "text.primary" }}
           />
         </div>
