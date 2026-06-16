@@ -101,6 +101,7 @@ export default function AssignSO() {
   );
   const [endDate, setEndDate] = React.useState<Date | null>(dayjs().toDate());
   const [customerFilter, setCustomerFilter] = React.useState("");
+  const [binFilter, setBinFilter] = React.useState("");
   const [pendingImportFilter, setPendingImportFilter] = React.useState(false);
   const [failedImportFilter, setFailedImportFilter] = React.useState(false);
   const [successImportFilter, setSuccessImportFilter] = React.useState(false);
@@ -145,6 +146,7 @@ export default function AssignSO() {
       status: statusFilter,
       customer: customerFilter,
       pendingImport: pendingImportFilter,
+      bin: binFilter,
       failedImport: failedImportFilter,
       successImport: successImportFilter,
       start: formatDateOnly(startDate),
@@ -160,6 +162,7 @@ export default function AssignSO() {
     statusFilter,
     customerFilter,
     pendingImportFilter,
+    binFilter,
     startDate,
     endDate,
     currentPage,
@@ -208,6 +211,7 @@ export default function AssignSO() {
     setStartDate(null);
     setEndDate(null);
     setCustomerFilter("");
+    setBinFilter("");
     setPendingImportFilter(false);
     setFailedImportFilter(false);
     setSuccessImportFilter(false);
@@ -700,6 +704,14 @@ export default function AssignSO() {
         !customerFilter ||
         (order.customerNameText || "").toLowerCase() === selectedCustomerName;
 
+      const bin = order.binCount ?? 0;
+      const matchesBin =
+        !binFilter ||
+        (binFilter === "0" && bin === 0) ||
+        (binFilter === "1" && bin === 1) ||
+        (binFilter === "2-3" && bin >= 2 && bin <= 3) ||
+        (binFilter === "4+" && bin >= 4);
+
       const matchesStatus =
         !statusFilter ||
         (statusFilter === "None"
@@ -744,6 +756,7 @@ export default function AssignSO() {
         matchesStatus &&
         matchesDate &&
         matchesCustomer &&
+        matchesBin &&
         matchesPendingImport &&
         matchesFailedImport &&
         matchesSuccessImport
@@ -758,6 +771,7 @@ export default function AssignSO() {
     startDate,
     endDate,
     customerFilter,
+    binFilter,
     pendingImportFilter,
     failedImportFilter,
     successImportFilter,
@@ -1299,6 +1313,11 @@ export default function AssignSO() {
               customerFilter={customerFilter}
               onCustomerFilterChange={(val: string) => {
                 setCustomerFilter(val);
+                setCurrentPage(1);
+              }}
+              binFilter={binFilter}
+              onBinFilterChange={(val: string) => {
+                setBinFilter(val);
                 setCurrentPage(1);
               }}
               customers={availableCustomers}

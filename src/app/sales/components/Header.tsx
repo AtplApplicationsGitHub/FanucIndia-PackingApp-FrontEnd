@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -35,6 +33,7 @@ const menuItems = [
   { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
   { label: "ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
   { label: "DISPATCHED ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "dispatched" },
+  { label: "FG STORAGE", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "fg-storage" },
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 

@@ -18,6 +18,7 @@ import axios from "axios";
 import { API } from "@/common/lib/endpoints";
 import AttachmentUploadDialog from "@/app/sales/components/AttachmentUploadDialog";
 import { motion } from "framer-motion";
+import SalesFgStorageReport from "@/app/sales/components/salesdashboard/SalesFgStorageReport";
 
 function SalesDashboardContent() {
   const theme = useTheme();
@@ -238,6 +239,17 @@ function SalesDashboardContent() {
                 onSelectedIdsChange={setSelectedIds}
               />
             </Box>
+          </motion.div>
+        )}
+
+        {view === "fg-storage" && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ padding: "1rem" }}
+          >
+            <SalesFgStorageReport />
           </motion.div>
         )}
 

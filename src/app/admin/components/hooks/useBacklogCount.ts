@@ -4,6 +4,8 @@ import { API, fetchWithAuth } from "../../../../common/lib/endpoints";
 interface BacklogOrder {
   saleOrderNumber: string;
   outboundDelivery: string;
+  customerName: string | null;
+  paymentClearance: boolean;
 }
 
 interface BacklogItem {

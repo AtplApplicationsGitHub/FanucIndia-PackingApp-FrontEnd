@@ -91,6 +91,8 @@ type Props = {
   customerFilter: string;
   onCustomerFilterChange: (val: string) => void;
   customers?: { id: number; name: string }[];
+  binFilter: string;
+  onBinFilterChange: (val: string) => void;
   onOpenSambaView?: () => void;
   onTodayClick?: () => void;
   failedImportFilter?: boolean;
@@ -144,6 +146,8 @@ export default function AssignOrdersToolbar({
   customerFilter,
   onCustomerFilterChange,
   customers = [],
+  binFilter,
+  onBinFilterChange,
   onOpenSambaView,
   onTodayClick,
   onBulkUpdateRequiredDate,
@@ -405,7 +409,7 @@ export default function AssignOrdersToolbar({
             {/* Customer Filter */}
             <FormControl
               size="small"
-              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 118 } }}
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 122 } }}
             >
               <Select
                 value={customerFilter}
@@ -419,6 +423,25 @@ export default function AssignOrdersToolbar({
                     {c.name}
                   </MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+
+            {/* BIN Filter */}
+            <FormControl
+              size="small"
+              sx={{ width: { xs: "100%", sm: "calc(50% - 6px)", lg: 80 } }}
+            >
+              <Select
+                value={binFilter}
+                displayEmpty
+                onChange={(e) => onBinFilterChange(e.target.value)}
+                sx={{ height: 40, fontSize: "13px" }}
+              >
+                <MenuItem value="">BIN</MenuItem>
+                <MenuItem value="0">0</MenuItem>
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2-3">2-3</MenuItem>
+                <MenuItem value="4+">≥4</MenuItem>
               </Select>
             </FormControl>
 

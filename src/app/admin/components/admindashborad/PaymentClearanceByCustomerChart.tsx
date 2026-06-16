@@ -5,7 +5,10 @@ import { BarChart } from "@mui/x-charts/BarChart";
 import { BarChart3 } from "lucide-react";
 import { TablePagination } from "@mui/material";
 import { usePaymentClearanceByCustomer } from "../hooks/usePaymentClearanceByCustomer";
-import { Box, Button } from "@mui/material";
+import { Tooltip, IconButton, Box, Button } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import { Download } from "lucide-react";
+import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 
 interface CustomerPaymentClearance {
   customerName: string;
@@ -48,6 +51,19 @@ export default function PaymentClearanceByCustomerChart({
     page * rowsPerPage + rowsPerPage,
   );
 
+  const handleExport = async () => {
+    const formatted = chartData.map((row) => ({
+      Customer: row.customer,
+      Total: row.total,
+      "Payment Cleared": row.cleared,
+      "Payment Pending": row.pending,
+    }));
+    const now = new Date();
+    const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    const dt = ist.toISOString().replace(/[-:T]/g, "_").slice(0, 19);
+    await exportToExcel(formatted, `PAY_CLEARANCE_CUSTOMER_${dt}`);
+  };
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-6 border border-[#E5E7EB] dark:border-[#4B5563]">
@@ -82,10 +98,24 @@ export default function PaymentClearanceByCustomerChart({
   return (
     <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div>
+        <div className="flex items-center gap-2">
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Payment Clearance by Customer ({displayDate})
           </h2>
+          <Tooltip title="Export to Excel">
+            <IconButton
+              onClick={handleExport}
+              size="small"
+              sx={{
+                color: "#10B981",
+                bgcolor: alpha("#10B981", 0.1),
+                borderRadius: 1.5,
+                "&:hover": { bgcolor: alpha("#10B981", 0.2) },
+              }}
+            >
+              <Download size={16} />
+            </IconButton>
+          </Tooltip>
         </div>
 
         <Box
@@ -202,7 +232,7 @@ export default function PaymentClearanceByCustomerChart({
                   Customer
                 </th>
                 <th className="px-3 py-2 text-center font-semibold text-[#7C3AED] dark:text-[#C4B5FD]">
-                  Total
+                  Total ({chartData.reduce((sum, row) => sum + row.total, 0)})
                 </th>
                 <th
                   className="px-3 py-2 text-center font-semibold"

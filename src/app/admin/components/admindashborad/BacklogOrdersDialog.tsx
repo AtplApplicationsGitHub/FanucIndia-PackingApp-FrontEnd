@@ -24,6 +24,8 @@ import { useTheme, alpha } from "@mui/material/styles";
 interface BacklogOrder {
   saleOrderNumber: string;
   outboundDelivery: string;
+  customerName: string | null;
+  paymentClearance: boolean;
 }
 
 interface BacklogItem {
@@ -71,9 +73,9 @@ export default function BacklogOrdersDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { maxHeight: 480 } }}
+      PaperProps={{ sx: { maxHeight: 560 } }}
     >
       <DialogTitle
         sx={{
@@ -98,7 +100,15 @@ export default function BacklogOrdersDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers sx={{ p: 2 }}>
-        <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            maxHeight: 380,
+            overflowY: "scroll",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
           <Table
             stickyHeader
             size="small"
@@ -141,12 +151,30 @@ export default function BacklogOrdersDialog({
                 >
                   Required Date
                 </TableCell>
+                <TableCell
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Customer Name
+                </TableCell>
+                <TableCell
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Payment Clearance
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {paginatedRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center">
+                  <TableCell colSpan={5} align="center">
                     <Typography color="text.secondary" p={3}>
                       No backlog orders.
                     </Typography>
@@ -179,6 +207,10 @@ export default function BacklogOrdersDialog({
                     </TableCell>
                     <TableCell>{order.outboundDelivery}</TableCell>
                     <TableCell>{order.dayLabel}</TableCell>
+                    <TableCell>{order.customerName ?? "—"}</TableCell>
+                    <TableCell>
+                      {order.paymentClearance ? "Cleared" : "Pending"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
