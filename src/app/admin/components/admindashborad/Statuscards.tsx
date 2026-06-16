@@ -172,7 +172,7 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
   }) => (
     <div className="relative min-w-0 bg-white dark:bg-[#1F2933] rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] border-l-4 border-l-teal-500 dark:border-l-teal-400 px-3 py-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] truncate">
+        <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] truncate ">
           Dashboard Date
         </p>
       </div>
@@ -197,11 +197,17 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
                   width: "100%",
                 },
                 "& .MuiInputBase-input": {
-                  fontSize: { xs: "0.85rem", sm: "1rem", md: "1.25rem" },
-                  fontWeight: 700,
+                  fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.35rem" },
+                  fontWeight: "700 !important",
                   color: (theme) => theme.palette.text.primary,
                   padding: 0,
                   width: "100%",
+                },
+                "& .MuiPickersSectionList-sectionContent": {
+                  fontWeight: 700,
+                },
+                "& .MuiPickersSectionList-section": {
+                  fontWeight: 700,
                 },
                 "& .MuiInputAdornment-root": { ml: 0.5 },
                 "& .MuiIconButton-root": { p: 0.25 },
