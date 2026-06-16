@@ -11,6 +11,8 @@ export type FgStorageReportRow = {
   dateTime: string;
   durationText: string;
   durationDays: number;
+  salesZoneName: string;
+  customerName: string;
 };
 
 function normalizeRow(item: any): FgStorageReportRow {
@@ -24,6 +26,8 @@ function normalizeRow(item: any): FgStorageReportRow {
     dateTime: item.dateTime ?? "",
     durationText: item.durationText ?? "-",
     durationDays: item.durationDays ?? 0,
+    salesZoneName: item.salesZoneName ?? "-",
+    customerName: item.customerName ?? "-",
   };
 }
 

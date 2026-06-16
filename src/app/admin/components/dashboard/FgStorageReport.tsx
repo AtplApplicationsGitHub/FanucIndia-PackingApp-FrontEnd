@@ -94,6 +94,8 @@ export default function FgStorageReportPanel() {
           row.fgLocation && row.fgLocation !== "N/A" ? row.fgLocation : "-",
         "Sale Order Number": row.saleOrderNumber || "-",
         "Outbound delivery": row.outboundDelivery || "-",
+        "Sales Zone": row.salesZoneName || "-",
+        "Customer Name": row.customerName || "-",
         "Last UpdatedBy": row.LastUpdatedBy || "-",
         "Date & Time": formatDate(row.dateTime),
         Duration: row.durationText || "-",
@@ -351,6 +353,8 @@ export default function FgStorageReportPanel() {
                   "LOCATION",
                   "SALE ORDER NUMBER",
                   "OUT BOUND DELIVERY",
+                  "SALES ZONE",
+                  "CUSTOMER NAME",
                   "LAST UPDATED BY",
                   "DATE & TIME",
                   "DURATION",
@@ -374,7 +378,7 @@ export default function FgStorageReportPanel() {
               {loading ? null : rows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={8}
                     align="center"
                     sx={{ py: 4, bgcolor: lightYellow }}
                   >
@@ -405,6 +409,12 @@ export default function FgStorageReportPanel() {
 
                     {/* OBD */}
                     <TableCell>{row.outboundDelivery || "-"}</TableCell>
+
+                    {/* SALES ZONE */}
+                    <TableCell>{row.salesZoneName || "-"}</TableCell>
+
+                    {/* CUSTOMER NAME */}
+                    <TableCell>{row.customerName || "-"}</TableCell>
 
                     {/* LAST UPDATED BY */}
                     <TableCell>{row.LastUpdatedBy}</TableCell>

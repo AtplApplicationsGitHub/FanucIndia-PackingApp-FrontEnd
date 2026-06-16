@@ -18,6 +18,9 @@ import {
   Box,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
+import { Tooltip } from "@mui/material";
+import { Download } from "lucide-react";
+import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 import { useRouter } from "next/navigation";
 import { useTheme, alpha } from "@mui/material/styles";
 
@@ -69,6 +72,22 @@ export default function BacklogOrdersDialog({
     page * rowsPerPage + rowsPerPage,
   );
 
+  const handleExport = async () => {
+    const formatted = rows.map((order) => ({
+      "SO Number": order.saleOrderNumber,
+      "Outbound Delivery": order.outboundDelivery,
+      "Required Date": order.dayLabel,
+      "Customer Name": (order as any).customerName ?? "-",
+      "Payment Clearance": (order as any).paymentClearance
+        ? "Cleared"
+        : "Pending",
+    }));
+    const now = new Date();
+    const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    const dt = ist.toISOString().replace(/[-:T]/g, "_").slice(0, 19);
+    await exportToExcel(formatted, `BACKLOG_${dt}`);
+  };
+
   return (
     <Dialog
       open={open}
@@ -91,7 +110,18 @@ export default function BacklogOrdersDialog({
           position: "relative",
         }}
       >
-        BACKLOG
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          BACKLOG
+          <Tooltip title="Export to Excel">
+            <IconButton
+              onClick={handleExport}
+              size="small"
+              sx={{ color: "#10B981" }}
+            >
+              <Download size={18} />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <IconButton
           onClick={onClose}
           sx={{ position: "absolute", right: 8, top: 8 }}
