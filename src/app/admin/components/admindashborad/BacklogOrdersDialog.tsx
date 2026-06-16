@@ -158,7 +158,7 @@ export default function BacklogOrdersDialog({
                     fontWeight: "bold",
                   }}
                 >
-                  Payment Clearance
+                  Payment
                 </TableCell>
                 <TableCell
                   sx={{
@@ -207,7 +207,9 @@ export default function BacklogOrdersDialog({
                     </TableCell>
                     <TableCell>{order.outboundDelivery}</TableCell>
                     <TableCell>{order.customerName ?? "—"}</TableCell>
-                    <TableCell>{order.paymentClearance}</TableCell>
+                    <TableCell>
+                      {order.paymentClearance === true ? "Yes" : "No"}
+                    </TableCell>
                     <TableCell>{order.dayLabel}</TableCell>
                   </TableRow>
                 ))
