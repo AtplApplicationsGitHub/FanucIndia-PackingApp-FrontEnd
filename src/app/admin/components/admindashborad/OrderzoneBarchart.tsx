@@ -120,10 +120,10 @@ export default function OrderStatusByZone({
   }
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] select-none h-full chart-no-focus">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 p-3">
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Order Status by Sales Zone ({displayDate})
           </h2>
@@ -151,6 +151,8 @@ export default function OrderStatusByZone({
             borderRadius: 2,
             border: "1px solid",
             borderColor: "divider",
+            mt:1,
+            mr: 1,
           }}
         >
           <Button
@@ -313,7 +315,7 @@ export default function OrderStatusByZone({
         </>
       ) : (
         /* Table View */
-        <div className="overflow-x-auto -mx-5 mt-2">
+        <div className="overflow-x-auto mt-2">
           <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
             <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
               <tr>
@@ -415,7 +417,7 @@ export default function OrderStatusByZone({
         </div>
       )}
       {viewMode === "table" && (
-        <div className="flex justify-end pt-2 border-t border-[#E5E7EB] dark:border-[#4B5563] mt-2">
+        <div className="flex justify-end border-t border-[#E5E7EB] dark:border-[#4B5563] ">
           <TablePagination
             component="div"
             count={chartData.length}
