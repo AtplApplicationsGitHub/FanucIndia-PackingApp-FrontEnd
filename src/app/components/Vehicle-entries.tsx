@@ -20,12 +20,10 @@ import {
   alpha,
   useTheme,
   Divider,
+  TextField,
 } from "@mui/material";
 import { Close, Download, Visibility } from "@mui/icons-material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import dayjs, { type Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import {
   useVehicleEntries,
   useVehicleEntryAttachments,
@@ -201,13 +199,6 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
     setPage(0);
   };
 
-  const handleDateChange = (value: Dayjs | null) => {
-    const nextDate =
-      value && value.isValid() ? value.format("YYYY-MM-DD") : null;
-    setSelectedDate(nextDate);
-    setPage(0);
-  };
-
   const handleOpenAttachments = async (entry: VehicleEntry) => {
     setSelectedEntry(entry);
     setAttachmentActionError("");
@@ -259,7 +250,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <>
       <Box
         sx={{
           width: "100%",
@@ -268,7 +259,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           flexDirection: "column",
         }}
       >
-        {/* 1. STANDARDIZED DIALOG TITLE */}
+        {/* 1. DIALOG TITLE */}
         <DialogTitle
           sx={{
             display: "flex",
@@ -291,25 +282,22 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
               gap: 1,
             }}
           >
-            <DatePicker
+            <TextField
               label="DATE"
-              value={selectedDate ? dayjs(selectedDate) : null}
-              onChange={handleDateChange}
-              format="DD-MM-YYYY"
-              slotProps={{
-                textField: {
-                  size: "small",
-                  variant: "outlined",
-                  sx: {
-                    width: { xs: "100%", sm: 200 },
-                    "& .MuiInputBase-root": {
-                      height: 40,
-                      fontSize: "13px",
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "12px",
-                    },
-                  },
+              value={dayjs(selectedDate).format("DD-MM-YYYY")}
+              size="small"
+              variant="outlined"
+              InputProps={{
+                readOnly: true,
+              }}
+              sx={{
+                width: { xs: "100%", sm: 125 },
+                "& .MuiInputBase-root": {
+                  height: 40,
+                  fontSize: "17px",
+                },
+                "& .MuiInputLabel-root": {
+                  fontSize: "16px",
                 },
               }}
             />
@@ -329,7 +317,7 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
 
         {/* 2. MAIN DIALOG CONTENT WRAPPER */}
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-          {/* 3. CLEAN FILTER BAR MOVED ABOVE TABLE */}
+          {/* 3. FILTER BAR */}
 
           {error ? (
             <Alert severity="error" sx={{ borderRadius: 1, mb: 2 }}>
@@ -656,6 +644,6 @@ export default function VehicleEntries({ onClose }: VehicleEntriesProps) {
           </TableContainer>
         </DialogContent>
       </Dialog>
-    </LocalizationProvider>
+    </>
   );
 }
