@@ -149,15 +149,6 @@ export default function BacklogOrdersDialog({
                     fontWeight: "bold",
                   }}
                 >
-                  Required Date
-                </TableCell>
-                <TableCell
-                  sx={{
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    fontWeight: "bold",
-                  }}
-                >
                   Customer Name
                 </TableCell>
                 <TableCell
@@ -168,6 +159,15 @@ export default function BacklogOrdersDialog({
                   }}
                 >
                   Payment Clearance
+                </TableCell>
+                <TableCell
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Required Date
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -206,11 +206,9 @@ export default function BacklogOrdersDialog({
                       </Box>
                     </TableCell>
                     <TableCell>{order.outboundDelivery}</TableCell>
-                    <TableCell>{order.dayLabel}</TableCell>
                     <TableCell>{order.customerName ?? "—"}</TableCell>
-                    <TableCell>
-                      {order.paymentClearance ? "Cleared" : "Pending"}
-                    </TableCell>
+                    <TableCell>{order.paymentClearance}</TableCell>
+                    <TableCell>{order.dayLabel}</TableCell>
                   </TableRow>
                 ))
               )}
