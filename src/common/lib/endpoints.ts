@@ -156,6 +156,7 @@ export const API = {
       const qs = query.toString();
       return `${API_BASE_URL}/archived-data${qs ? "?" + qs : ""}`;
     },
+    EFFICIENCY_REPORT: `${API_BASE_URL}/efficiency/report`,
   },
 
   SALES: {

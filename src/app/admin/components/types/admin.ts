@@ -155,3 +155,32 @@ export interface AdminOverallStatusDto {
   f105Count: number;
   dispatchedCount: number;
 }
+
+export type EfficiencyApiRecord = {
+  id: number;
+  salesOrderId: number;
+  saleOrderNumber: string;
+  outboundDelivery: string | null;
+  requiredDate: string;
+  userId: number;
+  userName: string;
+  leadTime: number;
+  scanTime: number;
+  bin: "1" | "2-3" | "4+" | string;
+  stage: "Issue" | "Packing" | string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BinMetric = {
+  leadTime: number | null;
+  processTime: number | null;
+  count: number;
+};
+
+export type EfficiencyRow = {
+  operator: string;
+  bin1: BinMetric;
+  bin2to3: BinMetric;
+  bin4plus: BinMetric;
+};

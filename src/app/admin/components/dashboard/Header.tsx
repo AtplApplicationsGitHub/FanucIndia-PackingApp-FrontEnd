@@ -35,6 +35,7 @@ import {
   MapPin,
   Menu as MenuIcon,
   X,
+  TrendingUp,
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -53,7 +54,8 @@ export type ViewType =
   | "status_hub"
   | "customer_report"
   | "fg_report"
-  | "archived";
+  | "archived"
+  | "efficiency_report";
 
 type Props = {
   userName: string;
@@ -63,34 +65,92 @@ type Props = {
 };
 
 const allMenuItems = [
-  { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
-  { label: "ASSIGN SO", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "assignso" },
-  { label: "ORDER LIST", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
-  { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
-  { label: "DISPATCH", icon: <Truck className="mr-1 h-4 w-4" />, value: "dispatch" },
-  { label: "FG DASHBOARD", icon: <Grid className="mr-1 h-4 w-4" />, value: "fg_dashboard" },
+  {
+    label: "DASHBOARD",
+    icon: <BarChart3 className="mr-1 h-4 w-4" />,
+    value: "home",
+  },
+  {
+    label: "ASSIGN SO",
+    icon: <ClipboardList className="mr-1 h-4 w-4" />,
+    value: "assignso",
+  },
+  {
+    label: "ORDER LIST",
+    icon: <ClipboardList className="mr-1 h-4 w-4" />,
+    value: "orders",
+  },
+  {
+    label: "SO SEARCH",
+    icon: <Search className="mr-1 h-4 w-4" />,
+    value: "so_search",
+  },
+  {
+    label: "DISPATCH",
+    icon: <Truck className="mr-1 h-4 w-4" />,
+    value: "dispatch",
+  },
+  {
+    label: "FG DASHBOARD",
+    icon: <Grid className="mr-1 h-4 w-4" />,
+    value: "fg_dashboard",
+  },
 ];
 
 const REPORTS_MENU = [
   { label: "STATUS HUB", value: "status_hub", icon: <Activity size={16} /> },
-  { label: "CUSTOMER REPORT", value: "customer_report", icon: <Users size={16} /> },
+  {
+    label: "CUSTOMER REPORT",
+    value: "customer_report",
+    icon: <Users size={16} />,
+  },
   { label: "FG STORAGE", value: "fg_report", icon: <Boxes size={16} /> },
   { label: "MANUAL FG", value: "manual_fg", icon: <MapPin size={16} /> },
-  { label: "ARCHIVED DATA", value: "archived", icon: <ArchiveIcon size={16} /> },
+  {
+    label: "ARCHIVED DATA",
+    value: "archived",
+    icon: <ArchiveIcon size={16} />,
+  },
+  {
+    label: "EFFICIENCY REPORT",
+    value: "efficiency_report",
+    icon: <TrendingUp size={16} />,
+  },
 ];
 
-const REPORT_VALUES = ["status_hub", "customer_report", "manual_fg", "fg_report", "archived"];
+const REPORT_VALUES = [
+  "status_hub",
+  "customer_report",
+  "manual_fg",
+  "fg_report",
+  "archived",
+  "efficiency_report",
+];
 const MAX_VISIBLE_ITEMS = 8;
 
 // All items for the mobile drawer (flat list)
 const allDrawerItems = [
   ...allMenuItems,
-  { label: "REPORTS", icon: <FileBarChart className="mr-1 h-4 w-4" />, value: "__reports_header__", isHeader: true },
+  {
+    label: "REPORTS",
+    icon: <FileBarChart className="mr-1 h-4 w-4" />,
+    value: "__reports_header__",
+    isHeader: true,
+  },
   ...REPORTS_MENU.map((r) => ({ ...r, isSubItem: true })),
-  { label: "MASTER", icon: <Database className="mr-1 h-4 w-4" />, value: "master" },
+  {
+    label: "MASTER",
+    icon: <Database className="mr-1 h-4 w-4" />,
+    value: "master",
+  },
 ];
 
-export default function AdminDashboardHeader({ userName, view, setView, showBackButton }: Props) {
+export default function AdminDashboardHeader({
+  userName,
+  view,
+  setView,
+  showBackButton,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
@@ -111,7 +171,8 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
     return itemValue === view;
   };
 
-  const handleMoreClick = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+  const handleMoreClick = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleMenuItemClick = (value: string) => {
@@ -124,7 +185,9 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
     setDrawerOpen(false);
   };
 
-  const isActiveItemHidden = hiddenItems.some((item) => getIsSelected(item.value));
+  const isActiveItemHidden = hiddenItems.some((item) =>
+    getIsSelected(item.value),
+  );
 
   const navButtonSx = (isSelected: boolean) => ({
     borderRadius: 0,
@@ -167,7 +230,11 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
           {showBackButton && (
             <IconButton
               onClick={() => router.back()}
-              sx={{ mr: 1, color: theme.palette.primary.contrastText, "&:hover": { bgcolor: "rgba(0,0,0,0.1)" } }}
+              sx={{
+                mr: 1,
+                color: theme.palette.primary.contrastText,
+                "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
+              }}
             >
               <ArrowLeft size={24} />
             </IconButton>
@@ -175,26 +242,58 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
 
           {/* Logo + Version */}
           <Box
-            sx={{ flexGrow: 1, mr: 1, cursor: "pointer", display: "flex", alignItems: "flex-end", gap: 1 }}
+            sx={{
+              flexGrow: 1,
+              mr: 1,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 1,
+            }}
             onClick={() => setView("home")}
           >
-            <Image src="/Fanuc_India.png" alt="Fanuc India Logo" width={85} height={21} priority />
+            <Image
+              src="/Fanuc_India.png"
+              alt="Fanuc India Logo"
+              width={85}
+              height={21}
+              priority
+            />
             <Typography
               variant="caption"
-              sx={{ color: theme.palette.primary.contrastText, opacity: 0.7, fontWeight: 600, fontSize: "0.75rem", lineHeight: 1, mb: "2px" }}
+              sx={{
+                color: theme.palette.primary.contrastText,
+                opacity: 0.7,
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                lineHeight: 1,
+                mb: "2px",
+              }}
             >
               v{packageJson.version}
             </Typography>
           </Box>
 
           {/* Desktop Nav — hidden on mobile */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, justifyContent: "flex-end" }}>
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              justifyContent: "flex-end",
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
               {visibleItems.map((item) => {
                 const isSelected = getIsSelected(item.value);
                 return (
-                  <Button key={item.value} disableRipple variant="text" onClick={() => handleMenuItemClick(item.value)} sx={navButtonSx(isSelected)}>
-                    {item.icon}{item.label}
+                  <Button
+                    key={item.value}
+                    disableRipple
+                    variant="text"
+                    onClick={() => handleMenuItemClick(item.value)}
+                    sx={navButtonSx(isSelected)}
+                  >
+                    {item.icon}
+                    {item.label}
                   </Button>
                 );
               })}
@@ -221,7 +320,10 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
                   <MenuItem
                     key={r.value}
                     selected={view === r.value}
-                    onClick={() => { setView(r.value as ViewType); setReportsAnchor(null); }}
+                    onClick={() => {
+                      setView(r.value as ViewType);
+                      setReportsAnchor(null);
+                    }}
                   >
                     <ListItemIcon>{r.icon}</ListItemIcon>
                     <ListItemText>{r.label}</ListItemText>
@@ -274,7 +376,10 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
                             fontWeight: isSelected ? 700 : 500,
                             color: theme.palette.primary.contrastText,
                             "&:hover": { bgcolor: "rgba(0,0,0,0.08)" },
-                            "&.Mui-selected": { bgcolor: "rgba(0,0,0,0.08)", "&:hover": { bgcolor: "rgba(0,0,0,0.12)" } },
+                            "&.Mui-selected": {
+                              bgcolor: "rgba(0,0,0,0.08)",
+                              "&:hover": { bgcolor: "rgba(0,0,0,0.12)" },
+                            },
                           }}
                         >
                           {item.icon} {item.label}
@@ -288,7 +393,14 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
           </Box>
 
           {/* Right: UserMenu + Hamburger (mobile) */}
-          <Box sx={{ ml: { xs: 0.5, md: 0 }, display: "flex", alignItems: "center", gap: { xs: 0.5, md: 1 } }}>
+          <Box
+            sx={{
+              ml: { xs: 0.5, md: 0 },
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 0.5, md: 1 },
+            }}
+          >
             <UserMenu username={userName} userRole="ADMIN" variant="full" />
             <IconButton
               onClick={() => setDrawerOpen(true)}
@@ -312,7 +424,11 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         PaperProps={{
-          sx: { width: 260, bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText },
+          sx: {
+            width: 260,
+            bgcolor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+          },
         }}
       >
         {/* Close button */}
@@ -327,7 +443,10 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
         >
           <IconButton
             onClick={() => setDrawerOpen(false)}
-            sx={{ color: theme.palette.primary.contrastText, "&:hover": { bgcolor: "rgba(0,0,0,0.1)" } }}
+            sx={{
+              color: theme.palette.primary.contrastText,
+              "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
+            }}
             aria-label="Close navigation menu"
           >
             <X size={20} />
@@ -346,13 +465,22 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
                   sx={{
                     px: 2,
                     py: 1.5,
-                    borderLeft: isSelected ? `4px solid ${theme.palette.primary.contrastText}` : "4px solid transparent",
-                    bgcolor: isSelected ? "rgba(255,255,255,0.1)" : "transparent",
+                    borderLeft: isSelected
+                      ? `4px solid ${theme.palette.primary.contrastText}`
+                      : "4px solid transparent",
+                    bgcolor: isSelected
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
                     "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
                     transition: "all 0.2s ease",
                   }}
                 >
-                  <ListItemIcon sx={{ color: theme.palette.primary.contrastText, minWidth: 36 }}>
+                  <ListItemIcon
+                    sx={{
+                      color: theme.palette.primary.contrastText,
+                      minWidth: 36,
+                    }}
+                  >
                     {item.icon}
                   </ListItemIcon>
                   <ListItemText
@@ -371,10 +499,29 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
 
           {/* REPORTS sub-section label */}
           <ListItem disablePadding>
-            <Box sx={{ px: 2, pt: 1.5, pb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
-              <FileBarChart size={16} color={theme.palette.primary.contrastText} style={{ opacity: 0.6 }} />
+            <Box
+              sx={{
+                px: 2,
+                pt: 1.5,
+                pb: 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <FileBarChart
+                size={16}
+                color={theme.palette.primary.contrastText}
+                style={{ opacity: 0.6 }}
+              />
               <Typography
-                sx={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: 1.2, opacity: 0.6, color: theme.palette.primary.contrastText }}
+                sx={{
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  letterSpacing: 1.2,
+                  opacity: 0.6,
+                  color: theme.palette.primary.contrastText,
+                }}
               >
                 REPORTS
               </Typography>
@@ -385,17 +532,29 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
             return (
               <ListItem key={r.value} disablePadding>
                 <ListItemButton
-                  onClick={() => { setView(r.value as ViewType); setDrawerOpen(false); }}
+                  onClick={() => {
+                    setView(r.value as ViewType);
+                    setDrawerOpen(false);
+                  }}
                   sx={{
                     pl: 4,
                     py: 1.2,
-                    borderLeft: isSelected ? `4px solid ${theme.palette.primary.contrastText}` : "4px solid transparent",
-                    bgcolor: isSelected ? "rgba(255,255,255,0.1)" : "transparent",
+                    borderLeft: isSelected
+                      ? `4px solid ${theme.palette.primary.contrastText}`
+                      : "4px solid transparent",
+                    bgcolor: isSelected
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
                     "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
                     transition: "all 0.2s ease",
                   }}
                 >
-                  <ListItemIcon sx={{ color: theme.palette.primary.contrastText, minWidth: 32 }}>
+                  <ListItemIcon
+                    sx={{
+                      color: theme.palette.primary.contrastText,
+                      minWidth: 32,
+                    }}
+                  >
                     {r.icon}
                   </ListItemIcon>
                   <ListItemText
@@ -422,13 +581,22 @@ export default function AdminDashboardHeader({ userName, view, setView, showBack
                   sx={{
                     px: 2,
                     py: 1.5,
-                    borderLeft: isSelected ? `4px solid ${theme.palette.primary.contrastText}` : "4px solid transparent",
-                    bgcolor: isSelected ? "rgba(255,255,255,0.1)" : "transparent",
+                    borderLeft: isSelected
+                      ? `4px solid ${theme.palette.primary.contrastText}`
+                      : "4px solid transparent",
+                    bgcolor: isSelected
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
                     "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
                     transition: "all 0.2s ease",
                   }}
                 >
-                  <ListItemIcon sx={{ color: theme.palette.primary.contrastText, minWidth: 36 }}>
+                  <ListItemIcon
+                    sx={{
+                      color: theme.palette.primary.contrastText,
+                      minWidth: 36,
+                    }}
+                  >
                     <Database className="h-4 w-4" />
                   </ListItemIcon>
                   <ListItemText
