@@ -180,6 +180,7 @@ export type BinMetric = {
 
 export type EfficiencyRow = {
   operator: string;
+  requiredDate: string;
   bin1: BinMetric;
   bin2to3: BinMetric;
   bin4plus: BinMetric;

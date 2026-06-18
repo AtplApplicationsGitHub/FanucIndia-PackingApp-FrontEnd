@@ -18,6 +18,7 @@ import {
   Button,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
+import { Download } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -26,6 +27,7 @@ import { useEfficiencyReport } from "@/app/admin/components/hooks/useEfficiencyR
 
 export default function EfficiencyReport() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
 
   const [startDate, setStartDate] = React.useState<Dayjs | null>(dayjs());
   const [endDate, setEndDate] = React.useState<Dayjs | null>(dayjs());
@@ -41,26 +43,42 @@ export default function EfficiencyReport() {
     setEndDate(null);
   };
 
-  const headerCellSx = {
+  // ── Bin group colors (visible in both light & dark) ──────────────────────
+  const binColors = {
+    bin1: isDark ? "#1c3557" : "#dbeafe", // blue
+    bin2to3: isDark ? "#1a3d2f" : "#d1fae5", // green
+    bin4plus: isDark ? "#35194f" : "#ede9fe", // purple
+  };
+
+  // ── Vertical divider border (left border on first col of each bin group) ──
+  const dividerBorder = {
+    borderLeft: "2px solid",
+    borderLeftColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)",
+  };
+
+  // ── Header styles ─────────────────────────────────────────────────────────
+  const baseHeaderSx = {
     fontWeight: 700,
     fontSize: "0.75rem",
-    textTransform: "uppercase",
-    color: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000",
-    bgcolor: theme.palette.mode === "dark" ? "#000000" : "#FFFFFF",
+    textTransform: "uppercase" as const,
+    color: isDark ? "#FFFFFF" : "#000000",
     py: 1,
     textAlign: "center" as const,
     borderBottom: "1px solid",
-    borderColor:
-      theme.palette.mode === "dark"
-        ? "rgba(255,255,255,0.1)"
-        : "rgba(0,0,0,0.08)",
+    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
   };
 
-  const subHeaderCellSx = {
-    ...headerCellSx,
+  const plainHeaderSx = {
+    ...baseHeaderSx,
+    bgcolor: isDark ? "#000000" : "#FFFFFF",
+  };
+
+  const subHeaderSx = {
+    ...baseHeaderSx,
     fontSize: "0.75rem",
     py: 1,
   };
+
   const bodyCellSx = {
     fontSize: "0.875rem",
     py: 0.75,
@@ -72,6 +90,7 @@ export default function EfficiencyReport() {
     textAlign: "center" as const,
   };
 
+  // ── Date picker shared props ───────────────────────────────────────────────
   const datePickerSlotProps = {
     textField: {
       size: "small" as const,
@@ -85,16 +104,10 @@ export default function EfficiencyReport() {
         "& .MuiOutlinedInput-root": {
           borderRadius: 2,
           "& fieldset": {
-            borderColor:
-              theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.2)"
-                : "rgba(0,0,0,0.15)",
+            borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
           },
           "&:hover fieldset": {
-            borderColor:
-              theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.3)"
-                : "rgba(0,0,0,0.3)",
+            borderColor: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
           },
           "&.Mui-focused fieldset": {
             borderColor: theme.palette.primary.main,
@@ -111,10 +124,111 @@ export default function EfficiencyReport() {
         },
       },
     },
-    field: {
-      clearable: true,
-    },
+    field: { clearable: true },
   };
+
+  const handleDownloadExcel = async () => {
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(`${stage} Stage`);
+
+    // Header row 1
+    sheet.addRow([
+      "Required Date",
+      "Operator",
+      "1 Bin",
+      "",
+      "",
+      "2-3 Bins",
+      "",
+      "",
+      ">=4 Bins",
+      "",
+      "",
+    ]);
+
+    // Header row 2
+    sheet.addRow([
+      "",
+      "",
+      "SO Count",
+      "Lead Time (mins)",
+      "Process Time (mins)",
+      "SO Count",
+      "Lead Time (mins)",
+      "Process Time (mins)",
+      "SO Count",
+      "Lead Time (mins)",
+      "Process Time (mins)",
+    ]);
+
+    // Merge cells
+    sheet.mergeCells("A1:A2"); // Required Date
+    sheet.mergeCells("B1:B2"); // Operator
+    sheet.mergeCells("C1:E1"); // 1 Bin
+    sheet.mergeCells("F1:H1"); // 2-3 Bins
+    sheet.mergeCells("I1:K1"); // >=4 Bins
+    sheet.getCell("C1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    sheet.getCell("F1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    sheet.getCell("I1").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    // Column widths
+    sheet.columns = [
+      { width: 15 },
+      { width: 22 },
+      { width: 10 },
+      { width: 18 },
+      { width: 20 },
+      { width: 10 },
+      { width: 18 },
+      { width: 20 },
+      { width: 10 },
+      { width: 18 },
+      { width: 20 },
+    ];
+
+    // Data rows
+    rows.forEach((row) => {
+      sheet.addRow([
+        row.requiredDate,
+        row.operator,
+        row.bin1.count || 0,
+        row.bin1.leadTime ?? "-",
+        row.bin1.processTime ?? "-",
+        row.bin2to3.count || 0,
+        row.bin2to3.leadTime ?? "-",
+        row.bin2to3.processTime ?? "-",
+        row.bin4plus.count || 0,
+        row.bin4plus.leadTime ?? "-",
+        row.bin4plus.processTime ?? "-",
+      ]);
+    });
+
+    // Download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const from = startDate ? startDate.format("YYYY-MM-DD") : "all";
+    const to = endDate ? endDate.format("YYYY-MM-DD") : "all";
+    a.href = url;
+    a.download = `Efficiency_${stage}_${from}_to_${to}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const TOTAL_COLS = 11; // Required Date + Operator + 3×3 bin columns
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -127,7 +241,7 @@ export default function EfficiencyReport() {
           gap: 2,
         }}
       >
-        {/* Filter Bar */}
+        {/* ── Filter Bar ── */}
         <Paper
           elevation={2}
           sx={{
@@ -181,6 +295,8 @@ export default function EfficiencyReport() {
                 } as any,
               }}
             />
+
+            {/* Clear */}
             <Tooltip title="Clear Filters">
               <IconButton
                 onClick={handleClearFilters}
@@ -194,6 +310,23 @@ export default function EfficiencyReport() {
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+
+            {/* Excel Download */}
+            <Tooltip title="Download Excel">
+              <IconButton
+                onClick={handleDownloadExcel}
+                size="small"
+                sx={{
+                  color: "text.secondary",
+                  flex: "0 0 auto",
+                  "&:hover": { color: "success.main" },
+                }}
+              >
+                <Download size={20} />
+              </IconButton>
+            </Tooltip>
+
+            {/* Stage toggle */}
             <Box
               sx={{
                 display: "flex",
@@ -235,7 +368,7 @@ export default function EfficiencyReport() {
           </Box>
         </Paper>
 
-        {/* Efficiency Table */}
+        {/* ── Efficiency Table ── */}
         <Paper
           elevation={0}
           sx={{
@@ -243,11 +376,8 @@ export default function EfficiencyReport() {
             borderRadius: 4,
             overflow: "hidden",
             border: "1px solid",
-            borderColor:
-              theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.1)"
-                : "rgba(0,0,0,0.06)",
-            bgcolor: theme.palette.mode === "dark" ? "#1F2933" : "#ffffff",
+            borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
+            bgcolor: isDark ? "#1F2933" : "#ffffff",
           }}
         >
           <TableContainer
@@ -255,51 +385,110 @@ export default function EfficiencyReport() {
               maxHeight: "calc(100vh - 280px)",
               "&::-webkit-scrollbar": { width: 6, height: 6 },
               "&::-webkit-scrollbar-thumb": {
-                bgcolor:
-                  theme.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.1)",
+                bgcolor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
                 borderRadius: 3,
               },
             }}
           >
             <Table stickyHeader size="small">
               <TableHead>
+                {/* Row 1 — group headers */}
                 <TableRow>
-                  <TableCell rowSpan={2} sx={headerCellSx}>
+                  <TableCell rowSpan={2} sx={plainHeaderSx}>
+                    Required Date
+                  </TableCell>
+                  <TableCell rowSpan={2} sx={plainHeaderSx}>
                     Operator
                   </TableCell>
-                  <TableCell colSpan={2} sx={headerCellSx}>
+                  <TableCell
+                    colSpan={3}
+                    sx={{
+                      ...baseHeaderSx,
+                      bgcolor: binColors.bin1,
+                      ...dividerBorder,
+                    }}
+                  >
                     1 Bin
                   </TableCell>
-                  <TableCell colSpan={2} sx={headerCellSx}>
+                  <TableCell
+                    colSpan={3}
+                    sx={{
+                      ...baseHeaderSx,
+                      bgcolor: binColors.bin2to3,
+                      ...dividerBorder,
+                    }}
+                  >
                     2-3 Bins
                   </TableCell>
-                  <TableCell colSpan={2} sx={headerCellSx}>
+                  <TableCell
+                    colSpan={3}
+                    sx={{
+                      ...baseHeaderSx,
+                      bgcolor: binColors.bin4plus,
+                      ...dividerBorder,
+                    }}
+                  >
                     &ge;4 Bins
                   </TableCell>
                 </TableRow>
+
+                {/* Row 2 — sub-column headers */}
                 <TableRow>
                   {/* 1 Bin */}
-                  <TableCell sx={subHeaderCellSx}>
-                    Lead Time (in mins)
+                  <TableCell
+                    sx={{
+                      ...subHeaderSx,
+                      bgcolor: binColors.bin1,
+                      ...dividerBorder,
+                    }}
+                  >
+                    SO Count
                   </TableCell>
-                  <TableCell sx={subHeaderCellSx}>
-                    Process Time (in mins)
+                  <TableCell sx={{ ...subHeaderSx, bgcolor: binColors.bin1 }}>
+                    Lead Time (mins)
                   </TableCell>
-                  {/* 2-3 Bin */}
-                  <TableCell sx={subHeaderCellSx}>
-                    Lead Time (in mins)
+                  <TableCell sx={{ ...subHeaderSx, bgcolor: binColors.bin1 }}>
+                    Process Time (mins)
                   </TableCell>
-                  <TableCell sx={subHeaderCellSx}>
-                    Process Time (in mins)
+                  {/* 2-3 Bins */}
+                  <TableCell
+                    sx={{
+                      ...subHeaderSx,
+                      bgcolor: binColors.bin2to3,
+                      ...dividerBorder,
+                    }}
+                  >
+                    SO Count
                   </TableCell>
-                  {/* >=4 Bin */}
-                  <TableCell sx={subHeaderCellSx}>
-                    Lead Time (in mins)
+                  <TableCell
+                    sx={{ ...subHeaderSx, bgcolor: binColors.bin2to3 }}
+                  >
+                    Lead Time (mins)
                   </TableCell>
-                  <TableCell sx={subHeaderCellSx}>
-                    Process Time (in mins)
+                  <TableCell
+                    sx={{ ...subHeaderSx, bgcolor: binColors.bin2to3 }}
+                  >
+                    Process Time (mins)
+                  </TableCell>
+                  {/* >=4 Bins */}
+                  <TableCell
+                    sx={{
+                      ...subHeaderSx,
+                      bgcolor: binColors.bin4plus,
+                      ...dividerBorder,
+                    }}
+                  >
+                    SO Count
+                  </TableCell>
+                  <TableCell
+                    sx={{ ...subHeaderSx, bgcolor: binColors.bin4plus }}
+                  >
+                    Lead Time (mins)
+                  </TableCell>
+                  <TableCell
+                    sx={{ ...subHeaderSx, bgcolor: binColors.bin4plus }}
+                  >
+                    Process Time (mins)
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -307,13 +496,21 @@ export default function EfficiencyReport() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell
+                      colSpan={TOTAL_COLS}
+                      align="center"
+                      sx={{ py: 10 }}
+                    >
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell
+                      colSpan={TOTAL_COLS}
+                      align="center"
+                      sx={{ py: 10 }}
+                    >
                       <Box
                         display="flex"
                         flexDirection="column"
@@ -327,38 +524,86 @@ export default function EfficiencyReport() {
                 ) : (
                   rows.map((row, index) => (
                     <TableRow
-                      key={`${row.operator}-${index}`}
+                      key={`${row.operator}-${row.requiredDate}-${index}`}
                       hover
                       sx={{
-                        bgcolor:
-                          theme.palette.mode === "dark"
-                            ? index % 2 === 0
-                              ? "#3A3A1E"
-                              : "#1A1F26"
-                            : index % 2 === 0
-                              ? "#FFF8DC"
-                              : "#FFFFFF",
+                        bgcolor: isDark
+                          ? index % 2 === 0
+                            ? "#3A3A1E"
+                            : "#1A1F26"
+                          : index % 2 === 0
+                            ? "#FFF8DC"
+                            : "#FFFFFF",
                       }}
                     >
-                      <TableCell sx={{ ...bodyCellSx }}>
-                        {row.operator}
+                      <TableCell sx={bodyCellSx}>
+                        {dayjs(row.requiredDate).format("DD-MM-YYYY")}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      <TableCell sx={bodyCellSx}>{row.operator}</TableCell>
+                      {/* 1 Bin */}
+                      <TableCell
+                        sx={{
+                          ...bodyCellCenterSx,
+                          ...dividerBorder,
+                          bgcolor: binColors.bin1,
+                        }}
+                      >
+                        {row.bin1.count || "-"}
+                      </TableCell>
+                      <TableCell
+                        sx={{ ...bodyCellCenterSx, bgcolor: binColors.bin1 }}
+                      >
                         {row.bin1.leadTime ?? "-"}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      <TableCell
+                        sx={{ ...bodyCellCenterSx, bgcolor: binColors.bin1 }}
+                      >
                         {row.bin1.processTime ?? "-"}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      {/* 2-3 Bins */}
+                      <TableCell
+                        sx={{
+                          ...bodyCellCenterSx,
+                          ...dividerBorder,
+                          bgcolor: binColors.bin2to3,
+                        }}
+                      >
+                        {row.bin2to3.count || "-"}
+                      </TableCell>
+                      <TableCell
+                        sx={{ ...bodyCellCenterSx, bgcolor: binColors.bin2to3 }}
+                      >
                         {row.bin2to3.leadTime ?? "-"}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      <TableCell
+                        sx={{ ...bodyCellCenterSx, bgcolor: binColors.bin2to3 }}
+                      >
                         {row.bin2to3.processTime ?? "-"}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      {/* >=4 Bins */}
+                      <TableCell
+                        sx={{
+                          ...bodyCellCenterSx,
+                          ...dividerBorder,
+                          bgcolor: binColors.bin4plus,
+                        }}
+                      >
+                        {row.bin4plus.count || "-"}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...bodyCellCenterSx,
+                          bgcolor: binColors.bin4plus,
+                        }}
+                      >
                         {row.bin4plus.leadTime ?? "-"}
                       </TableCell>
-                      <TableCell sx={bodyCellCenterSx}>
+                      <TableCell
+                        sx={{
+                          ...bodyCellCenterSx,
+                          bgcolor: binColors.bin4plus,
+                        }}
+                      >
                         {row.bin4plus.processTime ?? "-"}
                       </TableCell>
                     </TableRow>

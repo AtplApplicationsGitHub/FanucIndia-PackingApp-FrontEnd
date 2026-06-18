@@ -19,7 +19,9 @@ type Props = {
   fields: string[];
   initialValues: Record<string, string | number | boolean | null | undefined>;
   onClose: () => void;
-  onSave: (data: Record<string, string | number | boolean | null | undefined>) => void;
+  onSave: (
+    data: Record<string, string | number | boolean | null | undefined>,
+  ) => void;
   loading: boolean;
 };
 
@@ -33,9 +35,10 @@ export default function LookupFormDialog({
   loading,
 }: Props) {
   const theme = useTheme();
-  const [formData, setFormData] = useState<Record<string, string | number | boolean | null | undefined>>({});
+  const [formData, setFormData] = useState<
+    Record<string, string | number | boolean | null | undefined>
+  >({});
   const inputRef = useRef<HTMLInputElement>(null);
-
 
   useEffect(() => {
     if (open) {
@@ -49,20 +52,33 @@ export default function LookupFormDialog({
     }
   }, [open, initialValues]);
 
-  const handleChange = (key: string, value: string | number | boolean | null | undefined) => {
+  const handleChange = (
+    key: string,
+    value: string | number | boolean | null | undefined,
+  ) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
-    onSave(formData);
+    const normalizedData = Object.fromEntries(
+      Object.entries(formData).map(([k, v]) => [
+        k,
+        typeof v === "string" ? v.trim().replace(/\s+/g, " ") : v,
+      ]),
+    );
+    onSave(normalizedData);
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle
         sx={{
-          display: "flex", justifyContent: "center", alignItems: "center",
-          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontWeight: 700,
+          fontSize: "20px",
+          letterSpacing: 0.5,
           color: "error.main",
           pb: 1,
           position: "relative",
@@ -84,9 +100,11 @@ export default function LookupFormDialog({
             const rendered: React.ReactNode[] = [];
             for (let i = 0; i < fields.length; i++) {
               const key = fields[i];
-              const isBoolean = key === "acceptBulkData" || key === "remarksRequired";
+              const isBoolean =
+                key === "acceptBulkData" || key === "remarksRequired";
               const nextKey = fields[i + 1];
-              const nextIsBoolean = nextKey === "acceptBulkData" || nextKey === "remarksRequired";
+              const nextIsBoolean =
+                nextKey === "acceptBulkData" || nextKey === "remarksRequired";
 
               if (isBoolean && nextIsBoolean) {
                 rendered.push(
@@ -98,7 +116,9 @@ export default function LookupFormDialog({
                       label={key.replace(/([A-Z])/g, " $1")}
                       variant="outlined"
                       value={String(formData[key] ?? "false")}
-                      onChange={(e) => handleChange(key, e.target.value === "true")}
+                      onChange={(e) =>
+                        handleChange(key, e.target.value === "true")
+                      }
                     >
                       <MenuItem value="true">Yes</MenuItem>
                       <MenuItem value="false">No</MenuItem>
@@ -110,12 +130,14 @@ export default function LookupFormDialog({
                       label={nextKey.replace(/([A-Z])/g, " $1")}
                       variant="outlined"
                       value={String(formData[nextKey] ?? "false")}
-                      onChange={(e) => handleChange(nextKey, e.target.value === "true")}
+                      onChange={(e) =>
+                        handleChange(nextKey, e.target.value === "true")
+                      }
                     >
                       <MenuItem value="true">Yes</MenuItem>
                       <MenuItem value="false">No</MenuItem>
                     </TextField>
-                  </Box>
+                  </Box>,
                 );
                 i++; // skip next since we handled it
               } else if (isBoolean) {
@@ -128,11 +150,13 @@ export default function LookupFormDialog({
                     label={key.replace(/([A-Z])/g, " $1")}
                     variant="outlined"
                     value={String(formData[key] ?? "false")}
-                    onChange={(e) => handleChange(key, e.target.value === "true")}
+                    onChange={(e) =>
+                      handleChange(key, e.target.value === "true")
+                    }
                   >
                     <MenuItem value="true">Yes</MenuItem>
                     <MenuItem value="false">No</MenuItem>
-                  </TextField>
+                  </TextField>,
                 );
               } else {
                 rendered.push(
@@ -147,7 +171,7 @@ export default function LookupFormDialog({
                     fullWidth
                     variant="outlined"
                     sx={{ textTransform: "capitalize" }}
-                  />
+                  />,
                 );
               }
             }

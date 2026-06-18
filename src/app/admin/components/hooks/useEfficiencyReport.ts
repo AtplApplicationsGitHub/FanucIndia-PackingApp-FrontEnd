@@ -13,6 +13,18 @@ import {
 const BIN_KEYS = ["bin1", "bin2to3", "bin4plus"] as const;
 type BinKey = (typeof BIN_KEYS)[number];
 
+type BinAccum = {
+  leadSum: number;
+  processSum: number;
+  count: number;
+};
+
+type AggEntry = {
+  operator: string;
+  requiredDate: string;
+  bins: Record<BinKey, BinAccum>;
+};
+
 const resolveBinKey = (bin: string): BinKey | null => {
   const normalized = bin.trim();
   if (normalized === "1") return "bin1";
@@ -31,36 +43,36 @@ const emptyMetric = (): BinMetric => ({
 const round = (n: number) => Math.round(n * 100) / 100;
 
 function aggregate(records: EfficiencyApiRecord[]): EfficiencyRow[] {
-  const byOperator = new Map<
-    string,
-    Record<BinKey, { leadSum: number; processSum: number; count: number }>
-  >();
+  const map = new Map<string, AggEntry>();
 
   records.forEach((rec) => {
     const binKey = resolveBinKey(rec.bin);
     if (!binKey) return;
 
-    if (!byOperator.has(rec.userName)) {
-      byOperator.set(rec.userName, {
-        bin1: { leadSum: 0, processSum: 0, count: 0 },
-        bin2to3: { leadSum: 0, processSum: 0, count: 0 },
-        bin4plus: { leadSum: 0, processSum: 0, count: 0 },
+    const date = rec.requiredDate.slice(0, 10);
+    const key = `${rec.userName}||${date}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        operator: rec.userName,
+        requiredDate: date,
+        bins: {
+          bin1: { leadSum: 0, processSum: 0, count: 0 },
+          bin2to3: { leadSum: 0, processSum: 0, count: 0 },
+          bin4plus: { leadSum: 0, processSum: 0, count: 0 },
+        },
       });
     }
 
-    const bucket = byOperator.get(rec.userName)!;
-    bucket[binKey].leadSum += rec.leadTime ?? 0;
-    bucket[binKey].processSum += rec.scanTime ?? 0;
-    bucket[binKey].count += 1;
+    const entry = map.get(key)!;
+    entry.bins[binKey].leadSum += rec.leadTime ?? 0;
+    entry.bins[binKey].processSum += rec.scanTime ?? 0;
+    entry.bins[binKey].count += 1;
   });
 
-  return Array.from(byOperator.entries())
-    .map(([operator, bins]) => {
-      const toMetric = (b: {
-        leadSum: number;
-        processSum: number;
-        count: number;
-      }): BinMetric =>
+  return Array.from(map.values())
+    .map(({ operator, requiredDate, bins }) => {
+      const toMetric = (b: BinAccum): BinMetric =>
         b.count === 0
           ? emptyMetric()
           : {
@@ -71,12 +83,17 @@ function aggregate(records: EfficiencyApiRecord[]): EfficiencyRow[] {
 
       return {
         operator,
+        requiredDate,
         bin1: toMetric(bins.bin1),
         bin2to3: toMetric(bins.bin2to3),
         bin4plus: toMetric(bins.bin4plus),
       };
     })
-    .sort((a, b) => a.operator.localeCompare(b.operator));
+    .sort((a, b) => {
+      if (a.requiredDate !== b.requiredDate)
+        return a.requiredDate.localeCompare(b.requiredDate);
+      return a.operator.localeCompare(b.operator);
+    });
 }
 
 export function useEfficiencyReport(
@@ -104,7 +121,6 @@ export function useEfficiencyReport(
           params,
         },
       );
-
       setRows(aggregate(res.data ?? []));
     } catch (err: any) {
       setError(err?.message || "Failed to load efficiency report");
