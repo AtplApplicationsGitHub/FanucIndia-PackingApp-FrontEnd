@@ -3,11 +3,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Box,
   CircularProgress,
   Dialog,
@@ -18,6 +13,11 @@ import {
   Button,
   TablePagination,
   Avatar,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
   useTheme,
   alpha,
 } from "@mui/material";
@@ -104,187 +104,130 @@ export default function OperatorStatsTable({
     });
 
   return (
-    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm p-5 border border-[#E5E7EB] dark:border-[#4B5563] h-full chart-no-focus">
+    <div className="bg-white dark:bg-[#1F2933] rounded-xl shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] h-full chart-no-focus">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex items-center gap-2 p-3">
           <h2 className="text-base uppercase font-semibold text-[#D00000] dark:text-[#FF6B6B]">
             Operator Productivity ({dayjs(selectedDate).format("D MMM YYYY")})
           </h2>
-          <Box
+        </div>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            bgcolor: "action.hover",
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            mt: 1,
+            mr: 1,
+          }}
+        >
+          <Button
+            disableRipple
+            size="small"
+            onClick={() => setSelectedStage("issue")}
             sx={{
-              display: "flex",
-              alignItems: "center",
-              bgcolor: "action.hover",
-              borderRadius: 2,
-              p: 0.5,
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Button
-              disableRipple
-              size="small"
-              onClick={() => setSelectedStage("issue")}
-              sx={{
-                px: 1.6,
-                py: 0.65,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                borderRadius: 1.5,
-                textTransform: "none",
-                minWidth: "unset",
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor:
+                selectedStage === "issue" ? "background.paper" : "transparent",
+              color: selectedStage === "issue" ? "#D00000" : "text.secondary",
+              boxShadow: selectedStage === "issue" ? 1 : "none",
+              "&:hover": {
                 bgcolor:
                   selectedStage === "issue"
                     ? "background.paper"
                     : "transparent",
-                color: selectedStage === "issue" ? "#D00000" : "text.secondary",
-                boxShadow: selectedStage === "issue" ? 1 : "none",
-                "&:hover": {
-                  bgcolor:
-                    selectedStage === "issue"
-                      ? "background.paper"
-                      : "transparent",
-                  color: selectedStage === "issue" ? "#D00000" : "text.primary",
-                },
-              }}
-            >
-              Issue
-            </Button>
-            <Button
-              disableRipple
-              size="small"
-              onClick={() => setSelectedStage("packing")}
-              sx={{
-                px: 1.6,
-                py: 0.65,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                borderRadius: 1.5,
-                textTransform: "none",
-                minWidth: "unset",
+                color: selectedStage === "issue" ? "#D00000" : "text.primary",
+              },
+            }}
+          >
+            Issue
+          </Button>
+          <Button
+            disableRipple
+            size="small"
+            onClick={() => setSelectedStage("packing")}
+            sx={{
+              px: 1.6,
+              py: 0.65,
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              borderRadius: 1.5,
+              textTransform: "none",
+              minWidth: "unset",
+              bgcolor:
+                selectedStage === "packing"
+                  ? "background.paper"
+                  : "transparent",
+              color: selectedStage === "packing" ? "#D00000" : "text.secondary",
+              boxShadow: selectedStage === "packing" ? 1 : "none",
+              "&:hover": {
                 bgcolor:
                   selectedStage === "packing"
                     ? "background.paper"
                     : "transparent",
-                color:
-                  selectedStage === "packing" ? "#D00000" : "text.secondary",
-                boxShadow: selectedStage === "packing" ? 1 : "none",
-                "&:hover": {
-                  bgcolor:
-                    selectedStage === "packing"
-                      ? "background.paper"
-                      : "transparent",
-                  color:
-                    selectedStage === "packing" ? "#D00000" : "text.primary",
-                },
-              }}
-            >
-              Packing
-            </Button>
-          </Box>
+                color: selectedStage === "packing" ? "#D00000" : "text.primary",
+              },
+            }}
+          >
+            Packing
+          </Button>
+        </Box>
       </div>
 
-        {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: 250,
-            }}
-          >
-            <CircularProgress size={30} />
-          </Box>
-        ) : sortedStats.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: 250,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              No operator data available for {selectedStage} stage.
-            </Typography>
-          </Box>
-        ) : (
-          <Box sx={{ overflowX: "auto" }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor: "background.paper" }}>
-                  <TableCell
-                    sx={{
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      fontSize: "0.85rem",
-                      letterSpacing: 0.5,
-                      color: (theme) =>
-                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
-                      borderBottom: 1,
-                      borderColor: "divider",
-                    }}
+      {loading ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: 250,
+          }}
+        >
+          <CircularProgress size={30} />
+        </Box>
+      ) : (
+        <div className="overflow-x-auto mt-2">
+          <table className="w-full text-sm border-t border-[#E5E7EB] dark:border-[#4B5563]">
+            <thead className="bg-[#F7F7F7] dark:bg-[#2C3540]">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold text-[#1F2933] dark:text-[#E5E7EB] uppercase tracking-wider">
+                  Operators
+                </th>
+                <th className="px-3 py-2 text-center font-semibold uppercase tracking-wider text-[#D97706]">
+                  Assigned
+                </th>
+                <th className="px-3 py-2 text-center font-semibold uppercase tracking-wider text-[#16a34a]">
+                  Completed
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#4B5563]">
+              {sortedStats.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-3 py-8 text-center text-gray-500"
                   >
-                    Operators
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      fontSize: "0.85rem",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                      color: (theme) =>
-                        theme.palette.mode === "dark" ? "#BAE6FD" : "#0C4A6E",
-                    }}
-                    colSpan={2}
-                  >
-                    {selectedStage === "issue"
-                      ? "Issue Stage"
-                      : "Packing Stage"}
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ bgcolor: "background.paper" }}>
-                  <TableCell sx={{ borderBottom: 1, borderColor: "divider" }} />
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      color: "#D97706",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    Assigned
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      color: "success.main",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                      borderBottom: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    Completed
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedStats
+                    No operator data available for {selectedStage} stage.
+                  </td>
+                </tr>
+              ) : (
+                sortedStats
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
-                    <TableRow key={row.operatorEmail} hover>
-                      <TableCell
-                        sx={{ fontWeight: 500, borderColor: "divider" }}
-                      >
+                    <tr
+                      key={row.operatorEmail}
+                      className="hover:bg-[#F7F7F7] dark:hover:bg-[#2C3540] transition bg-white dark:bg-[#1F2933]"
+                    >
+                      <td className="px-3 py-2">
                         <Box
                           sx={{
                             display: "flex",
@@ -310,29 +253,23 @@ export default function OperatorStatsTable({
                           >
                             {row.operatorName.charAt(0).toUpperCase()}
                           </Avatar>
-                          <Box>
-                            <Typography variant="body2" fontWeight="bold">
-                              {row.operatorName}
-                            </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            {row.operatorName}{" "}
                             <Typography
+                              component="span"
                               variant="caption"
                               color="text.secondary"
                             >
-                              {row.operatorEmail}
+                              ({row.operatorEmail})
                             </Typography>
-                          </Box>
+                          </Typography>
                         </Box>
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                      </td>
+                      <td className="px-3 py-2 text-center">
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorEmail} - ${
-                                selectedStage === "issue"
-                                  ? "ISSUE ASSIGNED"
-                                  : "PACKING ASSIGNED"
-                              }`,
+                              `${row.operatorEmail} - ${selectedStage === "issue" ? "ISSUE ASSIGNED" : "PACKING ASSIGNED"}`,
                               selectedStage === "issue"
                                 ? row.issueAssigned || []
                                 : row.packingAssigned || [],
@@ -356,17 +293,12 @@ export default function OperatorStatsTable({
                             ? row.issueAssignedCount
                             : row.packingAssignedCount}
                         </Button>
-                      </TableCell>
-
-                      <TableCell align="center" sx={{ borderColor: "divider" }}>
+                      </td>
+                      <td className="px-3 py-2 text-center">
                         <Button
                           onClick={() =>
                             handleOpenDialog(
-                              `${row.operatorEmail} - ${
-                                selectedStage === "issue"
-                                  ? "ISSUE COMPLETED"
-                                  : "PACKING COMPLETED"
-                              }`,
+                              `${row.operatorEmail} - ${selectedStage === "issue" ? "ISSUE COMPLETED" : "PACKING COMPLETED"}`,
                               selectedStage === "issue"
                                 ? row.issueCompleted || []
                                 : row.packingCompleted || [],
@@ -390,14 +322,16 @@ export default function OperatorStatsTable({
                             ? row.issueCompletedCount
                             : row.packingCompletedCount}
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </Box>
-        )}
-        {!loading && sortedStats.length > 0 && (
+                      </td>
+                    </tr>
+                  ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!loading && sortedStats.length > 0 && (
+        <div className="flex justify-end border-t border-[#E5E7EB] dark:border-[#4B5563]">
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
@@ -406,12 +340,10 @@ export default function OperatorStatsTable({
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{
-              borderTop: 1,
-              borderColor: "divider",
-            }}
+            sx={{ color: "text.primary" }}
           />
-        )}
+        </div>
+      )}
 
       {/* Orders List Dialog */}
       <Dialog
