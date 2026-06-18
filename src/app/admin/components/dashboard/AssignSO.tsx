@@ -28,7 +28,6 @@ import FlagIcon from "@mui/icons-material/Flag";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { findName, formatDate } from "@/app/admin/components/utils/admin";
-import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 import { useAssign } from "@/app/admin/components/hooks/UseAssign";
@@ -870,6 +869,7 @@ export default function AssignSO() {
 
     if (!exportRows.length) return;
 
+    const ExcelJS = (await import("exceljs")).default;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("ASSIGN_SO");
 

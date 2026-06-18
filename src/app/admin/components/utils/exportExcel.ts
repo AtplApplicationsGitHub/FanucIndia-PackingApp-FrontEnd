@@ -1,7 +1,7 @@
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 export const exportToExcel = async (data: any[], filename: string) => {
+  const ExcelJS = (await import('exceljs')).default;
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Report');
 
