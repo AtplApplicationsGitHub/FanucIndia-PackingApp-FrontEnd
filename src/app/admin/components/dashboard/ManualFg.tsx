@@ -33,6 +33,7 @@ import {
 } from "@/app/admin/components/hooks/useManualFg";
 import { formatDateTimeIST, getISTDateKey } from "@/common/utils/dateTime";
 import CloseIcon from "@mui/icons-material/Close";
+import { CommonIconButton } from "@/common/components/CommonButton";
 
 function formatDate(iso: string) {
   if (!iso || iso === "-") return "-";
@@ -296,28 +297,25 @@ export default function FgLocation() {
             </IconButton>
 
             <Tooltip title="Download Excel">
-              <span>
-                <IconButton
-                  onClick={handleDownloadExcel}
-                  disabled={downloadingExcel}
-                  sx={{
-                    color: "#10b981",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
-                    height: 40,
-                    width: 40,
-                    flex: "0 0 auto",
-                  }}
-                  aria-label="download excel"
-                >
-                  {downloadingExcel ? (
-                    <CircularProgress size={18} />
-                  ) : (
-                    <Download size={20} />
-                  )}
-                </IconButton>
-              </span>
+              <CommonIconButton
+                onClick={handleDownloadExcel}
+                disabled={downloadingExcel}
+                aria-label="download excel"
+                sx={{
+                  flex: "0 0 auto",
+                  color: "success.main",
+                  "&:hover": {
+                    color: "success.dark",
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                  },
+                }}
+              >
+                {downloadingExcel ? (
+                  <CircularProgress size={18} />
+                ) : (
+                  <Download size={20} />
+                )}
+              </CommonIconButton>
             </Tooltip>
           </Box>
         </Paper>

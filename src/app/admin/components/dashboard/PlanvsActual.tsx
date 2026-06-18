@@ -30,6 +30,7 @@ import {
   TextField,
   Divider,
 } from "@mui/material";
+import { CommonIconButton } from "@/common/components/CommonButton";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import CloseIcon from "@mui/icons-material/Close";
@@ -838,15 +839,18 @@ export default function ReportPage() {
               </IconButton>
 
               <Tooltip title="Export to Excel" arrow>
-                <IconButton
+                <CommonIconButton
                   onClick={handleExport}
                   sx={{
-                    color: "#10b981",
-                    "&:hover": { bgcolor: "rgba(16, 185, 129, 0.1)" },
+                    color: "success.main",
+                    "&:hover": {
+                      color: "success.dark",
+                      bgcolor: alpha(theme.palette.success.main, 0.1),
+                    },
                   }}
                 >
                   <DownloadIcon size={20} />
-                </IconButton>
+                </CommonIconButton>
               </Tooltip>
             </Box>
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import Button, { ButtonProps } from "@mui/material/Button";
 import type { SxProps, Theme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
 
 const buttonSx = {
   bgcolor: (theme: Theme) => theme.palette.action.hover,
@@ -42,6 +43,30 @@ export default function CommonButton({ sx, ...props }: CommonButtonProps) {
         [
           ...(Array.isArray(buttonSx) ? buttonSx : [buttonSx]),
           ...(Array.isArray(sx) ? sx : [sx]),
+        ] as SxProps<Theme>
+      }
+    />
+  );
+}
+
+export function CommonIconButton({ sx, ...props }: ButtonProps) {
+  return (
+    <Button
+      {...props}
+      sx={
+        [
+          {
+            width: 34,
+            height: 34,
+            minWidth: 0,
+            borderRadius: 1,
+            color: "text.secondary",
+            "&:hover": {
+              bgcolor: (theme: Theme) =>
+                alpha(theme.palette.primary.main, 0.08),
+            },
+          },
+          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
         ] as SxProps<Theme>
       }
     />

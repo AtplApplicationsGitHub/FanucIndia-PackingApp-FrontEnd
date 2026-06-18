@@ -16,6 +16,7 @@ import {
   CircularProgress,
   useTheme,
   Button,
+  alpha,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { Download } from "lucide-react";
@@ -24,6 +25,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useEfficiencyReport } from "@/app/admin/components/hooks/useEfficiencyReport";
+import { CommonIconButton } from "@/common/components/CommonButton";
 
 export default function EfficiencyReport() {
   const theme = useTheme();
@@ -43,20 +45,20 @@ export default function EfficiencyReport() {
     setEndDate(null);
   };
 
-  // ── Bin group colors (visible in both light & dark) ──────────────────────
+  // Bin group colors (visible in both light & dark)
   const binColors = {
     bin1: isDark ? "#1c3557" : "#dbeafe", // blue
     bin2to3: isDark ? "#1a3d2f" : "#d1fae5", // green
     bin4plus: isDark ? "#35194f" : "#ede9fe", // purple
   };
 
-  // ── Vertical divider border (left border on first col of each bin group) ──
+  // Vertical divider border (left border on first col of each bin group)
   const dividerBorder = {
     borderLeft: "2px solid",
     borderLeftColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)",
   };
 
-  // ── Header styles ─────────────────────────────────────────────────────────
+  //  Header styles
   const baseHeaderSx = {
     fontWeight: 700,
     fontSize: "0.75rem",
@@ -90,7 +92,7 @@ export default function EfficiencyReport() {
     textAlign: "center" as const,
   };
 
-  // ── Date picker shared props ───────────────────────────────────────────────
+  // Date picker shared props
   const datePickerSlotProps = {
     textField: {
       size: "small" as const,
@@ -228,7 +230,7 @@ export default function EfficiencyReport() {
     URL.revokeObjectURL(url);
   };
 
-  const TOTAL_COLS = 11; // Required Date + Operator + 3×3 bin columns
+  const TOTAL_COLS = 11;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -312,18 +314,20 @@ export default function EfficiencyReport() {
             </Tooltip>
 
             {/* Excel Download */}
-            <Tooltip title="Download Excel">
-              <IconButton
+            <Tooltip title="Export to Excel">
+              <CommonIconButton
                 onClick={handleDownloadExcel}
                 size="small"
                 sx={{
-                  color: "text.secondary",
-                  flex: "0 0 auto",
-                  "&:hover": { color: "success.main" },
+                  color: "success.main",
+                  "&:hover": {
+                    color: "success.dark",
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                  },
                 }}
               >
                 <Download size={20} />
-              </IconButton>
+              </CommonIconButton>
             </Tooltip>
 
             {/* Stage toggle */}
@@ -368,7 +372,7 @@ export default function EfficiencyReport() {
           </Box>
         </Paper>
 
-        {/* ── Efficiency Table ── */}
+        {/* Efficiency Table */}
         <Paper
           elevation={0}
           sx={{

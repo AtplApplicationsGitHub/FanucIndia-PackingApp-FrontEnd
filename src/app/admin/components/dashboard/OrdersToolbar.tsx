@@ -9,6 +9,7 @@ import {
   MenuItem,
   Button,
   Tooltip,
+  alpha,
 } from "@mui/material";
 import { CalendarCheck, Download } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
@@ -19,6 +20,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { LookupRow } from "@/app/admin/components/types/admin";
+import { CommonIconButton } from "@/common/components/CommonButton";
 
 const STATUS_OPTIONS = ["None", "R105", "W105", "F105", "Dispatched"];
 
@@ -104,7 +106,7 @@ export default function AdminOrdersToolbar({
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: 2,
+            gap: 1.2,
             px: 2,
             py: 1.5,
             mx: "auto",
@@ -281,15 +283,19 @@ export default function AdminOrdersToolbar({
 
           {onExport && (
             <Tooltip title="Export to Excel" arrow>
-              <IconButton
+              <CommonIconButton
                 onClick={onExport}
                 sx={{
-                  color: "#10b981", // Emerald green for Excel
-                  "&:hover": { bgcolor: "rgba(16, 185, 129, 0.1)" },
+                  flex: "0 0 auto",
+                  color: "success.main",
+                  "&:hover": {
+                    color: "success.dark",
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                  },
                 }}
               >
                 <Download size={20} />
-              </IconButton>
+              </CommonIconButton>
             </Tooltip>
           )}
 

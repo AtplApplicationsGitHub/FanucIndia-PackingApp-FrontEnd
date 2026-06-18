@@ -45,7 +45,9 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useStatusCards } from "@/app/admin/components/hooks/useStatuscards";
-import CommonButton from "@/common/components/CommonButton";
+import CommonButton, {
+  CommonIconButton,
+} from "@/common/components/CommonButton";
 import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 import { Download } from "lucide-react";
 
@@ -486,8 +488,9 @@ function CustomerSOCountTab() {
   const [searchTerm, setSearchTerm] = React.useState("");
 
   // State for Dialog Box
-  const [selectedCustomer, setSelectedCustomer] =
-    React.useState<any | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = React.useState<any | null>(
+    null,
+  );
 
   const [dialogPage, setDialogPage] = React.useState(0);
   const [dialogRowsPerPage, setDialogRowsPerPage] = React.useState(10);
@@ -509,14 +512,23 @@ function CustomerSOCountTab() {
     if (!selectedCustomer) return [];
 
     // Check for either the old format (saleOrderNumbers) or new (saleOrderDetails)
-    const source = selectedCustomer.saleOrderDetails || selectedCustomer.saleOrderNumbers || [];
+    const source =
+      selectedCustomer.saleOrderDetails ||
+      selectedCustomer.saleOrderNumbers ||
+      [];
 
     const map = new Map<string, any>();
     source.forEach((item: any) => {
-      const soNum = typeof item === 'string' ? item : (item.soNumber || item.saleOrderNumber || "-");
-      const obd = typeof item === 'string' ? null : (item.outboundDelivery || item.obdNumber || null);
+      const soNum =
+        typeof item === "string"
+          ? item
+          : item.soNumber || item.saleOrderNumber || "-";
+      const obd =
+        typeof item === "string"
+          ? null
+          : item.outboundDelivery || item.obdNumber || null;
 
-      const key = `${soNum}_${obd || 'NONE'}`;
+      const key = `${soNum}_${obd || "NONE"}`;
       if (!map.has(key)) {
         map.set(key, { soNumber: soNum, outboundDelivery: obd });
       }
@@ -536,8 +548,14 @@ function CustomerSOCountTab() {
     filteredRows.forEach((row: any) => {
       const source = row.saleOrderDetails || row.saleOrderNumbers || [];
       source.forEach((item: any) => {
-        const soNum = typeof item === 'string' ? item : (item.soNumber || item.saleOrderNumber || "-");
-        const obd = typeof item === 'string' ? null : (item.outboundDelivery || item.obdNumber || null);
+        const soNum =
+          typeof item === "string"
+            ? item
+            : item.soNumber || item.saleOrderNumber || "-";
+        const obd =
+          typeof item === "string"
+            ? null
+            : item.outboundDelivery || item.obdNumber || null;
         exportData.push({
           "Customer Name": row.customerName,
           "SO Number": soNum,
@@ -688,12 +706,18 @@ function CustomerSOCountTab() {
               <ClearIcon fontSize="small" />
             </IconButton>
             <Tooltip title="Export to Excel">
-              <IconButton
+              <CommonIconButton
                 onClick={handleExportCustomerSO}
-                sx={{ color: "#10b981", ml: 1 }}
+                sx={{
+                  color: "success.main",
+                  "&:hover": {
+                    color: "success.dark",
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                  },
+                }}
               >
                 <Download size={20} />
-              </IconButton>
+              </CommonIconButton>
             </Tooltip>
           </Box>
 
@@ -818,11 +842,13 @@ function CustomerSOCountTab() {
               <TableBody>
                 {paginatedSaleOrders.length ? (
                   paginatedSaleOrders.map((detail, index) => (
-                    <TableRow key={`${detail.soNumber}-${detail.outboundDelivery}-${dialogPage}-${index}`}>
+                    <TableRow
+                      key={`${detail.soNumber}-${detail.outboundDelivery}-${dialogPage}-${index}`}
+                    >
                       <TableCell align="center">
                         <Typography
                           component={NextLink}
-                          href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? '/' + detail.outboundDelivery : ''}`}
+                          href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? "/" + detail.outboundDelivery : ""}`}
                           target="_blank"
                           sx={{
                             color: chartBlue,
@@ -841,7 +867,9 @@ function CustomerSOCountTab() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={2} align="center">No SO numbers found.</TableCell>
+                    <TableCell colSpan={2} align="center">
+                      No SO numbers found.
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -884,8 +912,9 @@ function MaterialSOCountTab() {
   const [toDate, setToDate] = React.useState<Dayjs | null>(
     dayjs().endOf("month"),
   );
-  const [selectedCustomer, setSelectedCustomer] =
-    React.useState<any | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = React.useState<any | null>(
+    null,
+  );
 
   const [dialogPage, setDialogPage] = React.useState(0);
   const [dialogRowsPerPage, setDialogRowsPerPage] = React.useState(10);
@@ -946,7 +975,7 @@ function MaterialSOCountTab() {
         id: detail.id,
         soNumber: detail.soNumber,
         outboundDelivery: obd,
-        requiredQuantity: 0
+        requiredQuantity: 0,
       };
       existing.requiredQuantity += Number(detail.requiredQuantity) || 0;
       aggregatedMap.set(key, existing);
@@ -1108,12 +1137,19 @@ function MaterialSOCountTab() {
               SEARCH
             </CommonButton>
             <Tooltip title="Export to Excel">
-              <IconButton
+              <CommonIconButton
                 onClick={handleExportCustomerQty}
-                sx={{ color: "#10b981", ml: 1 }}
+                sx={{
+                  flex: "0 0 auto",
+                  color: "success.main",
+                  "&:hover": {
+                    color: "success.dark",
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
+                  },
+                }}
               >
                 <Download size={20} />
-              </IconButton>
+              </CommonIconButton>
             </Tooltip>
           </Box>
 
@@ -1264,7 +1300,7 @@ function MaterialSOCountTab() {
                         <TableCell align="center">
                           <Typography
                             component={NextLink}
-                            href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? '/' + detail.outboundDelivery : ''}`}
+                            href={`/so-search/${detail.soNumber}${detail.outboundDelivery ? "/" + detail.outboundDelivery : ""}`}
                             target="_blank"
                             sx={{
                               color: chartBlue,

@@ -29,6 +29,7 @@ import { formatDateTimeIST } from "@/common/utils/dateTime";
 import { exportToExcel } from "@/app/admin/components/utils/exportExcel";
 import { Download } from "lucide-react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import { CommonIconButton } from "@/common/components/CommonButton";
 
 function formatDate(iso: string) {
   if (!iso || iso === "-") return "-";
@@ -287,26 +288,20 @@ export default function FgStorageReportPanel() {
 
         {/* 3. EXPORT BUTTON */}
         <Tooltip title="Export to Excel">
-          <IconButton
+          <CommonIconButton
             onClick={handleExport}
             sx={{
-              color: "#10B981",
-              bgcolor: alpha("#10B981", 0.1),
-              borderRadius: 2,
-              height: 42,
-              width: 42,
-              flexShrink: 0,
-              transition: "all 0.2s",
+              color: "success.main",
               "&:hover": {
-                bgcolor: alpha("#10B981", 0.2),
+                color: "success.dark",
+                bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
               },
             }}
           >
             <Download size={20} />
-          </IconButton>
+          </CommonIconButton>
         </Tooltip>
       </Paper>
-      {/* --- END MODERN TOOLBAR --- */}
       <Paper
         elevation={0}
         sx={{

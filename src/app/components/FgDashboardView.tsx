@@ -831,7 +831,7 @@ export default function FgDashboardView() {
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            {/* 3. ADD THIS: Export Button next to the Clear button */}
+            {/* 3. Export Button next to the Clear button */}
             <Tooltip title="Export to Excel">
               <IconButton
                 onClick={handleExport}
@@ -1038,7 +1038,9 @@ export default function FgDashboardView() {
                             const { percent, current, next, color } =
                               getStatusInfo(row);
                             return (
-                              <Box sx={{ width: "100%", minWidth: 260, py: 0.25 }}>
+                              <Box
+                                sx={{ width: "100%", minWidth: 260, py: 0.25 }}
+                              >
                                 {/* LINE 1: Current Stage, Time, Next Stage */}
                                 <Box
                                   sx={{
