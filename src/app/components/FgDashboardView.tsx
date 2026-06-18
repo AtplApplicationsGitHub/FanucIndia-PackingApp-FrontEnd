@@ -1425,7 +1425,14 @@ export default function FgDashboardView() {
           <DialogTitle
             sx={{
               fontWeight: 700,
+              fontSize: 20,
               textAlign: "center",
+              letterSpacing: 0,
+              color: "secondary.main",
+              p: 1.5,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               position: "relative",
             }}
           >
