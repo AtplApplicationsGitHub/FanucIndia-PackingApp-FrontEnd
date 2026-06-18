@@ -1440,7 +1440,13 @@ export default function FgDashboardView() {
             <IconButton
               size="small"
               onClick={() => setAutoRefreshDialogOpen(false)}
-              sx={{ position: "absolute", right: 8, top: 8 }}
+              sx={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "text.secondary",
+              }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
