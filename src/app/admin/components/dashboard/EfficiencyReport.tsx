@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Typography,
   IconButton,
   Tooltip,
@@ -34,11 +35,19 @@ export default function EfficiencyReport() {
   const [startDate, setStartDate] = React.useState<Dayjs | null>(dayjs());
   const [endDate, setEndDate] = React.useState<Dayjs | null>(dayjs());
   const [stage, setStage] = React.useState<"Issue" | "Packing">("Issue");
+
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
   const { rows, loading, error } = useEfficiencyReport(
     startDate,
     endDate,
     stage,
   );
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [rows]);
 
   const handleClearFilters = () => {
     setStartDate(null);
@@ -231,6 +240,11 @@ export default function EfficiencyReport() {
   };
 
   const TOTAL_COLS = 11;
+
+  const paginatedRows = rows.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -526,7 +540,7 @@ export default function EfficiencyReport() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  rows.map((row, index) => (
+                  paginatedRows.map((row, index) => (
                     <TableRow
                       key={`${row.operator}-${row.requiredDate}-${index}`}
                       hover
@@ -616,6 +630,29 @@ export default function EfficiencyReport() {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={rows.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50, 100]}
+            sx={{
+              borderTop: "1px solid",
+              borderColor: isDark
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(0,0,0,0.06)",
+              color: "text.secondary",
+              ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                {
+                  fontSize: "0.8rem",
+                },
+            }}
+          />
         </Paper>
       </Box>
     </LocalizationProvider>
