@@ -4,8 +4,10 @@ import { fetchWithAuth } from "../../../../common/lib/endpoints";
 
 interface DispatchSummaryData {
   ordersToBeDispatched: number;
+  ordersToBeDispatchedPaymentCleared: number;
   readyForDispatchToday: number;
   ordersDispatchedToday: number;
+  fgLocationCount: number;
 }
 
 interface UseDispatchSummaryReturn {
@@ -27,7 +29,10 @@ export const useDispatchSummary = (date?: string): UseDispatchSummaryReturn => {
       setError(null);
 
       // Append the date query parameter if provided
-      const url = new URL(API.DASHBOARD.ADMIN_DISPATCH_SUMMARY, window.location.origin);
+      const url = new URL(
+        API.DASHBOARD.ADMIN_DISPATCH_SUMMARY,
+        window.location.origin,
+      );
       if (date) {
         url.searchParams.append("date", date);
       }

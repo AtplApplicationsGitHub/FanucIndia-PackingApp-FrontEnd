@@ -25,7 +25,7 @@ import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 import FgLocation from "@/app/admin/components/dashboard/ManualFg";
-import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport"; // add this
+import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport"; 
 
 function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -84,7 +84,7 @@ function AdminDashboardContent() {
     }
   }, [searchParams]);
 
-  // NEW: Custom function to update the tab AND the browser history URL
+  // Custom function to update the tab AND the browser history URL
   const handleViewChange = (viewInput: any) => {
     const newView =
       typeof viewInput === "function" ? viewInput(admin.view) : viewInput;

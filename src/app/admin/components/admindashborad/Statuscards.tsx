@@ -15,6 +15,8 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 interface MiniCardProps {
   title: string;
   value?: number | string | null;
+  bracketValue?: number | string | null;
+  bracketTooltip?: string;
   loading?: boolean;
   error?: string | null;
   accentColor?: string;
@@ -25,6 +27,8 @@ interface MiniCardProps {
 const MiniCard = ({
   title,
   value,
+  bracketValue,
+  bracketTooltip,
   loading,
   error,
   accentColor = "border-l-gray-300 dark:border-l-gray-600",
@@ -46,7 +50,22 @@ const MiniCard = ({
       </p>
     ) : (
       <p className="text-lg sm:text-xl font-bold text-[#1F2933] dark:text-white mt-1">
-        {loading ? "..." : (value ?? 0)}
+        {loading ? (
+          "..."
+        ) : (
+          <>
+            {value ?? 0}
+
+            {bracketValue !== undefined && bracketValue !== null && (
+              <span
+                title={bracketTooltip}
+                className="ml-1 text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 cursor-default "
+              >
+                ({bracketValue})
+              </span>
+            )}
+          </>
+        )}
       </p>
     )}
     {headerIcon && <div className="absolute top-2 right-2">{headerIcon}</div>}
@@ -90,6 +109,8 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
     {
       title: "To Dispatch",
       value: dispatch?.ordersToBeDispatched,
+      bracketValue: dispatch?.ordersToBeDispatchedPaymentCleared,
+      bracketTooltip: "Payment Cleared",
       loading: dispatchLoading,
       error: dispatchError,
       accentColor: "border-l-blue-500 dark:border-l-blue-400",
@@ -107,6 +128,13 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
       loading: dispatchLoading,
       error: dispatchError,
       accentColor: "border-l-emerald-500 dark:border-l-emerald-400",
+    },
+    {
+      title: "FG",
+      value: dispatch?.fgLocationCount,
+      loading: dispatchLoading,
+      error: dispatchError,
+      accentColor: "border-l-teal-500 dark:border-l-teal-400",
     },
     {
       title: "Awaiting",
@@ -227,7 +255,7 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-11 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-12 gap-3">
         <DateCard selectedDate={selectedDate} onDateChange={onDateChange} />
         {allCards.map((card, idx) => (
           <MiniCard key={idx} {...card} />
