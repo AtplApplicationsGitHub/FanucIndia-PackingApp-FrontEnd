@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Box,
   TextField,
@@ -106,6 +112,14 @@ interface DispatchSO {
   };
 }
 
+interface VehicleEntry {
+  id: number;
+  vehicleNumber: string;
+  customerName?: string | null;
+  transporterName?: string | null;
+  dispatchStatus?: string;
+}
+
 /** One dropdown entry per sale order number (prefers row that already has LR). */
 const getUniqueDispatchSoOptions = (soList: DispatchSO[]): DispatchSO[] => {
   const map = new Map<string, DispatchSO>();
@@ -141,13 +155,11 @@ const getTransporterIdNumber = (
 const buildDispatchCreatePayload = (
   transporter: Transporter | null,
   vehicleNumber: string,
+  vehicleEntryId: number | null,
 ) => ({
-  ...(transporter
-    ? {
-        transporterId: String(transporter.id),
-      }
-    : {}),
+  ...(transporter ? { transporterId: String(transporter.id) } : {}),
   vehicleNumber: vehicleNumber.trim(),
+  ...(vehicleEntryId ? { vehicleEntryId: String(vehicleEntryId) } : {}),
 });
 
 const buildDispatchUpdatePayload = (
@@ -187,7 +199,8 @@ const mergeDispatchUpdate = (
     ...updated,
     transporterId,
     transporterName,
-    transporter: updated.transporter ??
+    transporter:
+      updated.transporter ??
       (transporterName
         ? {
             ...(current.transporter ?? {}),
@@ -651,11 +664,13 @@ export default function DispatchView() {
   const [form, setForm] = useState<{
     transporterId: Transporter | null;
     vehicleNumber: string;
+    vehicleEntryId: number | null;
     selectedSos: DispatchSO[];
     lrNumber: string;
   }>({
     transporterId: null,
     vehicleNumber: "",
+    vehicleEntryId: null,
     selectedSos: [],
     lrNumber: "",
   });
@@ -702,6 +717,13 @@ export default function DispatchView() {
   const [currentDispatchForAttachments, setCurrentDispatchForAttachments] =
     useState<Dispatch | null>(null);
 
+  const [pendingVehicleEntries, setPendingVehicleEntries] = useState<
+    VehicleEntry[]
+  >([]);
+  const [loadingVehicleEntries, setLoadingVehicleEntries] = useState(false);
+  const [selectedVehicleEntry, setSelectedVehicleEntry] =
+    useState<VehicleEntry | null>(null);
+
   // --- Data Fetching ---
   const showSnackbar = (
     message: string,
@@ -717,6 +739,23 @@ export default function DispatchView() {
       setTransporters(data);
     } catch {
       showSnackbar("Failed to load transporters", "error");
+    }
+  }, []);
+
+  const fetchPendingVehicleEntries = useCallback(async () => {
+    setLoadingVehicleEntries(true);
+    try {
+      const today = dayjs().format("YYYY-MM-DD");
+      const res = await fetchWithAuth(
+        API.VEHICLE_ENTRY.LIST({ startDate: today, endDate: today }),
+      );
+      const data = await res.json();
+      setPendingVehicleEntries(Array.isArray(data) ? data : []);
+    } catch {
+      showSnackbar("Failed to load vehicle entries", "error");
+      setPendingVehicleEntries([]);
+    } finally {
+      setLoadingVehicleEntries(false);
     }
   }, []);
 
@@ -784,9 +823,11 @@ export default function DispatchView() {
     setForm({
       transporterId: null,
       vehicleNumber: "",
+      vehicleEntryId: null,
       selectedSos: [],
       lrNumber: "",
     });
+    setSelectedVehicleEntry(null);
     setEditDialogSOs([]);
     setAttachments([]);
     setEditingId(null);
@@ -827,6 +868,7 @@ export default function DispatchView() {
 
   const handleCreateClick = () => {
     resetForm();
+    fetchPendingVehicleEntries();
     setCreateDialogOpen(true);
   };
 
@@ -838,6 +880,10 @@ export default function DispatchView() {
   const handleSave = async () => {
     if (!form.vehicleNumber.trim()) {
       showSnackbar("Vehicle Number is required.", "error");
+      return;
+    }
+    if (!editingId && !form.vehicleEntryId) {
+      showSnackbar("Please select a vehicle entry from the dropdown.", "error");
       return;
     }
 
@@ -929,6 +975,7 @@ export default function DispatchView() {
       const dispatchPayload = buildDispatchCreatePayload(
         form.transporterId,
         form.vehicleNumber,
+        form.vehicleEntryId,
       );
       const formData = new FormData();
       Object.entries(dispatchPayload).forEach(([key, value]) => {
@@ -1081,6 +1128,7 @@ export default function DispatchView() {
       setForm({
         transporterId: transporter,
         vehicleNumber: dispatchToEdit.vehicleNumber,
+        vehicleEntryId: null,
         selectedSos: [],
         lrNumber: "",
       });
@@ -1888,13 +1936,85 @@ export default function DispatchView() {
                   )}
                 />
 
-                <TextField
-                  label="Vehicle Number"
-                  required
-                  value={form.vehicleNumber}
-                  onChange={handleVehicleChange}
-                  helperText="Alphanumeric only (e.g., KA01XY1234)"
-                />
+                {editingId ? (
+                  // EDIT MODE: keep free-text input (vehicle already linked)
+                  <TextField
+                    label="Vehicle Number"
+                    required
+                    value={form.vehicleNumber}
+                    onChange={handleVehicleChange}
+                    helperText="Alphanumeric only (e.g., KA01XY1234)"
+                  />
+                ) : (
+                  // CREATE MODE: dropdown of today's pending vehicle entries
+                  <Autocomplete
+                    options={pendingVehicleEntries}
+                    loading={loadingVehicleEntries}
+                    getOptionLabel={(option) => option.vehicleNumber}
+                    value={selectedVehicleEntry}
+                    onChange={(_, value) => {
+                      setSelectedVehicleEntry(value);
+                      setForm((prev) => ({
+                        ...prev,
+                        vehicleNumber: value?.vehicleNumber ?? "",
+                        vehicleEntryId: value?.id ?? null,
+                      }));
+                    }}
+                    noOptionsText={
+                      loadingVehicleEntries
+                        ? "Loading..."
+                        : "No pending vehicle entries for today"
+                    }
+                    renderOption={(props, option) => {
+                      const { key, ...optionProps } = props;
+                      return (
+                        <Box component="li" key={key} {...optionProps}>
+                          <Box>
+                            <Typography fontWeight={600} fontSize="0.875rem">
+                              {option.vehicleNumber}
+                            </Typography>
+                            {(option.customerName ||
+                              option.transporterName) && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {[option.customerName, option.transporterName]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Vehicle Number"
+                        required
+                        placeholder="Select today's vehicle entry"
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loadingVehicleEntries && (
+                                <CircularProgress size={18} sx={{ mr: 1 }} />
+                              )}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                        helperText={
+                          pendingVehicleEntries.length === 0 &&
+                          !loadingVehicleEntries
+                            ? "No pending vehicle entries found for today"
+                            : "Showing today's unlinked vehicle entries only"
+                        }
+                      />
+                    )}
+                  />
+                )}
               </Box>
 
               {editingId ? (
