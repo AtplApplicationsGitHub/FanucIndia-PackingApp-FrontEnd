@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { API } from "../../../../common/lib/endpoints";
 import { fetchWithAuth } from "../../../../common/lib/endpoints";
-
+interface FgLocationOrder {
+  saleOrderNumber: string;
+  outboundDelivery: string | null;
+  location: unknown;
+}
 interface DispatchSummaryData {
   ordersToBeDispatched: number;
   ordersToBeDispatchedPaymentCleared: number;
   readyForDispatchToday: number;
   ordersDispatchedToday: number;
   fgLocationCount: number;
+  fgLocationOrders: FgLocationOrder[];
 }
-
 interface UseDispatchSummaryReturn {
   data: DispatchSummaryData | null;
   loading: boolean;

@@ -11,6 +11,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import FgLocationOrdersDialog from "./FgLocationOrdersDialog";
 
 interface MiniCardProps {
   title: string;
@@ -22,6 +23,7 @@ interface MiniCardProps {
   accentColor?: string;
   onClick?: () => void;
   headerIcon?: React.ReactNode;
+  ringColor?: string;
 }
 
 const MiniCard = ({
@@ -34,11 +36,14 @@ const MiniCard = ({
   accentColor = "border-l-gray-300 dark:border-l-gray-600",
   onClick,
   headerIcon,
+  ringColor,
 }: MiniCardProps) => (
   <div
     onClick={onClick}
     className={`relative bg-white dark:bg-[#1F2933] rounded-lg shadow-sm border border-[#E5E7EB] dark:border-[#4B5563] border-l-4 ${accentColor} px-3 py-2.5 hover:shadow-md transition-all ${
-      onClick ? "cursor-pointer hover:ring-2 hover:ring-purple-300" : ""
+      onClick
+        ? `cursor-pointer hover:ring-2 ${ringColor ?? "hover:ring-purple-300"}`
+        : ""
     }`}
   >
     <p className="text-[11px] sm:text-xs uppercase font-bold tracking-wide text-[#6B7280] dark:text-[#9CA3AF] pr-5 truncate">
@@ -103,7 +108,7 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
   } = useBinCounts(selectedDate);
 
   const [backlogDialogOpen, setBacklogDialogOpen] = useState(false);
-
+  const [fgDialogOpen, setFgDialogOpen] = useState(false);
   // Row 1 — 7 cards
   const topRowCards: MiniCardProps[] = [
     {
@@ -135,6 +140,8 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
       loading: dispatchLoading,
       error: dispatchError,
       accentColor: "border-l-teal-500 dark:border-l-teal-400",
+      onClick: () => setFgDialogOpen(true),
+      ringColor: "hover:ring-teal-500 dark:hover:ring-teal-400", 
     },
     {
       title: "Awaiting",
@@ -266,6 +273,11 @@ const StatusCards = ({ selectedDate, onDateChange }: StatusCardsProps) => {
         open={backlogDialogOpen}
         onClose={() => setBacklogDialogOpen(false)}
         breakdown={backlog?.breakdown ?? []}
+      />
+      <FgLocationOrdersDialog
+        open={fgDialogOpen}
+        onClose={() => setFgDialogOpen(false)}
+        orders={dispatch?.fgLocationOrders ?? []}
       />
     </div>
   );
