@@ -243,7 +243,7 @@ export default function AdminOrdersTable({
                 "PRODUCT",
                 "SALE ORDER NUMBER",
                 "OUT BOUND DELIVERY",
-                "TRANSFER ORDER",
+                "FG LOCATION",
                 "REQUIRED DATE",
                 "PAYMENT",
                 "SALES ZONE",
@@ -344,8 +344,8 @@ export default function AdminOrdersTable({
                   {/* OUTBOUND DELIVERY */}
                   <TableCell>{row.outboundDelivery}</TableCell>
 
-                  {/* TRANSFER ORDER */}
-                  <TableCell>{row.transferOrder}</TableCell>
+                  {/* FG LOCATION */}
+                  <TableCell>{row.fgLocation || "-"}</TableCell>
 
                   {/* DELIVERY DATE */}
                   <TableCell>
