@@ -35,6 +35,7 @@ export default function ErpUploadDialog({
   const [importLoading, setImportLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const handleFileChange = (selectedFile: File | null) => {
     if (selectedFile) {
       if (
@@ -157,7 +158,7 @@ export default function ErpUploadDialog({
 
   const handleConfirmObdAndImport = async () => {
     if (!saleOrderNumber || !selectedObd) return;
-    setImportLoading(true);
+    setConfirmLoading(true);
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -176,7 +177,7 @@ export default function ErpUploadDialog({
       }
       setError(msg);
     } finally {
-      setImportLoading(false);
+      setConfirmLoading(false);
     }
   };
 
@@ -186,6 +187,7 @@ export default function ErpUploadDialog({
     setImportLoading(false);
     setError(null);
     setIsDragging(false);
+    setConfirmLoading(false);
   };
 
   useEffect(() => {
@@ -203,9 +205,11 @@ export default function ErpUploadDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth={obdOptions.length > 1 ? "md" : "sm"}
       fullWidth
-      PaperProps={{ sx: { borderRadius: 2 } }}
+      PaperProps={{
+        sx: { borderRadius: 2, transition: "max-width 0.2s ease" },
+      }}
     >
       <DialogTitle
         sx={{
@@ -238,121 +242,241 @@ export default function ErpUploadDialog({
           </Typography>
         </Box>
 
-        {!file ? (
-          <Box
-            component="label"
-            htmlFor="erp-file-upload"
-            onDragEnter={() => setIsDragging(true)}
-            onDragLeave={() => setIsDragging(false)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            sx={{
-              mt: 3,
-              p: 8,
-              border: (theme) =>
-                `2px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
-              borderRadius: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              cursor: "pointer",
-              bgcolor: isDragging ? "action.hover" : "transparent",
-              transition: "background-color 0.2s, border-color 0.2s",
-              "&:hover": {
-                borderColor: "primary.main",
-              },
-            }}
-          >
-            <UploadCloud size={30} color="grey" />
-            <Typography fontSize={17} fontWeight={500} color="text.primary">
-              Click or drag to upload
-            </Typography>
-            <Typography fontSize={15} color="text.secondary">
-              Supports: .xlsx
-            </Typography>
-            <input
-              id="erp-file-upload"
-              type="file"
-              hidden
-              accept=".xlsx"
-              onChange={(e) =>
-                handleFileChange(e.target.files ? e.target.files[0] : null)
-              }
-            />
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              bgcolor: "background.paper",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <FileIcon size={24} />
-              <Typography sx={{ fontWeight: 500 }}>{file.name}</Typography>
-            </Box>
-            <IconButton
-              onClick={() => setFile(null)}
-              size="small"
-              aria-label="Remove file"
-            >
-              <CloseIcon size={18} />
-            </IconButton>
-          </Box>
-        )}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns:
+              obdOptions.length > 1 ? { xs: "1fr", sm: "1fr 1fr" } : "1fr",
+            gap: 3,
+            mt: 3,
+          }}
+        >
+          {/* LEFT COLUMN: manual upload */}
+          <Box>
+            {obdOptions.length > 1 && (
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  mb: 1,
+                  letterSpacing: 0.5,
+                  fontWeight: "bold",
+                }}
+              >
+                UPLOAD MANUALLY
+              </Typography>
+            )}
 
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {obdOptions.length > 1 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Multiple files found for SO <strong>{saleOrderNumber}</strong>.
-              Select the correct OBD:
-            </Typography>
-            <select
-              value={selectedObd}
-              onChange={(e) => setSelectedObd(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            >
-              <option value="">-- Select OBD --</option>
-              {obdOptions.map((o) => (
-                <option key={o.obd} value={o.obd}>
-                  {o.filename}
-                </option>
-              ))}
-            </select>
-            <CommonButton
-              sx={{ mt: 1 }}
-              onClick={handleConfirmObdAndImport}
-              disabled={!selectedObd || importLoading}
-            >
-              {importLoading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                "CONFIRM & IMPORT"
-              )}
-            </CommonButton>
+            {!file ? (
+              <Box
+                component="label"
+                htmlFor="erp-file-upload"
+                onDragEnter={() => setIsDragging(true)}
+                onDragLeave={() => setIsDragging(false)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                sx={{
+                  p: 8,
+                  border: (theme) =>
+                    `2px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
+                  borderRadius: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  bgcolor: isDragging ? "action.hover" : "transparent",
+                  transition: "background-color 0.2s, border-color 0.2s",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                  },
+                }}
+              >
+                <UploadCloud size={30} color="grey" />
+                <Typography fontSize={17} fontWeight={500} color="text.primary">
+                  Click or drag to upload
+                </Typography>
+                <Typography fontSize={15} color="text.secondary">
+                  Supports: .xlsx
+                </Typography>
+                <input
+                  id="erp-file-upload"
+                  type="file"
+                  hidden
+                  accept=".xlsx"
+                  onChange={(e) =>
+                    handleFileChange(e.target.files ? e.target.files[0] : null)
+                  }
+                />
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  p: 2,
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  bgcolor: "background.paper",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <FileIcon size={24} />
+                  <Typography sx={{ fontWeight: 500 }}>{file.name}</Typography>
+                </Box>
+                <IconButton
+                  onClick={() => setFile(null)}
+                  size="small"
+                  aria-label="Remove file"
+                >
+                  <CloseIcon size={18} />
+                </IconButton>
+              </Box>
+            )}
+
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
           </Box>
-        )}
+
+          {/* RIGHT COLUMN: only appears once handleImportDrive populates obdOptions */}
+          {obdOptions.length > 1 && (
+            <Box
+              sx={{
+                borderLeft: (theme) => ({
+                  sm: `1px solid ${theme.palette.divider}`,
+                }),
+                pl: { xs: 0, sm: 3 },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{
+                    display: "block",
+                    mb: 1,
+                    letterSpacing: 0.5,
+                    fontWeight: "bold",
+                  }}
+                >
+                  FILES FOUND IN ACTIVE FOLDER
+                </Typography>
+                <Box
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    borderRadius: "50%",
+                    width: 22,
+                    height: 22,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                  }}
+                >
+                  {obdOptions.length}
+                </Box>
+              </Box>
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {obdOptions.map((o) => (
+                  <Box
+                    key={o.obd}
+                    onClick={() => setSelectedObd(o.obd)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      p: 1.25,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      border: (theme) =>
+                        `1px solid ${
+                          selectedObd === o.obd
+                            ? theme.palette.primary.main
+                            : theme.palette.divider
+                        }`,
+                      bgcolor:
+                        selectedObd === o.obd
+                          ? "action.selected"
+                          : "transparent",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: (theme) =>
+                          `2px solid ${
+                            selectedObd === o.obd
+                              ? theme.palette.primary.main
+                              : theme.palette.text.disabled
+                          }`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {selectedObd === o.obd && (
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            bgcolor: "primary.main",
+                          }}
+                        />
+                      )}
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, wordBreak: "break-word" }}
+                    >
+                      {o.filename}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Box>
       </DialogContent>
       <Divider />
       <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
         <CommonButton
-          onClick={handleImportDrive}
-          disabled={loading || importLoading}
+          onClick={
+            obdOptions.length > 1
+              ? handleConfirmObdAndImport
+              : handleImportDrive
+          }
+          disabled={
+            obdOptions.length > 1
+              ? !selectedObd || confirmLoading
+              : loading || importLoading
+          }
         >
-          {importLoading ? (
+          {obdOptions.length > 1 ? (
+            confirmLoading ? (
+              <CircularProgress size={22} color="inherit" />
+            ) : (
+              "CONFIRM & IMPORT"
+            )
+          ) : importLoading ? (
             <CircularProgress size={22} color="inherit" />
           ) : (
             "IMPORT ERP DATA"
