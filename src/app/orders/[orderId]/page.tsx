@@ -205,6 +205,7 @@ export default function MaterialDataPage() {
 
   const [localRows, setLocalRows] = useState<MaterialRow[]>(fetchedRows);
   const [showAll, setShowAll] = useState(false);
+  const [scanOrder, setScanOrder] = useState<number[]>([]);
 
   const allIssued = useMemo(
     () =>
@@ -323,6 +324,16 @@ export default function MaterialDataPage() {
         rows = rows.filter((r) => r.packingStage < r.reqQuantity);
       }
     }
+
+    if (!showAll && scanOrder.length > 0) {
+      const priority = new Map(scanOrder.map((id, idx) => [id, idx]));
+      rows = [...rows].sort((a, b) => {
+        const aIdx = priority.has(a.id) ? priority.get(a.id)! : Infinity;
+        const bIdx = priority.has(b.id) ? priority.get(b.id)! : Infinity;
+        return aIdx - bIdx;
+      });
+    }
+
     return rows;
   }, [
     localRows,
@@ -331,6 +342,7 @@ export default function MaterialDataPage() {
     selectedGroup,
     selectedClassification,
     isOrderFullyComplete,
+    scanOrder,
   ]);
 
   const showBulkButton = useMemo(() => {
@@ -535,8 +547,18 @@ export default function MaterialDataPage() {
   };
 
   const handleProcess = async (code: string) => {
-    // ... existing logic ...
     setEditError(null);
+
+    const scannedRow = localRows.find(
+      (r) => r.materialCode === code || r.mappingBarcode === code,
+    );
+    if (scannedRow) {
+      setScanOrder((prev) => [
+        scannedRow.id,
+        ...prev.filter((id) => id !== scannedRow.id),
+      ]);
+    }
+
     try {
       let response: UpdateResponse | undefined;
       if (!allIssued) {
