@@ -311,6 +311,7 @@ export const API = {
   ERP_IMPORTER: {
     UPLOAD: `${API_BASE_URL}/erp-material-importer/upload`,
     IMPORT_FROM_DRIVE: `${API_BASE_URL}/erp-material-importer/import-from-drive`,
+    ACTIVE_OBD_OPTIONS: `${API_BASE_URL}/erp-material-importer/active-obd-options`,
     BULK_IMPORT_FROM_DRIVE: `${API_BASE_URL}/erp-material-importer/bulk-import-from-drive`,
     BULK_DOWNLOAD_DRIVE: `${API_BASE_URL}/erp-material-importer/bulk-download-drive`,
   },

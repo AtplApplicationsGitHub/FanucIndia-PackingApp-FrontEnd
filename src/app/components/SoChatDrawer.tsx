@@ -59,10 +59,20 @@ export default function SoChatDrawer({
   // Keep focus in the textbox, anchor popper to it
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const currentUserId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u.id ?? null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const token = useMemo(
     () =>
       typeof window !== "undefined" ? localStorage.getItem("token") : null,
-    []
+    [],
   );
 
   const refresh = async () => {
@@ -130,7 +140,7 @@ export default function SoChatDrawer({
     const last = parts[parts.length - 1] || "";
 
     if (last.startsWith("@")) {
-      parts[parts.length - 1] = `@${u.email}`; 
+      parts[parts.length - 1] = `@${u.email}`;
     } else {
       parts.push(`@${u.email}`);
     }
@@ -164,7 +174,7 @@ export default function SoChatDrawer({
       await axios.post(
         API.SO_CHAT.SEND(orderId),
         { toUserId: taggedUser.id, message: msg },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setText("");
       setTaggedUser(null);
@@ -180,7 +190,7 @@ export default function SoChatDrawer({
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box
         sx={{
-          width: 420,
+          width: { xs: "100vw", sm: 480 },
           height: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -228,59 +238,117 @@ export default function SoChatDrawer({
               No messages yet. Start by tagging someone using @
             </Typography>
           ) : (
-            <List sx={{ p: 0 }}>
-              {messages.map((m) => (
-                <Box key={m.id}>
-                  <ListItem sx={{ px: 0, alignItems: "flex-start" }}>
-                    <ListItemText
-                      primary={
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            flexWrap: 'wrap', 
-                            gap: 1, 
-                            alignItems: 'baseline',
-                            mb: 0.5 
-                          }}
+            // <List sx={{ p: 0 }}>
+            //   {messages.map((m) => (
+            //     <Box key={m.id}>
+            //       <ListItem sx={{ px: 0, alignItems: "flex-start" }}>
+            //         <ListItemText
+            //           primary={
+            //             <Box
+            //               sx={{
+            //                 display: "flex",
+            //                 flexWrap: "wrap",
+            //                 gap: 1,
+            //                 alignItems: "baseline",
+            //                 mb: 0.5,
+            //               }}
+            //             >
+            //               <Typography
+            //                 fontWeight={700}
+            //                 sx={{ wordBreak: "break-all" }}
+            //               >
+            //                 {m.fromUser.email}
+            //               </Typography>
+
+            //               <Typography
+            //                 variant="caption"
+            //                 color="text.secondary"
+            //                 sx={{ wordBreak: "break-all" }}
+            //               >
+            //                 → @{m.toUser.email}
+            //               </Typography>
+
+            //               <Typography
+            //                 variant="caption"
+            //                 color="text.secondary"
+            //                 sx={{ whiteSpace: "nowrap" }}
+            //               >
+            //                 {formatDateTimeIST(m.createdAt)}
+            //               </Typography>
+            //             </Box>
+            //           }
+            //           secondary={
+            //             <Typography
+            //               variant="body2"
+            //               sx={{ wordBreak: "break-word", mt: 0.5 }}
+            //             >
+            //               {m.message}
+            //             </Typography>
+            //           }
+            //         />
+            //       </ListItem>
+            //       <Divider />
+            //     </Box>
+            //   ))}
+            // </List>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              {messages.map((m) => {
+                const isOwn = m.fromUser.id === currentUserId;
+                return (
+                  <Box
+                    key={m.id}
+                    sx={{
+                      display: "flex",
+                      justifyContent: isOwn ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        maxWidth: "75%",
+                        bgcolor: isOwn ? "#DCF8C6" : "#F1F0F0", // WhatsApp-ish green vs grey
+                        borderRadius: 2,
+                        borderTopRightRadius: isOwn ? 0 : 2,
+                        borderTopLeftRadius: isOwn ? 2 : 0,
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      {!isOwn && (
+                        <Typography
+                          variant="caption"
+                          fontWeight={700}
+                          sx={{ color: "#1565C0" }}
                         >
-                          <Typography 
-                            fontWeight={700} 
-                            sx={{ wordBreak: 'break-all' }}
-                          >
-                            {m.fromUser.email}
-                          </Typography>
-                          
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary" 
-                            sx={{ wordBreak: 'break-all' }}
-                          >
-                            → @{m.toUser.email}
-                          </Typography>
-                          
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary" 
-                            sx={{ whiteSpace: 'nowrap' }}
-                          >
-                            {formatDateTimeIST(m.createdAt)}
-                          </Typography>
-                        </Box>
-                      }
-                      secondary={
-                        <Typography 
-                          variant="body2" 
-                          sx={{ wordBreak: 'break-word', mt: 0.5 }}
-                        >
-                          {m.message}
+                          {m.fromUser.email}
                         </Typography>
-                      }
-                    />
-                  </ListItem>
-                  <Divider />
-                </Box>
-              ))}
-            </List>
+                      )}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          wordBreak: "break-word",
+                          whiteSpace: "pre-wrap",
+                          mt: isOwn ? 0 : 0.3,
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        {m.message}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          textAlign: "right",
+                          mt: 0.3,
+                          color: "rgba(0,0,0,0.55)",
+                        }}
+                      >
+                        {formatDateTimeIST(m.createdAt)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
           )}
         </Box>
 
