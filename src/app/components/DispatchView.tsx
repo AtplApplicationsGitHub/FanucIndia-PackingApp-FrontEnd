@@ -80,6 +80,7 @@ import {
 import CommonButton from "@/common/components/CommonButton";
 import { formatDateTimeIST } from "@/common/utils/dateTime";
 import VehicleEntries from "@/app/components/Vehicle-entries";
+import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 
 interface Transporter {
   id: number;
@@ -713,6 +714,15 @@ export default function DispatchView() {
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [currentMenuId, setCurrentMenuId] = useState<number | null>(null);
+  const [deleteDispatchConfirmOpen, setDeleteDispatchConfirmOpen] =
+    useState(false);
+  const [deletingDispatch, setDeletingDispatch] = useState(false);
+
+  const [deleteSoConfirmOpen, setDeleteSoConfirmOpen] = useState(false);
+  const [soIdPendingDelete, setSoIdPendingDelete] = useState<number | null>(
+    null,
+  );
+  const [deletingSo, setDeletingSo] = useState(false);
   const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
   const [currentDispatchForAttachments, setCurrentDispatchForAttachments] =
     useState<Dispatch | null>(null);
@@ -1091,6 +1101,15 @@ export default function DispatchView() {
     }
   };
 
+  const handleConfirmDeleteSo = async () => {
+    if (!soIdPendingDelete) return;
+    setDeletingSo(true);
+    await handleDeleteSO(soIdPendingDelete);
+    setDeletingSo(false);
+    setDeleteSoConfirmOpen(false);
+    setSoIdPendingDelete(null);
+  };
+
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
     id: number,
@@ -1152,6 +1171,31 @@ export default function DispatchView() {
       showSnackbar("Failed to generate PDF", "error");
     }
     handleMenuClose();
+  };
+
+  const handleConfirmDeleteDispatch = async () => {
+    if (!currentMenuId) return;
+    setDeletingDispatch(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(API.DISPATCH.BY_ID(currentMenuId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showSnackbar("Dispatch record deleted successfully", "success");
+      fetchDispatches();
+      if (selectedDispatch?.id === currentMenuId) {
+        setSelectedDispatch(null);
+      }
+    } catch (error) {
+      showSnackbar(
+        getApiErrorMessage(error, "Failed to delete dispatch record"),
+        "error",
+      );
+    } finally {
+      setDeletingDispatch(false);
+      setDeleteDispatchConfirmOpen(false);
+      handleMenuClose();
+    }
   };
 
   const handleOpenAttachmentDialog = (dispatch: Dispatch) => {
@@ -1863,7 +1907,10 @@ export default function DispatchView() {
                         </Box>
                         <IconButton
                           size="small"
-                          onClick={() => handleDeleteSO(so.id)}
+                          onClick={() => {
+                            setSoIdPendingDelete(so.id);
+                            setDeleteSoConfirmOpen(true);
+                          }}
                           sx={{
                             color: "#EF4444",
                             "&:hover": { bgcolor: "rgba(239, 68, 68, 0.1)" },
@@ -2400,7 +2447,41 @@ export default function DispatchView() {
           <MenuItem onClick={handleGeneratePdf}>
             <PictureAsPdf sx={{ mr: 1 }} /> PDF
           </MenuItem>
+          <MenuItem
+            onClick={() => setDeleteDispatchConfirmOpen(true)}
+            sx={{ color: "error.main" }}
+          >
+            <Delete sx={{ mr: 1 }} /> Delete
+          </MenuItem>
         </Menu>
+
+        <ConfirmDeleteDialog
+          open={deleteDispatchConfirmOpen}
+          onCancel={() => {
+            setDeleteDispatchConfirmOpen(false);
+            handleMenuClose();
+          }}
+          onConfirm={handleConfirmDeleteDispatch}
+          loading={deletingDispatch}
+          title="DELETE DISPATCH RECORD"
+          description="Delete this dispatch record? Mapped SO numbers will be unmapped and their status reverted. This cannot be undone."
+          confirmText="YES, DELETE"
+          confirmColor="error"
+        />
+
+        <ConfirmDeleteDialog
+          open={deleteSoConfirmOpen}
+          onCancel={() => {
+            setDeleteSoConfirmOpen(false);
+            setSoIdPendingDelete(null);
+          }}
+          onConfirm={handleConfirmDeleteSo}
+          loading={deletingSo}
+          title="REMOVE SO FROM DISPATCH"
+          description="Remove this SO from the dispatch? Its status will revert to F105."
+          confirmText="YES, REMOVE"
+          confirmColor="error"
+        />
 
         <Snackbar
           open={snackbar.open}
