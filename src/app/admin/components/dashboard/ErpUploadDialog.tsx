@@ -372,7 +372,7 @@ export default function ErpUploadDialog({
                     fontWeight: "bold",
                   }}
                 >
-                  FILES FOUND IN ACTIVE FOLDER
+                  MULTIPLE FILES FOUND IN ACTIVE FOLDER
                 </Typography>
                 <Box
                   sx={{
@@ -384,14 +384,24 @@ export default function ErpUploadDialog({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 12,
+                    fontSize: 13,
+                    fontWeight: 700,
                   }}
                 >
                   {obdOptions.length}
                 </Box>
               </Box>
 
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  maxHeight: 240,
+                  overflowY: "auto",
+                  pr: 1.0,
+                }}
+              >
                 {obdOptions.map((o) => (
                   <Box
                     key={o.obd}
