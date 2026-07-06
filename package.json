@@ -1,6 +1,6 @@
 {
   "name": "fanuc-india-packing-app-front-end",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -65,7 +65,7 @@
     "typescript": "^5"
   },
   "overrides": {
-    "brace-expansion": "^5.0.6",
+    "brace-expansion": "^5.0.7",
     "picomatch": "^4.0.4",
     "yaml": "^2.8.3",
     "socket.io-parser": "^4.2.6",
