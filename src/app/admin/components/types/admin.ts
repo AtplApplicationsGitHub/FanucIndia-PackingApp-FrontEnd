@@ -84,7 +84,7 @@ export type EditableField =
 
 export type EditingCell = { id: number; field: EditableField } | null;
 
-export type UserRole = "ADMIN" | "SALES" | "USER" | "";
+export type UserRole = "ADMIN" | "SALES" | "USER" | "SUPER_ADMIN" | "";
 
 export interface User {
   id: number;

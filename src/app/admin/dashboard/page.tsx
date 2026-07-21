@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import AdminDashboardHeader from "@/app/admin/components/dashboard/Header";
 import AssignSO from "@/app/admin/components/dashboard/AssignSO";
 import AdminOrdersTable from "@/app/admin/components/dashboard/OrdersTable";
-import AdminMasterLookupPanel from "@/app/admin/components/dashboard/LookupPanel";
 import AdminOrdersToolbar from "@/app/admin/components/dashboard/OrdersToolbar";
 import AdminOrderEditModal from "@/app/admin/components/dashboard/EditModal";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
@@ -320,16 +319,6 @@ function AdminDashboardContent() {
             </Box>
           )}
 
-          {admin.view === "master" && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              style={{ padding: "0.5% 0 2rem 0" }}
-            >
-              <AdminMasterLookupPanel />
-            </motion.div>
-          )}
           {admin.view === "dispatch" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}

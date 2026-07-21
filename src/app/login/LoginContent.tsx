@@ -37,12 +37,19 @@ interface ApkDetails {
   downloadUrl: string;
 }
 
-type UserRole = "ADMIN" | "SALES" | "USER";
+type UserRole = "ADMIN" | "SALES" | "USER" | "SUPER_ADMIN";
 type User = { role: UserRole; email: string } & Record<string, unknown>;
 
 type LoginSuccessPayload = {
   accessToken: string;
   user: User;
+};
+
+const ROLE_ROUTES: Record<UserRole, string> = {
+  ADMIN: "/admin/dashboard",
+  SALES: "/sales/dashboard",
+  USER: "/user/dashboard",
+  SUPER_ADMIN: "/super-admin/dashboard",
 };
 
 function getErrorMessage(err: unknown): string {
@@ -157,12 +164,10 @@ export default function LoginContent() {
       try {
         const user = JSON.parse(userStr) as User;
 
-        if (user.role === "ADMIN") {
-          router.replace("/admin/dashboard");
-        } else if (user.role === "SALES") {
-          router.replace("/sales/dashboard");
-        } else if (user.role === "USER") {
-          router.replace("/user/dashboard");
+        const targetRoute = ROLE_ROUTES[user.role];
+
+        if (targetRoute) {
+          window.location.replace(targetRoute);
         }
       } catch (err: unknown) {
         console.warn("Failed to parse user session data", err);
@@ -198,8 +203,7 @@ export default function LoginContent() {
       try {
         const prevUser = JSON.parse(prevUserStr);
         prevEmail = prevUser.email || "";
-      } catch {
-      }
+      } catch {}
     }
 
     try {
@@ -215,25 +219,28 @@ export default function LoginContent() {
         sessionStorage.removeItem("userDashboardView");
       }
 
-      Cookies.set("token", accessToken, { expires: 1 });
+      const targetRoute = ROLE_ROUTES[user.role];
+
+      if (!targetRoute) {
+        setErrorMsg("Unknown user role.");
+        setSuccessMsg("");
+        setLoading(false);
+        return;
+      }
+
+      Cookies.set("token", accessToken, {
+        expires: 1,
+        path: "/",
+        sameSite: "lax",
+        secure: window.location.protocol === "https:",
+      });
+
       localStorage.setItem("token", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       setSuccessMsg("LOGGING IN...");
 
-      setTimeout(() => {
-        if (user.role === "ADMIN") {
-          router.replace("/admin/dashboard");
-        } else if (user.role === "SALES") {
-          router.replace("/sales/dashboard");
-        } else if (user.role === "USER") {
-          router.replace("/user/dashboard");
-        } else {
-          setErrorMsg("Unknown user role.");
-          setSuccessMsg("");
-          setLoading(false);
-        }
-      }, 1000);
+      window.location.replace(targetRoute);
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err));
       setSuccessMsg("");

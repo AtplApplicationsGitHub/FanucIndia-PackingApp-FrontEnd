@@ -82,7 +82,14 @@ const MenuProps = {
   },
 };
 
-const roles: UserRole[] = ["ADMIN", "SALES", "USER"];
+const roles: UserRole[] = ["ADMIN", "SALES", "USER", "SUPER_ADMIN"];
+const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN: "Admin",
+  SALES: "Sales",
+  USER: "User",
+  SUPER_ADMIN: "Super Admin",
+  "": "",
+};
 const passwordChecks = [
   { label: "At least 8 characters", check: (pw: string) => pw.length >= 8 },
   {
@@ -410,7 +417,7 @@ const AdminUserFormModal: React.FC<Props> = ({
                 >
                   {roles.map((r) => (
                     <MenuItem key={r} value={r}>
-                      {r.charAt(0) + r.slice(1).toLowerCase()}
+                      {ROLE_LABELS[r]}
                     </MenuItem>
                   ))}
                 </Select>

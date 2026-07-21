@@ -21,7 +21,6 @@ import {
 import {
   BarChart3,
   ClipboardList,
-  Database,
   Users,
   Truck,
   Grid,
@@ -138,11 +137,6 @@ const allDrawerItems = [
     isHeader: true,
   },
   ...REPORTS_MENU.map((r) => ({ ...r, isSubItem: true })),
-  {
-    label: "MASTER",
-    icon: <Database className="mr-1 h-4 w-4" />,
-    value: "master",
-  },
 ];
 
 export default function AdminDashboardHeader({
@@ -330,17 +324,6 @@ export default function AdminDashboardHeader({
                   </MenuItem>
                 ))}
               </Menu>
-
-              {/* MASTER */}
-              <Button
-                disableRipple
-                variant="text"
-                onClick={() => handleMenuItemClick("master")}
-                sx={navButtonSx(view === "master")}
-              >
-                <Database className="mr-1 h-4 w-4" />
-                MASTER
-              </Button>
 
               {/* More overflow */}
               {hiddenItems.length > 0 && (
@@ -571,47 +554,6 @@ export default function AdminDashboardHeader({
             );
           })}
 
-          {/* MASTER */}
-          {(() => {
-            const isSelected = view === "master";
-            return (
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={() => handleMenuItemClick("master")}
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    borderLeft: isSelected
-                      ? `4px solid ${theme.palette.primary.contrastText}`
-                      : "4px solid transparent",
-                    bgcolor: isSelected
-                      ? "rgba(255,255,255,0.1)"
-                      : "transparent",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: theme.palette.primary.contrastText,
-                      minWidth: 36,
-                    }}
-                  >
-                    <Database className="h-4 w-4" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="MASTER"
-                    primaryTypographyProps={{
-                      fontWeight: isSelected ? 700 : 600,
-                      fontSize: "0.85rem",
-                      letterSpacing: 0.5,
-                      color: theme.palette.primary.contrastText,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })()}
         </List>
       </Drawer>
     </>

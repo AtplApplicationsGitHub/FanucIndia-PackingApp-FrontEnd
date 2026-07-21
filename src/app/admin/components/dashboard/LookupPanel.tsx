@@ -13,6 +13,7 @@ import {
   Settings,
 } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
+import KeyIcon from "@mui/icons-material/Key";
 import { authFetch } from "@/common/lib/authFetch";
 import ConfirmDeleteDialog from "@/common/components/ConfirmDeleteDialog";
 import LookupCrudTable, {
@@ -122,6 +123,14 @@ export default function AdminMasterLookupPanel() {
   const [ipDialogOpen, setIpDialogOpen] = useState(false);
   const [printerIp, setPrinterIp] = useState("");
   const [ipFetching, setIpFetching] = useState(false);
+
+  const [orderDeletePasswordDialogOpen, setOrderDeletePasswordDialogOpen] =
+    useState(false);
+  const [orderDeletePassword, setOrderDeletePassword] = useState("");
+  const [orderDeletePasswordOriginal, setOrderDeletePasswordOriginal] =
+    useState("");
+  const [orderDeletePasswordFetching, setOrderDeletePasswordFetching] =
+    useState(false);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -365,6 +374,68 @@ export default function AdminMasterLookupPanel() {
     }
   };
 
+  const openOrderDeletePasswordDialog = () => {
+    setOrderDeletePasswordDialogOpen(true);
+    setOrderDeletePassword("");
+    setOrderDeletePasswordOriginal("");
+    setOrderDeletePasswordFetching(true);
+
+    (async () => {
+      try {
+        const res = await authFetch(
+          `${API_BASE_URL}/admin/sales-orders/super-password`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setOrderDeletePassword(data?.password || "");
+          setOrderDeletePasswordOriginal(data?.password || "");
+        } else {
+          setOrderDeletePassword("");
+          setOrderDeletePasswordOriginal("");
+        }
+      } catch (error) {
+        showSnackbar("Failed to fetch current Order Delete Password", "error");
+      } finally {
+        setOrderDeletePasswordFetching(false);
+      }
+    })();
+  };
+
+  const saveOrderDeletePassword = async () => {
+    if (!orderDeletePassword.trim()) {
+      showSnackbar("Password cannot be empty", "error");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/admin/sales-orders/super-password`,
+        {
+          method: "POST",
+          body: JSON.stringify({ password: orderDeletePassword.trim() }),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        if (err.message === "") throw new Error("SILENT_ERROR");
+        throw new Error(err.message || "Failed to save password");
+      }
+
+      showSnackbar("Order Delete Password updated successfully!", "success");
+      setOrderDeletePasswordDialogOpen(false);
+    } catch (error: any) {
+      if (error.message !== "SILENT_ERROR") {
+        showSnackbar(
+          error.message || "Failed to save Order Delete Password",
+          "error",
+        );
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDownloadBulk = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -584,6 +655,18 @@ export default function AdminMasterLookupPanel() {
             </IconButton>
           </Tooltip>
 
+          {/* Order Delete Password (Users Tab Only) */}
+          {selectedType === "users" && (
+            <Tooltip title="Order Delete Password" arrow>
+              <IconButton
+                onClick={openOrderDeletePasswordDialog}
+                sx={{ color: "#22c55e" }}
+              >
+                <KeyIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+
           {/* Printer-only Actions */}
           {selectedType === "printers" && (
             <>
@@ -723,6 +806,69 @@ export default function AdminMasterLookupPanel() {
           <CommonButton
             onClick={savePrinterIp}
             disabled={actionLoading || ipFetching}
+          >
+            {actionLoading ? "SAVING..." : "SAVE"}
+          </CommonButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Order Delete Password Dialog */}
+      <Dialog
+        open={orderDeletePasswordDialogOpen}
+        onClose={() => setOrderDeletePasswordDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: "20px",
+            letterSpacing: 0.5,
+            color: "error.main",
+            pb: 1,
+            position: "relative",
+          }}
+        >
+          ORDER DELETE PASSWORD
+          <IconButton
+            aria-label="close"
+            onClick={() => setOrderDeletePasswordDialogOpen(false)}
+            size="small"
+            sx={{ position: "absolute", right: 12 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <TextField
+              autoFocus
+              margin="dense"
+              size="small"
+              label="Order Delete Password"
+              type="text"
+              fullWidth
+              variant="outlined"
+              placeholder={
+                orderDeletePasswordFetching ? "Loading..." : "Order Delete Password"
+              }
+              value={orderDeletePassword}
+              onChange={(e) => setOrderDeletePassword(e.target.value)}
+              disabled={actionLoading || orderDeletePasswordFetching}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 1, gap: 1 }}>
+          <CommonButton
+            onClick={saveOrderDeletePassword}
+            disabled={
+              actionLoading ||
+              orderDeletePasswordFetching ||
+              orderDeletePassword === orderDeletePasswordOriginal
+            }
           >
             {actionLoading ? "SAVING..." : "SAVE"}
           </CommonButton>

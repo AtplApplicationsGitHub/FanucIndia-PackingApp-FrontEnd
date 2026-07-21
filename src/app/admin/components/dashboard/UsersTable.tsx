@@ -210,7 +210,7 @@ const AdminUsersTable: React.FC<Props> = ({
                     <TableCell>{row.name}</TableCell>
                     <TableCell>{row.email}</TableCell>
                     <TableCell sx={{ textTransform: "capitalize" }}>
-                      {row.role.toLowerCase()}
+                      {row.role.replace(/_/g, " ").toLowerCase()}
                     </TableCell>
                     <TableCell>{row.salesZone?.name ?? "-"}</TableCell>
                     <TableCell>
