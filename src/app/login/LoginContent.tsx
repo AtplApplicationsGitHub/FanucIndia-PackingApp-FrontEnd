@@ -167,7 +167,7 @@ export default function LoginContent() {
         const targetRoute = ROLE_ROUTES[user.role];
 
         if (targetRoute) {
-          window.location.replace(targetRoute);
+          router.replace(targetRoute);
         }
       } catch (err: unknown) {
         console.warn("Failed to parse user session data", err);
@@ -240,7 +240,7 @@ export default function LoginContent() {
 
       setSuccessMsg("LOGGING IN...");
 
-      window.location.replace(targetRoute);
+      router.replace(targetRoute);
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err));
       setSuccessMsg("");
