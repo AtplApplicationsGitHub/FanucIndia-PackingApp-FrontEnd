@@ -157,21 +157,29 @@ export default function LoginContent() {
       return;
     }
 
-    const token = Cookies.get("token") || localStorage.getItem("token");
+    const cookieToken = Cookies.get("token");
     const userStr = localStorage.getItem("user");
 
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr) as User;
+    if (!cookieToken) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      return;
+    }
 
-        const targetRoute = ROLE_ROUTES[user.role];
+    if (!userStr) return;
 
-        if (targetRoute) {
-          router.replace(targetRoute);
-        }
-      } catch (err: unknown) {
-        console.warn("Failed to parse user session data", err);
+    try {
+      const user = JSON.parse(userStr) as User;
+      const targetRoute = ROLE_ROUTES[user.role];
+
+      if (targetRoute) {
+        router.replace(targetRoute);
       }
+    } catch (err: unknown) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      Cookies.remove("token");
+      console.warn("Failed to parse user session data", err);
     }
   }, [router, searchParams]);
 
