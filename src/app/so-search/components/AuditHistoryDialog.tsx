@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import HistoryIcon from "@mui/icons-material/History";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -39,19 +40,27 @@ export interface AuditChange {
 
 export interface SalesOrderAuditLog {
   serialNumber: number;
-  action: "ORDER_CREATED" | "ORDER_UPDATED" | "ORDER_ARCHIVED" | string;
+  action:
+    | "ORDER_CREATED"
+    | "ORDER_UPDATED"
+    | "ORDER_ARCHIVED"
+    | "ATTACHMENT_UPLOADED"
+    | string;
   description?: string;
   orderReference?: {
     saleOrderNumber?: string | null;
     outboundDelivery?: string | null;
   };
   changes?: AuditChange[];
+  files?: string[];
   createdBy?: string | null;
   createdAt?: string | null;
   updatedBy?: string | null;
   updatedAt?: string | null;
   archivedBy?: string | null;
   archivedAt?: string | null;
+  uploadedBy?: string | null;
+  uploadedAt?: string | null;
 }
 
 interface Props {
@@ -105,11 +114,13 @@ function formatAuditValue(value: unknown): string {
 }
 
 function getActor(log: SalesOrderAuditLog): string {
-  return log.updatedBy || log.createdBy || log.archivedBy || "SYSTEM";
+  return (
+    log.updatedBy || log.createdBy || log.archivedBy || log.uploadedBy || "SYSTEM"
+  );
 }
 
 function getTimestamp(log: SalesOrderAuditLog): string | null {
-  return log.updatedAt || log.createdAt || log.archivedAt || null;
+  return log.updatedAt || log.createdAt || log.archivedAt || log.uploadedAt || null;
 }
 
 function getActionDetails(action: string) {
@@ -131,6 +142,12 @@ function getActionDetails(action: string) {
         label: "Order Updated",
         color: "primary" as const,
         icon: <EditNoteIcon fontSize="small" />,
+      };
+    case "ATTACHMENT_UPLOADED":
+      return {
+        label: "Attachments Uploaded",
+        color: "info" as const,
+        icon: <AttachFileIcon fontSize="small" />,
       };
     default:
       return {
@@ -389,6 +406,29 @@ function AuditLogEntry({
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>{soNumber}</TableCell>
               <TableCell>{obdValue}</TableCell>
+              <TableCell>{actor}</TableCell>
+              <TableCell>
+                {timestamp ? formatDateTimeIST(timestamp) : "—"}
+              </TableCell>
+            </TableRow>
+          </AuditTable>
+        ) : log.action === "ATTACHMENT_UPLOADED" ? (
+          <AuditTable
+            headers={[
+              "SO Number",
+              "OBD Value",
+              "Files",
+              "Uploaded By",
+              "Uploaded At",
+            ]}
+            columnWidths={["16%", "16%", "34%", "16%", "18%"]}
+          >
+            <TableRow>
+              <TableCell sx={{ fontWeight: 700 }}>{soNumber}</TableCell>
+              <TableCell>{obdValue}</TableCell>
+              <TableCell sx={{ wordBreak: "break-word" }}>
+                {formatAuditValue(log.files)}
+              </TableCell>
               <TableCell>{actor}</TableCell>
               <TableCell>
                 {timestamp ? formatDateTimeIST(timestamp) : "—"}

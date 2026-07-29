@@ -339,20 +339,27 @@ export function useSalesDashboard() {
         });
 
         const params = new URLSearchParams();
-        if (searchTerm) params.append("search", searchTerm);
-        if (paymentFilter) params.append("paymentClearance", paymentFilter);
-        if (startDate) params.append("startDate", toLocalYMD(startDate));
-        if (endDate) params.append("endDate", toLocalYMD(endDate));
+
+        if (selectedIds.length > 0) {
+          // User has specific rows checked - export exactly those,
+          // ignore the other filters below entirely.
+          params.append("ids", selectedIds.join(","));
+        } else {
+          if (searchTerm) params.append("search", searchTerm);
+          if (paymentFilter) params.append("paymentClearance", paymentFilter);
+          if (startDate) params.append("startDate", toLocalYMD(startDate));
+          if (endDate) params.append("endDate", toLocalYMD(endDate));
+
+          if (view === "dispatched") {
+            params.append("status", "Dispatched");
+          } else if (statusFilter) {
+            params.append("status", statusFilter);
+          } else if (view === "orders") {
+            params.append("excludeStatus", "Dispatched");
+          }
+        }
 
         if (isBlank) params.append("blank", "true");
-
-        if (view === "dispatched") {
-          params.append("status", "Dispatched");
-        } else if (statusFilter) {
-          params.append("status", statusFilter);
-        } else if (view === "orders") {
-          params.append("excludeStatus", "Dispatched");
-        }
 
         const url = `${API.SALES.EXCEL_EXPORT}?${params.toString()}`;
 
@@ -387,7 +394,7 @@ export function useSalesDashboard() {
         });
       }
     },
-    [searchTerm, paymentFilter, statusFilter, startDate, endDate, view],
+    [searchTerm, paymentFilter, statusFilter, startDate, endDate, view, selectedIds],
   );
 
   const handleBulkUpload = () => fileInputRef.current?.click();
