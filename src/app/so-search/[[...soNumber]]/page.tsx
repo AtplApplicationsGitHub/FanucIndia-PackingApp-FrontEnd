@@ -50,6 +50,7 @@ import { useSearchParams } from "next/navigation";
 import { useTheme, alpha, TableContainer, Tooltip } from "@mui/material";
 import CommonButton from "@/common/components/CommonButton";
 import BackButton from "@/common/components/BackButton";
+import type { SalesOrderAuditLog } from "../components/AuditHistoryDialog";
 
 interface ErpImportLogData {
   id: number;
@@ -82,6 +83,7 @@ interface SalesOrder {
   skipPackingStage?: boolean | null;
   issueAssignedUser?: { name: string; email?: string } | null;
   packingAssignedUser?: { name: string; email?: string } | null;
+  auditLogs?: SalesOrderAuditLog[] | null;
 }
 
 interface DispatchInfoData {

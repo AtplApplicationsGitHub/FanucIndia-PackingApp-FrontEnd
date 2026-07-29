@@ -1,6 +1,18 @@
-import { Box, Link, Paper, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Link,
+  Paper,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { KVBox } from "./KVBox";
 import { formatDateIST, formatDateTimeIST } from "@/common/utils/dateTime";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import { useState } from "react";
+import AuditHistoryDialog, {
+  type SalesOrderAuditLog,
+} from "./AuditHistoryDialog";
 
 interface SalesOrder {
   status: string;
@@ -26,6 +38,7 @@ interface SalesOrder {
   packingAssignedUser?: { name: string; email?: string } | null;
   erpImportLogs?: ErpImportLogData[];
   ERPImportLogs?: ErpImportLogData[];
+  auditLogs?: SalesOrderAuditLog[] | null;
 }
 
 interface DispatchInfoData {
@@ -60,7 +73,9 @@ interface Props {
   erpImportLogs?: ErpImportLogData[];
   onViewPackingAttachments: () => void;
   onViewDispatchAttachments?: () => void;
-  onViewVehicleAttachments?: (entry: VehicleEntrySummary) => void | Promise<void>;
+  onViewVehicleAttachments?: (
+    entry: VehicleEntrySummary,
+  ) => void | Promise<void>;
   onViewPaymentAttachments?: () => void;
   hasPaymentAttachments?: boolean;
 }
@@ -75,6 +90,8 @@ export default function OrderSnapshot({
   onViewPaymentAttachments,
   hasPaymentAttachments = false,
 }: Props) {
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
+
   const customerName =
     salesOrder.customerNameText?.trim() || salesOrder.customer?.name || "—";
 
@@ -152,11 +169,25 @@ export default function OrderSnapshot({
         alignItems="center"
         mb={2}
       >
-        <Typography
-          sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
-        >
-          ORDER
-        </Typography>
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <Typography
+            sx={{ color: "secondary.main", fontWeight: 600, fontSize: "20px" }}
+          >
+            ORDER
+          </Typography>
+          <Tooltip title="View audit history">
+            <span>
+              <IconButton
+                size="small"
+                color="secondary"
+                aria-label="View order audit history"
+                onClick={() => setAuditDialogOpen(true)}
+              >
+                <TimelineIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
       </Box>
       <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <KVBox label="Sales Order Number" value={salesOrder.saleOrderNumber} />
@@ -372,6 +403,14 @@ export default function OrderSnapshot({
           ))}
         </Box>
       )}
+
+      <AuditHistoryDialog
+        open={auditDialogOpen}
+        onClose={() => setAuditDialogOpen(false)}
+        auditLogs={salesOrder.auditLogs}
+        orderNumber={salesOrder.saleOrderNumber}
+        outboundDelivery={salesOrder.outboundDelivery}
+      />
     </Paper>
   );
 }
