@@ -121,6 +121,12 @@ function formatAuditValue(value: unknown, field?: string): string {
       return `${dd}-${mm}-${yyyy}`;
     }
   }
+  if (
+    field === "isErpImported" &&
+    (typeof value === "number" || typeof value === "string")
+  ) {
+    return String(value) === "1" ? "true" : "false";
+  }
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
