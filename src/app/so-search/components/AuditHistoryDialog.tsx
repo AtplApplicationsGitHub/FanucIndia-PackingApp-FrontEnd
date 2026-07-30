@@ -103,11 +103,23 @@ function toReadableLabel(field: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatAuditValue(value: unknown): string {
+function formatAuditValue(value: unknown, field?: string): string {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (Array.isArray(value)) {
-    return value.length ? value.map(formatAuditValue).join(", ") : "—";
+    return value.length ? value.map((v) => formatAuditValue(v)).join(", ") : "—";
+  }
+  if (
+    field === "deliveryDate" &&
+    (typeof value === "string" || typeof value === "number")
+  ) {
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      const dd = String(parsed.getUTCDate()).padStart(2, "0");
+      const mm = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+      const yyyy = parsed.getUTCFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    }
   }
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
@@ -371,10 +383,10 @@ function AuditLogEntry({
                     {toReadableLabel(change.field)}
                   </TableCell>
                   <TableCell sx={{ wordBreak: "break-word" }}>
-                    {formatAuditValue(oldValue)}
+                    {formatAuditValue(oldValue, change.field)}
                   </TableCell>
                   <TableCell sx={{ wordBreak: "break-word", fontWeight: 700 }}>
-                    {formatAuditValue(newValue)}
+                    {formatAuditValue(newValue, change.field)}
                   </TableCell>
                   <TableCell>{actor}</TableCell>
                   <TableCell>
