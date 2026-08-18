@@ -114,7 +114,18 @@ export default function UserMenu({
     <Box>
       <Tooltip title={username || "User"}>
         <Box
+          role="button"
+          tabIndex={0}
+          aria-label="User avatar menu"
+          aria-haspopup="menu"
+          aria-expanded={isMainOpen ? "true" : undefined}
           onClick={handleMainOpen}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setMainAnchor(e.currentTarget);
+            }
+          }}
           sx={{
             display: "flex",
             alignItems: "center",
