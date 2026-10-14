@@ -24,7 +24,7 @@ import FgStorageReport from "../components/dashboard/FgStorageReport";
 import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 import FgLocation from "@/app/admin/components/dashboard/ManualFg";
-import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport"; 
+import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport";
 
 function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -87,9 +87,25 @@ function AdminDashboardContent() {
   const handleViewChange = (viewInput: any) => {
     const newView =
       typeof viewInput === "function" ? viewInput(admin.view) : viewInput;
+
+    if (newView === "audit_planning") {
+      router.push("/admin/audit/planning");
+      return;
+    }
+
+    if (newView === "reconciliation_discrepancy") {
+      router.push("/admin/audit/reconciliation");
+      return;
+    }
+
+    if (newView === "audit_history") {
+      router.push("/admin/audit/history");
+      return;
+    }
+
     admin.setView(newView);
     sessionStorage.setItem("adminView", newView);
-    router.push(`/admin/dashboard?view=${newView}`); // This adds it to the back button history!
+    router.push(`/admin/dashboard?view=${newView}`);
   };
 
   const showSnackbar = (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
@@ -35,6 +35,10 @@ import {
   Menu as MenuIcon,
   X,
   TrendingUp,
+  ChevronRight,
+  ClipboardCheck,
+  GitCompare,
+  History,
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -95,6 +99,24 @@ const allMenuItems = [
     value: "fg_dashboard",
   },
 ];
+const AUDIT_MENU = [
+  {
+    label: "AUDIT PLANNING",
+    value: "audit_planning",
+    icon: <ClipboardCheck size={16} />,
+  },
+  {
+    label: "RECONCILIATION & DISCREPANCY",
+    value: "reconciliation_discrepancy",
+    icon: <GitCompare size={16} />,
+  },
+  {
+    label: "AUDIT HISTORY",
+    value: "audit_history",
+    icon: <History size={16} />,
+  },
+];
+const AUDIT_VALUES = AUDIT_MENU.map((a) => a.value);
 
 const REPORTS_MENU = [
   { label: "STATUS HUB", value: "status_hub", icon: <Activity size={16} /> },
@@ -115,6 +137,12 @@ const REPORTS_MENU = [
     value: "efficiency_report",
     icon: <TrendingUp size={16} />,
   },
+  {
+    label: "AUDIT",
+    value: "audit",
+    icon: <ClipboardCheck size={16} />,
+    children: AUDIT_MENU,
+  },
 ];
 
 const REPORT_VALUES = [
@@ -124,7 +152,9 @@ const REPORT_VALUES = [
   "fg_report",
   "archived",
   "efficiency_report",
+  ...AUDIT_VALUES,
 ];
+
 const MAX_VISIBLE_ITEMS = 8;
 
 // All items for the mobile drawer (flat list)
@@ -154,8 +184,69 @@ export default function AdminDashboardHeader({
 
   const [reportsAnchor, setReportsAnchor] = useState<null | HTMLElement>(null);
   const reportsOpen = Boolean(reportsAnchor);
+  const [auditExpanded, setAuditExpanded] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerReportsOpen, setDrawerReportsOpen] = useState(false);
+  const [drawerAuditOpen, setDrawerAuditOpen] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+
+  const [showDesktopNav, setShowDesktopNav] = useState(false);
+
+  const updateNavbarLayout = useCallback(() => {
+    const toolbar = toolbarRef.current;
+    const logo = logoRef.current;
+    const nav = navRef.current;
+    const user = userRef.current;
+
+    if (!toolbar || !logo || !nav || !user) return;
+
+    const styles = window.getComputedStyle(toolbar);
+
+    const availableWidth =
+      toolbar.clientWidth -
+      parseFloat(styles.paddingLeft) -
+      parseFloat(styles.paddingRight);
+
+    const backWidth = backRef.current
+      ? backRef.current.getBoundingClientRect().width +
+        parseFloat(window.getComputedStyle(backRef.current).marginRight)
+      : 0;
+
+    const requiredWidth =
+      backWidth +
+      logo.getBoundingClientRect().width +
+      nav.getBoundingClientRect().width +
+      user.getBoundingClientRect().width +
+      32;
+
+    setShowDesktopNav(requiredWidth <= availableWidth);
+  }, []);
+
+  useEffect(() => {
+    const observer = new ResizeObserver(updateNavbarLayout);
+
+    const elements = [
+      toolbarRef.current,
+      logoRef.current,
+      navRef.current,
+      userRef.current,
+      backRef.current,
+    ];
+
+    elements.forEach((element) => {
+      if (element) observer.observe(element);
+    });
+
+    document.fonts.ready.then(updateNavbarLayout);
+    updateNavbarLayout();
+
+    return () => observer.disconnect();
+  }, [updateNavbarLayout]);
 
   const visibleItems = allMenuItems.slice(0, MAX_VISIBLE_ITEMS);
   const hiddenItems = allMenuItems.slice(MAX_VISIBLE_ITEMS);
@@ -210,9 +301,10 @@ export default function AdminDashboardHeader({
         sx={{ px: 0, boxShadow: 2, bgcolor: theme.palette.primary.main }}
       >
         <Toolbar
+          ref={toolbarRef}
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
             alignItems: "center",
             pl: { xs: 1.5, md: 4 },
             pr: { xs: 1, md: 2 },
@@ -223,6 +315,7 @@ export default function AdminDashboardHeader({
           {/* Back Button */}
           {showBackButton && (
             <IconButton
+              ref={backRef}
               onClick={() => router.back()}
               sx={{
                 mr: 1,
@@ -236,9 +329,12 @@ export default function AdminDashboardHeader({
 
           {/* Logo + Version */}
           <Box
+            ref={logoRef}
             sx={{
-              flexGrow: 1,
+              flexGrow: 0,
+              flexShrink: 0,
               mr: 1,
+              ml: 0,
               cursor: "pointer",
               display: "flex",
               alignItems: "flex-end",
@@ -268,11 +364,21 @@ export default function AdminDashboardHeader({
             </Typography>
           </Box>
 
-          {/* Desktop Nav — hidden on mobile */}
+          {/* Desktop Navigation */}
           <Box
+            ref={navRef}
+            aria-hidden={!showDesktopNav}
+            inert={!showDesktopNav}
             sx={{
-              display: { xs: "none", md: "flex" },
+              display: "flex",
               justifyContent: "flex-end",
+              flexShrink: 0,
+              ml: "auto",
+              width: "max-content",
+              position: showDesktopNav ? "static" : "absolute",
+              visibility: showDesktopNav ? "visible" : "hidden",
+              pointerEvents: showDesktopNav ? "auto" : "none",
+              left: showDesktopNav ? "auto" : "-9999px",
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
@@ -291,7 +397,6 @@ export default function AdminDashboardHeader({
                   </Button>
                 );
               })}
-
               {/* REPORTS dropdown */}
               <Button
                 disableRipple
@@ -309,20 +414,59 @@ export default function AdminDashboardHeader({
                 onClose={() => setReportsAnchor(null)}
                 anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
+                PaperProps={{ sx: { width: 250 } }}
               >
-                {REPORTS_MENU.map((r) => (
-                  <MenuItem
-                    key={r.value}
-                    selected={view === r.value}
-                    onClick={() => {
-                      setView(r.value as ViewType);
-                      setReportsAnchor(null);
-                    }}
-                  >
-                    <ListItemIcon>{r.icon}</ListItemIcon>
-                    <ListItemText>{r.label}</ListItemText>
-                  </MenuItem>
-                ))}
+                {REPORTS_MENU.flatMap((r) => {
+                  if (!r.children) {
+                    return [
+                      <MenuItem
+                        key={r.value}
+                        selected={view === r.value}
+                        onClick={() => {
+                          setView(r.value as ViewType);
+                          setReportsAnchor(null);
+                        }}
+                      >
+                        <ListItemIcon>{r.icon}</ListItemIcon>
+                        <ListItemText>{r.label}</ListItemText>
+                      </MenuItem>,
+                    ];
+                  }
+                  return [
+                    <MenuItem
+                      key={r.value}
+                      selected={AUDIT_VALUES.includes(view)}
+                      onClick={() => setAuditExpanded((p) => !p)}
+                    >
+                      <ListItemIcon>{r.icon}</ListItemIcon>
+                      <ListItemText>{r.label}</ListItemText>
+                      <ChevronRight
+                        size={16}
+                        style={{
+                          transform: auditExpanded ? "rotate(90deg)" : "none",
+                          transition: "transform 0.2s",
+                        }}
+                      />
+                    </MenuItem>,
+                    ...(auditExpanded
+                      ? r.children.map((c) => (
+                          <MenuItem
+                            key={c.value}
+                            selected={view === c.value}
+                            sx={{ pl: 5, whiteSpace: "normal" }}
+                            onClick={() => {
+                              setView(c.value as ViewType);
+                              setReportsAnchor(null);
+                              setAuditExpanded(false);
+                            }}
+                          >
+                            <ListItemIcon>{c.icon}</ListItemIcon>
+                            <ListItemText>{c.label}</ListItemText>
+                          </MenuItem>
+                        ))
+                      : []),
+                  ];
+                })}
               </Menu>
 
               {/* More overflow */}
@@ -378,17 +522,19 @@ export default function AdminDashboardHeader({
           {/* Right: UserMenu + Hamburger (mobile) */}
           <Box
             sx={{
-              ml: { xs: 0.5, md: 0 },
+              ml: showDesktopNav ? 0 : "auto",
               display: "flex",
               alignItems: "center",
               gap: { xs: 0.5, md: 1 },
             }}
           >
-            <UserMenu username={userName} userRole="ADMIN" variant="full" />
+            <Box ref={userRef} sx={{ flexShrink: 0 }}>
+              <UserMenu username={userName} userRole="ADMIN" variant="full" />
+            </Box>
             <IconButton
               onClick={() => setDrawerOpen(true)}
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: showDesktopNav ? "none" : "flex",
                 color: theme.palette.primary.contrastText,
                 p: 0.5,
                 "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
@@ -405,7 +551,11 @@ export default function AdminDashboardHeader({
       <Drawer
         anchor="right"
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setDrawerReportsOpen(false);
+          setDrawerAuditOpen(false);
+        }}
         PaperProps={{
           sx: {
             width: 260,
@@ -425,7 +575,11 @@ export default function AdminDashboardHeader({
           }}
         >
           <IconButton
-            onClick={() => setDrawerOpen(false)}
+            onClick={() => {
+              setDrawerOpen(false);
+              setDrawerReportsOpen(false);
+              setDrawerAuditOpen(false);
+            }}
             sx={{
               color: theme.palette.primary.contrastText,
               "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
@@ -481,55 +635,98 @@ export default function AdminDashboardHeader({
           })}
 
           {/* REPORTS sub-section label */}
+        
           <ListItem disablePadding>
-            <Box
+            <ListItemButton
+              onClick={() => setDrawerReportsOpen((prev) => !prev)}
+              aria-expanded={drawerReportsOpen}
               sx={{
                 px: 2,
-                pt: 1.5,
-                pb: 0.5,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
+                py: 1.5,
+                "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
               }}
             >
-              <FileBarChart
-                size={16}
-                color={theme.palette.primary.contrastText}
-                style={{ opacity: 0.6 }}
-              />
-              <Typography
+              <ListItemIcon
                 sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                  letterSpacing: 1.2,
-                  opacity: 0.6,
                   color: theme.palette.primary.contrastText,
+                  minWidth: 32,
                 }}
               >
-                REPORTS
-              </Typography>
-            </Box>
+                <FileBarChart size={16} />
+              </ListItemIcon>
+
+              <ListItemText
+                primary="REPORTS"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                  color: theme.palette.primary.contrastText,
+                }}
+              />
+
+              <ChevronDown
+                size={18}
+                style={{
+                  transform: drawerReportsOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
+            </ListItemButton>
           </ListItem>
-          {REPORTS_MENU.map((r) => {
-            const isSelected = view === r.value;
-            return (
-              <ListItem key={r.value} disablePadding>
+          {drawerReportsOpen && (
+            <>
+              {REPORTS_MENU.filter((r) => !r.children).map((r) => {
+                const isSelected = view === r.value;
+                return (
+                  <ListItem key={r.value} disablePadding>
+                    <ListItemButton
+                      onClick={() => {
+                        setView(r.value as ViewType);
+                        setDrawerOpen(false);
+                      }}
+                      sx={{
+                        pl: 4,
+                        py: 1.2,
+                        borderLeft: isSelected
+                          ? `4px solid ${theme.palette.primary.contrastText}`
+                          : "4px solid transparent",
+                        bgcolor: isSelected
+                          ? "rgba(255,255,255,0.1)"
+                          : "transparent",
+                        "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          color: theme.palette.primary.contrastText,
+                          minWidth: 32,
+                        }}
+                      >
+                        {r.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={r.label}
+                        primaryTypographyProps={{
+                          fontWeight: isSelected ? 700 : 600,
+                          fontSize: "0.82rem",
+                          letterSpacing: 0.4,
+                          color: theme.palette.primary.contrastText,
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+
+              <ListItem disablePadding>
                 <ListItemButton
-                  onClick={() => {
-                    setView(r.value as ViewType);
-                    setDrawerOpen(false);
-                  }}
+                  onClick={() => setDrawerAuditOpen((prev) => !prev)}
+                  aria-expanded={drawerAuditOpen}
                   sx={{
                     pl: 4,
                     py: 1.2,
-                    borderLeft: isSelected
-                      ? `4px solid ${theme.palette.primary.contrastText}`
-                      : "4px solid transparent",
-                    bgcolor: isSelected
-                      ? "rgba(255,255,255,0.1)"
-                      : "transparent",
                     "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                    transition: "all 0.2s ease",
                   }}
                 >
                   <ListItemIcon
@@ -538,22 +735,69 @@ export default function AdminDashboardHeader({
                       minWidth: 32,
                     }}
                   >
-                    {r.icon}
+                    <ClipboardCheck size={16} />
                   </ListItemIcon>
                   <ListItemText
-                    primary={r.label}
+                    primary="AUDIT"
                     primaryTypographyProps={{
-                      fontWeight: isSelected ? 700 : 600,
+                      fontWeight: 600,
                       fontSize: "0.82rem",
-                      letterSpacing: 0.4,
                       color: theme.palette.primary.contrastText,
+                    }}
+                  />
+                  <ChevronDown
+                    size={18}
+                    style={{
+                      transform: drawerAuditOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.2s",
                     }}
                   />
                 </ListItemButton>
               </ListItem>
-            );
-          })}
-
+              {drawerAuditOpen &&
+                AUDIT_MENU.map((a) => {
+                  const isSelected = view === a.value;
+                  return (
+                    <ListItem key={a.value} disablePadding>
+                      <ListItemButton
+                        onClick={() => {
+                          setView(a.value as ViewType);
+                          setDrawerOpen(false);
+                        }}
+                        sx={{
+                          pl: 6,
+                          py: 1.2,
+                          borderLeft: isSelected
+                            ? `4px solid ${theme.palette.primary.contrastText}`
+                            : "4px solid transparent",
+                          bgcolor: isSelected
+                            ? "rgba(255,255,255,0.1)"
+                            : "transparent",
+                          "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            color: theme.palette.primary.contrastText,
+                            minWidth: 32,
+                          }}
+                        >
+                          {a.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={a.label}
+                          primaryTypographyProps={{
+                            fontWeight: isSelected ? 700 : 600,
+                            fontSize: "0.8rem",
+                            color: theme.palette.primary.contrastText,
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+            </>
+          )}
         </List>
       </Drawer>
     </>
