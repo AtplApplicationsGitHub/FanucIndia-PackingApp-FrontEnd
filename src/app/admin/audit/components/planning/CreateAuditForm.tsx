@@ -25,8 +25,10 @@ import type { AuditRow, AuditType } from "../../types/audit";
 
 export default function CreateAuditForm({
   auditType,
+  onClose,
 }: {
   auditType: AuditType;
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const { savePlan } = useAuditPlans();
@@ -82,7 +84,8 @@ export default function CreateAuditForm({
         rows,
       });
 
-      router.push("/admin/audit/planning");
+      if (onClose) onClose();
+      else router.push("/admin/audit/planning");
     } catch {
       setError("Unable to save the mock audit.");
     }

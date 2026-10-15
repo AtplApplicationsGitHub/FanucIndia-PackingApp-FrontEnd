@@ -5,6 +5,8 @@ import { useState } from "react";
 import {
   alpha,
   Paper,
+  Box,
+  Chip,
   Table,
   TableBody,
   TableCell,
@@ -24,23 +26,32 @@ export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
   const [perPage, setPerPage] = useState(10);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
-      <Typography fontWeight={700} sx={{ mb: 2 }}>
-        Excel Preview — {rows.length} records
-      </Typography>
+    <Paper variant="outlined" sx={{ p: 1.5, mt: 1.2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <Typography fontWeight={700}>Excel Preview</Typography>
+        <Chip
+          size="small"
+          label={`${rows.length} records`}
+          sx={{
+            fontWeight: 600,
+            bgcolor: alpha(theme.palette.primary.main, 0.2),
+          }}
+        />
+      </Box>
 
-      <TableContainer>
-        <Table size="small">
+      <TableContainer sx={{ maxHeight: perPage > 10 ? 360 : "none" }}>
+        <Table size="small" stickyHeader>
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow>
-              {["Excel Row", "Storage Bin", "Material Code", "Quantity"].map(
+              {["Storage Bin", "Material Code", "Quantity"].map(
                 (label, index) => (
                   <TableCell
                     key={label}
-                    align={index === 3 ? "right" : "left"}
+                    align={index === 2 ? "right" : "left"}
                     sx={{
                       fontWeight: "bold",
                       color: theme.palette.primary.contrastText,
+                      bgcolor: theme.palette.primary.main,
                     }}
                   >
                     {label}
@@ -63,7 +74,6 @@ export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
                         : "inherit",
                   }}
                 >
-                  <TableCell>{row.excelRow}</TableCell>
                   <TableCell>{row.storage}</TableCell>
                   <TableCell>{row.materialCode}</TableCell>
                   <TableCell align="right">{row.quantity}</TableCell>
@@ -78,7 +88,7 @@ export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
         count={rows.length}
         page={page}
         rowsPerPage={perPage}
-        rowsPerPageOptions={[10, 25, 50]}
+        rowsPerPageOptions={[10, 20]}
         onPageChange={(_, nextPage) => setPage(nextPage)}
         onRowsPerPageChange={(e) => {
           setPerPage(Number(e.target.value));

@@ -32,42 +32,36 @@ export default function AuditPlanning() {
     {
       type: "cycle_count",
       title: "Cycle Count",
-      description: "Risk-based physical stock verification.",
       path: "/admin/audit/planning/cycle-count",
       icon: <Package size={18} />,
     },
     {
       type: "bom",
       title: "BOM Completeness",
-      description: "Verify disturbed packages against SAP BOM.",
       path: "/admin/audit/planning/bom",
       icon: <FileText size={18} />,
     },
     {
       type: "location",
       title: "Location Audit",
-      description: "Verify actual storage locations.",
       path: "/admin/audit/planning/location",
       icon: <MapPin size={18} />,
     },
     {
       type: "free_stock",
       title: "Free Stock / 4th Axis",
-      description: "Verify free-stock inventory.",
       path: "/admin/audit/planning/free-stock",
       icon: <Tag size={18} />,
     },
   ] satisfies Array<{
     type: AuditType;
     title: string;
-    description: string;
     path: string;
     icon: React.ReactNode;
   }>;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
-    
       {/* <Box sx={{ ...gridSx, mb: 2 }}>
         <StatCard
           label="Active audits"
@@ -121,9 +115,8 @@ export default function AuditPlanning() {
           <AuditTypeCard
             key={card.type}
             title={card.title}
-            description={card.description}
             icon={card.icon}
-            path={card.path}
+            type={card.type}
             count={plans.filter((plan) => plan.type === card.type).length}
           />
         ))}
