@@ -22,9 +22,9 @@ import ExcelUpload from "./ExcelUpload";
 import OperatorSelect from "./OperatorSelect";
 import AuditExcelPreview from "./AuditExcelPreview";
 
+import { useCreateBomAudit } from "../../hooks/useCreateBomAudit";
 import { parseAuditExcel } from "../../utils/parseAuditExcel";
-import { useAuditPlans } from "../../hooks/useAuditPlans";
-import { AUDIT_LABELS } from "../../mock/auditMockData";
+import { AUDIT_LABELS } from "../../utils/auditLabels";
 
 import type { AuditRow, AuditType } from "../../types/audit";
 
@@ -35,10 +35,11 @@ type Props = {
 };
 
 export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
-  const { savePlan } = useAuditPlans();
+  const { createBomAudit, loading: creating } = useCreateBomAudit();
 
   const [name, setName] = useState("");
-  const [operator, setOperator] = useState("");
+  const [operatorId, setOperatorId] = useState<number | "">("");
+  const [operatorName, setOperatorName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<AuditRow[] | null>(null);
   const [error, setError] = useState("");
@@ -51,7 +52,8 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
 
   const handleClose = () => {
     setName("");
-    setOperator("");
+    setOperatorId("");
+    setOperatorName("");
     setFile(null);
     setRows(null);
     setError("");
@@ -62,14 +64,14 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
   const generateAudit = async () => {
     resetPreview();
 
-    if (!name.trim() || !operator || !file) {
+    if (!name.trim() || operatorId === "" || !file) {
       setError("Audit Name, Excel Upload and Operator are required.");
       return;
     }
 
     try {
       setLoading(true);
-      setRows(await parseAuditExcel(file, auditType));
+      setRows(await parseAuditExcel(file));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unable to read the Excel file.",
@@ -79,31 +81,23 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
     }
   };
 
-  const confirmAudit = () => {
-    if (!rows || !file || !operator || !name.trim()) return;
+  const confirmAudit = async () => {
+    if (!rows || !file || operatorId === "" || !name.trim()) return;
 
     try {
-      savePlan({
-        id: crypto.randomUUID(),
-        name: name.trim(),
-        type: auditType,
-        operator,
-        fileName: file.name,
-        createdAt: new Date().toISOString(),
-        status: "Assigned",
-        rows,
-      });
-
+      await createBomAudit({ file, auditName: name.trim(), operatorId });
       handleClose();
-    } catch {
-      setError("Unable to save the mock audit.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create BOM audit.",
+      );
     }
   };
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={creating ? undefined : handleClose}
       fullWidth
       maxWidth="md"
       PaperProps={{ sx: { borderRadius: 2 } }}
@@ -124,6 +118,7 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
         {AUDIT_LABELS[auditType].toUpperCase()} – CREATE AUDIT
         <IconButton
           onClick={handleClose}
+          disabled={creating}
           size="small"
           sx={{ position: "absolute", right: 12 }}
         >
@@ -147,6 +142,7 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
             fullWidth
             size="small"
             value={name}
+            inputProps={{ maxLength: 255 }}
             onChange={(e) => {
               setName(e.target.value);
               resetPreview();
@@ -154,9 +150,10 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
           />
 
           <OperatorSelect
-            value={operator}
-            onChange={(value) => {
-              setOperator(value);
+            value={operatorId}
+            onChange={(id, opName) => {
+              setOperatorId(id);
+              setOperatorName(opName);
               resetPreview();
             }}
           />
@@ -173,12 +170,25 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert
+            severity="error"
+            sx={{
+              mt: 2,
+              whiteSpace: "pre-line",
+              maxHeight: 220,
+              overflowY: "auto",
+            }}
+          >
             {error}
           </Alert>
         )}
 
-        {rows && <AuditExcelPreview rows={rows} />}
+        {rows && (
+          <AuditExcelPreview
+            rows={rows}
+            headers={["Storage", "Material Code", "Qty"]}
+          />
+        )}
       </DialogContent>
 
       <Divider />
@@ -186,14 +196,22 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
       <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
         {rows && (
           <Typography variant="body2" sx={{ mr: "auto" }}>
-            Assign {rows.length} records to <strong>{operator}</strong>
+            Assign {rows.length} records to <strong>{operatorName}</strong>
           </Typography>
         )}
 
         {rows ? (
           <>
-            <CommonButton onClick={resetPreview}>BACK</CommonButton>
-            <CommonButton onClick={confirmAudit}>CONFIRM & ASSIGN</CommonButton>
+            <CommonButton onClick={resetPreview} disabled={creating}>
+              BACK
+            </CommonButton>
+            <CommonButton onClick={confirmAudit} disabled={creating}>
+              {creating ? (
+                <CircularProgress size={22} color="inherit" />
+              ) : (
+                "CONFIRM & ASSIGN"
+              )}
+            </CommonButton>
           </>
         ) : (
           <CommonButton onClick={generateAudit} disabled={loading}>

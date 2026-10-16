@@ -20,7 +20,15 @@ import {
 
 import type { AuditRow } from "../../types/audit";
 
-export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
+export default function AuditExcelPreview({
+  rows,
+  headers = ["Storage Bin", "Material Code", "Quantity"],
+  title = "Excel Preview",
+}: {
+  rows: AuditRow[];
+  headers?: string[];
+  title?: string;
+}) {
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [perPage, setPerPage] = useState(10);
@@ -28,7 +36,7 @@ export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
   return (
     <Paper variant="outlined" sx={{ p: 1.5, mt: 1.2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-        <Typography fontWeight={700}>Excel Preview</Typography>
+        <Typography fontWeight={700}>{title}</Typography>
         <Chip
           size="small"
           label={`${rows.length} records`}
@@ -43,21 +51,19 @@ export default function AuditExcelPreview({ rows }: { rows: AuditRow[] }) {
         <Table size="small" stickyHeader>
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow>
-              {["Storage Bin", "Material Code", "Quantity"].map(
-                (label, index) => (
-                  <TableCell
-                    key={label}
-                    align={index === 2 ? "right" : "left"}
-                    sx={{
-                      fontWeight: "bold",
-                      color: theme.palette.primary.contrastText,
-                      bgcolor: theme.palette.primary.main,
-                    }}
-                  >
-                    {label}
-                  </TableCell>
-                ),
-              )}
+              {headers.map((label, index) => (
+                <TableCell
+                  key={label}
+                  align={index === 2 ? "right" : "left"}
+                  sx={{
+                    fontWeight: "bold",
+                    color: theme.palette.primary.contrastText,
+                    bgcolor: theme.palette.primary.main,
+                  }}
+                >
+                  {label}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
 

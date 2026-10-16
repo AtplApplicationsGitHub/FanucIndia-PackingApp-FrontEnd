@@ -16,6 +16,10 @@ export default function ExcelUpload({ file, onChange }: Props) {
 
   const handleFileChange = (selectedFile: File | null) => {
     if (!selectedFile) return;
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError("File larger than 10 MB");
+      return;
+    }
 
     if (selectedFile.name.toLowerCase().endsWith(".xlsx")) {
       setError(null);

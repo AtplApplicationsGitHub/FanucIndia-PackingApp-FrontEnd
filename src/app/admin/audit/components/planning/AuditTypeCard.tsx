@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import CreateAuditDialog from "./CreateAuditDialog";
 import type { AuditType } from "../../types/audit";
@@ -16,7 +15,7 @@ type Props = {
 };
 
 export default function AuditTypeCard({ title, count, type, icon }: Props) {
-  const [open, setOpen] = useState(false); // replaces useRouter
+  const [open, setOpen] = useState(false);
   return (
     <Paper
       variant="outlined"
@@ -64,6 +63,7 @@ export default function AuditTypeCard({ title, count, type, icon }: Props) {
 
       <CommonButton
         variant="contained"
+        disabled={type !== "bom"}
         onClick={() => setOpen(true)}
         sx={{
           alignSelf: "flex-start",

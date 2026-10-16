@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   alpha,
@@ -8,7 +8,6 @@ import {
   Button,
   Chip,
   FormControl,
-  InputAdornment,
   MenuItem,
   Paper,
   Select,
@@ -19,7 +18,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  TextField,
   Typography,
   useTheme,
   Dialog,
@@ -30,76 +28,61 @@ import {
   InputBase,
   Tooltip,
 } from "@mui/material";
-import { Search } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
-import { useAuditPlans } from "../../hooks/useAuditPlans";
-import { AUDIT_LABELS } from "../../mock/auditMockData";
-import type { AuditPlan, AuditStatus, AuditType } from "../../types/audit";
+import { useBomAudits } from "../../hooks/useBomAudits";
+import { useCancelBomAudit } from "../../hooks/useCancelBomAudit";
+import { AUDIT_LABELS } from "../../utils/auditLabels";
+import type { BomAuditStatus, BomAuditSummary } from "../../types/audit";
 import {
   STALE_AFTER_DAYS,
   formatAge,
   getAgeInDays,
 } from "../../utils/auditAge";
 
-import AuditExcelPreview from "./AuditExcelPreview";
+import BomAuditDetailDialog from "./BomAuditDetailDialog";
 
 export default function AuditPlansTable() {
   const theme = useTheme();
-  const { plans, deletePlan } = useAuditPlans();
-  const [search, setSearch] = useState("");
+  const { audits, pagination, params, loading, updateParams } = useBomAudits();
+  const { cancelBomAudit, loading: cancelling } = useCancelBomAudit();
+
   const [searchInput, setSearchInput] = useState("");
-
-  const [auditType, setAuditType] = useState<AuditType | "all">("all");
-
-  const [status, setStatus] = useState<AuditStatus | "All">("Assigned");
-  const [selected, setSelected] = useState<AuditPlan | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<AuditPlan | null>(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [viewId, setViewId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BomAuditSummary | null>(
+    null,
+  );
 
   const headCellSx = {
     fontWeight: "bold",
     color: theme.palette.primary.contrastText,
   };
 
-  const rows = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
 
-    return plans
-      .filter((plan) => {
-        const matchesSearch =
-          !keyword ||
-          [plan.id, plan.name, plan.operator].some((value) =>
-            value.toLowerCase().includes(keyword),
-          );
-
-        const matchesType = auditType === "all" || plan.type === auditType;
-
-        const matchesStatus = status === "All" || plan.status === status;
-
-        return matchesSearch && matchesType && matchesStatus;
-      })
-      .sort((a, b) => {
-        const diff =
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-
-        return status === "Completed" ? -diff : diff;
-      });
-  }, [plans, search, auditType, status]);
-
-  const visibleRows = useMemo(
-    () => rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [rows, page, rowsPerPage],
-  );
-
-  const handleStatusChange = (next: AuditStatus | "All") => {
-    setStatus(next);
-    setPage(0);
-    setSelected(null);
+    try {
+      await cancelBomAudit(deleteTarget.id);
+    } catch (error) {
+      window.dispatchEvent(
+        new CustomEvent("show-global-message", {
+          detail: {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to cancel audit.",
+            severity: "error",
+          },
+        }),
+      );
+      // list may be stale (e.g. already cancelled) -> refresh it
+      window.dispatchEvent(new Event("bom-audits-updated"));
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -146,8 +129,10 @@ export default function AuditPlansTable() {
               component="form"
               onSubmit={(e) => {
                 e.preventDefault();
-                setSearch(searchInput.trim().replace(/\s+/g, " "));
-                setPage(0);
+                updateParams({
+                  search: searchInput.trim().replace(/\s+/g, " "),
+                  page: 1,
+                });
               }}
               sx={{
                 p: "2px 4px",
@@ -178,8 +163,7 @@ export default function AuditPlansTable() {
                   aria-label="clear search"
                   onClick={() => {
                     setSearchInput("");
-                    setSearch("");
-                    setPage(0);
+                    updateParams({ search: "", page: 1 });
                   }}
                 >
                   <ClearIcon sx={{ fontSize: 20 }} />
@@ -191,34 +175,21 @@ export default function AuditPlansTable() {
               </IconButton>
             </Box>
 
-            <FormControl size="small" sx={{ minWidth: 155 }}>
-              <Select
-                value={auditType}
-                onChange={(e) => {
-                  setAuditType(e.target.value as AuditType | "all");
-                  setPage(0);
-                }}
-                inputProps={{ "aria-label": "Audit type filter" }}
-              >
-                <MenuItem value="all">All audit types</MenuItem>
-                <MenuItem value="cycle_count">Cycle Count</MenuItem>
-                <MenuItem value="bom">BOM Completeness</MenuItem>
-                <MenuItem value="location">Location Audit</MenuItem>
-                <MenuItem value="free_stock">Free Stock / 4th Axis</MenuItem>
-              </Select>
-            </FormControl>
-
             <FormControl size="small" sx={{ minWidth: 130 }}>
               <Select
-                value={status}
-                onChange={(e) =>
-                  handleStatusChange(e.target.value as AuditStatus | "All")
-                }
+                value={params.status || "ALL"}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  updateParams({
+                    status: next === "ALL" ? "" : (next as BomAuditStatus),
+                    page: 1,
+                  });
+                }}
                 inputProps={{ "aria-label": "Audit status filter" }}
               >
-                <MenuItem value="All">All statuses</MenuItem>
-                <MenuItem value="Assigned">Assigned</MenuItem>
-                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="ALL">All statuses</MenuItem>
+                <MenuItem value="ASSIGNED">Assigned</MenuItem>
+                <MenuItem value="CANCELLED">Cancelled</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -237,7 +208,6 @@ export default function AuditPlansTable() {
                 <TableCell sx={headCellSx}>Type</TableCell>
                 <TableCell sx={headCellSx}>Assigned To</TableCell>
                 <TableCell sx={headCellSx}>Created On</TableCell>
-                <TableCell sx={headCellSx}>Age</TableCell>
                 <TableCell sx={headCellSx}>Source File</TableCell>
                 <TableCell sx={headCellSx}>Status</TableCell>
                 <TableCell align="center" sx={headCellSx}>
@@ -247,24 +217,23 @@ export default function AuditPlansTable() {
             </TableHead>
 
             <TableBody>
-              {rows.length === 0 ? (
+              {audits.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
-                      No {status.toLowerCase()} audits.
+                      {loading ? "Loading audits..." : "No audits found."}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                visibleRows.map((plan, index) => {
-                  const ageDays = getAgeInDays(plan.createdAt);
-
-                  const isStale =
-                    plan.status === "Assigned" && ageDays >= STALE_AFTER_DAYS;
+                audits.map((audit, index) => {
+                  const isAssigned = audit.status === "ASSIGNED";
+                  const ageDays = getAgeInDays(audit.createdAt);
+                  const isStale = isAssigned && ageDays >= STALE_AFTER_DAYS;
 
                   return (
                     <TableRow
-                      key={plan.id}
+                      key={audit.id}
                       sx={{
                         backgroundColor:
                           index % 2 === 1
@@ -278,16 +247,16 @@ export default function AuditPlansTable() {
                         },
                       }}
                     >
-                      <TableCell>{plan.id.slice(0, 8)}</TableCell>
+                      <TableCell>{audit.auditNo}</TableCell>
 
-                      <TableCell>{plan.name}</TableCell>
+                      <TableCell>{audit.auditName}</TableCell>
 
-                      <TableCell>{AUDIT_LABELS[plan.type]}</TableCell>
+                      <TableCell>{AUDIT_LABELS.bom}</TableCell>
 
-                      <TableCell>{plan.operator}</TableCell>
+                      <TableCell>{audit.operatorName}</TableCell>
 
                       <TableCell>
-                        {new Date(plan.createdAt).toLocaleString("en-GB", {
+                        {new Date(audit.createdAt).toLocaleString("en-GB", {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",
@@ -296,23 +265,12 @@ export default function AuditPlansTable() {
                         })}
                       </TableCell>
 
-                      <TableCell
-                        sx={{
-                          color: isStale ? "warning.main" : "text.secondary",
-                          fontWeight: isStale ? 700 : 400,
-                        }}
-                      >
-                        {plan.status === "Assigned" ? formatAge(ageDays) : "-"}
-                      </TableCell>
-
-                      <TableCell>{plan.fileName}</TableCell>
+                      <TableCell>{audit.fileName}</TableCell>
 
                       <TableCell>
                         <Chip
-                          label={plan.status}
-                          color={
-                            plan.status === "Completed" ? "success" : "warning"
-                          }
+                          label={audit.status}
+                          color={isAssigned ? "warning" : "default"}
                           size="small"
                         />
                       </TableCell>
@@ -321,22 +279,31 @@ export default function AuditPlansTable() {
                         <Tooltip title="View Audit">
                           <IconButton
                             size="small"
-                            aria-label={`View ${plan.name}`}
-                            onClick={() => setSelected(plan)}
+                            aria-label={`View ${audit.auditName}`}
+                            onClick={() => setViewId(audit.id)}
                           >
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title="Delete Audit">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            aria-label={`Delete ${plan.name}`}
-                            onClick={() => setDeleteTarget(plan)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                        <Tooltip
+                          title={
+                            isAssigned
+                              ? "Delete Audit"
+                              : "Only assigned audits can be deleted"
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              disabled={!isAssigned}
+                              aria-label={`Delete ${audit.auditName}`}
+                              onClick={() => setDeleteTarget(audit)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -348,22 +315,23 @@ export default function AuditPlansTable() {
         </TableContainer>
 
         <TablePagination
-          rowsPerPageOptions={[5, 10, 20]}
+          rowsPerPageOptions={[10, 20, 50]}
           component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={(_, nextPage) => setPage(nextPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
+          count={pagination.total}
+          rowsPerPage={params.limit}
+          page={params.page - 1}
+          onPageChange={(_, nextPage) => updateParams({ page: nextPage + 1 })}
+          onRowsPerPageChange={(e) =>
+            updateParams({ limit: parseInt(e.target.value, 10), page: 1 })
+          }
         />
       </Paper>
 
+      <BomAuditDetailDialog auditId={viewId} onClose={() => setViewId(null)} />
+
       <Dialog
         open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
+        onClose={() => (cancelling ? undefined : setDeleteTarget(null))}
         maxWidth="xs"
         fullWidth
       >
@@ -372,34 +340,23 @@ export default function AuditPlansTable() {
         <DialogContent>
           <Typography variant="body2">
             Are you sure you want to delete{" "}
-            <strong>{deleteTarget?.name}</strong>?
+            <strong>{deleteTarget?.auditName}</strong>? The audit will be marked
+            CANCELLED.
           </Typography>
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button disabled={cancelling} onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </Button>
 
           <Button
             color="error"
             variant="contained"
-            onClick={() => {
-              if (!deleteTarget) return;
-
-              try {
-                deletePlan(deleteTarget.id);
-
-                if (selected?.id === deleteTarget.id) {
-                  setSelected(null);
-                }
-
-                setPage(0);
-                setDeleteTarget(null);
-              } catch (error) {
-                console.error("Unable to delete mock audit", error);
-              }
-            }}
+            disabled={cancelling}
+            onClick={handleConfirmDelete}
           >
-            Delete
+            {cancelling ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

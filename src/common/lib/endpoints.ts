@@ -380,6 +380,28 @@ export const API = {
     FILES: `${API_BASE_URL}/samba/files`,
     DOWNLOAD: `${API_BASE_URL}/samba/download`,
   },
+     BOM_AUDIT: {
+  BASE: `${API_BASE_URL}/bom-audit`,
+  LIST: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) => {
+    const query = new URLSearchParams();
+
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.search) query.set("search", params.search);
+    if (params?.status) query.set("status", params.status);
+
+    const qs = query.toString();
+    return `${API_BASE_URL}/bom-audit${qs ? "?" + qs : ""}`;
+  },
+  OPERATORS: `${API_BASE_URL}/bom-audit/operators`,
+  BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
+  CANCEL: (id: number) => `${API_BASE_URL}/bom-audit/${id}/cancel`,
+},
 };
 
 /** PATCH /dispatch/so/:soId request body */
