@@ -24,10 +24,12 @@ export default function AuditExcelPreview({
   rows,
   headers = ["Storage Bin", "Material Code", "Quantity"],
   title = "Excel Preview",
+  showOperator = false,
 }: {
   rows: AuditRow[];
   headers?: string[];
   title?: string;
+  showOperator?: boolean;
 }) {
   const theme = useTheme();
   const [page, setPage] = useState(0);
@@ -54,7 +56,7 @@ export default function AuditExcelPreview({
               {headers.map((label, index) => (
                 <TableCell
                   key={label}
-                  align={index === 2 ? "right" : "left"}
+                  align={index === headers.length - 1 ? "right" : "left"}
                   sx={{
                     fontWeight: "bold",
                     color: theme.palette.primary.contrastText,
@@ -80,6 +82,7 @@ export default function AuditExcelPreview({
                         : "inherit",
                   }}
                 >
+                  {showOperator && <TableCell>{row.operator ?? "–"}</TableCell>}
                   <TableCell>{row.storage}</TableCell>
                   <TableCell>{row.materialCode}</TableCell>
                   <TableCell align="right">{row.quantity}</TableCell>

@@ -36,6 +36,11 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useBomAudits } from "../../hooks/useBomAudits";
 import { useCancelBomAudit } from "../../hooks/useCancelBomAudit";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
+import {
+  BOM_AUDIT_STATUS_OPTIONS,
+  bomAuditStatusColor,
+  bomAuditStatusLabel,
+} from "../../utils/bomAuditStatus";
 import type { BomAuditStatus, BomAuditSummary } from "../../types/audit";
 import {
   STALE_AFTER_DAYS,
@@ -175,7 +180,7 @@ export default function AuditPlansTable() {
               </IconButton>
             </Box>
 
-            <FormControl size="small" sx={{ minWidth: 130 }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
               <Select
                 value={params.status || "ALL"}
                 onChange={(e) => {
@@ -188,8 +193,11 @@ export default function AuditPlansTable() {
                 inputProps={{ "aria-label": "Audit status filter" }}
               >
                 <MenuItem value="ALL">All statuses</MenuItem>
-                <MenuItem value="ASSIGNED">Assigned</MenuItem>
-                <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                {BOM_AUDIT_STATUS_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>
@@ -269,8 +277,8 @@ export default function AuditPlansTable() {
 
                       <TableCell>
                         <Chip
-                          label={audit.status}
-                          color={isAssigned ? "warning" : "default"}
+                          label={bomAuditStatusLabel(audit.status)}
+                          color={bomAuditStatusColor(audit.status)}
                           size="small"
                         />
                       </TableCell>

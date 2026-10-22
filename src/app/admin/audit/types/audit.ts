@@ -5,6 +5,7 @@ export type AuditRow = {
   materialCode: string;
   quantity: number;
   excelRow: number;
+  operator?: string;
 };
 export type BomAudit = {
   id: number;
@@ -22,10 +23,30 @@ export type BomAudit = {
   cancelledByName: string | null;
   totalRows: number;
   mergedRows: number;
+  downloadedAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  submittedAt?: string | null;
+  uploadBatchId?: string | null;
 };
-export type BomAuditStatus = "ASSIGNED" | "CANCELLED";
+export type BomAuditStatus =
+  | "ASSIGNED"
+  | "CANCELLED"
+  | "DOWNLOADED"
+  | "IN_PROGRESS"
+  | "PENDING_RECONCILIATION";
 
 export type BomAuditSummary = Omit<BomAudit, "totalRows" | "mergedRows">;
+
+export type CreateBomAuditResult = {
+  auditName: string;
+  uploadBatchId: string;
+  totalLocations: number;
+  totalMaterials: number;
+  totalRows: number;
+  mergedRows: number;
+  audits: BomAuditSummary[];
+};
 
 export type BomAuditPagination = {
   page: number;

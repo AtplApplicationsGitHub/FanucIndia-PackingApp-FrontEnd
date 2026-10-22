@@ -399,12 +399,12 @@ export const API = {
     return `${API_BASE_URL}/bom-audit${qs ? "?" + qs : ""}`;
   },
   OPERATORS: `${API_BASE_URL}/bom-audit/operators`,
+  TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
   BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
   CANCEL: (id: number) => `${API_BASE_URL}/bom-audit/${id}/cancel`,
 },
 };
 
-/** PATCH /dispatch/so/:soId request body */
 export type DispatchSoPatchBody = {
   LRnumber: string;
 };

@@ -19,6 +19,10 @@ import { KVBox } from "@/app/so-search/components/KVBox";
 import AuditExcelPreview from "./AuditExcelPreview";
 import { useBomAuditDetail } from "../../hooks/useBomAuditDetail";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
+import {
+  bomAuditStatusColor,
+  bomAuditStatusLabel,
+} from "../../utils/bomAuditStatus";
 
 import type { AuditRow } from "../../types/audit";
 
@@ -40,7 +44,6 @@ const formatDateTime = (value: string) =>
 export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
   const { detail, loading, error } = useBomAuditDetail(auditId);
 
-  // Flatten locations -> materials so the same preview table can be reused
   const rows = useMemo<AuditRow[]>(
     () =>
       detail
@@ -49,7 +52,7 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
               storage: location.storageBin,
               materialCode: material.materialCode,
               quantity: material.expectedQty,
-              excelRow: material.id, // only used as a unique key
+              excelRow: material.id,
             })),
           )
         : [],
@@ -109,9 +112,9 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
               <KVBox label="Type" value={AUDIT_LABELS.bom} />
               <KVBox label="Status">
                 <Chip
-                  label={detail.status}
+                  label={bomAuditStatusLabel(detail.status)}
                   size="small"
-                  color={detail.status === "CANCELLED" ? "default" : "warning"}
+                  color={bomAuditStatusColor(detail.status)}
                 />
               </KVBox>
               <KVBox label="Assigned To" value={detail.operatorName} />
@@ -131,6 +134,15 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
                   />
                   <KVBox label="Cancelled By" value={detail.cancelledByName} />
                 </>
+              )}
+              {detail.downloadedAt && (
+                <KVBox label="Downloaded On" value={formatDateTime(detail.downloadedAt)} />
+              )}
+              {detail.startedAt && (
+                <KVBox label="Started On" value={formatDateTime(detail.startedAt)} />
+              )}
+              {detail.submittedAt && (
+                <KVBox label="Submitted On" value={formatDateTime(detail.submittedAt)} />
               )}
             </Box>
 

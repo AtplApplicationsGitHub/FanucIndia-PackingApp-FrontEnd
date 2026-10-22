@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   Alert,
   Box,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -12,21 +13,25 @@ import {
   DialogTitle,
   Divider,
   IconButton,
-  TextField,
   Typography,
 } from "@mui/material";
-import { X } from "lucide-react";
+import { Download, X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
 import ExcelUpload from "./ExcelUpload";
-import OperatorSelect from "./OperatorSelect";
 import AuditExcelPreview from "./AuditExcelPreview";
 
 import { useCreateBomAudit } from "../../hooks/useCreateBomAudit";
-import { parseAuditExcel } from "../../utils/parseAuditExcel";
+import { useDownloadBomTemplate } from "../../hooks/useDownloadBomTemplate";
+import {
+  parseAuditExcel,
+  type AuditOperator,
+  type ParsedAuditFile,
+} from "../../utils/parseAuditExcel";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
 
-import type { AuditRow, AuditType } from "../../types/audit";
+import type { AuditType } from "../../types/audit";
 
 type Props = {
   open: boolean;
@@ -34,44 +39,71 @@ type Props = {
   onClose: () => void;
 };
 
+/*
+ * Create BOM audit from the Excel TEMPLATE.
+ * Audit Name (row 1 of the template) and the Operator of every storage bin (dropdown column)
+ * now come from the file - the "Audit Name" text box and the Operator dropdown were removed
+ * from this form (OperatorSelect.tsx is kept for other screens).
+ * One file = one Audit Name; the server creates ONE AUDIT PER OPERATOR.
+ */
+/** Current USER-role operators - the Operator column of the file is checked against this list */
+async function loadOperators(): Promise<AuditOperator[]> {
+  const res = await fetchWithAuth(API.BOM_AUDIT.OPERATORS);
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !Array.isArray(json.data)) {
+    throw new Error("Unable to load operators. Please try again.");
+  }
+  return json.data as AuditOperator[];
+}
+
 export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
   const { createBomAudit, loading: creating } = useCreateBomAudit();
+  const { downloadTemplate, loading: downloading } = useDownloadBomTemplate();
 
-  const [name, setName] = useState("");
-  const [operatorId, setOperatorId] = useState<number | "">("");
-  const [operatorName, setOperatorName] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [rows, setRows] = useState<AuditRow[] | null>(null);
+  const [parsed, setParsed] = useState<ParsedAuditFile | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const rows = parsed?.rows ?? null;
+
   const resetPreview = () => {
-    setRows(null);
+    setParsed(null);
     setError("");
   };
 
   const handleClose = () => {
-    setName("");
-    setOperatorId("");
-    setOperatorName("");
     setFile(null);
-    setRows(null);
+    setParsed(null);
     setError("");
     setLoading(false);
     onClose();
   };
 
+  const handleDownloadTemplate = async () => {
+    setError("");
+    try {
+      await downloadTemplate();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to download the template.",
+      );
+    }
+  };
+
   const generateAudit = async () => {
     resetPreview();
 
-    if (!name.trim() || operatorId === "" || !file) {
-      setError("Audit Name, Excel Upload and Operator are required.");
+    if (!file) {
+      setError("Please upload the filled BOM audit template.");
       return;
     }
 
     try {
       setLoading(true);
-      setRows(await parseAuditExcel(file));
+      // Operators are checked here, so a wrong operator is shown BEFORE the preview
+      const operators = await loadOperators();
+      setParsed(await parseAuditExcel(file, operators));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unable to read the Excel file.",
@@ -82,17 +114,22 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
   };
 
   const confirmAudit = async () => {
-    if (!rows || !file || operatorId === "" || !name.trim()) return;
+    if (!parsed || !file) return;
 
     try {
-      await createBomAudit({ file, auditName: name.trim(), operatorId });
+      // Audit Name + operators are read from the file by the server
+      await createBomAudit({ file });
       handleClose();
     } catch (err) {
+      // Back to the upload step: don't show "N audits will be created" next to an error
+      setParsed(null);
       setError(
         err instanceof Error ? err.message : "Failed to create BOM audit.",
       );
     }
   };
+
+  const busy = creating || downloading;
 
   return (
     <Dialog
@@ -128,46 +165,53 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
       <Divider />
 
       <DialogContent sx={{ pt: 0.5 }}>
+        {/* Step 1 - template */}
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-            gap: 2,
             mt: 3,
+            p: 1.5,
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
+            gap: 1.5,
           }}
         >
-          <TextField
-            label="Audit Name"
-            required
-            fullWidth
-            size="small"
-            value={name}
-            inputProps={{ maxLength: 255 }}
-            onChange={(e) => {
-              setName(e.target.value);
-              resetPreview();
-            }}
-          />
-
-          <OperatorSelect
-            value={operatorId}
-            onChange={(id, opName) => {
-              setOperatorId(id);
-              setOperatorName(opName);
-              resetPreview();
-            }}
-          />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body2" fontWeight={700}>
+              1. Download the template and fill it
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Type the Audit Name in row 1 and pick an Operator for every
+              storage bin from the dropdown. One audit is created per operator.
+            </Typography>
+          </Box>
+          <CommonButton
+            onClick={handleDownloadTemplate}
+            disabled={busy}
+            startIcon={downloading ? undefined : <Download size={16} />}
+          >
+            {downloading ? (
+              <CircularProgress size={22} color="inherit" />
+            ) : (
+              "DOWNLOAD TEMPLATE"
+            )}
+          </CommonButton>
         </Box>
 
-        <Box sx={{ mt: 3 }}>
-          <ExcelUpload
-            file={file}
-            onChange={(selectedFile) => {
-              setFile(selectedFile);
-              resetPreview();
-            }}
-          />
-        </Box>
+        {/* Step 2 - upload */}
+        <Typography variant="body2" fontWeight={700} sx={{ mt: 3, mb: 1 }}>
+          2. Upload the filled template
+        </Typography>
+        <ExcelUpload
+          file={file}
+          onChange={(selectedFile) => {
+            setFile(selectedFile);
+            resetPreview();
+          }}
+        />
 
         {error && (
           <Alert
@@ -183,10 +227,34 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
           </Alert>
         )}
 
+        {parsed && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2">
+              Audit Name: <strong>{parsed.auditName}</strong>
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5, mb: 0.5 }}>
+              {parsed.operators.length} audit
+              {parsed.operators.length === 1 ? "" : "s"} will be created (one
+              per operator):
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {parsed.operators.map((op) => (
+                <Chip
+                  key={op.label}
+                  size="small"
+                  variant="outlined"
+                  label={`${op.label} – ${op.bins} bin${op.bins === 1 ? "" : "s"}, ${op.records} records`}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
         {rows && (
           <AuditExcelPreview
             rows={rows}
-            headers={["Storage", "Material Code", "Qty"]}
+            showOperator
+            headers={["Operator", "Storage", "Material Code", "Qty"]}
           />
         )}
       </DialogContent>
@@ -194,9 +262,13 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
       <Divider />
 
       <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-        {rows && (
+        {parsed && (
           <Typography variant="body2" sx={{ mr: "auto" }}>
-            Assign {rows.length} records to <strong>{operatorName}</strong>
+            Assign {parsed.rows.length} records to{" "}
+            <strong>
+              {parsed.operators.length} operator
+              {parsed.operators.length === 1 ? "" : "s"}
+            </strong>
           </Typography>
         )}
 
@@ -214,7 +286,7 @@ export default function CreateAuditDialog({ open, auditType, onClose }: Props) {
             </CommonButton>
           </>
         ) : (
-          <CommonButton onClick={generateAudit} disabled={loading}>
+          <CommonButton onClick={generateAudit} disabled={loading || busy}>
             {loading ? (
               <CircularProgress size={22} color="inherit" />
             ) : (
