@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 
 import {
-  Alert,
   Box,
   Chip,
   CircularProgress,
@@ -20,7 +19,6 @@ import CommonButton from "@/common/components/CommonButton";
 
 import { KVBox } from "@/app/so-search/components/KVBox";
 import AuditExcelPreview from "./AuditExcelPreview";
-import { useBomAuditDetail } from "../../hooks/useBomAuditDetail";
 import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
 import {
@@ -28,11 +26,12 @@ import {
   bomAuditStatusLabel,
 } from "../../utils/bomAuditStatus";
 
-import type { AuditRow } from "../../types/audit";
-
+import type { AuditRow, BomAuditDetail } from "../../types/audit";
 type Props = {
-  auditId: number | null;
+  detail: BomAuditDetail | null;
+  open: boolean;
   onClose: () => void;
+  onExited: () => void;
 };
 
 const formatDateTime = (value: string) =>
@@ -45,8 +44,12 @@ const formatDateTime = (value: string) =>
     hour12: false,
   });
 
-export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
-  const { detail, loading, error } = useBomAuditDetail(auditId);
+export default function BomAuditDetailDialog({
+  detail,
+  open,
+  onClose,
+  onExited,
+}: Props) {
   const { downloadReport, loading: downloading } = useDownloadBomReport();
 
   // Flatten locations -> materials so the same preview table can be reused
@@ -67,8 +70,9 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
 
   return (
     <Dialog
-      open={auditId !== null}
+      open={open}
       onClose={onClose}
+      TransitionProps={{ onExited }}
       fullWidth
       maxWidth="md"
       PaperProps={{ sx: { borderRadius: 2 } }}
@@ -98,18 +102,6 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
       <Divider />
 
       <DialogContent sx={{ pt: 0.5 }}>
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mt: 2, whiteSpace: "pre-line" }}>
-            {error}
-          </Alert>
-        )}
-
         {detail && (
           <>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 3 }}>
@@ -143,13 +135,22 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
               )}
               {/* Stage B - handheld timeline */}
               {detail.downloadedAt && (
-                <KVBox label="Downloaded On" value={formatDateTime(detail.downloadedAt)} />
+                <KVBox
+                  label="Downloaded On"
+                  value={formatDateTime(detail.downloadedAt)}
+                />
               )}
               {detail.startedAt && (
-                <KVBox label="Started On" value={formatDateTime(detail.startedAt)} />
+                <KVBox
+                  label="Started On"
+                  value={formatDateTime(detail.startedAt)}
+                />
               )}
               {detail.submittedAt && (
-                <KVBox label="Submitted On" value={formatDateTime(detail.submittedAt)} />
+                <KVBox
+                  label="Submitted On"
+                  value={formatDateTime(detail.submittedAt)}
+                />
               )}
               {/* Report Excel on the SFTP server (created after submit; retried automatically if the upload failed) */}
               {detail.submittedAt && (

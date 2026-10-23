@@ -1,15 +1,29 @@
-import { Alert, Typography } from "@mui/material";
+"use client";
+
+import { Box } from "@mui/material";
+
+import IssueBreakdown from "./IssueBreakdown";
+import ReconAuditsTable from "./ReconAuditsTable";
+import ReconStatCards from "./ReconStatCards";
+import { useReconciliationAudits } from "../../hooks/useReconciliationAudits";
 
 export default function ReconciliationScreen() {
-  return (
-    <>
-      <Typography variant="h5" gutterBottom>
-        Discrepancy & Reconciliation
-      </Typography>
+  const { audits, pagination, stats, params, loading, updateParams } =
+    useReconciliationAudits();
 
-      <Alert severity="info">
-        Reconciliation requirements are pending confirmation.
-      </Alert>
-    </>
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, gap: 2 }}>
+      <ReconStatCards stats={stats} />
+
+      <IssueBreakdown counts={stats.openByIssue} />
+
+      <ReconAuditsTable
+        audits={audits}
+        pagination={pagination}
+        params={params}
+        loading={loading}
+        updateParams={updateParams}
+      />
+    </Box>
   );
 }

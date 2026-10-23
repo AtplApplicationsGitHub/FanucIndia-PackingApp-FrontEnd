@@ -39,6 +39,7 @@ import {
   ClipboardCheck,
   GitCompare,
   History,
+  Layers3,
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -140,7 +141,7 @@ const REPORTS_MENU = [
   {
     label: "AUDIT",
     value: "audit",
-    icon: <ClipboardCheck size={16} />,
+    icon: <Layers3 size={16} />,
     children: AUDIT_MENU,
   },
 ];
@@ -635,7 +636,7 @@ export default function AdminDashboardHeader({
           })}
 
           {/* REPORTS sub-section label */}
-        
+
           <ListItem disablePadding>
             <ListItemButton
               onClick={() => setDrawerReportsOpen((prev) => !prev)}
@@ -735,7 +736,7 @@ export default function AdminDashboardHeader({
                       minWidth: 32,
                     }}
                   >
-                    <ClipboardCheck size={16} />
+                    <Layers3 size={16} />
                   </ListItemIcon>
                   <ListItemText
                     primary="AUDIT"

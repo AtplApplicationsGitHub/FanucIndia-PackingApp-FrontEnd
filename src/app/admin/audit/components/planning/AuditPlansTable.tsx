@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import {
   alpha,
   Box,
@@ -32,16 +31,22 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
+import { formatDateIST } from "@/common/utils/dateTime";
 import { useBomAudits } from "../../hooks/useBomAudits";
 import { useCancelBomAudit } from "../../hooks/useCancelBomAudit";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import { getBomAuditError } from "../../utils/getBomAuditError";
 import {
   BOM_AUDIT_STATUS_OPTIONS,
   bomAuditStatusColor,
   bomAuditStatusLabel,
 } from "../../utils/bomAuditStatus";
-import type { BomAuditStatus, BomAuditSummary } from "../../types/audit";
+import type {
+  BomAuditStatus,
+  BomAuditSummary,
+  BomAuditDetail,
+} from "../../types/audit";
 import {
   STALE_AFTER_DAYS,
   formatAge,
@@ -56,7 +61,64 @@ export default function AuditPlansTable() {
   const { cancelBomAudit, loading: cancelling } = useCancelBomAudit();
 
   const [searchInput, setSearchInput] = useState("");
-  const [viewId, setViewId] = useState<number | null>(null);
+  const [viewDetail, setViewDetail] = useState<BomAuditDetail | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+
+  const viewRequestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      viewRequestRef.current?.abort();
+    };
+  }, []);
+
+  const handleView = async (id: number) => {
+    if (viewRequestRef.current || viewOpen || viewDetail) return;
+
+    const controller = new AbortController();
+    viewRequestRef.current = controller;
+
+    try {
+      const res = await fetchWithAuth(API.BOM_AUDIT.BY_ID(id), {
+        signal: controller.signal,
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          getBomAuditError(json, "Failed to load audit details."),
+        );
+      }
+
+      if (!json.data || json.data.id !== id) {
+        throw new Error("Invalid audit details received.");
+      }
+
+      if (controller.signal.aborted) return;
+
+      setViewDetail(json.data as BomAuditDetail);
+      setViewOpen(true);
+    } catch (error) {
+      if (controller.signal.aborted) return;
+
+      window.dispatchEvent(
+        new CustomEvent("show-global-message", {
+          detail: {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Failed to load audit details.",
+            severity: "error",
+          },
+        }),
+      );
+    } finally {
+      if (viewRequestRef.current === controller) {
+        viewRequestRef.current = null;
+      }
+    }
+  };
   const [deleteTarget, setDeleteTarget] = useState<BomAuditSummary | null>(
     null,
   );
@@ -263,15 +325,7 @@ export default function AuditPlansTable() {
 
                       <TableCell>{audit.operatorName}</TableCell>
 
-                      <TableCell>
-                        {new Date(audit.createdAt).toLocaleString("en-GB", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: false,
-                        })}
-                      </TableCell>
+                      <TableCell>{formatDateIST(audit.createdAt)}</TableCell>
 
                       <TableCell>{audit.fileName}</TableCell>
 
@@ -288,7 +342,7 @@ export default function AuditPlansTable() {
                           <IconButton
                             size="small"
                             aria-label={`View ${audit.auditName}`}
-                            onClick={() => setViewId(audit.id)}
+                            onClick={() => void handleView(audit.id)}
                           >
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
@@ -335,8 +389,12 @@ export default function AuditPlansTable() {
         />
       </Paper>
 
-      <BomAuditDetailDialog auditId={viewId} onClose={() => setViewId(null)} />
-
+      <BomAuditDetailDialog
+        detail={viewDetail}
+        open={viewOpen}
+        onClose={() => setViewOpen(false)}
+        onExited={() => setViewDetail(null)}
+      />
       <Dialog
         open={Boolean(deleteTarget)}
         onClose={() => (cancelling ? undefined : setDeleteTarget(null))}
