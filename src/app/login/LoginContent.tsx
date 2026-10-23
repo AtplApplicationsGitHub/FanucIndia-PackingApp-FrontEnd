@@ -105,24 +105,30 @@ export default function LoginContent() {
   const [apkInfo, setApkInfo] = useState<{
     dispatch: ApkDetails | null;
     pickPack: ApkDetails | null;
-  }>({ dispatch: null, pickPack: null });
+    // Phase 2 - RFID Audit (Kotlin) app
+    rfidAudit: ApkDetails | null;
+  }>({ dispatch: null, pickPack: null, rfidAudit: null });
 
   useEffect(() => {
     const fetchApkInfo = async () => {
       try {
         const baseUrl = API_BASE_URL;
-        const [dispatchRes, pickPackRes] = await Promise.all([
+        const [dispatchRes, pickPackRes, rfidAuditRes] = await Promise.all([
           apiClient
             .get<ApkDetails>(`${baseUrl}/app-update/dispatch/latest-version`)
             .catch(() => null),
           apiClient
             .get<ApkDetails>(`${baseUrl}/app-update/pick-pack/latest-version`)
             .catch(() => null),
+          apiClient
+            .get<ApkDetails>(`${baseUrl}/app-update/rfid-audit/latest-version`)
+            .catch(() => null),
         ]);
 
         setApkInfo({
           dispatch: dispatchRes?.data || null,
           pickPack: pickPackRes?.data || null,
+          rfidAudit: rfidAuditRes?.data || null,
         });
       } catch (err) {
         console.error("Failed to fetch APK info:", err);
@@ -409,6 +415,41 @@ export default function LoginContent() {
                   >
                     {apkInfo.dispatch?.latestVersion
                       ? `Version ${apkInfo.dispatch.latestVersion}`
+                      : "Latest Version"}
+                  </Typography>
+                </Box>
+                <ListItemIcon sx={{ minWidth: "auto", ml: 2 }}>
+                  <Download size={20} color="#1976d2" />
+                </ListItemIcon>
+              </MenuItem>
+
+              <Divider sx={{ my: "0 !important", opacity: 0.6 }} />
+
+              {/* Phase 2 - RFID Audit (Kotlin) app. APKs are read from APK_PATH_RFID_AUDIT on the server.
+                  Fixed label: the server's appName is "rfid-audit", which would show as "Rfid-audit". */}
+              <MenuItem
+                component="a"
+                href={
+                  apkInfo.rfidAudit?.downloadUrl ||
+                  `${process.env.NEXT_PUBLIC_API_URL}/app-update/rfid-audit/download`
+                }
+                onClick={handleApkClose}
+                sx={{ py: 1.5 }}
+              >
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ color: "text.primary" }}
+                  >
+                    RFID Audit
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary", display: "block" }}
+                  >
+                    {apkInfo.rfidAudit?.latestVersion
+                      ? `Version ${apkInfo.rfidAudit.latestVersion}`
                       : "Latest Version"}
                   </Typography>
                 </Box>

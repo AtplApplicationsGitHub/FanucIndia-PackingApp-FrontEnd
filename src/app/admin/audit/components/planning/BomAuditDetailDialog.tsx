@@ -8,16 +8,20 @@ import {
   Chip,
   CircularProgress,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
   IconButton,
 } from "@mui/material";
-import { X } from "lucide-react";
+import { Download, X } from "lucide-react";
+
+import CommonButton from "@/common/components/CommonButton";
 
 import { KVBox } from "@/app/so-search/components/KVBox";
 import AuditExcelPreview from "./AuditExcelPreview";
 import { useBomAuditDetail } from "../../hooks/useBomAuditDetail";
+import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
 import {
   bomAuditStatusColor,
@@ -43,7 +47,9 @@ const formatDateTime = (value: string) =>
 
 export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
   const { detail, loading, error } = useBomAuditDetail(auditId);
+  const { downloadReport, loading: downloading } = useDownloadBomReport();
 
+  // Flatten locations -> materials so the same preview table can be reused
   const rows = useMemo<AuditRow[]>(
     () =>
       detail
@@ -52,7 +58,7 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
               storage: location.storageBin,
               materialCode: material.materialCode,
               quantity: material.expectedQty,
-              excelRow: material.id,
+              excelRow: material.id, // only used as a unique key
             })),
           )
         : [],
@@ -135,6 +141,7 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
                   <KVBox label="Cancelled By" value={detail.cancelledByName} />
                 </>
               )}
+              {/* Stage B - handheld timeline */}
               {detail.downloadedAt && (
                 <KVBox label="Downloaded On" value={formatDateTime(detail.downloadedAt)} />
               )}
@@ -143,6 +150,17 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
               )}
               {detail.submittedAt && (
                 <KVBox label="Submitted On" value={formatDateTime(detail.submittedAt)} />
+              )}
+              {/* Report Excel on the SFTP server (created after submit; retried automatically if the upload failed) */}
+              {detail.submittedAt && (
+                <KVBox
+                  label="Report (SFTP)"
+                  value={
+                    detail.reportGeneratedAt
+                      ? `Saved on ${formatDateTime(detail.reportGeneratedAt)}`
+                      : "Pending upload"
+                  }
+                />
               )}
             </Box>
 
@@ -154,6 +172,26 @@ export default function BomAuditDetailDialog({ auditId, onClose }: Props) {
           </>
         )}
       </DialogContent>
+
+      {/* Download Report - only after the operator has submitted the audit from the handheld */}
+      {detail?.submittedAt && (
+        <>
+          <Divider />
+          <DialogActions sx={{ px: 3, py: 1.5 }}>
+            <CommonButton
+              onClick={() => downloadReport(detail.id, detail.auditNo)}
+              disabled={downloading}
+              startIcon={downloading ? undefined : <Download size={16} />}
+            >
+              {downloading ? (
+                <CircularProgress size={22} color="inherit" />
+              ) : (
+                "DOWNLOAD REPORT"
+              )}
+            </CommonButton>
+          </DialogActions>
+        </>
+      )}
     </Dialog>
   );
 }

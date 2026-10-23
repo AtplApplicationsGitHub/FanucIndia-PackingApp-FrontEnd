@@ -402,6 +402,7 @@ export const API = {
   TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
   BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
   CANCEL: (id: number) => `${API_BASE_URL}/bom-audit/${id}/cancel`,
+  REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,
 },
 };
 

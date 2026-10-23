@@ -5,6 +5,7 @@ export type AuditRow = {
   materialCode: string;
   quantity: number;
   excelRow: number;
+  /** Template upload: operator of this row's storage bin, as written in the file ("Name (email)") */
   operator?: string;
 };
 export type BomAudit = {
@@ -23,21 +24,28 @@ export type BomAudit = {
   cancelledByName: string | null;
   totalRows: number;
   mergedRows: number;
+  // Stage B - handheld timeline (null until it happens)
   downloadedAt?: string | null;
   startedAt?: string | null;
   completedAt?: string | null;
   submittedAt?: string | null;
+  /** Audits created from the same uploaded file share this id (one audit per operator) */
   uploadBatchId?: string | null;
+  /** Report Excel saved on the SFTP server after submit (null until the upload worked) */
+  reportPath?: string | null;
+  reportGeneratedAt?: string | null;
 };
 export type BomAuditStatus =
   | "ASSIGNED"
   | "CANCELLED"
+  // Stage B - handheld
   | "DOWNLOADED"
   | "IN_PROGRESS"
   | "PENDING_RECONCILIATION";
 
 export type BomAuditSummary = Omit<BomAudit, "totalRows" | "mergedRows">;
 
+/** data of POST /bom-audit - one audit per operator in the uploaded template */
 export type CreateBomAuditResult = {
   auditName: string;
   uploadBatchId: string;
