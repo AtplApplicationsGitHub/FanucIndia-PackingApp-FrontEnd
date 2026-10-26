@@ -3,7 +3,12 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import CreateAuditDialog from "./CreateAuditDialog";
+// Phase 2 - Cycle Count has its own create flow (stock upload -> movement period -> plan -> release)
+import CreateCycleCountDialog from "../cycle-count/CreateCycleCountDialog";
 import type { AuditType } from "../../types/audit";
+
+/** Audit types whose "Create Audit" button is enabled. */
+const CREATE_ENABLED: AuditType[] = ["bom", "cycle_count"];
 import { Box, Paper, Typography } from "@mui/material";
 import CommonButton from "@/common/components/CommonButton";
 
@@ -63,7 +68,7 @@ export default function AuditTypeCard({ title, count, type, icon }: Props) {
 
       <CommonButton
         variant="contained"
-        disabled={type !== "bom"}
+        disabled={!CREATE_ENABLED.includes(type)}
         onClick={() => setOpen(true)}
         sx={{
           alignSelf: "flex-start",
@@ -72,11 +77,15 @@ export default function AuditTypeCard({ title, count, type, icon }: Props) {
       >
         Create Audit
       </CommonButton>
-      <CreateAuditDialog
-        open={open}
-        auditType={type}
-        onClose={() => setOpen(false)}
-      />
+      {type === "cycle_count" ? (
+        <CreateCycleCountDialog open={open} onClose={() => setOpen(false)} />
+      ) : (
+        <CreateAuditDialog
+          open={open}
+          auditType={type}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </Paper>
   );
 }

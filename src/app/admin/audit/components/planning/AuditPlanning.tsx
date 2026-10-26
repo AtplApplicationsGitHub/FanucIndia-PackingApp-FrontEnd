@@ -1,17 +1,24 @@
 "use client";
 
-import { Box} from "@mui/material";
+import { useState } from "react";
+
+import { Box, Tab, Tabs } from "@mui/material";
 
 import { Package, FileText, MapPin, Tag } from "lucide-react";
 
 import AuditTypeCard from "./AuditTypeCard";
 import AuditPlansTable from "./AuditPlansTable";
+// Phase 2 - Cycle Count tracker (shown in its own tab next to the BOM tracker)
+import CycleCountPlansTable from "../cycle-count/CycleCountPlansTable";
 
 import { useAssignedBomAuditCount } from "../../hooks/useAssignedBomAuditCount";
+import { useAssignedCycleCountCount } from "../../hooks/useAssignedCycleCountCount";
 import type { AuditType } from "../../types/audit";
 
 export default function AuditPlanning() {
   const bomCount = useAssignedBomAuditCount();
+  const cycleCountCount = useAssignedCycleCountCount();
+  const [trackerTab, setTrackerTab] = useState<"bom" | "cycle_count">("bom");
   const gridSx = {
     display: "grid",
     gridTemplateColumns: {
@@ -49,6 +56,9 @@ export default function AuditPlanning() {
     icon: React.ReactNode;
   }>;
 
+  const assignedCount = (type: AuditType) =>
+    type === "bom" ? bomCount : type === "cycle_count" ? cycleCountCount : 0;
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
       <Box sx={gridSx}>
@@ -58,12 +68,22 @@ export default function AuditPlanning() {
             title={card.title}
             icon={card.icon}
             type={card.type}
-            count={card.type === "bom" ? bomCount : 0}
+            count={assignedCount(card.type)}
           />
         ))}
       </Box>
 
-      <AuditPlansTable />
+      <Tabs
+        value={trackerTab}
+        onChange={(_, v) => setTrackerTab(v)}
+        sx={{ mt: 2, borderBottom: 1, borderColor: "divider" }}
+        aria-label="Audit trackers"
+      >
+        <Tab value="bom" label="BOM Completeness" sx={{ textTransform: "none", fontWeight: 600 }} />
+        <Tab value="cycle_count" label="Cycle Count" sx={{ textTransform: "none", fontWeight: 600 }} />
+      </Tabs>
+
+      {trackerTab === "bom" ? <AuditPlansTable /> : <CycleCountPlansTable />}
     </Box>
   );
 }

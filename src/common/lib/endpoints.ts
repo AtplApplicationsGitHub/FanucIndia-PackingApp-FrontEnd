@@ -404,6 +404,33 @@ export const API = {
   CANCEL: (id: number) => `${API_BASE_URL}/bom-audit/${id}/cancel`,
   REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,
 },
+  // Phase 2 - Cycle Count audit (Phase A: create audit on the web)
+  CYCLE_COUNT: {
+    BASE: `${API_BASE_URL}/cycle-count`,
+    LIST: (params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      status?: string;
+    }) => {
+      const query = new URLSearchParams();
+
+      if (params?.page) query.set("page", String(params.page));
+      if (params?.limit) query.set("limit", String(params.limit));
+      if (params?.search) query.set("search", params.search);
+      if (params?.status) query.set("status", params.status);
+
+      const qs = query.toString();
+      return `${API_BASE_URL}/cycle-count${qs ? "?" + qs : ""}`;
+    },
+    STOCK_UPLOADS: `${API_BASE_URL}/cycle-count/stock-uploads`,
+    STOCK_UPLOAD_BY_ID: (id: number) =>
+      `${API_BASE_URL}/cycle-count/stock-uploads/${id}`,
+    PLAN_PREVIEW: `${API_BASE_URL}/cycle-count/plan-preview`,
+    OPERATORS: `${API_BASE_URL}/cycle-count/operators`,
+    BY_ID: (id: number) => `${API_BASE_URL}/cycle-count/${id}`,
+    CANCEL: (id: number) => `${API_BASE_URL}/cycle-count/${id}/cancel`,
+  },
 };
 
 export type DispatchSoPatchBody = {
