@@ -122,6 +122,16 @@ const AdminUsersTable: React.FC<Props> = ({
           <Table size="small">
             <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
               <TableRow>
+                {/* User ID = User.id in the database */}
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    width: 90,
+                    color: theme.palette.primary.contrastText,
+                  }}
+                >
+                  User ID
+                </TableCell>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
@@ -177,13 +187,13 @@ const AdminUsersTable: React.FC<Props> = ({
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No users found.
                     </Typography>
@@ -207,6 +217,7 @@ const AdminUsersTable: React.FC<Props> = ({
                       },
                     }}
                   >
+                    <TableCell>{row.id}</TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell>{row.email}</TableCell>
                     <TableCell sx={{ textTransform: "capitalize" }}>

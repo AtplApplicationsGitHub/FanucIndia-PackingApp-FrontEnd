@@ -11,6 +11,7 @@ import {
   Download,
   Upload,
   Settings,
+  FileSpreadsheet,
 } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyIcon from "@mui/icons-material/Key";
@@ -37,6 +38,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Switch,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -107,6 +109,9 @@ export default function AdminMasterLookupPanel() {
   const [error, setError] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [localSearch, setLocalSearch] = useState("");
+  // Users tab: toggle "Show Terminal Operators only" (role = USER)
+  const [showTerminalOperatorsOnly, setShowTerminalOperatorsOnly] =
+    useState(false);
 
   // Dialog State
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -187,6 +192,7 @@ export default function AdminMasterLookupPanel() {
     setSelectedType(newValue);
     setSearchQuery("");
     setLocalSearch("");
+    setShowTerminalOperatorsOnly(false);
   };
 
   const getSearchKeys = React.useCallback((): string[] => {
@@ -667,6 +673,41 @@ export default function AdminMasterLookupPanel() {
             </Tooltip>
           )}
 
+          {/* Terminal Operators filter (Users Tab Only): role = USER accounts only */}
+          {selectedType === "users" && (
+            <Tooltip title="Show Terminal Operators only" arrow>
+              <Switch
+                size="small"
+                checked={showTerminalOperatorsOnly}
+                onChange={(e) => setShowTerminalOperatorsOnly(e.target.checked)}
+                inputProps={{ "aria-label": "Show Terminal Operators only" }}
+              />
+            </Tooltip>
+          )}
+
+          {/* Excel download - only while the Terminal Operators filter is on.
+              Downloads exactly what the table shows (role USER + applied search). */}
+          {selectedType === "users" && showTerminalOperatorsOnly && (
+            <Tooltip title="Download Terminal Operator User List" arrow>
+              <span>
+                <IconButton
+                  onClick={() => {
+                    if (!usersState.users.length) {
+                      showSnackbar("No Terminal Operators to download.", "info");
+                      return;
+                    }
+                    void usersState.downloadTerminalOperators(searchQuery);
+                  }}
+                  disabled={usersState.exporting || usersState.loading}
+                  aria-label="Download Terminal Operator User List"
+                  sx={{ color: "#10b981" }}
+                >
+                  <FileSpreadsheet size={20} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+
           {/* Printer-only Actions */}
           {selectedType === "printers" && (
             <>
@@ -695,6 +736,7 @@ export default function AdminMasterLookupPanel() {
             showSnackbar={showSnackbar}
             usersState={usersState}
             searchQuery={searchQuery}
+            roleFilter={showTerminalOperatorsOnly ? "USER" : undefined}
           />
         ) : (
           <>

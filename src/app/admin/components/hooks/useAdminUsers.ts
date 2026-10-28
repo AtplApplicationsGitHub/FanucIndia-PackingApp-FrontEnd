@@ -1,7 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { API } from "@/common/lib/endpoints";
 import { User } from "@/app/admin/components/types/admin";
+import { secureDownload } from "@/common/lib/secure-download";
+
+/** Role filter of the Users master table ("USER" = Terminal Operators only). */
+export type UserRoleFilter = "USER";
+
+export const TERMINAL_OPERATOR_FILE_NAME = "Terminal Operator User List.xlsx";
 
 type APIErrorResponse = {
   message?: string | object;
@@ -39,15 +45,19 @@ export function useAdminUsers(
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Last search / role filter of the table, so a refresh after create / update / delete keeps them
+  const lastQueryRef = useRef<{ search?: string; role?: UserRoleFilter }>({});
+
   const fetchUsers = useCallback(
-    async (search?: string) => {
+    async (search?: string, role?: UserRoleFilter) => {
+      lastQueryRef.current = { search, role };
       setLoading(true);
       setError(null);
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get<User[]>(API.ADMIN.USERS, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { search },
+          params: { search, role },
         });
         setUsers(res.data || []);
       } catch (e) {
@@ -56,6 +66,50 @@ export function useAdminUsers(
         showSnackbar(String(message), "error");
       } finally {
         setLoading(false);
+      }
+    },
+    [showSnackbar],
+  );
+
+  /** Reload the table with the same search / role filter it is showing. */
+  const refreshUsers = useCallback(
+    () => fetchUsers(lastQueryRef.current.search, lastQueryRef.current.role),
+    [fetchUsers],
+  );
+
+  /**
+   * Downloads "Terminal Operator User List.xlsx": role USER accounts (ID, Name, Email),
+   * filtered by the search applied in the table - the same rows the table shows.
+   */
+  const [exporting, setExporting] = useState(false);
+  const downloadTerminalOperators = useCallback(
+    async (search?: string) => {
+      setExporting(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get<Blob>(
+          API.ADMIN.USERS_EXPORT_TERMINAL_OPERATORS,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { search: search || undefined },
+            responseType: "blob",
+          },
+        );
+        secureDownload(res.data, TERMINAL_OPERATOR_FILE_NAME);
+      } catch (e) {
+        // Error body arrives as a Blob (responseType "blob") - read the server message from it
+        let message = "Failed to download the Terminal Operator list.";
+        if (axios.isAxiosError(e) && e.response?.data instanceof Blob) {
+          try {
+            const body = JSON.parse(await e.response.data.text());
+            if (typeof body?.message === "string") message = body.message;
+          } catch {
+            // keep the default message
+          }
+        }
+        showSnackbar(message, "error");
+      } finally {
+        setExporting(false);
       }
     },
     [showSnackbar],
@@ -71,7 +125,7 @@ export function useAdminUsers(
         headers: { Authorization: `Bearer ${token}` },
       });
       showSnackbar("User created!", "success");
-      fetchUsers();
+      refreshUsers();
       setModalOpen(false);
     } catch (e) {
       const message = getErrorMessage(e, "Failed to create user.");
@@ -94,7 +148,7 @@ export function useAdminUsers(
         headers: { Authorization: `Bearer ${token}` },
       });
       showSnackbar("User updated!", "success");
-      fetchUsers();
+      refreshUsers();
       setModalOpen(false);
       setEditingUser(null);
     } catch (e) {
@@ -113,7 +167,7 @@ export function useAdminUsers(
         headers: { Authorization: `Bearer ${token}` },
       });
       showSnackbar("User deleted!", "success");
-      fetchUsers();
+      refreshUsers();
     } catch (e) {
       const message = getErrorMessage(e, "Failed to delete user.");
       if (
@@ -137,6 +191,8 @@ export function useAdminUsers(
     loading,
     error,
     fetchUsers,
+    downloadTerminalOperators,
+    exporting,
     createUser,
     updateUser,
     deleteUser,

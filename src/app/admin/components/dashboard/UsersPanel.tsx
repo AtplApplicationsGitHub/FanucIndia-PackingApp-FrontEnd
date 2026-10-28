@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import Box from "@mui/material/Box";
-import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
+import {
+  useAdminUsers,
+  UserRoleFilter,
+} from "@/app/admin/components/hooks/useAdminUsers";
 import AdminUsersTable from "@/app/admin/components/dashboard/UsersTable";
 import AdminUserFormModal, {
   UserSubmitData,
@@ -13,12 +16,14 @@ interface AdminManageUsersPanelProps {
   ) => void;
   usersState: ReturnType<typeof useAdminUsers>;
   searchQuery: string; // <--- ADDED: Listens to the Toolbar in LookupPanel
+  roleFilter?: UserRoleFilter; // Toolbar toggle "Show Terminal Operators only" -> "USER"
 }
 
 const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
   showSnackbar,
   usersState,
   searchQuery, // <--- ADDED
+  roleFilter,
 }) => {
   // REMOVED: local inputValue and search states
 
@@ -36,9 +41,10 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
   } = usersState;
 
   // UPDATED: Now fetches users based on the centralized Toolbar search
+  // + role filter of the "Show Terminal Operators only" toggle
   useEffect(() => {
-    fetchUsers(searchQuery);
-  }, [fetchUsers, searchQuery]);
+    fetchUsers(searchQuery, roleFilter);
+  }, [fetchUsers, searchQuery, roleFilter]);
 
   const onEdit = (userId: number) => {
     const user = users.find((u) => u.id === userId) || null;
