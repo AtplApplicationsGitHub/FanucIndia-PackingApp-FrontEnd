@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
+import { useRouter } from "next/navigation";
+import { planningRoute } from "../../utils/auditRoutes";
 import {
   Alert,
   Autocomplete,
@@ -10,13 +11,8 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   FormControlLabel,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -28,20 +24,20 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
-import ExcelUpload from "../planning/ExcelUpload";
-import CycleCountPlanTable from "./CycleCountPlanTable";
+import ExcelUpload from "../shared/ExcelUpload";
 
 import {
-  CYCLE_COUNT_UPDATED_EVENT,
   createCycleCount,
   loadCycleCountOperators,
   previewCycleCountPlan,
-  showGlobalMessage,
   uploadCycleCountStock,
 } from "../../utils/cycleCountApi";
+import {
+  notifyAuditsUpdated,
+  showGlobalMessage,
+} from "../../utils/auditEvents";
 import {
   CNC_FILTER_LABELS,
   SELECTION_METHOD_LABELS,
@@ -56,20 +52,29 @@ import type {
   SelectionMethod,
   StockUpload,
 } from "../../types/cycleCount";
-
-type Props = {
-  open: boolean;
-  onClose: () => void;
-};
+import CycleCountPlanPreviewTable from "./CycleCountPlanPreviewTable";
 
 const CLASSES: MaterialClass[] = ["A", "B", "C"];
 const MAX_LOCATIONS = 500;
 const DEFAULT_RANGE_DAYS = 30;
 
 /** Small numbered section box (same look as the BOM create dialog steps). */
-function Step({ no, title, hint, children }: { no: string; title: string; hint?: string; children: React.ReactNode }) {
+function Step({
+  no,
+  title,
+  hint,
+  children,
+}: {
+  no: string;
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <Paper variant="outlined" sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+    <Paper
+      variant="outlined"
+      sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}
+    >
       <Box>
         <Typography variant="body2" fontWeight={700}>
           {no}. {title}
@@ -87,7 +92,16 @@ function Step({ no, title, hint, children }: { no: string; title: string; hint?:
 
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 1.5, py: 0.75, minWidth: 120 }}>
+    <Box
+      sx={{
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+        px: 1.5,
+        py: 0.75,
+        minWidth: 120,
+      }}
+    >
       <Typography fontWeight={700} fontSize={18}>
         {value}
       </Typography>
@@ -105,7 +119,8 @@ function Stat({ label, value }: { label: string; value: number | string }) {
  *   3 Plan: busiest / random / manual, number of locations, CNC, A/B/C -> Generate plan (preview)
  *   4 Audit name + operators -> Release (one audit per operator)
  */
-export default function CreateCycleCountDialog({ open, onClose }: Props) {
+export default function CreateCycleCountForm() {
+  const router = useRouter();
   // 1 - stock
   const [file, setFile] = useState<File | null>(null);
   const [upload, setUpload] = useState<StockUpload | null>(null);
@@ -132,34 +147,29 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!open) return;
-    loadCycleCountOperators()
-      .then(setOperators)
-      .catch((e) => setError(e instanceof Error ? e.message : "Unable to load operators."));
-  }, [open]);
+    let active = true;
 
-  const reset = () => {
-    setFile(null);
-    setUpload(null);
-    setShowExcluded(false);
-    setFromDate(localYmd(DEFAULT_RANGE_DAYS));
-    setToDate(localYmd(0));
-    setIncludeArchived(true);
-    setMethod("BUSIEST");
-    setCount(20);
-    setCnc("BOTH");
-    setClasses([...CLASSES]);
-    setPreview(null);
-    setManualSel(new Set());
-    setAuditName("");
-    setSelectedOps([]);
-    setError("");
-  };
+    loadCycleCountOperators()
+      .then((data) => {
+        if (active) setOperators(data);
+      })
+      .catch((e) => {
+        if (active) {
+          setError(
+            e instanceof Error ? e.message : "Unable to load operators.",
+          );
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleClose = () => {
-    if (releasing) return;
-    reset();
-    onClose();
+    if (uploading || previewing || releasing) return;
+
+    router.push(planningRoute("cycle_count"));
   };
 
   /** Any change of the criteria makes the shown plan outdated. */
@@ -198,7 +208,9 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
       if (!result.hasClassColumn) setClasses([...CLASSES]);
     } catch (e) {
       setUpload(null);
-      setError(e instanceof Error ? e.message : "Failed to upload the stock file.");
+      setError(
+        e instanceof Error ? e.message : "Failed to upload the stock file.",
+      );
     } finally {
       setUploading(false);
     }
@@ -206,7 +218,10 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
 
   // ---------------------------------------------------------------- 3 generate plan
 
-  const rangeError = fromDate && toDate && fromDate > toDate ? "From date must be on or before To date." : "";
+  const rangeError =
+    fromDate && toDate && fromDate > toDate
+      ? "From date must be on or before To date."
+      : "";
 
   const handleGenerate = async () => {
     const c = criteria();
@@ -223,7 +238,9 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
     setPreviewing(true);
     try {
       const result = await previewCycleCountPlan(
-        method === "MANUAL" ? { ...c, storageBins: [] } : { ...c, locationCount: count },
+        method === "MANUAL"
+          ? { ...c, storageBins: [] }
+          : { ...c, locationCount: count },
       );
       setPreview(result);
       setManualSel(new Set());
@@ -238,7 +255,10 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
   /** Bins that will be released: the server plan, or the ticked candidates (MANUAL). */
   const planRows = useMemo(() => {
     if (!preview) return [];
-    if (method === "MANUAL") return (preview.candidates ?? []).filter((r) => manualSel.has(r.storageBin));
+    if (method === "MANUAL")
+      return (preview.candidates ?? []).filter((r) =>
+        manualSel.has(r.storageBin),
+      );
     return preview.plan;
   }, [preview, method, manualSel]);
 
@@ -263,7 +283,9 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
       return;
     }
     if (selectedOps.length > planRows.length) {
-      setError(`The plan has ${planRows.length} location(s). Select at most ${planRows.length} operator(s).`);
+      setError(
+        `The plan has ${planRows.length} location(s). Select at most ${planRows.length} operator(s).`,
+      );
       return;
     }
     setError("");
@@ -276,11 +298,15 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
         operatorIds: selectedOps.map((o) => o.id),
       });
       showGlobalMessage(result.message, "success");
-      window.dispatchEvent(new Event(CYCLE_COUNT_UPDATED_EVENT));
-      reset();
-      onClose();
+      notifyAuditsUpdated();
+
+      router.replace(planningRoute("cycle_count"));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to release the Cycle Count audit.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Failed to release the Cycle Count audit.",
+      );
     } finally {
       setReleasing(false);
     }
@@ -289,15 +315,20 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
   const busy = uploading || previewing || releasing;
 
   return (
-    <Dialog
-      open={open}
-      onClose={releasing ? undefined : handleClose}
-      fullWidth
-      maxWidth="lg"
-      scroll="paper"
-      PaperProps={{ sx: { borderRadius: 2 } }}
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: 1400,
+        mx: "auto",
+        p: { xs: 2, md: 3 },
+        bgcolor: "background.paper",
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 2,
+      }}
     >
-      <DialogTitle
+      <Box
+        component="header"
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -311,16 +342,24 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
         }}
       >
         CYCLE COUNT – CREATE AUDIT
-        <IconButton onClick={handleClose} disabled={releasing} size="small" sx={{ position: "absolute", right: 12 }}>
-          <X size={18} />
-        </IconButton>
-      </DialogTitle>
+      </Box>
       <Divider />
 
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2.5 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2.5 }}>
         {/* ---------------- 1. Stock data ---------------- */}
-        <Step no="1" title="Upload SAP stock (LX03)" hint="Required columns: StorageBin, Material, Avail. Rows with zero stock or invalid data are left out of the plan.">
-          <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 1.5, alignItems: { md: "center" } }}>
+        <Step
+          no="1"
+          title="Upload SAP stock (LX03)"
+          hint="Required columns: StorageBin, Material, Avail. Rows with zero stock or invalid data are left out of the plan."
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 1.5,
+              alignItems: { md: "center" },
+            }}
+          >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <ExcelUpload
                 file={file}
@@ -331,8 +370,17 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                 }}
               />
             </Box>
-            <CommonButton onClick={handleUpload} disabled={!file || busy || Boolean(upload)}>
-              {uploading ? <CircularProgress size={22} color="inherit" /> : upload ? "UPLOADED" : "UPLOAD & VALIDATE"}
+            <CommonButton
+              onClick={handleUpload}
+              disabled={!file || busy || Boolean(upload)}
+            >
+              {uploading ? (
+                <CircularProgress size={22} color="inherit" />
+              ) : upload ? (
+                "UPLOADED"
+              ) : (
+                "UPLOAD & VALIDATE"
+              )}
             </CommonButton>
           </Box>
 
@@ -343,20 +391,48 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                 <Stat label="Valid rows" value={upload.validRows} />
                 <Stat label="Excluded rows" value={upload.excludedRows} />
                 <Stat label="Locations" value={upload.totalLocations} />
-                <Stat label="Packages (Cert. No.)" value={upload.hasCertNoColumn ? upload.totalPackages : "–"} />
+                <Stat
+                  label="Packages (Cert. No.)"
+                  value={upload.hasCertNoColumn ? upload.totalPackages : "–"}
+                />
               </Box>
               {upload.excludedByReason.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    alignItems: "center",
+                  }}
+                >
                   {upload.excludedByReason.map((r) => (
-                    <Chip key={r.reason} size="small" color="error" variant="outlined" label={`${r.label}: ${r.count}`} />
+                    <Chip
+                      key={r.reason}
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      label={`${r.label}: ${r.count}`}
+                    />
                   ))}
-                  <CommonButton size="small" onClick={() => setShowExcluded((v) => !v)} sx={{ height: 28 }}>
+                  <CommonButton
+                    size="small"
+                    onClick={() => setShowExcluded((v) => !v)}
+                    sx={{ height: 28 }}
+                  >
                     {showExcluded ? "Hide excluded rows" : "View excluded rows"}
                   </CommonButton>
                 </Box>
               )}
               <Collapse in={showExcluded} unmountOnExit>
-                <Box sx={{ maxHeight: 260, overflow: "auto", border: 1, borderColor: "divider", borderRadius: 1 }}>
+                <Box
+                  sx={{
+                    maxHeight: 260,
+                    overflow: "auto",
+                    border: 1,
+                    borderColor: "divider",
+                    borderRadius: 1,
+                  }}
+                >
                   <Table size="small" stickyHeader>
                     <TableHead>
                       <TableRow>
@@ -384,16 +460,22 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                 </Box>
                 {upload.excludedSample.length < upload.excludedRows && (
                   <Typography variant="caption" color="text.secondary">
-                    Showing the first {upload.excludedSample.length} of {upload.excludedRows} excluded rows.
+                    Showing the first {upload.excludedSample.length} of{" "}
+                    {upload.excludedRows} excluded rows.
                   </Typography>
                 )}
               </Collapse>
-              {(!upload.hasCncColumn || !upload.hasClassColumn || !upload.hasCertNoColumn) && (
+              {(!upload.hasCncColumn ||
+                !upload.hasClassColumn ||
+                !upload.hasCertNoColumn) && (
                 <Alert severity="info">
                   {[
-                    !upload.hasCertNoColumn && "no Cert. No. column (packages cannot be counted)",
-                    !upload.hasCncColumn && "no CNC column (CNC filter not available)",
-                    !upload.hasClassColumn && "no material class column (A / B / C filter not available)",
+                    !upload.hasCertNoColumn &&
+                      "no Cert. No. column (packages cannot be counted)",
+                    !upload.hasCncColumn &&
+                      "no CNC column (CNC filter not available)",
+                    !upload.hasClassColumn &&
+                      "no material class column (A / B / C filter not available)",
                   ]
                     .filter(Boolean)
                     .join("; ")
@@ -413,7 +495,14 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
               title="Movement period"
               hint="DIMS transfer orders in this period decide which locations are busy. Archived orders can be included."
             >
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  alignItems: "center",
+                }}
+              >
                 <TextField
                   label="From"
                   type="date"
@@ -457,10 +546,26 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
             </Step>
 
             {/* ---------------- 3. Plan ---------------- */}
-            <Step no="3" title="Plan the count" hint="Choose how many locations and how to pick them, then generate the plan.">
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2.5, alignItems: "flex-end" }}>
+            <Step
+              no="3"
+              title="Plan the count"
+              hint="Choose how many locations and how to pick them, then generate the plan."
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2.5,
+                  alignItems: "flex-end",
+                }}
+              >
                 <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    mb={0.5}
+                  >
                     How to pick locations
                   </Typography>
                   <ToggleButtonGroup
@@ -473,8 +578,14 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                       invalidatePlan();
                     }}
                   >
-                    {(Object.keys(SELECTION_METHOD_LABELS) as SelectionMethod[]).map((m) => (
-                      <ToggleButton key={m} value={m} sx={{ textTransform: "none", px: 1.5 }}>
+                    {(
+                      Object.keys(SELECTION_METHOD_LABELS) as SelectionMethod[]
+                    ).map((m) => (
+                      <ToggleButton
+                        key={m}
+                        value={m}
+                        sx={{ textTransform: "none", px: 1.5 }}
+                      >
                         {SELECTION_METHOD_LABELS[m]}
                       </ToggleButton>
                     ))}
@@ -489,7 +600,11 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                     value={count}
                     onChange={(e) => {
                       const n = parseInt(e.target.value, 10);
-                      setCount(Number.isFinite(n) ? Math.min(MAX_LOCATIONS, Math.max(1, n)) : 1);
+                      setCount(
+                        Number.isFinite(n)
+                          ? Math.min(MAX_LOCATIONS, Math.max(1, n))
+                          : 1,
+                      );
                       invalidatePlan();
                     }}
                     inputProps={{ min: 1, max: MAX_LOCATIONS }}
@@ -498,7 +613,12 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                 )}
 
                 <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    mb={0.5}
+                  >
                     CNC packages
                   </Typography>
                   <ToggleButtonGroup
@@ -512,16 +632,26 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                       invalidatePlan();
                     }}
                   >
-                    {(Object.keys(CNC_FILTER_LABELS) as CncFilter[]).map((v) => (
-                      <ToggleButton key={v} value={v} sx={{ textTransform: "none", px: 1.5 }}>
-                        {CNC_FILTER_LABELS[v]}
-                      </ToggleButton>
-                    ))}
+                    {(Object.keys(CNC_FILTER_LABELS) as CncFilter[]).map(
+                      (v) => (
+                        <ToggleButton
+                          key={v}
+                          value={v}
+                          sx={{ textTransform: "none", px: 1.5 }}
+                        >
+                          {CNC_FILTER_LABELS[v]}
+                        </ToggleButton>
+                      ),
+                    )}
                   </ToggleButtonGroup>
                 </Box>
 
                 <Box>
-                  <Typography variant="caption" color="text.secondary" display="block">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
                     Material class
                   </Typography>
                   {CLASSES.map((c) => (
@@ -533,7 +663,14 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                           size="small"
                           checked={classes.includes(c)}
                           onChange={(e) => {
-                            setClasses((prev) => (e.target.checked ? [...prev, c].sort() : prev.filter((x) => x !== c)) as MaterialClass[]);
+                            setClasses(
+                              (prev) =>
+                                (e.target.checked
+                                  ? [...prev, c].sort()
+                                  : prev.filter(
+                                      (x) => x !== c,
+                                    )) as MaterialClass[],
+                            );
                             invalidatePlan();
                           }}
                         />
@@ -544,18 +681,37 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                 </Box>
 
                 <CommonButton onClick={handleGenerate} disabled={busy}>
-                  {previewing ? <CircularProgress size={22} color="inherit" /> : "GENERATE PLAN"}
+                  {previewing ? (
+                    <CircularProgress size={22} color="inherit" />
+                  ) : (
+                    "GENERATE PLAN"
+                  )}
                 </CommonButton>
               </Box>
 
               {preview && (
                 <>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    <Stat label="Movements in period" value={preview.movement.lines} />
-                    <Stat label="From live data" value={preview.movement.liveLines} />
-                    <Stat label="From archived data" value={preview.movement.archivedLines} />
-                    <Stat label="Locations moved" value={preview.movement.locationsMoved} />
-                    <Stat label="Locations matching filters" value={preview.candidateCount} />
+                    <Stat
+                      label="Movements in period"
+                      value={preview.movement.lines}
+                    />
+                    <Stat
+                      label="From live data"
+                      value={preview.movement.liveLines}
+                    />
+                    <Stat
+                      label="From archived data"
+                      value={preview.movement.archivedLines}
+                    />
+                    <Stat
+                      label="Locations moved"
+                      value={preview.movement.locationsMoved}
+                    />
+                    <Stat
+                      label="Locations matching filters"
+                      value={preview.candidateCount}
+                    />
                   </Box>
                   {preview.filters.notes.map((n) => (
                     <Alert key={n} severity="warning">
@@ -567,8 +723,12 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                       ? `Tick the locations to audit – ${manualSel.size} of ${preview.candidates?.length ?? 0} selected`
                       : `Plan preview – ${preview.plan.length} location${preview.plan.length === 1 ? "" : "s"} (${SELECTION_METHOD_LABELS[method].toLowerCase()})`}
                   </Typography>
-                  <CycleCountPlanTable
-                    rows={method === "MANUAL" ? preview.candidates ?? [] : preview.plan}
+                  <CycleCountPlanPreviewTable
+                    rows={
+                      method === "MANUAL"
+                        ? (preview.candidates ?? [])
+                        : preview.plan
+                    }
                     selectable={method === "MANUAL"}
                     selected={manualSel}
                     onToggle={(bin) =>
@@ -582,7 +742,11 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                     onToggleAll={(bins, checked) =>
                       setManualSel((prev) => {
                         const next = new Set(prev);
-                        bins.forEach((b) => (checked ? next.size < MAX_LOCATIONS && next.add(b) : next.delete(b)));
+                        bins.forEach((b) =>
+                          checked
+                            ? next.size < MAX_LOCATIONS && next.add(b)
+                            : next.delete(b),
+                        );
                         return next;
                       })
                     }
@@ -594,7 +758,11 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
             </Step>
 
             {/* ---------------- 4. Assign & release ---------------- */}
-            <Step no="4" title="Assign & release" hint="The locations are shared between the selected operators. One audit is created per operator.">
+            <Step
+              no="4"
+              title="Assign & release"
+              hint="The locations are shared between the selected operators. One audit is created per operator."
+            >
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
                 <TextField
                   label="Audit Name"
@@ -613,7 +781,13 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
                   getOptionLabel={(o) => `${o.name} (${o.email})`}
                   isOptionEqualToValue={(a, b) => a.id === b.id}
                   filterSelectedOptions
-                  renderInput={(params) => <TextField {...params} label="Operators" placeholder="Select operators" />}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Operators"
+                      placeholder="Select operators"
+                    />
+                  )}
                   sx={{ flex: "2 1 360px" }}
                 />
               </Box>
@@ -627,31 +801,56 @@ export default function CreateCycleCountDialog({ open, onClose }: Props) {
         )}
 
         {error && (
-          <Alert severity="error" sx={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto" }}>
+          <Alert
+            severity="error"
+            sx={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto" }}
+          >
             {error}
           </Alert>
         )}
-      </DialogContent>
-
+      </Box>
       <Divider />
-      <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+      <Box
+        sx={{
+          px: 3,
+          py: 2,
+          gap: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          flexWrap: "wrap",
+        }}
+      >
         {planRows.length > 0 && (
           <Typography variant="body2" sx={{ mr: "auto" }}>
-            Release <strong>{planRows.length}</strong> location{planRows.length === 1 ? "" : "s"}
+            Release <strong>{planRows.length}</strong> location
+            {planRows.length === 1 ? "" : "s"}
             {selectedOps.length ? (
               <>
-                {" "}to <strong>{selectedOps.length} operator{selectedOps.length === 1 ? "" : "s"}</strong>
+                {" "}
+                to{" "}
+                <strong>
+                  {selectedOps.length} operator
+                  {selectedOps.length === 1 ? "" : "s"}
+                </strong>
               </>
             ) : null}
           </Typography>
         )}
-        <CommonButton onClick={handleClose} disabled={releasing}>
+        <CommonButton onClick={handleClose} disabled={busy}>
           CANCEL
         </CommonButton>
-        <CommonButton onClick={handleRelease} disabled={busy || !planRows.length}>
-          {releasing ? <CircularProgress size={22} color="inherit" /> : "RELEASE TO HANDHELD"}
+        <CommonButton
+          onClick={handleRelease}
+          disabled={busy || !planRows.length}
+        >
+          {releasing ? (
+            <CircularProgress size={22} color="inherit" />
+          ) : (
+            "RELEASE TO HANDHELD"
+          )}
         </CommonButton>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Box>
   );
 }

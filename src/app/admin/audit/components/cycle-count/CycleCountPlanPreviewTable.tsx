@@ -18,7 +18,10 @@ import {
 } from "@mui/material";
 
 import type { PlanCandidate } from "../../types/cycleCount";
-import { MOVEMENT_LEVEL_LABELS, movementLevelColor } from "../../utils/cycleCountLabels";
+import {
+  MOVEMENT_LEVEL_LABELS,
+  movementLevelColor,
+} from "../../utils/cycleCountLabels";
 
 type Props = {
   rows: PlanCandidate[];
@@ -32,7 +35,7 @@ type Props = {
 };
 
 /** Planned / candidate locations with their movement in the selected period. */
-export default function CycleCountPlanTable({
+export default function CycleCountPlanPreviewTable({
   rows,
   selectable = false,
   selected,
@@ -50,14 +53,24 @@ export default function CycleCountPlanTable({
 
   const pageRows = rows.slice(page * perPage, page * perPage + perPage);
   const pageBins = pageRows.map((r) => r.storageBin);
-  const allOnPage = selectable && pageBins.length > 0 && pageBins.every((b) => selected?.has(b));
+  const allOnPage =
+    selectable &&
+    pageBins.length > 0 &&
+    pageBins.every((b) => selected?.has(b));
   const someOnPage = selectable && pageBins.some((b) => selected?.has(b));
-  const headSx = { fontWeight: "bold", color: theme.palette.primary.contrastText, whiteSpace: "nowrap" as const };
-  const cols = 8 + (selectable ? 1 : 0) + (showClass ? 1 : 0) + (showCnc ? 1 : 0);
+  const headSx = {
+    fontWeight: "bold",
+    color: theme.palette.primary.contrastText,
+    whiteSpace: "nowrap" as const,
+  };
+  const cols =
+    8 + (selectable ? 1 : 0) + (showClass ? 1 : 0) + (showCnc ? 1 : 0);
 
   return (
     <>
-      <TableContainer sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
+      <TableContainer
+        sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}
+      >
         <Table size="small">
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow>
@@ -68,18 +81,30 @@ export default function CycleCountPlanTable({
                     checked={allOnPage}
                     indeterminate={!allOnPage && someOnPage}
                     onChange={(e) => onToggleAll?.(pageBins, e.target.checked)}
-                    inputProps={{ "aria-label": "Select all locations on this page" }}
+                    inputProps={{
+                      "aria-label": "Select all locations on this page",
+                    }}
                   />
                 </TableCell>
               )}
               <TableCell sx={headSx}>#</TableCell>
               <TableCell sx={headSx}>Storage Bin</TableCell>
-              <TableCell sx={headSx} align="right">Movements</TableCell>
-              <TableCell sx={headSx} align="right">Transfer Orders</TableCell>
-              <TableCell sx={headSx} align="right">From Archive</TableCell>
+              <TableCell sx={headSx} align="right">
+                Movements
+              </TableCell>
+              <TableCell sx={headSx} align="right">
+                Transfer Orders
+              </TableCell>
+              <TableCell sx={headSx} align="right">
+                From Archive
+              </TableCell>
               <TableCell sx={headSx}>Movement</TableCell>
-              <TableCell sx={headSx} align="right">Packages</TableCell>
-              <TableCell sx={headSx} align="right">Stock Lines</TableCell>
+              <TableCell sx={headSx} align="right">
+                Packages
+              </TableCell>
+              <TableCell sx={headSx} align="right">
+                Stock Lines
+              </TableCell>
               {showClass && <TableCell sx={headSx}>Classes</TableCell>}
               {showCnc && <TableCell sx={headSx}>CNC</TableCell>}
             </TableRow>
@@ -99,7 +124,10 @@ export default function CycleCountPlanTable({
                   key={r.storageBin}
                   hover
                   sx={{
-                    backgroundColor: i % 2 === 1 ? alpha(theme.palette.primary.main, 0.12) : "inherit",
+                    backgroundColor:
+                      i % 2 === 1
+                        ? alpha(theme.palette.primary.main, 0.12)
+                        : "inherit",
                   }}
                 >
                   {selectable && (
@@ -120,15 +148,28 @@ export default function CycleCountPlanTable({
                   <TableCell>
                     <Chip
                       size="small"
-                      label={MOVEMENT_LEVEL_LABELS[r.movementLevel] ?? r.movementLevel}
+                      label={
+                        MOVEMENT_LEVEL_LABELS[r.movementLevel] ??
+                        r.movementLevel
+                      }
                       color={movementLevelColor(r.movementLevel)}
-                      variant={r.movementLevel === "NONE" ? "outlined" : "filled"}
+                      variant={
+                        r.movementLevel === "NONE" ? "outlined" : "filled"
+                      }
                     />
                   </TableCell>
                   <TableCell align="right">{r.packages}</TableCell>
                   <TableCell align="right">{r.lines}</TableCell>
-                  {showClass && <TableCell>{r.classes.length ? r.classes.join(", ") : "–"}</TableCell>}
-                  {showCnc && <TableCell>{r.hasCnc === null ? "–" : r.hasCnc ? "Yes" : "No"}</TableCell>}
+                  {showClass && (
+                    <TableCell>
+                      {r.classes.length ? r.classes.join(", ") : "–"}
+                    </TableCell>
+                  )}
+                  {showCnc && (
+                    <TableCell>
+                      {r.hasCnc === null ? "–" : r.hasCnc ? "Yes" : "No"}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

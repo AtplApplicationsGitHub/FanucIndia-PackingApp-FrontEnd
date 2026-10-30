@@ -1,89 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { Box, Tab, Tabs } from "@mui/material";
-
+import { Box } from "@mui/material";
 import { Package, FileText, MapPin, Tag } from "lucide-react";
 
 import AuditTypeCard from "./AuditTypeCard";
 import AuditPlansTable from "./AuditPlansTable";
-// Phase 2 - Cycle Count tracker (shown in its own tab next to the BOM tracker)
-import CycleCountPlansTable from "../cycle-count/CycleCountPlansTable";
 
-import { useAssignedBomAuditCount } from "../../hooks/useAssignedBomAuditCount";
-import { useAssignedCycleCountCount } from "../../hooks/useAssignedCycleCountCount";
+import { useAuditCounts } from "../../hooks/useAuditCounts";
+
 import type { AuditType } from "../../types/audit";
+import { AUDIT_LABELS } from "../../utils/auditLabels";
+import { parsePlanningTab, planningRoute } from "../../utils/auditRoutes";
+
+const gridSx = {
+  display: "grid",
+  gridTemplateColumns: {
+    xs: "1fr",
+    sm: "repeat(2, 1fr)",
+    lg: "repeat(4, 1fr)",
+  },
+  gap: 2,
+};
+
+const CARDS = [
+  { type: "cycle_count", icon: <Package size={18} /> },
+  { type: "bom", icon: <FileText size={18} /> },
+  { type: "location", icon: <MapPin size={18} /> },
+  { type: "free_stock", icon: <Tag size={18} /> },
+] satisfies Array<{ type: AuditType; icon: React.ReactNode }>;
 
 export default function AuditPlanning() {
-  const bomCount = useAssignedBomAuditCount();
-  const cycleCountCount = useAssignedCycleCountCount();
-  const [trackerTab, setTrackerTab] = useState<"bom" | "cycle_count">("bom");
-  const gridSx = {
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      lg: "repeat(4, 1fr)",
-    },
-    gap: 2,
-  };
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { counts, statusCounts } = useAuditCounts();
 
-  const cards = [
-    {
-      type: "cycle_count",
-      title: "Cycle Count",
-      icon: <Package size={18} />,
-    },
-    {
-      type: "bom",
-      title: "BOM Completeness",
-      icon: <FileText size={18} />,
-    },
-    {
-      type: "location",
-      title: "Location Audit",
-      icon: <MapPin size={18} />,
-    },
-    {
-      type: "free_stock",
-      title: "Free Stock / 4th Axis",
-      icon: <Tag size={18} />,
-    },
-  ] satisfies Array<{
-    type: AuditType;
-    title: string;
-    icon: React.ReactNode;
-  }>;
-
-  const assignedCount = (type: AuditType) =>
-    type === "bom" ? bomCount : type === "cycle_count" ? cycleCountCount : 0;
+  // The selected stat card (= the audit type listed below) lives in the URL: ?tab=
+  const selected = parsePlanningTab(searchParams.get("tab"));
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
-      <Box sx={gridSx}>
-        {cards.map((card) => (
+      {/* Four audit cards - clicking one loads that audit type in the table below */}
+      <Box sx={{ ...gridSx, px: 2 }}>
+        {CARDS.map((card) => (
           <AuditTypeCard
             key={card.type}
-            title={card.title}
+            title={AUDIT_LABELS[card.type]}
             icon={card.icon}
             type={card.type}
-            count={assignedCount(card.type)}
+            count={counts[card.type]}
+            selected={card.type === selected}
+            onSelect={() =>
+              router.replace(planningRoute(card.type), { scroll: false })
+            }
           />
         ))}
       </Box>
 
-      <Tabs
-        value={trackerTab}
-        onChange={(_, v) => setTrackerTab(v)}
-        sx={{ mt: 2, borderBottom: 1, borderColor: "divider" }}
-        aria-label="Audit trackers"
-      >
-        <Tab value="bom" label="BOM Completeness" sx={{ textTransform: "none", fontWeight: 600 }} />
-        <Tab value="cycle_count" label="Cycle Count" sx={{ textTransform: "none", fontWeight: 600 }} />
-      </Tabs>
-
-      {trackerTab === "bom" ? <AuditPlansTable /> : <CycleCountPlansTable />}
+      {/* key = audit type: switching cards resets search / filter / page and refetches */}
+      <AuditPlansTable
+        key={selected}
+        auditType={selected}
+        statusCounts={statusCounts[selected]}
+      />
     </Box>
   );
 }

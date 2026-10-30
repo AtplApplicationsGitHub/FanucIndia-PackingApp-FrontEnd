@@ -10,6 +10,7 @@ type Props = {
   required?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  readOnly?: boolean;
 };
 
 const TextInput: React.FC<Props> = ({
@@ -21,6 +22,7 @@ const TextInput: React.FC<Props> = ({
   required = true,
   placeholder,
   disabled,
+  readOnly = false,
 }) => (
   <TextField
     fullWidth
@@ -29,11 +31,16 @@ const TextInput: React.FC<Props> = ({
     value={value}
     required={required}
     disabled={disabled}
+    slotProps={{
+      input: {
+        readOnly,
+      },
+    }}
     onChange={(e) => onChange(name, e.target.value ?? "")}
     placeholder={placeholder || `Enter ${label}`}
     error={!!error}
     helperText={error}
-    size="medium" 
+    size="medium"
     variant="outlined"
     autoComplete="off"
     sx={{
@@ -43,7 +50,7 @@ const TextInput: React.FC<Props> = ({
       },
       "& .MuiInputLabel-root": {
         fontWeight: 500,
-        fontSize: 16, 
+        fontSize: 16,
       },
       "& .MuiFormLabel-asterisk": {
         color: "#dc2626",

@@ -1,25 +1,11 @@
 import type { ChipProps } from "@mui/material";
 import type {
   CncFilter,
-  CycleCountStatus,
   MovementLevel,
   SelectionMethod,
 } from "../types/cycleCount";
 
 /* Cycle Count labels / colours (same values as the backend cycle-count.constants.ts). */
-
-export const CYCLE_COUNT_STATUS_OPTIONS: { value: CycleCountStatus; label: string }[] = [
-  { value: "ASSIGNED", label: "Assigned" },
-  { value: "CANCELLED", label: "Cancelled" },
-];
-
-export function cycleCountStatusLabel(status: string): string {
-  return CYCLE_COUNT_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
-}
-
-export function cycleCountStatusColor(status: string): ChipProps["color"] {
-  return status === "ASSIGNED" ? "warning" : "default";
-}
 
 export const SELECTION_METHOD_LABELS: Record<SelectionMethod, string> = {
   BUSIEST: "Busiest first",

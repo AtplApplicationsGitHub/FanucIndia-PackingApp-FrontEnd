@@ -4,24 +4,19 @@ import { useState } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import type { CreateBomAuditResult } from "../types/audit";
 import { getBomAuditError } from "../utils/getBomAuditError";
+import { notifyAuditsUpdated } from "../utils/auditEvents";
 
 export function useCreateBomAudit() {
   const [loading, setLoading] = useState(false);
 
-  // Template upload: the file carries the Audit Name and the Operator of every storage bin
-  const createBomAudit = async (data: {
-    file: File;
-    auditName?: string;
-    operatorId?: number;
-  }) => {
+  // The Excel contains Operator IDs; auditName is sent separately.
+  const createBomAudit = async (data: { file: File; auditName: string }) => {
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", data.file);
-      if (data.auditName) formData.append("auditName", data.auditName);
-      if (data.operatorId) formData.append("operatorId", String(data.operatorId));
+      formData.append("auditName", data.auditName);
 
-      // Do NOT set Content-Type here; the browser sets it for multipart
       const res = await fetchWithAuth(API.BOM_AUDIT.BASE, {
         method: "POST",
         body: formData,
@@ -38,7 +33,7 @@ export function useCreateBomAudit() {
           detail: { message: json.message, severity: "success" },
         }),
       );
-      window.dispatchEvent(new Event("bom-audits-updated"));
+      notifyAuditsUpdated();
       return json.data as CreateBomAuditResult;
     } finally {
       setLoading(false);

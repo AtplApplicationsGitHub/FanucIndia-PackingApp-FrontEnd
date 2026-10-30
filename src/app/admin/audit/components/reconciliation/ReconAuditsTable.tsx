@@ -40,7 +40,7 @@ import {
   getAccuracy,
   isActiveStatus,
 } from "../../utils/reconLabels";
-
+import { reconciliationDetailRoute } from "../../utils/auditRoutes";
 type Props = {
   audits: ReconAuditSummary[];
   pagination: BomAuditPagination;
@@ -306,7 +306,7 @@ export default function ReconAuditsTable({
                         color={active ? "primary" : "inherit"}
                         sx={{ textTransform: "none", fontWeight: 600 }}
                         onClick={() =>
-                          router.push(`/admin/audit/reconciliation/${audit.id}`)
+                          router.push(reconciliationDetailRoute(audit.id))
                         }
                       >
                         {active ? "Reconcile" : "View"}

@@ -35,7 +35,6 @@ import {
   Menu as MenuIcon,
   X,
   TrendingUp,
-  ChevronRight,
   ClipboardCheck,
   GitCompare,
   History,
@@ -104,16 +103,19 @@ const AUDIT_MENU = [
   {
     label: "AUDIT PLANNING",
     value: "audit_planning",
+    route: "/admin/audit/planning",
     icon: <ClipboardCheck size={16} />,
   },
   {
     label: "RECONCILIATION & DISCREPANCY",
     value: "reconciliation_discrepancy",
+    route: "/admin/audit/reconciliation",
     icon: <GitCompare size={16} />,
   },
   {
     label: "AUDIT HISTORY",
     value: "audit_history",
+    route: "/admin/audit/history",
     icon: <History size={16} />,
   },
 ];
@@ -138,12 +140,6 @@ const REPORTS_MENU = [
     value: "efficiency_report",
     icon: <TrendingUp size={16} />,
   },
-  {
-    label: "AUDIT",
-    value: "audit",
-    icon: <Layers3 size={16} />,
-    children: AUDIT_MENU,
-  },
 ];
 
 const REPORT_VALUES = [
@@ -153,7 +149,6 @@ const REPORT_VALUES = [
   "fg_report",
   "archived",
   "efficiency_report",
-  ...AUDIT_VALUES,
 ];
 
 const MAX_VISIBLE_ITEMS = 8;
@@ -185,8 +180,8 @@ export default function AdminDashboardHeader({
 
   const [reportsAnchor, setReportsAnchor] = useState<null | HTMLElement>(null);
   const reportsOpen = Boolean(reportsAnchor);
-  const [auditExpanded, setAuditExpanded] = useState(false);
-
+  const [auditAnchor, setAuditAnchor] = useState<null | HTMLElement>(null); // NEW
+  const auditOpen = Boolean(auditAnchor);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerReportsOpen, setDrawerReportsOpen] = useState(false);
   const [drawerAuditOpen, setDrawerAuditOpen] = useState(false);
@@ -417,57 +412,66 @@ export default function AdminDashboardHeader({
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
                 PaperProps={{ sx: { width: 250 } }}
               >
-                {REPORTS_MENU.flatMap((r) => {
-                  if (!r.children) {
-                    return [
-                      <MenuItem
-                        key={r.value}
-                        selected={view === r.value}
-                        onClick={() => {
-                          setView(r.value as ViewType);
-                          setReportsAnchor(null);
-                        }}
-                      >
-                        <ListItemIcon>{r.icon}</ListItemIcon>
-                        <ListItemText>{r.label}</ListItemText>
-                      </MenuItem>,
-                    ];
-                  }
-                  return [
-                    <MenuItem
-                      key={r.value}
-                      selected={AUDIT_VALUES.includes(view)}
-                      onClick={() => setAuditExpanded((p) => !p)}
-                    >
-                      <ListItemIcon>{r.icon}</ListItemIcon>
-                      <ListItemText>{r.label}</ListItemText>
-                      <ChevronRight
-                        size={16}
-                        style={{
-                          transform: auditExpanded ? "rotate(90deg)" : "none",
-                          transition: "transform 0.2s",
-                        }}
-                      />
-                    </MenuItem>,
-                    ...(auditExpanded
-                      ? r.children.map((c) => (
-                          <MenuItem
-                            key={c.value}
-                            selected={view === c.value}
-                            sx={{ pl: 5, whiteSpace: "normal" }}
-                            onClick={() => {
-                              setView(c.value as ViewType);
-                              setReportsAnchor(null);
-                              setAuditExpanded(false);
-                            }}
-                          >
-                            <ListItemIcon>{c.icon}</ListItemIcon>
-                            <ListItemText>{c.label}</ListItemText>
-                          </MenuItem>
-                        ))
-                      : []),
-                  ];
-                })}
+                {REPORTS_MENU.map((r) => (
+                  <MenuItem
+                    key={r.value}
+                    selected={view === r.value}
+                    onClick={() => {
+                      setView(r.value as ViewType);
+                      setReportsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>{r.icon}</ListItemIcon>
+                    <ListItemText>{r.label}</ListItemText>
+                  </MenuItem>
+                ))}
+              </Menu>
+
+              {/* AUDIT dropdown (NEW, next to Reports) */}
+              <Button
+                disableRipple
+                variant="text"
+                onClick={(e) => setAuditAnchor(e.currentTarget)}
+                endIcon={<ChevronDown size={16} />}
+                sx={navButtonSx(AUDIT_VALUES.includes(view))}
+              >
+                <Layers3 className="mr-1 h-4 w-4" />
+                AUDIT
+              </Button>
+              <Menu
+                anchorEl={auditAnchor}
+                open={auditOpen}
+                onClose={() => setAuditAnchor(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+                PaperProps={{
+                  sx: {
+                    width: 250,
+                    maxWidth: "calc(100vw - 32px)",
+                  },
+                }}
+              >
+                {AUDIT_MENU.map((a) => (
+                  <MenuItem
+                    key={a.value}
+                    selected={view === a.value}
+                    onClick={() => {
+                      router.push(a.route);
+                      setAuditAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>{a.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={a.label}
+                      primaryTypographyProps={{
+                        sx: {
+                          whiteSpace: "normal",
+                          overflowWrap: "break-word",
+                        },
+                      }}
+                    />
+                  </MenuItem>
+                ))}
               </Menu>
 
               {/* More overflow */}
@@ -634,7 +638,6 @@ export default function AdminDashboardHeader({
               </ListItem>
             );
           })}
-
           {/* REPORTS sub-section label */}
 
           <ListItem disablePadding>
@@ -676,7 +679,7 @@ export default function AdminDashboardHeader({
           </ListItem>
           {drawerReportsOpen && (
             <>
-              {REPORTS_MENU.filter((r) => !r.children).map((r) => {
+              {REPORTS_MENU.map((r) => {
                 const isSelected = view === r.value;
                 return (
                   <ListItem key={r.value} disablePadding>
@@ -719,86 +722,86 @@ export default function AdminDashboardHeader({
                   </ListItem>
                 );
               })}
-
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={() => setDrawerAuditOpen((prev) => !prev)}
-                  aria-expanded={drawerAuditOpen}
-                  sx={{
-                    pl: 4,
-                    py: 1.2,
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: theme.palette.primary.contrastText,
-                      minWidth: 32,
-                    }}
-                  >
-                    <Layers3 size={16} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="AUDIT"
-                    primaryTypographyProps={{
-                      fontWeight: 600,
-                      fontSize: "0.82rem",
-                      color: theme.palette.primary.contrastText,
-                    }}
-                  />
-                  <ChevronDown
-                    size={18}
-                    style={{
-                      transform: drawerAuditOpen ? "rotate(180deg)" : "none",
-                      transition: "transform 0.2s",
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-              {drawerAuditOpen &&
-                AUDIT_MENU.map((a) => {
-                  const isSelected = view === a.value;
-                  return (
-                    <ListItem key={a.value} disablePadding>
-                      <ListItemButton
-                        onClick={() => {
-                          setView(a.value as ViewType);
-                          setDrawerOpen(false);
-                        }}
-                        sx={{
-                          pl: 6,
-                          py: 1.2,
-                          borderLeft: isSelected
-                            ? `4px solid ${theme.palette.primary.contrastText}`
-                            : "4px solid transparent",
-                          bgcolor: isSelected
-                            ? "rgba(255,255,255,0.1)"
-                            : "transparent",
-                          "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{
-                            color: theme.palette.primary.contrastText,
-                            minWidth: 32,
-                          }}
-                        >
-                          {a.icon}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={a.label}
-                          primaryTypographyProps={{
-                            fontWeight: isSelected ? 700 : 600,
-                            fontSize: "0.8rem",
-                            color: theme.palette.primary.contrastText,
-                          }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
             </>
           )}
+
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => setDrawerAuditOpen((prev) => !prev)}
+              aria-expanded={drawerAuditOpen}
+              sx={{
+                px: 2,
+                py: 1.5,
+                "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: theme.palette.primary.contrastText,
+                  minWidth: 32,
+                }}
+              >
+                <Layers3 size={16} />
+              </ListItemIcon>
+              <ListItemText
+                primary="AUDIT"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                  color: theme.palette.primary.contrastText,
+                }}
+              />
+              <ChevronDown
+                size={18}
+                style={{
+                  transform: drawerAuditOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          {drawerAuditOpen &&
+            AUDIT_MENU.map((a) => {
+              const isSelected = view === a.value;
+              return (
+                <ListItem key={a.value} disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      router.push(a.route);
+                      setDrawerOpen(false);
+                    }}
+                    sx={{
+                      pl: 4,
+                      py: 1.2,
+                      borderLeft: isSelected
+                        ? `4px solid ${theme.palette.primary.contrastText}`
+                        : "4px solid transparent",
+                      bgcolor: isSelected
+                        ? "rgba(255,255,255,0.1)"
+                        : "transparent",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color: theme.palette.primary.contrastText,
+                        minWidth: 32,
+                      }}
+                    >
+                      {a.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={a.label}
+                      primaryTypographyProps={{
+                        fontWeight: isSelected ? 700 : 600,
+                        fontSize: "0.8rem",
+                        color: theme.palette.primary.contrastText,
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
         </List>
       </Drawer>
     </>

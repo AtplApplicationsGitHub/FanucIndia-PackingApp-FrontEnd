@@ -13,9 +13,6 @@ import type {
  * (same error body as BOM: { code, message, errors? }), so screens can show it as-is.
  */
 
-/** Refresh event for the tracker table and the card count (same idea as "bom-audits-updated"). */
-export const CYCLE_COUNT_UPDATED_EVENT = "cycle-count-audits-updated";
-
 async function readJson(res: Response, fallback: string) {
   if (res.status === 413) throw new Error("File larger than 10 MB");
   const json = await res.json().catch(() => ({}));
@@ -67,19 +64,9 @@ export async function createCycleCount(
 
 export async function loadCycleCountOperators(): Promise<CycleCountOperator[]> {
   const res = await fetchWithAuth(API.CYCLE_COUNT.OPERATORS);
-  const json = await readJson(res, "Unable to load operators. Please try again.");
-  return Array.isArray(json.data) ? (json.data as CycleCountOperator[]) : [];
-}
-
-export async function cancelCycleCount(id: number): Promise<string> {
-  const res = await fetchWithAuth(API.CYCLE_COUNT.CANCEL(id), { method: "PATCH" });
-  const json = await readJson(res, "Failed to cancel the audit.");
-  return json.message as string;
-}
-
-/** Same global snackbar the rest of DIMS uses. */
-export function showGlobalMessage(message: string, severity: "success" | "error" | "info" | "warning") {
-  window.dispatchEvent(
-    new CustomEvent("show-global-message", { detail: { message, severity } }),
+  const json = await readJson(
+    res,
+    "Unable to load operators. Please try again.",
   );
+  return Array.isArray(json.data) ? (json.data as CycleCountOperator[]) : [];
 }

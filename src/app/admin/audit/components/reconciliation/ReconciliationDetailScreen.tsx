@@ -36,20 +36,13 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import {
-  CheckCircle2,
-  Gauge,
-  ListChecks,
-  Package,
-  ScanLine,
-} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
 import CommonButton from "@/common/components/CommonButton";
 import { KVBox } from "@/app/so-search/components/KVBox";
 import ReverifyDialog from "./ReverifyDialog";
 import DiscrepancyReviewDialog from "./DiscrepancyReviewDialog";
-import ReconMetricCard from "./ReconMetricCard";
+import ReconDetailStatCards from "./ReconDetailStatCards";
 import { IssueChip, ReconStatusChip, VarianceStatusChip } from "./ReconChips";
 import { useReconciliationDetail } from "../../hooks/useReconciliationDetail";
 import {
@@ -57,7 +50,6 @@ import {
   ISSUE_LABELS,
   ISSUE_ORDER,
   formatDateTime,
-  getAccuracy,
 } from "../../utils/reconLabels";
 import type {
   ReconDecision,
@@ -173,14 +165,6 @@ export default function ReconciliationDetailScreen() {
   }
 
   const isClosed = detail.status === "CLOSED";
-  const resolved = detail.totalVariances - detail.openVariances;
-  const accuracy = getAccuracy(
-    detail.matchedComponents,
-    detail.expectedComponents,
-  );
-  const accuracyColor =
-    accuracy >= 98 ? "success" : accuracy >= 95 ? "warning" : "error";
-  const scanDiff = detail.scannedComponents - detail.expectedComponents;
   const reviewing = detail.variances.find((v) => v.id === reviewId) ?? null;
 
   const handleReverify = async (operatorId: number, operatorName: string) => {
@@ -317,55 +301,15 @@ export default function ReconciliationDetailScreen() {
       </Box>
 
       {/* Metrics */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, 1fr)",
-            lg: "repeat(5, 1fr)",
-          },
-          gap: 2,
+      <ReconDetailStatCards
+        expected={detail.expectedComponents}
+        metrics={{
+          scanned: detail.scannedComponents,
+          matched: detail.matchedComponents,
+          totalVariances: detail.totalVariances,
+          openVariances: detail.openVariances,
         }}
-      >
-        <ReconMetricCard
-          title="Expected"
-          value={detail.expectedComponents}
-          icon={<Package size={18} />}
-          caption="Material lines in the audit file"
-        />
-        <ReconMetricCard
-          title="Scanned"
-          value={detail.scannedComponents}
-          icon={<ScanLine size={18} />}
-          caption={`${scanDiff > 0 ? "+" : ""}${scanDiff} vs expected`}
-        />
-        <ReconMetricCard
-          title="Matched"
-          value={detail.matchedComponents}
-          icon={<CheckCircle2 size={18} />}
-          caption={`${detail.expectedComponents - detail.matchedComponents} not matched`}
-        />
-        <ReconMetricCard
-          title="Accuracy"
-          value={`${accuracy.toFixed(1)}%`}
-          icon={<Gauge size={18} />}
-          progress={accuracy}
-          progressColor={accuracyColor}
-        />
-        <ReconMetricCard
-          title="Resolved"
-          value={`${resolved} / ${detail.totalVariances}`}
-          icon={<ListChecks size={18} />}
-          progress={
-            detail.totalVariances
-              ? (resolved / detail.totalVariances) * 100
-              : 100
-          }
-          progressColor="success"
-          caption={`${detail.openVariances} open`}
-        />
-      </Box>
+      />
 
       {/* Location-wise variance */}
       {binSummary.length > 0 && (

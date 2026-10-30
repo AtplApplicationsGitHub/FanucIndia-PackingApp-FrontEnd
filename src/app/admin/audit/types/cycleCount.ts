@@ -3,8 +3,6 @@
  * Same shapes as the backend cycle-count module responses.
  */
 
-export type CycleCountStatus = "ASSIGNED" | "CANCELLED";
-
 export type SelectionMethod = "BUSIEST" | "RANDOM" | "MANUAL";
 export type CncFilter = "BOTH" | "WITH_CNC" | "WITHOUT_CNC";
 export type MaterialClass = "A" | "B" | "C";
@@ -87,7 +85,7 @@ export type CycleCountSummary = {
   id: number;
   auditNo: string;
   auditName: string;
-  status: CycleCountStatus | string;
+  status: string;
   operatorId: number;
   operatorName: string;
   stockUploadId: number;
@@ -103,8 +101,6 @@ export type CycleCountSummary = {
   uploadBatchId: string;
   createdByName: string;
   createdAt: string;
-  cancelledAt: string | null;
-  cancelledByName: string | null;
 };
 
 export type CycleCountDetail = CycleCountSummary & {
@@ -124,11 +120,4 @@ export type CycleCountDetail = CycleCountSummary & {
       expectedQty: number;
     }[];
   }[];
-};
-
-export type CycleCountPagination = {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
 };

@@ -68,8 +68,9 @@ export default function AuditLayout({ children }: { children: ReactNode }) {
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          px: { xs: 2, md: 4 },
-          py: 3,
+          px: 0,
+          pt: 2,
+          pb: 2,
         }}
       >
         {children}

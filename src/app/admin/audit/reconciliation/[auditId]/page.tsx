@@ -1,5 +1,11 @@
-import ReconciliationDetailScreen from "../../components/reconciliation/ReconciliationDetailScreen";
+import { Suspense } from "react";
+
+import AuditDetailScreen from "../../components/reconciliation/AuditDetailScreen";
 
 export default function ReconciliationDetailPage() {
-  return <ReconciliationDetailScreen />;
+  return (
+    <Suspense fallback={null}>
+      <AuditDetailScreen />
+    </Suspense>
+  );
 }

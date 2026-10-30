@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import AuditPlanning from "../components/planning/AuditPlanning";
 
 export default function AuditPlanningPage() {
-  return <AuditPlanning />;
+  return (
+    <Suspense fallback={null}>
+      <AuditPlanning />
+    </Suspense>
+  );
 }

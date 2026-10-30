@@ -15,7 +15,7 @@ import {
 import { X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
-import OperatorSelect from "../planning/OperatorSelect";
+import OperatorSelect from "../shared/OperatorSelect";
 
 type Props = {
   open: boolean;

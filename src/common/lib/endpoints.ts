@@ -69,6 +69,7 @@ export const API = {
 
     USERS: `${API_BASE_URL}/users`,
     USER_BY_ID: (id: number) => `${API_BASE_URL}/users/${id}`,
+    USERS_EXPORT_TERMINAL_OPERATORS: `${API_BASE_URL}/users/export/terminal-operators`,
     SFTP_STATUS: `${API_BASE_URL}/admin/sales-orders/sftp-status`,
     FG_STORAGE_REPORT: (params?: {
       search?: string;
@@ -380,56 +381,47 @@ export const API = {
     FILES: `${API_BASE_URL}/samba/files`,
     DOWNLOAD: `${API_BASE_URL}/samba/download`,
   },
-     BOM_AUDIT: {
-  BASE: `${API_BASE_URL}/bom-audit`,
-  LIST: (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-  }) => {
-    const query = new URLSearchParams();
-
-    if (params?.page) query.set("page", String(params.page));
-    if (params?.limit) query.set("limit", String(params.limit));
-    if (params?.search) query.set("search", params.search);
-    if (params?.status) query.set("status", params.status);
-
-    const qs = query.toString();
-    return `${API_BASE_URL}/bom-audit${qs ? "?" + qs : ""}`;
-  },
-  OPERATORS: `${API_BASE_URL}/bom-audit/operators`,
-  TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
-  BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
-  CANCEL: (id: number) => `${API_BASE_URL}/bom-audit/${id}/cancel`,
-  REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,
-},
-  // Phase 2 - Cycle Count audit (Phase A: create audit on the web)
-  CYCLE_COUNT: {
-    BASE: `${API_BASE_URL}/cycle-count`,
-    LIST: (params?: {
+   AUDIT: {
+    STATUSES: `${API_BASE_URL}/audit/statuses`,
+    STATUS_COUNTS: `${API_BASE_URL}/audit/status-counts`,
+    OPERATORS: `${API_BASE_URL}/audit/operators`,
+    // One list API for every audit type: auditType = the clicked card
+    LIST: (params: {
+      auditType: string;
       page?: number;
       limit?: number;
       search?: string;
       status?: string;
+      fromDate?: string;
+      toDate?: string;
     }) => {
-      const query = new URLSearchParams();
+      const query = new URLSearchParams({ auditType: params.auditType });
 
-      if (params?.page) query.set("page", String(params.page));
-      if (params?.limit) query.set("limit", String(params.limit));
-      if (params?.search) query.set("search", params.search);
-      if (params?.status) query.set("status", params.status);
+      if (params.page) query.set("page", String(params.page));
+      if (params.limit) query.set("limit", String(params.limit));
+      if (params.search) query.set("search", params.search);
+      if (params.status) query.set("status", params.status);
+      if (params.fromDate) query.set("fromDate", params.fromDate);
+      if (params.toDate) query.set("toDate", params.toDate);
 
-      const qs = query.toString();
-      return `${API_BASE_URL}/cycle-count${qs ? "?" + qs : ""}`;
+      return `${API_BASE_URL}/audit/list?${query.toString()}`;
     },
+  },
+     BOM_AUDIT: {
+  BASE: `${API_BASE_URL}/bom-audit`,
+  TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
+  BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
+  REASSIGN: (id: number) =>`${API_BASE_URL}/bom-audit/${id}/operator`,
+  REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,
+},
+  CYCLE_COUNT: {
+    BASE: `${API_BASE_URL}/cycle-count`,
     STOCK_UPLOADS: `${API_BASE_URL}/cycle-count/stock-uploads`,
     STOCK_UPLOAD_BY_ID: (id: number) =>
       `${API_BASE_URL}/cycle-count/stock-uploads/${id}`,
     PLAN_PREVIEW: `${API_BASE_URL}/cycle-count/plan-preview`,
     OPERATORS: `${API_BASE_URL}/cycle-count/operators`,
     BY_ID: (id: number) => `${API_BASE_URL}/cycle-count/${id}`,
-    CANCEL: (id: number) => `${API_BASE_URL}/cycle-count/${id}/cancel`,
   },
 };
 

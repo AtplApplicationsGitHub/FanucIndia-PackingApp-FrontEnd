@@ -23,7 +23,14 @@ const HEADER_ALIASES = {
 } as const;
 
 const OPTIONAL_ALIASES = {
-  operator: ["operator", "operatorname", "assignedto", "user", "auditor"],
+  operator: [
+    "operator",
+    "operatorid",
+    "operatorname",
+    "assignedto",
+    "user",
+    "auditor",
+  ],
   auditName: ["auditname"],
 } as const;
 
@@ -33,42 +40,24 @@ export type AuditOperator = { id: number; name: string; email: string };
 /** Same label as the template dropdown and the server: "Name (email)" */
 const operatorLabel = (o: AuditOperator) => `${o.name} (${o.email})`;
 
-/**
- * Matches an Operator cell to a real operator - SAME rules as the server (resolveOperatorGroups):
- * "Name (email)" or a plain email -> by email; otherwise -> by name, only when exactly one operator has it.
- */
+/** Operator must be a valid numeric USER-role operator ID. */
 const matchOperator = (
   label: string,
   operators: AuditOperator[],
 ): { operator?: AuditOperator; problem?: string } => {
-  const emailInBrackets = /\(([^()\s]+@[^()\s]+)\)\s*$/.exec(label)?.[1];
-  const email = (emailInBrackets ?? (label.includes("@") ? label : ""))
-    .trim()
-    .toLowerCase();
-  // Exact dropdown label "Name (email)" always wins (also works when an email has no "@")
-  const exact = operators.find(
-    (o) =>
-      operatorLabel({ ...o, name: o.name.trim(), email: o.email.trim() }).toLowerCase() ===
-      label.toLowerCase(),
-  );
-  if (exact) return { operator: exact };
-  if (email) {
-    const operator = operators.find(
-      (o) => o.email.trim().toLowerCase() === email,
-    );
-    return operator
-      ? { operator }
-      : { problem: `Operator "${label}" was not found or is not an operator (USER role)` };
-  }
-  const sameName = operators.filter(
-    (o) => o.name.trim().toLowerCase() === label.toLowerCase(),
-  );
-  if (sameName.length === 1) return { operator: sameName[0] };
-  if (sameName.length > 1)
+  if (!/^\d+$/.test(label)) {
     return {
-      problem: `Operator "${label}" matches ${sameName.length} users - select it from the dropdown`,
+      problem: `Operator "${label}" must be the Operator ID (a whole number, e.g. 12)`,
     };
-  return { problem: `Operator "${label}" was not found or is not an operator (USER role)` };
+  }
+
+  const operator = operators.find((o) => o.id === Number(label));
+
+  return operator
+    ? { operator }
+    : {
+        problem: `Operator ID ${label} does not exist or is not an operator (USER role)`,
+      };
 };
 
 /** Result of reading the template on the browser (preview only - the server checks everything again). */
@@ -76,7 +65,22 @@ export type ParsedAuditFile = {
   auditName: string;
   rows: AuditRow[];
   /** One entry per operator (= one audit), in file order */
-  operators: { label: string; bins: number; records: number }[];
+  operators: {
+    label: string;
+    /** number of storage bins (locations) of this operator */
+    bins: number;
+    /** the storage bins (locations) themselves, naturally sorted */
+    locations: string[];
+    records: number;
+  }[];
+};
+
+export type ParseAuditExcelOptions = {
+  /**
+   * true (default): the Audit Name must be in the file (row 1 / Audit Name column).
+   * false: the name is typed in the page textbox, so a missing name in the file is NOT an error.
+   */
+  requireAuditNameInFile?: boolean;
 };
 
 const INVISIBLE = /[​-‍⁠﻿]/g;
@@ -115,7 +119,9 @@ const naturalCompare = (a: string, b: string) =>
 export async function parseAuditExcel(
   file: File,
   operatorList?: AuditOperator[],
+  options: ParseAuditExcelOptions = {},
 ): Promise<ParsedAuditFile> {
+  const { requireAuditNameInFile = true } = options;
   if (!file.name.toLowerCase().endsWith(".xlsx")) {
     throw new Error("Upload an .xlsx Excel file.");
   }
@@ -125,13 +131,20 @@ export async function parseAuditExcel(
   await workbook.xlsx.load(new Uint8Array(await file.arrayBuffer()) as any);
 
   const sheet = workbook.worksheets.find(
-    (ws) => ws.actualRowCount > 0 && ws.state !== "hidden" && ws.state !== "veryHidden",
+    (ws) =>
+      ws.actualRowCount > 0 &&
+      ws.state !== "hidden" &&
+      ws.state !== "veryHidden",
   );
   if (!sheet) throw new Error("The uploaded file is empty.");
 
   // Header = first row (within the first rows) that has Material Code, Storage and Qty (same as BE)
   const requiredCount = Object.keys(HEADER_ALIASES).length;
-  let best: { rowNo: number; headers: Map<string, number>; found: number } | null = null;
+  let best: {
+    rowNo: number;
+    headers: Map<string, number>;
+    found: number;
+  } | null = null;
   sheet.eachRow({ includeEmpty: false }, (row) => {
     if (row.number > HEADER_SEARCH_ROWS) return;
     if (best && best.found === requiredCount) return;
@@ -140,13 +153,17 @@ export async function parseAuditExcel(
       const key = normalize(getValue(cell.value));
       if (key && !headers.has(key)) headers.set(key, col);
     });
-    const found = (Object.values(HEADER_ALIASES) as readonly (readonly string[])[]).filter((aliases) =>
-      aliases.some((alias) => headers.has(alias)),
-    ).length;
-    if (!best || found > best.found) best = { rowNo: row.number, headers, found };
+    const found = (
+      Object.values(HEADER_ALIASES) as readonly (readonly string[])[]
+    ).filter((aliases) => aliases.some((alias) => headers.has(alias))).length;
+    if (!best || found > best.found)
+      best = { rowNo: row.number, headers, found };
   });
   if (!best) throw new Error("The uploaded file is empty.");
-  const { rowNo: headerRowNo, headers } = best as { rowNo: number; headers: Map<string, number> };
+  const { rowNo: headerRowNo, headers } = best as {
+    rowNo: number;
+    headers: Map<string, number>;
+  };
 
   const findColumn = (aliases: readonly string[]) =>
     aliases.map((alias) => headers.get(alias)).find((col) => col !== undefined);
@@ -173,7 +190,7 @@ export async function parseAuditExcel(
   ) {
     throw new Error(
       `Required column(s) missing: ${missing.join(", ")}. ` +
-        "Please use the downloaded template (StorageBin, Material, Avail and Operator columns).",
+        "The file must have the columns StorageBin, Material, Qty (or Avail) and Operator (Operator ID).",
     );
   }
 
@@ -182,9 +199,16 @@ export async function parseAuditExcel(
   let hasAuditNameLabel = false;
   for (let r = 1; r < headerRowNo && !hasAuditNameLabel; r++) {
     sheet.getRow(r).eachCell({ includeEmpty: false }, (cell, col) => {
-      if (hasAuditNameLabel || normalize(getValue(cell.value)) !== AUDIT_NAME_LABEL) return;
+      if (
+        hasAuditNameLabel ||
+        normalize(getValue(cell.value)) !== AUDIT_NAME_LABEL
+      )
+        return;
       hasAuditNameLabel = true;
-      auditName = getValue(sheet.getRow(r).getCell(col + 1).value).replace(/\s+/g, " ");
+      auditName = getValue(sheet.getRow(r).getCell(col + 1).value).replace(
+        /\s+/g,
+        " ",
+      );
     });
   }
   const auditNamesInColumn = new Set<string>();
@@ -203,12 +227,18 @@ export async function parseAuditExcel(
     ).toUpperCase();
     const storage = getValue(row.getCell(storageColumn).value).toUpperCase();
     const qtyText = getValue(row.getCell(qtyColumn).value);
-    const operator = getValue(row.getCell(operatorColumn).value).replace(/\s+/g, " ");
+    const operator = getValue(row.getCell(operatorColumn).value)
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/^(\d+)\.0+$/, "$1");
 
     if (!materialCode && !storage && !qtyText) return;
 
     if (auditNameColumn !== undefined) {
-      const name = getValue(row.getCell(auditNameColumn).value).replace(/\s+/g, " ");
+      const name = getValue(row.getCell(auditNameColumn).value).replace(
+        /\s+/g,
+        " ",
+      );
       if (name) auditNamesInColumn.add(name);
     }
 
@@ -232,10 +262,11 @@ export async function parseAuditExcel(
       errors.push(`Qty "${qtyText}" must be a whole number greater than 0`);
 
     // One storage bin = one operator
-    if (!operator) errors.push("Operator is missing (select one from the dropdown)");
+    if (!operator) errors.push("Operator is missing (enter the Operator ID)");
     else if (storage) {
       const assigned = binOperator.get(storage);
-      if (!assigned) binOperator.set(storage, { label: operator, rowNo: rowNumber });
+      if (!assigned)
+        binOperator.set(storage, { label: operator, rowNo: rowNumber });
       else if (assigned.label.toLowerCase() !== operator.toLowerCase())
         errors.push(
           `Storage bin ${storage} is already assigned to "${assigned.label}" (row ${assigned.rowNo}). One storage bin can have only one operator`,
@@ -298,8 +329,9 @@ export async function parseAuditExcel(
       `The Audit Name column has ${auditNamesInColumn.size} different values. One file can have only one Audit Name.`,
     );
   }
-  if (!auditName && auditNamesInColumn.size === 1) auditName = [...auditNamesInColumn][0];
-  if (!auditName) {
+  if (!auditName && auditNamesInColumn.size === 1)
+    auditName = [...auditNamesInColumn][0];
+  if (!auditName && requireAuditNameInFile) {
     throw new Error(
       'Audit Name is missing. Type it in the yellow "Audit Name" box at the top of the template (row 1).',
     );
@@ -336,7 +368,7 @@ export async function parseAuditExcel(
       operatorErrors.sort((a, b) => a.rowNo - b.rowNo);
       throw new Error(
         [
-          `${operatorErrors.length} operator(s) in the file are not valid. Please select operators from the template dropdown.`,
+          `${operatorErrors.length} operator(s) in the file are not valid. Use the Operator ID of a Terminal Operator.`,
           ...operatorErrors.slice(0, MAX_REPORTED_ERRORS).map((e) => e.text),
         ].join("\n"),
       );
@@ -349,7 +381,10 @@ export async function parseAuditExcel(
   }
 
   // One audit per operator, in the order the operators first appear in the file
-  const operators = new Map<string, { label: string; bins: Set<string>; records: number; firstRow: number }>();
+  const operators = new Map<
+    string,
+    { label: string; bins: Set<string>; records: number; firstRow: number }
+  >();
   for (const row of rows) {
     const key = (row.operator ?? "").toLowerCase();
     const entry = operators.get(key) ?? {
@@ -367,7 +402,9 @@ export async function parseAuditExcel(
     operators.set(key, entry);
   }
 
-  const orderedOperators = [...operators.values()].sort((a, b) => a.firstRow - b.firstRow);
+  const orderedOperators = [...operators.values()].sort(
+    (a, b) => a.firstRow - b.firstRow,
+  );
   const operatorRank = new Map(
     orderedOperators.map((o, index) => [o.label.toLowerCase(), index]),
   );
@@ -385,6 +422,7 @@ export async function parseAuditExcel(
     operators: orderedOperators.map((o) => ({
       label: o.label,
       bins: o.bins.size,
+      locations: [...o.bins].sort(naturalCompare),
       records: o.records,
     })),
   };

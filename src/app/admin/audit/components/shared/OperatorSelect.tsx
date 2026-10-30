@@ -18,7 +18,7 @@ export default function OperatorSelect({ value, onChange }: Props) {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetchWithAuth(API.BOM_AUDIT.OPERATORS);
+        const res = await fetchWithAuth(API.AUDIT.OPERATORS);
         if (!res.ok) throw new Error();
         const json = await res.json();
         setOperators(json.data ?? []);
