@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { Box } from "@mui/material";
 import {
   CheckCircle2,
@@ -23,20 +25,22 @@ type Props = {
   expected: number;
   /** null / undefined = the operator has not uploaded yet -> scanned, matched ... show "-" */
   metrics?: ReconDetailMetrics | null;
+  extraCard?: ReactNode;
 };
 
 const PENDING = "Awaiting operator upload";
 
 /** Expected / Scanned / Matched / Accuracy / Resolved cards of one audit (reconciliation detail + planning detail). */
-export default function ReconDetailStatCards({ expected, metrics }: Props) {
+export default function ReconDetailStatCards({ expected, metrics, extraCard }: Props) {
   const gridSx = {
     display: "grid",
     gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      lg: "repeat(5, 1fr)",
+      xs: "repeat(1, minmax(0, 1fr))",
+      sm: "repeat(2, minmax(0, 1fr))",
+      md: "repeat(3, minmax(0, 1fr))",
+      lg: `repeat(${extraCard ? 6 : 5}, minmax(0, 1fr))`,
     },
-    gap: 2,
+    gap: 1.5,
   };
 
   const expectedCard = (
@@ -117,6 +121,7 @@ export default function ReconDetailStatCards({ expected, metrics }: Props) {
         progressColor="success"
         caption={`${openVariances} open`}
       />
+      {extraCard}
     </Box>
   );
 }

@@ -16,17 +16,8 @@ export const parsePlanningTab = (value: string | null): PlanningTab =>
 export const planningRoute = (tab?: PlanningTab) =>
   tab ? `${AUDIT_PLANNING_ROUTE}?tab=${tab}` : AUDIT_PLANNING_ROUTE;
 
-export const AUDIT_RECONCILIATION_ROUTE = "/admin/audit/reconciliation";
-
-/**
- * Detail page of one audit.
- * - from the Reconciliation list: no type (reconciliation audits)
- * - from Audit Planning: pass the audit type, the page then shows the view of the audit's status
- */
-export const reconciliationDetailRoute = (auditId: number, type?: AuditType) =>
-  type
-    ? `${AUDIT_RECONCILIATION_ROUTE}/${auditId}?type=${type}`
-    : `${AUDIT_RECONCILIATION_ROUTE}/${auditId}`;
+export const auditViewRoute = (auditId: number, type: AuditType) =>
+  `${AUDIT_PLANNING_ROUTE}/view/${auditId}?type=${type}`;
 
 export const AUDIT_CREATE_ROUTES: Record<AuditType, string> = {
   bom: `${AUDIT_PLANNING_ROUTE}/create/bom`,

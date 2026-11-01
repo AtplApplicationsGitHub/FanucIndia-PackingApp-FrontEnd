@@ -4,28 +4,20 @@ import { useEffect, useState } from "react";
 
 import {
   Box,
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
   IconButton,
-  MenuItem,
   Paper,
-  TextField,
   Typography,
 } from "@mui/material";
 import { X } from "lucide-react";
 
-import { KVBox } from "@/app/so-search/components/KVBox";
+import CommonButton from "@/common/components/CommonButton";
+import ReconDecisionFields from "./ReconDecisionFields";
 import { IssueChip, VarianceStatusChip } from "./ReconChips";
-import {
-  DECISION_LABELS,
-  ISSUE_HINTS,
-  SAP_ACTION_LABELS,
-  formatDateTime,
-} from "../../utils/reconLabels";
+import { ISSUE_HINTS, formatDateTime } from "../../utils/reconLabels";
 import type {
   ReconDecision,
   ReconSapAction,
@@ -68,7 +60,7 @@ export default function DiscrepancyReviewDialog({
       open={variance !== null}
       onClose={saving ? undefined : onClose}
       fullWidth
-      maxWidth="sm"
+      maxWidth="md"
       PaperProps={{ sx: { borderRadius: 2 } }}
     >
       <DialogTitle
@@ -80,7 +72,7 @@ export default function DiscrepancyReviewDialog({
           fontSize: "20px",
           letterSpacing: 0.5,
           color: "error.main",
-          pb: 1,
+          py: 1.25,
           position: "relative",
         }}
       >
@@ -88,6 +80,7 @@ export default function DiscrepancyReviewDialog({
         <IconButton
           onClick={onClose}
           size="small"
+          aria-label="close"
           disabled={saving}
           sx={{ position: "absolute", right: 12 }}
         >
@@ -97,166 +90,176 @@ export default function DiscrepancyReviewDialog({
       <Divider />
 
       {variance && (
-        <>
-          <DialogContent sx={{ pt: 2 }}>
-            <Box sx={{ display: "flex", gap: 1, mb: 0.5 }}>
-              <IssueChip type={variance.issueType} />
-              <VarianceStatusChip status={variance.status} />
-            </Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block", mb: 2 }}
-            >
-              {ISSUE_HINTS[variance.issueType]}
-            </Typography>
-
+        <DialogContent sx={{ pt: "12px !important", pb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              columnGap: 2,
+              rowGap: 0.5,
+              mb: 1.5,
+            }}
+          >
             <Box
               sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                gap: 1.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                minWidth: 0,
               }}
             >
-              <Paper variant="outlined" sx={{ p: 1.5 }}>
-                <Typography fontWeight={700} sx={{ mb: 1 }}>
-                  Expected (audit file)
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <KVBox
-                    fullWidth
-                    label="Storage Bin"
-                    value={variance.storageBin}
-                  />
-                  <KVBox
-                    fullWidth
-                    label="Material"
-                    value={variance.materialCode}
-                  />
-                  <KVBox
-                    fullWidth
-                    label="Quantity"
-                    value={variance.expectedQty}
-                  />
-                </Box>
-              </Paper>
-
-              <Paper variant="outlined" sx={{ p: 1.5 }}>
-                <Typography fontWeight={700} sx={{ mb: 1 }}>
-                  Actual scanned
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <KVBox
-                    fullWidth
-                    label="Storage Bin"
-                    value={variance.storageBin}
-                  />
-                  <KVBox
-                    fullWidth
-                    label="Material"
-                    value={variance.materialCode}
-                  />
-                  <KVBox
-                    fullWidth
-                    label="Quantity"
-                    value={`${variance.scannedQty} (${diff > 0 ? "+" : ""}${diff})`}
-                  />
-                </Box>
-              </Paper>
+              <IssueChip type={variance.issueType} />
+              <VarianceStatusChip status={variance.status} />
+              <Typography variant="caption" color="text.secondary">
+                {ISSUE_HINTS[variance.issueType]}
+              </Typography>
             </Box>
-
             {variance.scannedAt && (
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: "block", mt: 1 }}
+                sx={{ ml: "auto" }}
               >
                 Scanned on {formatDateTime(variance.scannedAt)}
               </Typography>
             )}
+          </Box>
 
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 1.5,
+            }}
+          >
+            <CompareCard
+              title="Expected (audit file)"
+              storageBin={variance.storageBin}
+              materialCode={variance.materialCode}
+              quantity={variance.expectedQty}
+            />
+            <CompareCard
+              title="Actual scanned"
+              storageBin={variance.storageBin}
+              materialCode={variance.materialCode}
+              quantity={`${variance.scannedQty} (${diff > 0 ? "+" : ""}${diff})`}
+            />
+          </Box>
+
+          <Box sx={{ mt: 2 }}>
+            <ReconDecisionFields
+              decision={decision}
+              sapAction={sapAction}
+              remarks={remarks}
+              disabled={readOnly || saving}
+              onDecisionChange={setDecision}
+              onSapActionChange={setSapAction}
+              onRemarksChange={setRemarks}
+            />
+          </Box>
+
+          {(variance.resolvedAt || !readOnly) && (
             <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
+                mt: 1.5,
+              }}
             >
-              <TextField
-                select
-                size="small"
-                fullWidth
-                label="Decision"
-                value={decision}
-                disabled={readOnly || saving}
-                onChange={(e) => setDecision(e.target.value as ReconDecision)}
-              >
-                {(Object.keys(DECISION_LABELS) as ReconDecision[]).map((d) => (
-                  <MenuItem key={d} value={d}>
-                    {DECISION_LABELS[d]}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              {/* Placeholder: SAP behaviour is not finalised, the choice is only stored. */}
-              <TextField
-                select
-                size="small"
-                fullWidth
-                label="SAP follow-up (optional)"
-                value={sapAction}
-                disabled={readOnly || saving}
-                onChange={(e) => setSapAction(e.target.value as ReconSapAction)}
-              >
-                {(Object.keys(SAP_ACTION_LABELS) as ReconSapAction[]).map(
-                  (a) => (
-                    <MenuItem key={a} value={a}>
-                      {SAP_ACTION_LABELS[a]}
-                    </MenuItem>
-                  ),
-                )}
-              </TextField>
-
-              <TextField
-                size="small"
-                fullWidth
-                required
-                multiline
-                minRows={3}
-                label="Remarks"
-                value={remarks}
-                disabled={readOnly || saving}
-                onChange={(e) => setRemarks(e.target.value)}
-              />
-            </Box>
-
-            {variance.resolvedAt && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block", mt: 1.5 }}
-              >
-                Resolved by {variance.resolvedByName} on{" "}
-                {formatDateTime(variance.resolvedAt)}
+              <Typography variant="caption" color="text.secondary">
+                {variance.resolvedAt
+                  ? `Resolved by ${variance.resolvedByName ?? "-"} on ${formatDateTime(variance.resolvedAt)}`
+                  : ""}
               </Typography>
-            )}
-          </DialogContent>
 
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button disabled={saving} onClick={onClose}>
-              {readOnly ? "Close" : "Cancel"}
-            </Button>
-
-            {!readOnly && (
-              <Button
-                variant="contained"
-                disabled={!decision || !remarks.trim() || saving}
-                onClick={() =>
-                  decision && onSave(decision, sapAction, remarks.trim())
-                }
-              >
-                {saving ? "Saving..." : "Save Reconciliation"}
-              </Button>
-            )}
-          </DialogActions>
-        </>
+              {!readOnly && (
+                <CommonButton
+                  variant="contained"
+                  disabled={!decision || !remarks.trim() || saving}
+                  onClick={() =>
+                    decision && onSave(decision, sapAction, remarks.trim())
+                  }
+                >
+                  {saving ? "SAVING..." : "SAVE"}
+                </CommonButton>
+              )}
+            </Box>
+          )}
+        </DialogContent>
       )}
     </Dialog>
+  );
+}
+
+function CompareCard({
+  title,
+  storageBin,
+  materialCode,
+  quantity,
+}: {
+  title: string;
+  storageBin: string;
+  materialCode: string;
+  quantity: string | number;
+}) {
+  return (
+    <Paper variant="outlined" sx={{ px: 1.5, py: 1, borderRadius: 2 }}>
+      <Typography sx={{ fontWeight: 700, fontSize: 14, mb: 0.75 }}>
+        {title}
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns:
+            "minmax(0, 0.9fr) minmax(0, 1.5fr) minmax(0, 0.7fr)",
+          gap: 1,
+        }}
+      >
+        <Field label="Storage Bin" value={storageBin} />
+        <Field label="Material" value={materialCode} />
+        <Field label="Quantity" value={quantity} />
+      </Box>
+    </Paper>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string | number }) {
+  return (
+    <Box
+      sx={{
+        minWidth: 0,
+        px: 1,
+        py: 0.5,
+        borderRadius: 1.5,
+        border: "1px dashed",
+        borderColor: "divider",
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: "text.secondary",
+          lineHeight: 1.4,
+        }}
+        noWrap
+      >
+        {label}
+      </Typography>
+      <Typography
+        title={String(value)}
+        sx={{ fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}
+        noWrap
+      >
+        {value}
+      </Typography>
+    </Box>
   );
 }

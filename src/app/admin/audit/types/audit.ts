@@ -106,7 +106,7 @@ export type AuditListParams = {
   page: number;
   limit: number;
   search: string;
-  status: AuditStatus | "";
+  status: AuditStatus | "ALL" | "";
   fromDate?: string;
   toDate?: string;
 };

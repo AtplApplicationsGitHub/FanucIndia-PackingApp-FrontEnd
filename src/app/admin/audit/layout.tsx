@@ -12,7 +12,6 @@ import AdminDashboardHeader, {
 
 const AUDIT_ROUTES: Record<string, string> = {
   audit_planning: "/admin/audit/planning",
-  reconciliation_discrepancy: "/admin/audit/reconciliation",
   audit_history: "/admin/audit/history",
 };
 
@@ -34,9 +33,7 @@ export default function AuditLayout({ children }: { children: ReactNode }) {
   const selected = (
     pathname.includes("/history")
       ? "audit_history"
-      : pathname.includes("/reconciliation")
-        ? "reconciliation_discrepancy"
-        : "audit_planning"
+      : "audit_planning"
   ) as ViewType;
 
   const setView: Dispatch<SetStateAction<ViewType>> = (next) => {

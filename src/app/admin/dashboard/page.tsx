@@ -93,11 +93,6 @@ function AdminDashboardContent() {
       return;
     }
 
-    if (newView === "reconciliation_discrepancy") {
-      router.push("/admin/audit/reconciliation");
-      return;
-    }
-
     if (newView === "audit_history") {
       router.push("/admin/audit/history");
       return;

@@ -36,7 +36,6 @@ import {
   X,
   TrendingUp,
   ClipboardCheck,
-  GitCompare,
   History,
   Layers3,
 } from "lucide-react";
@@ -105,12 +104,6 @@ const AUDIT_MENU = [
     value: "audit_planning",
     route: "/admin/audit/planning",
     icon: <ClipboardCheck size={16} />,
-  },
-  {
-    label: "RECONCILIATION & DISCREPANCY",
-    value: "reconciliation_discrepancy",
-    route: "/admin/audit/reconciliation",
-    icon: <GitCompare size={16} />,
   },
   {
     label: "AUDIT HISTORY",

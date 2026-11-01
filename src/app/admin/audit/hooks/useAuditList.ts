@@ -28,7 +28,7 @@ export function useAuditList(auditType: AuditType) {
     page: 1,
     limit: 10,
     search: "",
-    status: "ASSIGNED", // same default as the BOM table
+    status: "ALL",
   });
   const [audits, setAudits] = useState<AuditListRow[]>([]);
   const [pagination, setPagination] =

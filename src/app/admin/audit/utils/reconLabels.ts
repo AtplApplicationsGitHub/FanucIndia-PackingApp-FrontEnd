@@ -8,9 +8,9 @@ import type {
 type ChipColor = "default" | "error" | "warning" | "info" | "success";
 
 export const RECON_STATUS_LABELS: Record<ReconAuditStatus, string> = {
-  PENDING_RECONCILIATION: "Pending Reconciliation",
-  IN_PROGRESS: "In Progress",
-  RECONCILED: "Reconciled",
+  PENDING_RECONCILIATION: "Not Started",
+  IN_PROGRESS: "Reviewing",
+  RECONCILED: "All Reviewed",
   CLOSED: "Closed",
 };
 
@@ -22,15 +22,15 @@ export const RECON_STATUS_COLORS: Record<ReconAuditStatus, ChipColor> = {
 };
 
 export const ISSUE_ORDER: ReconIssueType[] = [
+  "QUANTITY_MISMATCH",
   "MISSING",
   "EXCESS",
-  "QUANTITY_MISMATCH",
 ];
 
 export const ISSUE_LABELS: Record<ReconIssueType, string> = {
   MISSING: "Missing",
-  EXCESS: "Excess",
-  QUANTITY_MISMATCH: "Quantity Mismatch",
+  EXCESS: "Unexpected",
+  QUANTITY_MISMATCH: "Mismatch",
 };
 
 export const ISSUE_HINTS: Record<ReconIssueType, string> = {
@@ -55,18 +55,18 @@ export const SAP_ACTION_LABELS: Record<ReconSapAction, string> = {
   FLAG_FOR_ADJUSTMENT: "Flag for SAP adjustment",
 };
 
-export const isActiveStatus = (status: ReconAuditStatus) =>
-  status === "PENDING_RECONCILIATION" || status === "IN_PROGRESS";
-
 export const getAccuracy = (matched: number, expected: number) =>
   expected === 0 ? 100 : Math.round((matched / expected) * 1000) / 10;
 
 export const formatDateTime = (value: string) =>
-  new Date(value).toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  new Date(value)
+    .toLocaleString("en-GB", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(/\b(am|pm)\b/i, (meridiem) => meridiem.toUpperCase());

@@ -54,7 +54,7 @@ import {
   notifyAuditsUpdated,
   showGlobalMessage,
 } from "../../utils/auditEvents";
-import { reconciliationDetailRoute } from "../../utils/auditRoutes";
+import { auditViewRoute } from "../../utils/auditRoutes";
 import type {
   AuditListRow,
   AuditOperator,
@@ -69,10 +69,15 @@ const sourceFile = (row: AuditListRow) =>
   String(row.details.fileName ?? row.details.stockFileName ?? "-");
 
 const STATUS_BADGES: {
-  status: AuditStatus;
+  status: AuditStatus | "ALL";
   label: string;
-  color: "warning" | "info" | "secondary" | "success";
+  color: "primary" | "warning" | "info" | "secondary" | "success";
 }[] = [
+  {
+    status: "ALL",
+    label: "All",
+    color: "primary",
+  },
   {
     status: "ASSIGNED",
     label: "Assigned",
@@ -355,11 +360,15 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
           >
             {STATUS_BADGES.map((item) => {
               const selected = params.status === item.status;
+              const count =
+                item.status === "ALL"
+                  ? Object.values(statusCounts).reduce((sum, n) => sum + n, 0)
+                  : statusCounts[item.status];
 
               return (
                 <Chip
                   key={item.status}
-                  label={`${item.label} (${statusCounts[item.status]})`}
+                  label={`${item.label} (${count})`}
                   color={item.color}
                   variant={selected ? "filled" : "outlined"}
                   clickable
@@ -530,7 +539,7 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
           onClick={() => {
             // View opens the reconciliation page (content depends on the audit status)
             if (menuAudit)
-              router.push(reconciliationDetailRoute(menuAudit.id, auditType));
+              router.push(auditViewRoute(menuAudit.id, auditType));
             closeMenu();
           }}
         >

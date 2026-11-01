@@ -6,24 +6,28 @@ import { Alert, Box, CircularProgress } from "@mui/material";
 
 import CommonButton from "@/common/components/CommonButton";
 import AuditProgressDetail from "./AuditProgressDetail";
-import ReconciliationDetailScreen from "./ReconciliationDetailScreen";
 import { useAuditDetailView } from "../../hooks/useAuditDetailView";
-import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import {
   isPlanningTab,
   planningRoute,
   type PlanningTab,
 } from "../../utils/auditRoutes";
 
-const RECONCILIATION_API_READY = false;
-
 export default function AuditDetailScreen() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { auditId } = useParams<{ auditId: string }>();
   const type = searchParams.get("type");
   const id = Number(auditId);
 
-  if (!isPlanningTab(type)) return <ReconciliationDetailScreen />;
+  if (!isPlanningTab(type)) {
+    return (
+      <ErrorState
+        message="Invalid audit link."
+        onBack={() => router.push(planningRoute())}
+      />
+    );
+  }
 
   return <PlanningAuditDetail auditType={type} auditId={id} />;
 }
@@ -37,7 +41,6 @@ function PlanningAuditDetail({
 }) {
   const router = useRouter();
   const { view, loading, error } = useAuditDetailView(auditType, auditId);
-  const { downloadReport, loading: downloading } = useDownloadBomReport();
 
   const backToPlanning = () => router.push(planningRoute(auditType));
 
@@ -62,24 +65,11 @@ function PlanningAuditDetail({
     );
   }
 
-  const reconciled =
-    view.status === "RECONCILIATION_PENDING" || view.status === "CLOSED";
-
-  if (auditType === "bom" && reconciled && RECONCILIATION_API_READY) {
-    return <ReconciliationDetailScreen />;
-  }
-
   return (
     <AuditProgressDetail
       auditType={auditType}
+      auditId={auditId}
       view={view}
-      onBack={backToPlanning}
-      onDownloadReport={
-        auditType === "bom" && view.submittedAt
-          ? () => downloadReport(auditId, view.auditNo)
-          : undefined
-      }
-      downloading={downloading}
     />
   );
 }

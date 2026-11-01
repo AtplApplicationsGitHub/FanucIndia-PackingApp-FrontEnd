@@ -406,6 +406,16 @@ export const API = {
 
       return `${API_BASE_URL}/audit/list?${query.toString()}`;
     },
+    RECONCILIATION: {
+      DETAIL: (auditType: string, id: number) =>
+        `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}`,
+      REVIEW: (auditType: string, id: number, varianceId: number) =>
+        `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/variances/${varianceId}`,
+      BULK_REVIEW: (auditType: string, id: number) =>
+        `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/variances/bulk`,
+      CLOSE: (auditType: string, id: number) =>
+        `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/close`,
+    },
   },
      BOM_AUDIT: {
   BASE: `${API_BASE_URL}/bom-audit`,

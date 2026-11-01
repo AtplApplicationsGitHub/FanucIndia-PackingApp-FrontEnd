@@ -24,22 +24,6 @@ export type ReconDecision =
 /** Optional SAP follow-up. Behaviour is not finalised - stored only, nothing is posted. */
 export type ReconSapAction = "NONE" | "FLAG_FOR_ADJUSTMENT";
 
-export type ReconAuditSummary = {
-  id: number;
-  auditNo: string;
-  auditName: string;
-  operatorName: string;
-  fileName: string;
-  uploadedAt: string; // BomAudit.submittedAt
-  totalLocations: number;
-  expectedComponents: number; // material lines expected
-  scannedComponents: number; // lines with a scan (incl. unexpected)
-  matchedComponents: number; // lines with lineStatus VALID
-  totalVariances: number;
-  openVariances: number;
-  status: ReconAuditStatus;
-};
-
 export type ReconVariance = {
   id: number; // BomAuditMaterial.id
   storageBin: string;
@@ -52,27 +36,48 @@ export type ReconVariance = {
   sapAction: ReconSapAction;
   remarks: string;
   scannedAt: string | null; // lastScannedAt
+  locationCompletedAt: string | null;
   resolvedAt: string | null;
   resolvedByName: string | null;
 };
 
-export type ReconAuditDetail = ReconAuditSummary & {
-  closedAt: string | null;
-  closedByName: string | null;
-  variances: ReconVariance[];
+export type ReconLocationSummary = {
+  sequenceNo: number;
+  storageBin: string;
+  expectedMaterials: number;
+  valid: number;
+  mismatch: number;
+  missing: number;
+  unexpected: number;
+  completedAt: string | null;
+  totalVariances: number;
+  openVariances: number;
+  resolvedVariances: number;
 };
 
-export type ReconStats = {
-  pendingCount: number;
-  totalAudits: number;
-  oldestPendingDays: number;
-  inProgressCount: number;
-  inProgressResolved: number;
-  inProgressTotal: number;
-  openVariances: number;
-  openVarianceAudits: number;
-  accuracy: number;
-  matchedComponents: number;
+export type ReconAuditDetail = {
+  id: number;
+  auditNo: string;
+  auditName: string;
+  auditType: string;
+  status: string;
+  reviewStatus: ReconAuditStatus;
+  operatorId: number;
+  operatorName: string;
+  fileName: string;
+  createdAt: string;
+  submittedAt: string | null;
+  totalLocations: number;
   expectedComponents: number;
-  openByIssue: Record<ReconIssueType, number>;
+  scannedComponents: number;
+  matchedComponents: number;
+  accuracy: number;
+  totalVariances: number;
+  openVariances: number;
+  resolvedVariances: number;
+  locations: ReconLocationSummary[];
+  variances: ReconVariance[];
+  closedAt: string | null;
+  closedByName: string | null;
+  canClose: boolean;
 };
