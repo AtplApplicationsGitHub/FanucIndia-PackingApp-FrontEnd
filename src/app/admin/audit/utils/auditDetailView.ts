@@ -42,6 +42,13 @@ export const bomDetailToView = (d: BomAuditDetail): AuditDetailView => ({
   startedAt: d.startedAt ?? null,
   submittedAt: d.submittedAt ?? null,
   rows: toRows(d.locations),
+  locationUploads: d.locations.map((l) => ({
+    sequenceNo: l.sequenceNo,
+    storageBin: l.storageBin,
+    expectedMaterials: l.expectedMaterials,
+    completedAt: l.verifiedAt ?? null,
+    uploadedAt: l.uploadedAt ?? null,
+  })),
 });
 
 export const cycleCountDetailToView = (
@@ -78,4 +85,5 @@ export const cycleCountDetailToView = (
   startedAt: null,
   submittedAt: null,
   rows: toRows(d.locations),
+  locationUploads: null,
 });

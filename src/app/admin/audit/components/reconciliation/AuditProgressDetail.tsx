@@ -22,6 +22,8 @@ import {
 import ReconDetailStatCards from "./ReconDetailStatCards";
 import ReconciliationPanel from "./ReconciliationPanel";
 import AuditMaterialsDialog from "../shared/AuditMaterialsDialog";
+import AuditStatusPill from "../shared/AuditStatusPill";
+import AuditTableDialog from "../shared/AuditTableDialog";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
 import { auditStatusColor, auditStatusLabel } from "../../utils/auditStatus";
 import { formatDateTime } from "../../utils/reconLabels";
@@ -45,9 +47,12 @@ export default function AuditProgressDetail({
   view,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadsOpen, setUploadsOpen] = useState(false);
   const [status, setStatus] = useState(view.status);
 
   const awaitingUpload = status === "ASSIGNED" || status === "IN_PROGRESS";
+  const uploads = awaitingUpload ? view.locationUploads : null;
+  const uploadedCount = uploads?.filter((l) => l.uploadedAt).length ?? 0;
   const viewLabel = "Audit Materials";
 
   return (
@@ -116,7 +121,16 @@ export default function AuditProgressDetail({
         <InfoCard icon={<Download size={18} />} label="Downloaded On" value={dateOrEmpty(view.downloadedAt)} />
         <InfoCard icon={<PlayCircle size={18} />} label="Started On" value={dateOrEmpty(view.startedAt)} />
         <InfoCard icon={<Send size={18} />} label="Submitted On" value={dateOrEmpty(view.submittedAt)} />
-        <InfoCard icon={<MapPin size={18} />} label="Total Locations" value={view.totalLocations} />
+        {uploads ? (
+          <InfoCard
+            icon={<MapPin size={18} />}
+            label="Total Locations"
+            value={`${view.totalLocations} · ${uploadedCount} uploaded`}
+            onClick={() => setUploadsOpen(true)}
+          />
+        ) : (
+          <InfoCard icon={<MapPin size={18} />} label="Total Locations" value={view.totalLocations} />
+        )}
         <InfoCard icon={<Package size={18} />} label={view.itemsLabel} value={view.totalItems} />
         <InfoCard
           icon={<Eye size={18} />}
@@ -145,6 +159,31 @@ export default function AuditProgressDetail({
         ) : (
           <ReconDetailStatCards expected={view.totalItems} />
         ))}
+
+      {uploads && (
+        <AuditTableDialog
+          open={uploadsOpen}
+          title={`LOCATION UPLOAD STATUS (${uploadedCount} / ${uploads.length})`}
+          columns={[
+            { label: "Storage Bin" },
+            { label: "Materials", align: "right" },
+            { label: "Status", align: "center" },
+            { label: "Uploaded On" },
+          ]}
+          rows={uploads.map((l) => [
+            l.storageBin,
+            l.expectedMaterials,
+            <AuditStatusPill
+              key="status"
+              label={l.uploadedAt ? "Uploaded" : "Pending"}
+              color={l.uploadedAt ? "success" : "warning"}
+            />,
+            l.uploadedAt ? formatDateTime(l.uploadedAt) : EMPTY,
+          ])}
+          emptyText="No locations found."
+          onClose={() => setUploadsOpen(false)}
+        />
+      )}
 
       <AuditMaterialsDialog
         open={dialogOpen}

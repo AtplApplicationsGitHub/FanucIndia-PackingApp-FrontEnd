@@ -8,16 +8,16 @@ import type {
 type ChipColor = "default" | "error" | "warning" | "info" | "success";
 
 export const RECON_STATUS_LABELS: Record<ReconAuditStatus, string> = {
-  PENDING_RECONCILIATION: "Not Started",
-  IN_PROGRESS: "Reviewing",
-  RECONCILED: "All Reviewed",
+  NOT_STARTED: "Not Started",
+  REVIEWING: "Reviewing",
+  ALL_REVIEWED: "All Reviewed",
   CLOSED: "Closed",
 };
 
 export const RECON_STATUS_COLORS: Record<ReconAuditStatus, ChipColor> = {
-  PENDING_RECONCILIATION: "warning",
-  IN_PROGRESS: "info",
-  RECONCILED: "success",
+  NOT_STARTED: "warning",
+  REVIEWING: "info",
+  ALL_REVIEWED: "success",
   CLOSED: "default",
 };
 

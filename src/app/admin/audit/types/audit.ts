@@ -122,10 +122,13 @@ export type BomAuditLocation = {
   sequenceNo: number;
   storageBin: string;
   expectedMaterials: number;
+  verifiedAt?: string | null;
+  uploadedAt?: string | null;
   materials: BomAuditMaterial[];
 };
 
 export type BomAuditDetail = BomAuditSummary & {
   updatedAt: string;
+  uploadedLocations?: number;
   locations: BomAuditLocation[];
 };

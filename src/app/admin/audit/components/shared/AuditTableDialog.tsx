@@ -35,7 +35,7 @@ type Props = {
   onClose: () => void;
 };
 
-const ROWS_PER_PAGE = 5;
+const ROWS_PER_PAGE = 10;
 
 /** Small popup with a paginated table (S.No + the given columns). Used for locations, location materials ... */
 export default function AuditTableDialog({
@@ -67,8 +67,9 @@ export default function AuditTableDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="xs"
+      maxWidth="sm"
       fullWidth
+      PaperProps={{ sx: { maxWidth: 540 } }}
       TransitionProps={{ onExited: () => setPage(0) }}
     >
       <DialogTitle

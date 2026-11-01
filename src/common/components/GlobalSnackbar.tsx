@@ -8,11 +8,14 @@ export default function GlobalSnackbar() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState<"error" | "warning" | "info" | "success">("error");
+  const [duration, setDuration] = useState(4000);
 
   useEffect(() => {
     const handleGlobalMessage = (event: any) => {
       setMessage(event.detail.message || "An unexpected error occurred.");
       setSeverity(event.detail.severity || "error");
+      const text = String(event.detail.message || "");
+      setDuration(event.detail.duration || (text.length > 120 || text.includes("\n") ? 10000 : 4000));
       setOpen(true);
     };
 
@@ -28,12 +31,17 @@ export default function GlobalSnackbar() {
   return (
     <Snackbar
       open={open}
-      autoHideDuration={4000}
+      autoHideDuration={duration}
       onClose={handleClose}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       sx={{ zIndex: 9999 }}
     >
-      <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }} variant="filled">
+      <Alert
+        onClose={handleClose}
+        severity={severity}
+        sx={{ width: "100%", maxWidth: 640, maxHeight: 260, overflowY: "auto", whiteSpace: "pre-line" }}
+        variant="filled"
+      >
         {message}
       </Alert>
     </Snackbar>

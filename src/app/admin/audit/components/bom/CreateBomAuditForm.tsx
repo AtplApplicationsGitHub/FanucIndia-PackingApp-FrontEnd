@@ -1,13 +1,20 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Box, CircularProgress, Typography } from "@mui/material";
+import {
+  alpha,
+  Box,
+  Chip,
+  CircularProgress,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import CommonButton from "@/common/components/CommonButton";
 import ExcelUploadButton from "../shared/ExcelUploadButton";
 import BomAssignPreview from "./BomAssignPreview";
-import TextInput from "@/app/sales/components/forms/TextInput";
 
 import { planningRoute } from "../../utils/auditRoutes";
 import { useCreateBomAudit } from "../../hooks/useCreateBomAudit";
@@ -19,6 +26,16 @@ import {
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 
 const MAX_AUDIT_NAME = 255;
+
+const showError = (message: string) =>
+  window.dispatchEvent(
+    new CustomEvent("show-global-message", {
+      detail: { message, severity: "error" },
+    }),
+  );
+
+const UPLOAD_HINT =
+  "Upload a .xlsx file with Location, Qty, Material and Operator ID columns.";
 
 async function loadOperators(): Promise<AuditOperator[]> {
   const res = await fetchWithAuth(API.AUDIT.OPERATORS);
@@ -42,7 +59,6 @@ export default function CreateBomAuditForm() {
 
   const [parsed, setParsed] = useState<ParsedAuditFile | null>(null);
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const parseToken = useRef(0);
@@ -63,20 +79,21 @@ export default function CreateBomAuditForm() {
 
     setFile(selected);
     setParsed(null);
-    setError("");
   };
 
   // Validate Excel and show preview
   const handlePreview = async () => {
     setNameTouched(true);
-    setError("");
 
     if (!file) {
-      setError("Please upload the Excel file.");
+      showError("Please upload the Excel file.");
       return;
     }
 
-    if (nameError) return;
+    if (nameError) {
+      showError(nameError);
+      return;
+    }
 
     const token = ++parseToken.current;
 
@@ -95,7 +112,7 @@ export default function CreateBomAuditForm() {
     } catch (err) {
       if (token !== parseToken.current) return;
 
-      setError(
+      showError(
         err instanceof Error ? err.message : "Unable to read the Excel file.",
       );
     } finally {
@@ -112,8 +129,6 @@ export default function CreateBomAuditForm() {
     if (!parsed || !file || nameError || creating) return;
 
     try {
-      setError("");
-
       await createBomAudit({
         file,
         auditName: cleanName,
@@ -123,136 +138,160 @@ export default function CreateBomAuditForm() {
     } catch (err) {
       setParsed(null);
 
-      setError(
+      showError(
         err instanceof Error ? err.message : "Failed to create BOM audit.",
       );
     }
   };
 
+  const showNameError = nameTouched && !!nameError;
+  const busy = creating || loading;
+  const locationCount = useMemo(
+    () => new Set((parsed?.rows ?? []).map((row) => row.storage)).size,
+    [parsed],
+  );
+
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{ px: 2, pt: 2, pb: 2 }}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "minmax(0, 3fr) minmax(0, 7fr)",
-            },
-            gap: 2,
-            alignItems: "end",
-          }}
-        >
-          {/* AUDIT NAME */}
-          <Box sx={{ minWidth: 0, alignSelf: "start" }}>
-            <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-              Audit name <span style={{ color: "#d32f2f" }}>*</span>
-            </Typography>
-
-            <TextInput
-              label=""
-              name="auditName"
-              value={auditName}
-              placeholder="Enter audit name"
-              required
-              disabled={creating || loading}
-              readOnly={!!parsed}
-              onChange={(_, value) => {
-                if (parsed || creating || loading) return;
-
-                setAuditName(value.slice(0, MAX_AUDIT_NAME));
-                setParsed(null);
-              }}
-              error={nameTouched ? nameError : ""}
-            />
-          </Box>
-
-          {/* EXCEL DRAG-AND-DROP */}
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-              Upload Excel <span style={{ color: "#d32f2f" }}>*</span>
-            </Typography>
+      <Box sx={{ px: 2, pt: 0, pb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Paper
+            elevation={0}
+            sx={(theme) => ({
+              width: "fit-content",
+              maxWidth: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1,
+              px: 2,
+              py: 1,
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
+              bgcolor: "background.paper",
+            })}
+          >
+            {parsed && (
+              <Typography
+                component="h2"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: "error.main",
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                }}
+              >
+                AUDIT PREVIEW
+              </Typography>
+            )}
 
             <Box
               sx={{
                 display: "flex",
+                justifyContent: "center",
                 alignItems: "center",
+                flexWrap: "wrap",
                 gap: 1.5,
-                flexWrap: { xs: "wrap", md: "nowrap" },
               }}
             >
-              {/* Excel upload */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  pointerEvents:
-                    creating || loading || parsed ? "none" : "auto",
-                  opacity: creating || loading ? 0.6 : 1,
+              {/* AUDIT NAME */}
+              <TextField
+                size="small"
+                label="Audit name"
+                name="auditName"
+                required
+                autoComplete="off"
+                value={auditName}
+                disabled={busy}
+                error={showNameError}
+                onChange={(e) => {
+                  if (parsed || busy) return;
+
+                  setAuditName(e.target.value.slice(0, MAX_AUDIT_NAME));
+                  setParsed(null);
                 }}
-              >
+                slotProps={{ input: { readOnly: !!parsed } }}
+                sx={{
+                  width: { xs: "100%", sm: 360 },
+                  "& .MuiFormLabel-asterisk": { color: "error.main" },
+                }}
+              />
+
+              {/* EXCEL UPLOAD */}
+              <Box sx={{ minWidth: 0, display: "flex", alignItems: "center" }}>
                 <ExcelUploadButton
                   file={file}
                   onChange={handleFileChange}
-                  onError={setError}
-                  disabled={creating || loading}
-                  dragDropOnly
+                  onError={showError}
+                  disabled={busy}
                   readOnly={!!parsed}
+                  uploadTooltip={UPLOAD_HINT}
                 />
               </Box>
 
-              {/* Confirm & assign - same row as the upload box */}
+              {/* Confirm & assign - same row as the upload */}
               <CommonButton
                 onClick={handlePreview}
-                disabled={
-                  !file || !!nameError || creating || loading || !!parsed
-                }
+                disabled={!file || !!nameError || busy || !!parsed}
               >
                 {loading ? (
-                  <CircularProgress size={22} color="inherit" />
+                  <CircularProgress size={20} color="inherit" />
                 ) : (
                   "CONFIRM & ASSIGN"
                 )}
               </CommonButton>
+
+              <Chip
+                size="small"
+                disabled={!parsed}
+                label={`${locationCount} ${locationCount === 1 ? "location" : "locations"}`}
+                sx={(theme) => ({
+                  fontWeight: 600,
+                  bgcolor: alpha(theme.palette.primary.main, 0.3),
+                })}
+              />
+
+              <CommonButton
+                onClick={() => setParsed(null)}
+                disabled={!parsed || creating}
+              >
+                BACK
+              </CommonButton>
+
+              <CommonButton
+                onClick={confirmAudit}
+                disabled={!parsed || creating}
+              >
+                {creating ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  "RELEASE AUDIT"
+                )}
+              </CommonButton>
             </Box>
-
-            {loading && (
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}
-              >
-                <CircularProgress size={18} />
-                <Typography variant="body2" color="text.secondary">
-                  Reading the file and checking operators...
-                </Typography>
-              </Box>
-            )}
-
-            {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mt: 2,
-                  whiteSpace: "pre-line",
-                  maxHeight: 220,
-                  overflowY: "auto",
-                }}
-              >
-                {error}
-              </Alert>
-            )}
-          </Box>
+          </Paper>
         </Box>
-        {/* AUDIT PREVIEW - only after CONFIRM & ASSIGN */}
-        {parsed && (
-          <Box sx={{ mt: 2 }}>
-            <BomAssignPreview
-              rows={parsed.rows}
-              onBack={() => setParsed(null)}
-              onRelease={confirmAudit}
-              releasing={creating}
-            />
+
+        {loading && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5 }}>
+            <CircularProgress size={18} />
+            <Typography variant="body2" color="text.secondary">
+              Reading the file and checking operators...
+            </Typography>
           </Box>
         )}
+
+        {/* AUDIT PREVIEW - disabled and empty until CONFIRM & ASSIGN */}
+        <Box sx={{ mt: 1.5 }}>
+          <BomAssignPreview
+            key={parsed ? "parsed" : "empty"}
+            rows={parsed?.rows ?? []}
+            disabled={!parsed}
+          />
+        </Box>
       </Box>
     </Box>
   );

@@ -4,13 +4,14 @@ import { useRef, useState } from "react";
 import {
   alpha,
   Box,
-  Button,
   Chip,
   Tooltip,
   Typography,
   IconButton,
 } from "@mui/material";
 import { FileSpreadsheet, Upload, X } from "lucide-react";
+
+import CommonButton from "@/common/components/CommonButton";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -22,6 +23,7 @@ type Props = {
   showUploadButton?: boolean;
   dragDropOnly?: boolean;
   readOnly?: boolean;
+  uploadTooltip?: string;
 };
 
 export default function ExcelUploadButton({
@@ -32,6 +34,7 @@ export default function ExcelUploadButton({
   showUploadButton = false,
   dragDropOnly = false,
   readOnly = false,
+  uploadTooltip = "",
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -190,26 +193,17 @@ export default function ExcelUploadButton({
           >
             {/* Keep upload button visible when requested */}
             {(!file || showUploadButton) && (
-              <Button
-                variant="outlined"
-                color="inherit"
-                size="small"
-                disabled={disabled}
-                startIcon={<Upload size={16} />}
-                onClick={() => inputRef.current?.click()}
-                sx={{
-                  height: 34,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                  borderColor: "divider",
-                  "&:hover": {
-                    borderColor: "primary.main",
-                  },
-                }}
-              >
-                Upload Excel
-              </Button>
+              <Tooltip title={uploadTooltip} arrow>
+                <span>
+                  <CommonButton
+                    disabled={disabled}
+                    startIcon={<Upload size={16} />}
+                    onClick={() => inputRef.current?.click()}
+                  >
+                    UPLOAD EXCEL
+                  </CommonButton>
+                </span>
+              </Tooltip>
             )}
 
             {/* Display selected filename */}
@@ -226,6 +220,8 @@ export default function ExcelUploadButton({
                   variant="outlined"
                   sx={{
                     maxWidth: 280,
+                    height: 34,
+                    borderRadius: 1,
                     fontWeight: 600,
                     borderColor: "primary.main",
                     bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),

@@ -101,6 +101,11 @@ const AdminUsersTable: React.FC<Props> = ({
     setPage(0);
   };
 
+  React.useEffect(() => {
+    const lastPage = Math.max(0, Math.ceil(users.length / rowsPerPage) - 1);
+    if (page > lastPage) setPage(lastPage);
+  }, [users.length, rowsPerPage, page]);
+
   // Calculate visible rows for the current page
   const visibleRows = React.useMemo(
     () => users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
@@ -119,7 +124,18 @@ const AdminUsersTable: React.FC<Props> = ({
         }}
       >
         <TableContainer>
-          <Table size="small">
+          <Table
+            size="small"
+            sx={{
+              tableLayout: "fixed",
+              minWidth: 860,
+              "& .MuiTableBody-root .MuiTableCell-root": {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
             <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
               <TableRow>
                 {/* User ID = User.id in the database */}
@@ -135,6 +151,7 @@ const AdminUsersTable: React.FC<Props> = ({
                 <TableCell
                   sx={{
                     fontWeight: "bold",
+                    width: "18%",
                     color: theme.palette.primary.contrastText,
                   }}
                 >
@@ -143,6 +160,7 @@ const AdminUsersTable: React.FC<Props> = ({
                 <TableCell
                   sx={{
                     fontWeight: "bold",
+                    width: "26%",
                     color: theme.palette.primary.contrastText,
                   }}
                 >
@@ -151,6 +169,7 @@ const AdminUsersTable: React.FC<Props> = ({
                 <TableCell
                   sx={{
                     fontWeight: "bold",
+                    width: "14%",
                     color: theme.palette.primary.contrastText,
                   }}
                 >
@@ -159,6 +178,7 @@ const AdminUsersTable: React.FC<Props> = ({
                 <TableCell
                   sx={{
                     fontWeight: "bold",
+                    width: "14%",
                     color: theme.palette.primary.contrastText,
                   }}
                 >
@@ -167,6 +187,7 @@ const AdminUsersTable: React.FC<Props> = ({
                 <TableCell
                   sx={{
                     fontWeight: "bold",
+                    width: "18%",
                     color: theme.palette.primary.contrastText,
                   }}
                 >
@@ -218,12 +239,14 @@ const AdminUsersTable: React.FC<Props> = ({
                     }}
                   >
                     <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.email}</TableCell>
+                    <TableCell title={row.name}>{row.name}</TableCell>
+                    <TableCell title={row.email}>{row.email}</TableCell>
                     <TableCell sx={{ textTransform: "capitalize" }}>
                       {row.role.replace(/_/g, " ").toLowerCase()}
                     </TableCell>
-                    <TableCell>{row.salesZone?.name ?? "-"}</TableCell>
+                    <TableCell title={row.salesZone?.name ?? undefined}>
+                      {row.salesZone?.name ?? "-"}
+                    </TableCell>
                     <TableCell>
                       {row.createdAt ? formatDateTimeIST(row.createdAt) : "-"}
                     </TableCell>

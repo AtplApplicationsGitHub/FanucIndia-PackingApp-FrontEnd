@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   alpha,
-  Box,
-  Chip,
   Paper,
   Table,
   TableBody,
@@ -16,26 +14,20 @@ import {
   Typography,
   useTheme,
   Link as MuiLink,
-  CircularProgress,
 } from "@mui/material";
-import CommonButton from "@/common/components/CommonButton";
 import AuditTableDialog from "../shared/AuditTableDialog";
 import type { AuditRow } from "../../types/audit";
 
 type Props = {
   rows: AuditRow[];
-  onBack: () => void;
-  onRelease: () => void;
-  releasing: boolean;
+  disabled?: boolean;
 };
 
 const operatorName = (label: string) => label.split(" (")[0];
 
 export default function BomAssignPreview({
   rows,
-  onBack,
-  onRelease,
-  releasing,
+  disabled = false,
 }: Props) {
   const theme = useTheme();
 
@@ -65,56 +57,21 @@ export default function BomAssignPreview({
   );
   const headSx = {
     fontWeight: 700,
-    color: theme.palette.mode === "dark" ? "#ffffff" : "#000000",
+    color: theme.palette.primary.contrastText,
     whiteSpace: "nowrap" as const,
   };
 
   return (
     <Paper
       variant="outlined"
+      aria-disabled={disabled}
       sx={{
         borderRadius: 2,
         overflow: "hidden",
+        opacity: disabled ? 0.6 : 1,
+        transition: "opacity .2s",
       }}
     >
-      {/* HEADER */}
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 1,
-        }}
-      >
-        <Typography fontWeight={700}>Audit preview</Typography>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Chip
-            size="small"
-            label={`${locations.length} locations`}
-            sx={{
-              fontWeight: 600,
-              bgcolor: alpha(theme.palette.primary.main, 0.3),
-            }}
-          />
-
-          <CommonButton onClick={onBack} disabled={releasing}>
-            BACK
-          </CommonButton>
-
-          <CommonButton onClick={onRelease} disabled={releasing}>
-            {releasing ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "RELEASE AUDIT"
-            )}
-          </CommonButton>
-        </Box>
-      </Box>
-
       {/* DISTINCT LOCATIONS + OPERATOR */}
       <TableContainer>
         <Table
@@ -143,11 +100,7 @@ export default function BomAssignPreview({
             <col style={{ width: "33.33%" }} />
             <col style={{ width: "33.34%" }} />
           </colgroup>
-          <TableHead
-            sx={{
-              bgcolor: theme.palette.mode === "dark" ? "#000000" : "#ffffff",
-            }}
-          >
+          <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow sx={{ height: 50 }}>
               <TableCell sx={headSx}>S.NO</TableCell>
               <TableCell sx={headSx}>LOCATION</TableCell>
@@ -160,7 +113,9 @@ export default function BomAssignPreview({
               <TableRow>
                 <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                   <Typography variant="body2" color="text.secondary">
-                    No records found.
+                    {disabled
+                      ? "Enter the audit name, upload the Excel and press CONFIRM & ASSIGN to preview."
+                      : "No records found."}
                   </Typography>
                 </TableCell>
               </TableRow>

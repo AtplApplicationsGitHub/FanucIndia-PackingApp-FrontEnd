@@ -496,6 +496,16 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                         label={audit.statusLabel}
                         color={auditStatusColor(audit.status)}
                       />
+                      {audit.status === "IN_PROGRESS" &&
+                        typeof audit.details.uploadedLocations === "number" && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block", mt: 0.25, whiteSpace: "nowrap" }}
+                          >
+                            {audit.details.uploadedLocations} / {audit.storageBinCount} uploaded
+                          </Typography>
+                        )}
                     </TableCell>
                   </TableRow>
                 ))

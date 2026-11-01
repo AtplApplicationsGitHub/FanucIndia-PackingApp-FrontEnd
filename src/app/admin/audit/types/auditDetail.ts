@@ -22,4 +22,14 @@ export type AuditDetailView = {
   submittedAt: string | null;
   /** Expected stock, one row per location + material */
   rows: AuditRow[];
+  /** Partial upload progress per location (null for types without handheld upload) */
+  locationUploads: AuditLocationUpload[] | null;
+};
+
+export type AuditLocationUpload = {
+  sequenceNo: number;
+  storageBin: string;
+  expectedMaterials: number;
+  completedAt: string | null;
+  uploadedAt: string | null;
 };

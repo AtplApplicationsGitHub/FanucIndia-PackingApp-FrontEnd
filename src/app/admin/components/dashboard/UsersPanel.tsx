@@ -68,6 +68,7 @@ const AdminManageUsersPanel: React.FC<AdminManageUsersPanelProps> = ({
       {/* REMOVED: The entire <Stack> with the duplicate search and button */}
 
       <AdminUsersTable
+        key={`${roleFilter ?? "ALL"}|${searchQuery}`}
         users={users}
         loading={loading}
         onEdit={onEdit}

@@ -8,9 +8,9 @@
  *   MISMATCH            ->  QUANTITY_MISMATCH  (actualQty != expectedQty)
  */
 export type ReconAuditStatus =
-  | "PENDING_RECONCILIATION"
-  | "IN_PROGRESS"
-  | "RECONCILED"
+  | "NOT_STARTED"
+  | "REVIEWING"
+  | "ALL_REVIEWED"
   | "CLOSED";
 
 export type ReconIssueType = "MISSING" | "EXCESS" | "QUANTITY_MISMATCH";
