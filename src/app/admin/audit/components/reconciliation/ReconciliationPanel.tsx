@@ -6,13 +6,12 @@ import {
   alpha,
   Alert,
   Box,
-  Button,
   Checkbox,
   CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   IconButton,
   InputBase,
@@ -37,6 +36,7 @@ import {
   MapPinned,
   Pencil,
   PencilLine,
+  X,
 } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -669,27 +669,49 @@ export default function ReconciliationPanel({
         onClose={() => (closing ? undefined : setConfirmClose(false))}
         maxWidth="xs"
         fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
       >
-        <DialogTitle>Close Audit</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontWeight: 700,
+            fontSize: "20px",
+            letterSpacing: 0.5,
+            color: "error.main",
+            py: 1.25,
+            position: "relative",
+          }}
+        >
+          CLOSE AUDIT
+          <IconButton
+            onClick={() => setConfirmClose(false)}
+            size="small"
+            aria-label="close"
+            disabled={closing}
+            sx={{ position: "absolute", right: 12 }}
+          >
+            <X size={18} />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: "16px !important", pb: 2 }}>
           <Typography variant="body2">
             Close <strong>{detail.auditNo}</strong>? Once closed, its
             discrepancies can no longer be edited.
           </Typography>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <CommonButton
+              variant="contained"
+              color="error"
+              disabled={closing}
+              onClick={handleClose}
+            >
+              {closing ? "CLOSING..." : "CLOSE AUDIT"}
+            </CommonButton>
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button disabled={closing} onClick={() => setConfirmClose(false)}>
-            Cancel
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            disabled={closing}
-            onClick={handleClose}
-          >
-            {closing ? "Closing..." : "Close Audit"}
-          </Button>
-        </DialogActions>
       </Dialog>
     </Box>
   );
