@@ -16,18 +16,25 @@ import {
   Link as MuiLink,
 } from "@mui/material";
 import AuditTableDialog from "../shared/AuditTableDialog";
-import type { AuditRow } from "../../types/audit";
+import BinOperatorCell from "./BinOperatorCell";
+import type { AuditOperator, AuditRow } from "../../types/audit";
 
 type Props = {
   rows: AuditRow[];
   disabled?: boolean;
+  assignments: Record<string, AuditOperator>;
+  operators: AuditOperator[];
+  operatorsLoading: boolean;
+  onAssign: (storageBin: string, operator: AuditOperator) => void;
 };
-
-const operatorName = (label: string) => label.split(" (")[0];
 
 export default function BomAssignPreview({
   rows,
   disabled = false,
+  assignments,
+  operators,
+  operatorsLoading,
+  onAssign,
 }: Props) {
   const theme = useTheme();
 
@@ -39,10 +46,10 @@ export default function BomAssignPreview({
   // One row per distinct location (storage bin) with its assigned operator.
   // The parser guarantees one operator per bin, so the first row of a bin is enough.
   const locations = useMemo(() => {
-    const seen = new Map<string, { storage: string; operator?: string }>();
+    const seen = new Map<string, { storage: string }>();
     for (const row of rows) {
       if (!seen.has(row.storage)) {
-        seen.set(row.storage, { storage: row.storage, operator: row.operator });
+        seen.set(row.storage, { storage: row.storage });
       }
     }
     return [...seen.values()];
@@ -113,9 +120,7 @@ export default function BomAssignPreview({
               <TableRow>
                 <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
                   <Typography variant="body2" color="text.secondary">
-                    {disabled
-                      ? "Enter the audit name, upload the Excel and press CONFIRM & ASSIGN to preview."
-                      : "No records found."}
+                    {disabled ? "No data" : "No records found."}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -140,7 +145,14 @@ export default function BomAssignPreview({
                       </MuiLink>
                     </TableCell>
                     <TableCell>
-                      {row.operator ? operatorName(row.operator) : "—"}
+                      <BinOperatorCell
+                        storageBin={row.storage}
+                        value={assignments[row.storage] ?? null}
+                        operators={operators}
+                        operatorsLoading={operatorsLoading}
+                        disabled={disabled}
+                        onChange={(operator) => onAssign(row.storage, operator)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

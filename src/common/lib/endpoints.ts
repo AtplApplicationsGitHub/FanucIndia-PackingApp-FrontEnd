@@ -420,6 +420,7 @@ export const API = {
      BOM_AUDIT: {
   BASE: `${API_BASE_URL}/bom-audit`,
   TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
+  PREVIEW: `${API_BASE_URL}/bom-audit/preview`,
   BY_ID: (id: number) => `${API_BASE_URL}/bom-audit/${id}`,
   REASSIGN: (id: number) =>`${API_BASE_URL}/bom-audit/${id}/operator`,
   REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,

@@ -9,13 +9,20 @@ import { notifyAuditsUpdated } from "../utils/auditEvents";
 export function useCreateBomAudit() {
   const [loading, setLoading] = useState(false);
 
-  // The Excel contains Operator IDs; auditName is sent separately.
-  const createBomAudit = async (data: { file: File; auditName: string }) => {
+  // The Excel may contain Operator IDs; auditName and the operators chosen on the screen are sent separately.
+  const createBomAudit = async (data: {
+    file: File;
+    auditName: string;
+    binOperators?: { storageBin: string; operatorId: number }[];
+  }) => {
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", data.file);
       formData.append("auditName", data.auditName);
+      if (data.binOperators?.length) {
+        formData.append("binOperators", JSON.stringify(data.binOperators));
+      }
 
       const res = await fetchWithAuth(API.BOM_AUDIT.BASE, {
         method: "POST",

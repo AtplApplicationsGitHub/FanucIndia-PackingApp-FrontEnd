@@ -127,6 +127,22 @@ export type BomAuditLocation = {
   materials: BomAuditMaterial[];
 };
 
+/** POST /bom-audit/preview - the Excel as the server read it (nothing saved) */
+export type BomAuditPreview = {
+  fileName: string;
+  totalLocations: number;
+  totalMaterials: number;
+  totalRows: number;
+  mergedRows: number;
+  locations: {
+    storageBin: string;
+    /** Operator given in the file (null = to be assigned on the screen) */
+    operatorId: number | null;
+    operatorName: string | null;
+    materials: { materialCode: string; expectedQty: number }[];
+  }[];
+};
+
 export type BomAuditDetail = BomAuditSummary & {
   updatedAt: string;
   uploadedLocations?: number;

@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Tooltip,
   InputBase,
   Menu,
   MenuItem,
@@ -442,16 +443,31 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                 audits.map((audit) => (
                   <TableRow key={`${audit.auditType}-${audit.id}`}>
                     <TableCell sx={{ width: "1%" }}>
-                      <IconButton
-                        size="small"
-                        aria-label={`Actions for ${audit.auditName}`}
-                        onClick={(e) => {
-                          setMenuAnchor(e.currentTarget);
-                          setMenuAudit(audit);
-                        }}
-                      >
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
+                      {audit.actions.canDelete ? (
+                        <IconButton
+                          size="small"
+                          aria-label={`Actions for ${audit.auditName}`}
+                          onClick={(e) => {
+                            setMenuAnchor(e.currentTarget);
+                            setMenuAudit(audit);
+                          }}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      ) : (
+                        <Tooltip title="View" arrow>
+                          <span>
+                            <IconButton
+                              size="small"
+                              aria-label={`View ${audit.auditName}`}
+                              disabled={auditType !== "bom" && auditType !== "cycle_count"}
+                              onClick={() => router.push(auditViewRoute(audit.id, auditType))}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      )}
                     </TableCell>
                     <TableCell>{audit.auditNo}</TableCell>
                     <TableCell>{audit.auditName}</TableCell>
