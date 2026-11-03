@@ -195,7 +195,7 @@ export default function AuditProgressDetail({
       <ReconciliationPanel
         auditType={auditType}
         auditId={auditId}
-        pending={auditType !== "bom" || awaitingUpload}
+        pending={auditType !== "bom" || status === "ASSIGNED"}
         expectedLines={view.totalItems}
         onAuditStatusChange={setStatus}
         onClosedAtChange={setClosedAt}
@@ -206,6 +206,7 @@ export default function AuditProgressDetail({
         <AuditTableDialog
           open={uploadsOpen}
           title={`LOCATION UPLOAD STATUS (${uploadedCount} / ${uploads.length})`}
+          width={680}
           columns={[
             { label: "Storage Bin" },
             { label: "Materials", align: "right" },
@@ -220,7 +221,9 @@ export default function AuditProgressDetail({
               label={l.uploadedAt ? "Uploaded" : "Pending"}
               color={l.uploadedAt ? "success" : "warning"}
             />,
-            l.uploadedAt ? formatDateTime(l.uploadedAt) : EMPTY,
+            <Box key="uploadedOn" component="span" sx={{ whiteSpace: "nowrap" }}>
+              {l.uploadedAt ? formatDateTime(l.uploadedAt) : EMPTY}
+            </Box>,
           ])}
           emptyText="No locations found."
           onClose={() => setUploadsOpen(false)}

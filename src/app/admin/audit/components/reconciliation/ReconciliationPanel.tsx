@@ -49,6 +49,7 @@ import ReconMetricCard from "./ReconMetricCard";
 import { IssueChip, ReconStatusChip, VarianceStatusChip } from "./ReconChips";
 import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { useReconciliationDetail } from "../../hooks/useReconciliationDetail";
+import { useReconciliationLines } from "../../hooks/useReconciliationLines";
 import {
   CATEGORY_ALL,
   CATEGORY_ALL_EXCEPT_VALID,
@@ -58,13 +59,14 @@ import {
   ISSUE_ORDER,
   formatDateTime,
   isReviewable,
-  matchesCategory,
+  toReviewable,
 } from "../../utils/reconLabels";
 import type { AuditRow, AuditType } from "../../types/audit";
 import type {
   ReconAuditDetail,
   ReconCategoryFilter,
   ReconDecision,
+  ReconLine,
   ReconSapAction,
   ReconVariance,
   ReconVarianceStatus,
@@ -83,21 +85,25 @@ const EMPTY_RECON_DETAIL: ReconAuditDetail = {
   auditType: "",
   status: "",
   reviewStatus: "NOT_STARTED",
+  partial: false,
+  canReview: false,
   operatorId: 0,
   operatorName: "",
   fileName: "",
   createdAt: "",
   submittedAt: null,
   totalLocations: 0,
+  uploadedLocations: 0,
+  auditExpectedComponents: 0,
   expectedComponents: 0,
   scannedComponents: 0,
   matchedComponents: 0,
-  accuracy: 0,
+  accuracy: null,
+  qtyAccuracy: null,
   totalVariances: 0,
   openVariances: 0,
   resolvedVariances: 0,
   locations: [],
-  variances: [],
   closedAt: null,
   closedByName: null,
   canClose: false,
@@ -134,7 +140,7 @@ type Props = {
   auditId: number;
   pendingRows?: AuditRow[];
   onAuditStatusChange?: (status: string) => void;
-  /** true = not submitted yet / type has no reconciliation: no API call, values show "—" */
+  /** true = not downloaded yet / type has no reconciliation: no API call, values show "—" (In Progress loads the uploaded data) */
   pending?: boolean;
   /** Expected lines, known from the audit file even while pending */
   expectedLines?: number;
@@ -163,32 +169,29 @@ export default function ReconciliationPanel({
     !pending && Number.isFinite(auditId) ? auditId : null,
   );
 
-  const pendingDetail = useMemo<ReconAuditDetail>(
-    () => ({
-      ...EMPTY_RECON_DETAIL,
-      variances: pendingRows.map(
-        (r): ReconVariance => ({
-          id: r.excelRow,
-          storageBin: r.storage,
-          materialCode: r.materialCode,
-          expectedQty: r.quantity,
-          scannedQty: 0,
-          issueType: "MISSING",
-          status: "OPEN",
-          decision: null,
-          sapAction: "NONE",
-          remarks: "",
-          scannedAt: null,
-          locationCompletedAt: null,
-          resolvedAt: null,
-          resolvedByName: null,
-        }),
-      ),
-    }),
+  const pendingLines = useMemo<ReconLine[]>(
+    () =>
+      pendingRows.map((r) => ({
+        id: r.excelRow,
+        storageBin: r.storage,
+        materialCode: r.materialCode,
+        expectedQty: r.quantity,
+        scannedQty: null,
+        pending: true,
+        issueType: null,
+        status: null,
+        decision: null,
+        sapAction: null,
+        remarks: "",
+        scannedAt: null,
+        locationCompletedAt: null,
+        resolvedAt: null,
+        resolvedByName: null,
+      })),
     [pendingRows],
   );
 
-  const detail = pending ? pendingDetail : loadedDetail;
+  const detail = pending ? EMPTY_RECON_DETAIL : loadedDetail;
   const loading = pending ? false : loadingRaw;
   const error = pending ? "" : errorRaw;
 
@@ -217,35 +220,63 @@ export default function ReconciliationPanel({
     textTransform: "uppercase",
   } as const;
 
-  const bins = useMemo(
-    () =>
-      Array.from(new Set((detail?.variances ?? []).map((v) => v.storageBin))),
-    [detail],
+  const {
+    rows: serverRows,
+    total: serverTotal,
+    loading: linesLoading,
+    error: linesError,
+    reload: reloadLines,
+  } = useReconciliationLines(
+    auditType,
+    !pending && Number.isFinite(auditId) ? auditId : null,
+    {
+      search,
+      storageBin: binFilter,
+      category: issueFilter,
+      status: statusFilter,
+      page,
+      limit: perPage,
+    },
   );
 
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const bins = useMemo(
+    () =>
+      pending
+        ? Array.from(new Set(pendingLines.map((v) => v.storageBin)))
+        : (detail?.locations ?? []).map((l) => l.storageBin),
+    [pending, pendingLines, detail],
+  );
 
-    return (detail?.variances ?? []).filter(
+  // Not downloaded yet: the audit file rows are filtered here (only search / bin apply - they have no category or status yet)
+  const localRows = useMemo(() => {
+    if (!pending) return [];
+    if (issueFilter !== CATEGORY_ALL || statusFilter !== "ALL") return [];
+    const q = search.trim().toLowerCase();
+    return pendingLines.filter(
       (v) =>
         (binFilter === "ALL" || v.storageBin === binFilter) &&
-        matchesCategory(v.issueType, issueFilter) &&
-        (statusFilter === "ALL" ||
-          (isReviewable(v.issueType) && v.status === statusFilter)) &&
         (!q ||
           v.storageBin.toLowerCase().includes(q) ||
           v.materialCode.toLowerCase().includes(q)),
     );
-  }, [detail, search, binFilter, issueFilter, statusFilter]);
+  }, [pending, pendingLines, search, binFilter, issueFilter, statusFilter]);
 
   const pageRows = useMemo(
-    () => rows.slice(page * perPage, page * perPage + perPage),
-    [rows, page, perPage],
+    () =>
+      pending
+        ? localRows.slice(page * perPage, page * perPage + perPage)
+        : serverRows,
+    [pending, localRows, serverRows, page, perPage],
   );
+  const totalRows = pending ? localRows.length : serverTotal;
 
   const selectedVariances = useMemo(
-    () => (detail?.variances ?? []).filter((v) => selectedIds.includes(v.id)),
-    [detail, selectedIds],
+    () =>
+      pageRows
+        .filter((v) => selectedIds.includes(v.id))
+        .map(toReviewable)
+        .filter((v): v is ReconVariance => v !== null),
+    [pageRows, selectedIds],
   );
 
   useEffect(() => {
@@ -269,7 +300,9 @@ export default function ReconciliationPanel({
   }
 
   const isClosed = detail.status === "CLOSED";
-  const reviewing = detail.variances.find((v) => v.id === reviewId) ?? null;
+  const locked = pending || (!isClosed && !detail.canReview);
+  const reviewingLine = pageRows.find((v) => v.id === reviewId);
+  const reviewing = reviewingLine ? toReviewable(reviewingLine) : null;
 
   const handleSave = async (
     decision: ReconDecision,
@@ -283,6 +316,7 @@ export default function ReconciliationPanel({
       await saveDecision(reviewId, decision, sapAction, remarks);
       toast("Reconciliation saved.", "success");
       setReviewId(null);
+      void reloadLines();
     } catch (e) {
       toast(
         e instanceof Error ? e.message : "Failed to save reconciliation.",
@@ -293,9 +327,9 @@ export default function ReconciliationPanel({
     }
   };
 
-  const pageIds = pageRows
-    .filter((v) => isReviewable(v.issueType))
-    .map((v) => v.id);
+  const pageIds = locked
+    ? []
+    : pageRows.filter((v) => isReviewable(v.issueType)).map((v) => v.id);
   const pageSelectedCount = pageIds.filter((rowId) =>
     selectedIds.includes(rowId),
   ).length;
@@ -327,6 +361,7 @@ export default function ReconciliationPanel({
       );
       setBulkOpen(false);
       setSelectedIds([]);
+      void reloadLines();
     } catch (e) {
       toast(
         e instanceof Error ? e.message : "Failed to save reconciliation.",
@@ -343,6 +378,7 @@ export default function ReconciliationPanel({
     try {
       const closed = await closeAudit();
       if (closed) onAuditStatusChange?.(closed.status);
+      void reloadLines();
       toast(`${detail.auditNo} closed.`, "success");
     } catch (e) {
       toast(e instanceof Error ? e.message : "Failed to close audit.", "error");
@@ -356,7 +392,7 @@ export default function ReconciliationPanel({
     (l) => l.totalVariances > 0,
   ).length;
 
-  const actionFor = (status: ReconVarianceStatus) => {
+  const actionFor = (status: ReconVarianceStatus | null) => {
     if (isClosed) return { label: "View", icon: <Eye size={18} /> };
     if (status === "OPEN") {
       return { label: "Review", icon: <PencilLine size={18} /> };
@@ -377,6 +413,10 @@ export default function ReconciliationPanel({
                 matched: detail.matchedComponents,
                 totalVariances: detail.totalVariances,
                 openVariances: detail.openVariances,
+                accuracy: detail.accuracy,
+                qtyAccuracy: detail.qtyAccuracy,
+                partial: detail.partial,
+                auditExpected: detail.auditExpectedComponents,
               }
         }
         extraCard={
@@ -388,7 +428,11 @@ export default function ReconciliationPanel({
                 : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
             }
             caption={
-              pending ? undefined : `${locationsWithVariance} with variance`
+              pending
+                ? undefined
+                : detail.partial
+                  ? `${detail.uploadedLocations} uploaded · ${locationsWithVariance} with variance`
+                  : `${locationsWithVariance} with variance`
             }
             icon={<MapPinned size={18} />}
             onClick={pending ? undefined : () => setLocationsOpen(true)}
@@ -541,7 +585,7 @@ export default function ReconciliationPanel({
               <CommonButton
                 variant="contained"
                 startIcon={<Pencil size={16} />}
-                disabled={pending || selectedVariances.length === 0}
+                disabled={locked || selectedVariances.length === 0}
                 onClick={() => setBulkOpen(true)}
               >
                 {selectedVariances.length > 0
@@ -553,7 +597,7 @@ export default function ReconciliationPanel({
             <CommonButton
               variant="contained"
               startIcon={<Download size={16} />}
-              disabled={downloading || pending}
+              disabled={downloading || pending || detail.partial}
               onClick={() => void downloadReport(detail.id, detail.auditNo)}
             >
               {downloading ? "DOWNLOADING..." : "DOWNLOAD REPORT"}
@@ -585,11 +629,19 @@ export default function ReconciliationPanel({
                 {formatDateTime(detail.closedAt)}
               </Typography>
             )}
+            {detail.partial && (
+              <Typography variant="caption" color="text.secondary">
+                Reconciliation opens once all locations are uploaded (
+                {detail.uploadedLocations} / {detail.totalLocations})
+              </Typography>
+            )}
             {!pending && <ReconStatusChip status={detail.reviewStatus} />}
           </Box>
         </Box>
 
-        <TableContainer>
+        <TableContainer
+          sx={{ opacity: linesLoading ? 0.6 : 1, transition: "opacity .15s" }}
+        >
           <Table
             size="small"
             sx={{
@@ -623,7 +675,7 @@ export default function ReconciliationPanel({
                       size="small"
                       indeterminate={somePageSelected}
                       checked={allPageSelected}
-                      disabled={pageIds.length === 0 || pending}
+                      disabled={pageIds.length === 0}
                       onChange={toggleSelectPage}
                       inputProps={{
                         "aria-label": "Select all rows on this page",
@@ -647,7 +699,7 @@ export default function ReconciliationPanel({
             </TableHead>
 
             <TableBody>
-              {rows.length === 0 ? (
+              {pageRows.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={COLUMNS.length + (isClosed ? 0 : 1)}
@@ -655,13 +707,18 @@ export default function ReconciliationPanel({
                     sx={{ py: 4 }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {pending ? "—" : "No discrepancies found."}
+                      {pending
+                        ? "—"
+                        : linesLoading
+                          ? "Loading..."
+                          : linesError || "No records found."}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 pageRows.map((v, index) => {
-                  const diff = v.scannedQty - v.expectedQty;
+                  const rowPending = v.pending || v.scannedQty === null;
+                  const diff = (v.scannedQty ?? 0) - v.expectedQty;
                   const action = actionFor(v.status);
                   const reviewable = isReviewable(v.issueType);
 
@@ -681,7 +738,7 @@ export default function ReconciliationPanel({
                           <Checkbox
                             size="small"
                             checked={selectedIds.includes(v.id)}
-                            disabled={pending || !reviewable}
+                            disabled={locked || !reviewable}
                             onChange={() => toggleSelectOne(v.id)}
                             inputProps={{
                               "aria-label": `Select ${v.materialCode}`,
@@ -699,13 +756,13 @@ export default function ReconciliationPanel({
                       </TableCell>
                       <TableCell align="right">{v.expectedQty}</TableCell>
                       <TableCell align="right">
-                        {pending ? "-" : v.scannedQty}
+                        {rowPending ? "-" : v.scannedQty}
                       </TableCell>
                       <TableCell
                         align="right"
                         sx={{
                           fontWeight: 700,
-                          color: pending
+                          color: rowPending
                             ? "text.secondary"
                             : diff < 0
                               ? "error.main"
@@ -714,13 +771,17 @@ export default function ReconciliationPanel({
                                 : "text.secondary",
                         }}
                       >
-                        {pending ? "-" : diff > 0 ? `+${diff}` : diff}
+                        {rowPending ? "-" : diff > 0 ? `+${diff}` : diff}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {pending ? "-" : <IssueChip type={v.issueType} />}
+                        {rowPending || !v.issueType ? (
+                          "-"
+                        ) : (
+                          <IssueChip type={v.issueType} />
+                        )}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {pending || !reviewable ? (
+                        {rowPending || !reviewable || !v.status ? (
                           "-"
                         ) : (
                           <VarianceStatusChip status={v.status} />
@@ -735,7 +796,7 @@ export default function ReconciliationPanel({
                           : "-"}
                       </TableCell>
                       <TableCell align="center">
-                        {pending ? (
+                        {rowPending || (locked && !isClosed) ? (
                           "-"
                         ) : !reviewable ? null : (
                           <Tooltip title={action.label}>
@@ -769,7 +830,7 @@ export default function ReconciliationPanel({
         <TablePagination
           rowsPerPageOptions={[10, 20, 50]}
           component="div"
-          count={rows.length}
+          count={totalRows}
           rowsPerPage={perPage}
           page={page}
           onPageChange={(_, next) => setPage(next)}

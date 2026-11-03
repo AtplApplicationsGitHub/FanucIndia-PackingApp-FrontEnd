@@ -12,14 +12,24 @@ import {
 } from "lucide-react";
 
 import ReconMetricCard from "./ReconMetricCard";
-import { getAccuracy } from "../../utils/reconLabels";
 
 export type ReconDetailMetrics = {
   scanned: number;
   matched: number;
   totalVariances: number;
   openVariances: number;
+  /** Line accuracy from the server (null = nothing to judge yet) */
+  accuracy: number | null;
+  /** Quantity accuracy from the server (null = nothing expected) */
+  qtyAccuracy: number | null;
+  /** In Progress: the numbers cover the uploaded locations only */
+  partial?: boolean;
+  /** Expected lines of the whole audit file (shown while partial) */
+  auditExpected?: number;
 };
+
+const formatPercent = (value: number | null) =>
+  value === null ? "—" : `${value.toFixed(1)}%`;
 
 type Props = {
   expected: number;
@@ -83,16 +93,39 @@ export default function ReconDetailStatCards({
     );
   }
 
-  const { scanned, matched, totalVariances, openVariances } = metrics;
+  const {
+    scanned,
+    matched,
+    totalVariances,
+    openVariances,
+    accuracy,
+    qtyAccuracy,
+    partial,
+    auditExpected,
+  } = metrics;
   const resolved = totalVariances - openVariances;
-  const accuracy = getAccuracy(matched, expected);
   const accuracyColor =
-    accuracy >= 98 ? "success" : accuracy >= 95 ? "warning" : "error";
+    accuracy === null
+      ? "primary"
+      : accuracy >= 98
+        ? "success"
+        : accuracy >= 95
+          ? "warning"
+          : "error";
   const scanDiff = scanned - expected;
 
   return (
     <Box sx={gridSx}>
-      {expectedCard}
+      {partial ? (
+        <ReconMetricCard
+          title="Expected"
+          value={`${expected} / ${auditExpected ?? expected}`}
+          icon={<Package size={18} />}
+          caption="Uploaded locations only"
+        />
+      ) : (
+        expectedCard
+      )}
       <ReconMetricCard
         title="Scanned"
         value={scanned}
@@ -107,9 +140,10 @@ export default function ReconDetailStatCards({
       />
       <ReconMetricCard
         title="Accuracy"
-        value={`${accuracy.toFixed(1)}%`}
+        value={formatPercent(accuracy)}
         icon={<Gauge size={18} />}
-        progress={accuracy}
+        caption={`Qty ${formatPercent(qtyAccuracy)}`}
+        progress={accuracy ?? 0}
         progressColor={accuracyColor}
       />
       <ReconMetricCard

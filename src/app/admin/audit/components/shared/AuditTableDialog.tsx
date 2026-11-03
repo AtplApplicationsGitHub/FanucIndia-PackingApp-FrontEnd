@@ -35,6 +35,7 @@ type Props = {
   serialColumnWidth?: number;
   showTotalCount?: boolean;
   showSerialNumber?: boolean;
+  width?: number;
 };
 
 const ROWS_PER_PAGE = 10;
@@ -50,6 +51,7 @@ export default function AuditTableDialog({
   serialColumnWidth,
   showTotalCount = false,
   showSerialNumber = true,
+  width = 540,
 }: Props) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -72,9 +74,9 @@ export default function AuditTableDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { maxWidth: 540 } }}
+      PaperProps={{ sx: { maxWidth: width } }}
       TransitionProps={{ onExited: () => setPage(0) }}
     >
       <DialogTitle

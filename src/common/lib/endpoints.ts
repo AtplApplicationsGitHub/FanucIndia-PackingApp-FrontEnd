@@ -407,8 +407,11 @@ export const API = {
       return `${API_BASE_URL}/audit/list?${query.toString()}`;
     },
     RECONCILIATION: {
+      OPTIONS: `${API_BASE_URL}/audit/reconciliation/options`,
       DETAIL: (auditType: string, id: number) =>
         `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}`,
+      LINES: (auditType: string, id: number) =>
+        `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/lines`,
       REVIEW: (auditType: string, id: number, varianceId: number) =>
         `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/variances/${varianceId}`,
       BULK_REVIEW: (auditType: string, id: number) =>

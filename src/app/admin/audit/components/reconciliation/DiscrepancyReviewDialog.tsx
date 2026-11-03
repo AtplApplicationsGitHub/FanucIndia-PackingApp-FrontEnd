@@ -19,12 +19,8 @@ import { X } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
 import ReconDecisionFields from "./ReconDecisionFields";
 import { IssueChip, VarianceStatusChip } from "./ReconChips";
-import {
-  DECISION_LABELS,
-  ISSUE_HINTS,
-  SAP_ACTION_LABELS,
-  formatDateTime,
-} from "../../utils/reconLabels";
+import { ISSUE_HINTS, formatDateTime } from "../../utils/reconLabels";
+import { optionLabel, useReconOptions } from "../../hooks/useReconOptions";
 import type {
   ReconDecision,
   ReconSapAction,
@@ -50,6 +46,7 @@ export default function DiscrepancyReviewDialog({
   onClose,
   onSave,
 }: Props) {
+  const { options } = useReconOptions();
   const [decision, setDecision] = useState<ReconDecision | "">("");
   const [sapAction, setSapAction] = useState<ReconSapAction>("NONE");
   const [remarks, setRemarks] = useState("");
@@ -169,11 +166,11 @@ export default function DiscrepancyReviewDialog({
               >
                 <ReadOnlyField
                   label="Decision"
-                  value={variance.decision ? DECISION_LABELS[variance.decision] : ""}
+                  value={optionLabel(options?.decisions, variance.decision)}
                 />
                 <ReadOnlyField
                   label="SAP follow-up"
-                  value={SAP_ACTION_LABELS[variance.sapAction]}
+                  value={optionLabel(options?.sapActions, variance.sapAction)}
                 />
                 <ReadOnlyField
                   label="Remarks"

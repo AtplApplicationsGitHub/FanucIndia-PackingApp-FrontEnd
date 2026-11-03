@@ -2,7 +2,7 @@
 
 import { Box, MenuItem, TextField } from "@mui/material";
 
-import { DECISION_LABELS, SAP_ACTION_LABELS } from "../../utils/reconLabels";
+import { useReconOptions } from "../../hooks/useReconOptions";
 import type { ReconDecision, ReconSapAction } from "../../types/reconciliation";
 
 type Props = {
@@ -24,6 +24,12 @@ export default function ReconDecisionFields({
   onSapActionChange,
   onRemarksChange,
 }: Props) {
+  const { options, loading, error } = useReconOptions();
+  const decisions = options?.decisions ?? [];
+  const sapActions = options?.sapActions ?? [];
+  const inList = (list: { value: string }[], value: string) =>
+    list.some((o) => o.value === value) ? value : "";
+
   return (
     <Box
       sx={{
@@ -37,13 +43,15 @@ export default function ReconDecisionFields({
         size="small"
         fullWidth
         label="Decision"
-        value={decision}
-        disabled={disabled}
+        value={inList(decisions, decision)}
+        disabled={disabled || loading}
+        error={!!error}
+        helperText={error || undefined}
         onChange={(e) => onDecisionChange(e.target.value as ReconDecision)}
       >
-        {(Object.keys(DECISION_LABELS) as ReconDecision[]).map((d) => (
-          <MenuItem key={d} value={d}>
-            {DECISION_LABELS[d]}
+        {decisions.map((d) => (
+          <MenuItem key={d.value} value={d.value}>
+            {d.label}
           </MenuItem>
         ))}
       </TextField>
@@ -54,13 +62,13 @@ export default function ReconDecisionFields({
         size="small"
         fullWidth
         label="SAP follow-up (optional)"
-        value={sapAction}
-        disabled={disabled}
+        value={inList(sapActions, sapAction)}
+        disabled={disabled || loading}
         onChange={(e) => onSapActionChange(e.target.value as ReconSapAction)}
       >
-        {(Object.keys(SAP_ACTION_LABELS) as ReconSapAction[]).map((a) => (
-          <MenuItem key={a} value={a}>
-            {SAP_ACTION_LABELS[a]}
+        {sapActions.map((a) => (
+          <MenuItem key={a.value} value={a.value}>
+            {a.label}
           </MenuItem>
         ))}
       </TextField>

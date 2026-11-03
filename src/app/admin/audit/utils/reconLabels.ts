@@ -1,14 +1,15 @@
 import type {
   ReconAuditStatus,
   ReconCategoryFilter,
-  ReconDecision,
   ReconIssueType,
-  ReconSapAction,
+  ReconLine,
+  ReconVariance,
 } from "../types/reconciliation";
 
 type ChipColor = "default" | "error" | "warning" | "info" | "success";
 
 export const RECON_STATUS_LABELS: Record<ReconAuditStatus, string> = {
+  AWAITING_UPLOAD: "Awaiting Upload",
   NOT_STARTED: "Not Started",
   REVIEWING: "Reviewing",
   ALL_REVIEWED: "All Reviewed",
@@ -16,6 +17,7 @@ export const RECON_STATUS_LABELS: Record<ReconAuditStatus, string> = {
 };
 
 export const RECON_STATUS_COLORS: Record<ReconAuditStatus, ChipColor> = {
+  AWAITING_UPLOAD: "default",
   NOT_STARTED: "warning",
   REVIEWING: "info",
   ALL_REVIEWED: "success",
@@ -60,30 +62,24 @@ export const CATEGORY_GROUP_LABELS = {
   [CATEGORY_ALL_EXCEPT_VALID]: "All Except Valid",
 } as const;
 
-/** A matched (VALID) line has nothing to review, edit or close. */
-export const isReviewable = (issueType: ReconIssueType) => issueType !== "VALID";
+/** A matched (VALID) line, or a line of a location not uploaded yet, has nothing to review, edit or close. */
+export const isReviewable = (issueType: ReconIssueType | null) =>
+  issueType !== null && issueType !== "VALID";
 
-export const matchesCategory = (
-  issueType: ReconIssueType,
-  filter: ReconCategoryFilter,
-) =>
-  filter === CATEGORY_ALL ||
-  (filter === CATEGORY_ALL_EXCEPT_VALID
-    ? isReviewable(issueType)
-    : issueType === filter);
-
-export const DECISION_LABELS: Record<ReconDecision, string> = {
-  CORRECT_SYSTEM_RECORD: "Accept physical count (correct SAP / system record)",
-  CORRECT_PHYSICAL_STOCK: "Keep system record (correct physical stock)",
-};
-
-export const SAP_ACTION_LABELS: Record<ReconSapAction, string> = {
-  NONE: "No SAP action",
-  FLAG_FOR_ADJUSTMENT: "Flag for SAP adjustment",
-};
-
-export const getAccuracy = (matched: number, expected: number) =>
-  expected === 0 ? 100 : Math.round((matched / expected) * 1000) / 10;
+/** A table row as a discrepancy that can be reviewed (null for VALID / pending rows). */
+export const toReviewable = (line: ReconLine): ReconVariance | null =>
+  line.issueType &&
+  line.issueType !== "VALID" &&
+  line.status &&
+  line.scannedQty !== null
+    ? {
+        ...line,
+        issueType: line.issueType,
+        status: line.status,
+        scannedQty: line.scannedQty,
+        sapAction: line.sapAction ?? "NONE",
+      }
+    : null;
 
 export const formatDateTime = (value: string) =>
   new Date(value)
