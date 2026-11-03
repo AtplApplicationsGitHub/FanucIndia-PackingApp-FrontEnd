@@ -31,9 +31,7 @@ export default function AuditLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const selected = (
-    pathname.includes("/history")
-      ? "audit_history"
-      : "audit_planning"
+    pathname.includes("/history") ? "audit_history" : "audit_planning"
   ) as ViewType;
 
   const setView: Dispatch<SetStateAction<ViewType>> = (next) => {

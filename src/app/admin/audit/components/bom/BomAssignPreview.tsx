@@ -182,6 +182,7 @@ export default function BomAssignPreview({
       <AuditTableDialog
         open={binOpen}
         title={`${selectedBin ?? ""} - MATERIALS`}
+        showTotalCount
         columns={[{ label: "Material" }, { label: "Qty", align: "right" }]}
         rows={binMaterials}
         emptyText="No materials found."

@@ -2,10 +2,8 @@
 
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-
 import { Box, Paper, Typography } from "@mui/material";
 import CommonButton from "@/common/components/CommonButton";
-
 import type { AuditType } from "../../types/audit";
 import { AUDIT_CREATE_ROUTES } from "../../utils/auditRoutes";
 import { Plus } from "lucide-react";
@@ -15,9 +13,9 @@ type Props = {
   count: number;
   type: AuditType;
   icon: ReactNode;
-  /** This card's audit type is the one currently listed below the cards */
   selected?: boolean;
   onSelect: () => void;
+  createDisabled?: boolean;
 };
 
 export default function AuditTypeCard({
@@ -27,6 +25,7 @@ export default function AuditTypeCard({
   icon,
   selected = false,
   onSelect,
+  createDisabled = false,
 }: Props) {
   const router = useRouter();
 
@@ -35,8 +34,8 @@ export default function AuditTypeCard({
     router.push(AUDIT_CREATE_ROUTES[type]);
   };
 
+  // Handle keyboard events for accessibility (Enter or Space to select)
   const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
-    // only when the card itself is focused, not its CREATE button
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -61,8 +60,6 @@ export default function AuditTypeCard({
         alignItems: "center",
         gap: 1,
         cursor: "pointer",
-        // App yellow (theme primary) - same token in light and dark mode.
-        // The extra 1px ring keeps the card size unchanged when selected.
         borderColor: selected ? theme.palette.primary.main : undefined,
         boxShadow: selected
           ? `0 0 0 1px ${theme.palette.primary.main}`
@@ -108,6 +105,7 @@ export default function AuditTypeCard({
       {/* Navigate to the dedicated Create Audit page */}
       <CommonButton
         variant="contained"
+        disabled={createDisabled}
         onClick={handleCreateAudit}
         startIcon={<Plus size={15} />}
         sx={{

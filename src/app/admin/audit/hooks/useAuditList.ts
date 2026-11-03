@@ -11,6 +11,10 @@ import type {
   AuditPagination,
   AuditType,
 } from "../types/audit";
+import {
+  loadSavedParams,
+  savePlanningState,
+} from "../utils/auditPlanningState";
 
 const EMPTY_PAGINATION: AuditPagination = {
   page: 1,
@@ -24,12 +28,14 @@ const EMPTY_PAGINATION: AuditPagination = {
  * The table is mounted with key={auditType}, so clicking another card starts with fresh params.
  */
 export function useAuditList(auditType: AuditType) {
-  const [params, setParams] = useState<AuditListParams>({
-    page: 1,
-    limit: 10,
-    search: "",
-    status: "ALL",
-  });
+  const [params, setParams] = useState<AuditListParams>(() =>
+    loadSavedParams(auditType, {
+      page: 1,
+      limit: 10,
+      search: "",
+      status: "ALL",
+    }),
+  );
   const [audits, setAudits] = useState<AuditListRow[]>([]);
   const [pagination, setPagination] =
     useState<AuditPagination>(EMPTY_PAGINATION);
@@ -79,6 +85,9 @@ export function useAuditList(auditType: AuditType) {
     },
     [auditType],
   );
+  useEffect(() => {
+    savePlanningState(auditType, params);
+  }, [auditType, params]);
 
   useEffect(() => {
     void fetchList(params);

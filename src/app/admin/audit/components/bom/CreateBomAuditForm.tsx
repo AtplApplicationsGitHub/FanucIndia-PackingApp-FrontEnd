@@ -342,7 +342,7 @@ export default function CreateBomAuditForm() {
           </Box>
         )}
 
-        {/* AUDIT PREVIEW - disabled and empty until CONFIRM & ASSIGN */}
+        {/* AUDIT PREVIEW */}
         <Box sx={{ mt: 1.5 }}>
           <BomAssignPreview
             key={parsed ? "parsed" : "empty"}

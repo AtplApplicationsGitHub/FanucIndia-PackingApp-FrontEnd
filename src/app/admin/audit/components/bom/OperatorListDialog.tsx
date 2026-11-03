@@ -20,10 +20,12 @@ export default function OperatorListDialog({
     <AuditTableDialog
       open={open}
       title="OPERATORS"
+      showSerialNumber={false}
+      showTotalCount
       columns={[
-        { label: "User ID", align: "right" },
-        { label: "Name" },
-        { label: "Email" },
+        { label: "User ID", align: "left", width: 100 },
+        { label: "Name", width: 120 },
+        { label: "Email", width: 120 },
       ]}
       rows={operators.map((o) => [o.id, o.name, o.email])}
       emptyText={loading ? "Loading operators..." : "No operators found."}

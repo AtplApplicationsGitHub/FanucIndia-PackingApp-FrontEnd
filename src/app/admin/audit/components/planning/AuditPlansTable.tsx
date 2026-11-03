@@ -8,14 +8,7 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
-  Dialog,
-  Divider,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
-  Tooltip,
   InputBase,
   Menu,
   MenuItem,
@@ -36,8 +29,6 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
-import { X as CloseIcon } from "lucide-react";
-import CommonButton from "@/common/components/CommonButton";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -63,9 +54,12 @@ import type {
   AuditType,
 } from "../../types/audit";
 import AssignedToCell from "./AssignedToCell";
+import DeleteAuditDialog from "./DeleteAuditDialog";
 import AuditLocationsDialog from "../shared/AuditLocationsDialog";
 import AuditStatusPill from "../shared/AuditStatusPill";
+import { Tooltip } from "@mui/material";
 
+// Displays the uploaded file name
 const sourceFile = (row: AuditListRow) =>
   String(row.details.fileName ?? row.details.stockFileName ?? "-");
 
@@ -104,10 +98,7 @@ type Props = {
   auditType: AuditType;
   statusCounts: AuditStatusCounts;
 };
-/**
- * Audit table of the selected stat card (BOM table layout, shared by every audit type).
- * Mount it with key={auditType} so a card change starts with a clean search / filter / page.
- */
+
 export default function AuditPlansTable({ auditType, statusCounts }: Props) {
   const theme = useTheme();
   const router = useRouter();
@@ -122,7 +113,7 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
   const { operators, loading: operatorsLoading } = useAuditOperators(
     audits.some((a) => a.actions.canReassign),
   );
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(params.search);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuAudit, setMenuAudit] = useState<AuditListRow | null>(null);
   const [locAudit, setLocAudit] = useState<AuditListRow | null>(null);
@@ -133,12 +124,16 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
     setMenuAudit(null);
   };
 
+  // Same rule as the "View" menu item: only these types have a view page
+  const viewAvailable = auditType === "bom" || auditType === "cycle_count";
+
   const headCellSx = {
     fontWeight: 700,
     color: theme.palette.primary.contrastText,
     whiteSpace: "nowrap" as const,
   };
 
+  // Deletes the audit
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
 
@@ -155,6 +150,7 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
       setDeleteTarget(null);
     }
   };
+  // Function to Ressign the audit
   const handleReassign = async (
     audit: AuditListRow,
     operator: AuditOperator,
@@ -336,15 +332,28 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
               />
               {/* CLEAR BOTH DATES */}
               {(params.fromDate || params.toDate) && (
-                <IconButton
-                  aria-label="clear date filters"
-                  size="small"
-                  onClick={() =>
-                    updateParams({ fromDate: "", toDate: "", page: 1 })
-                  }
-                >
-                  <ClearIcon sx={{ fontSize: 20 }} />
-                </IconButton>
+                <Tooltip title="Clear Filter" arrow>
+                  <IconButton
+                    aria-label="Clear Filter"
+                    size="small"
+                    onClick={() =>
+                      updateParams({ fromDate: "", toDate: "", page: 1 })
+                    }
+                    sx={{
+                      color: "text.primary",
+                      bgcolor: "transparent",
+                      "&:hover": {
+                        color: "error.main",
+                        bgcolor: "action.hover",
+                      },
+                      "&:active": {
+                        color: "text.primary",
+                      },
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
               )}
             </LocalizationProvider>
           </Box>
@@ -443,33 +452,39 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                 audits.map((audit) => (
                   <TableRow key={`${audit.auditType}-${audit.id}`}>
                     <TableCell sx={{ width: "1%" }}>
-                      {audit.actions.canDelete ? (
-                        <IconButton
-                          size="small"
-                          aria-label={`Actions for ${audit.auditName}`}
-                          onClick={(e) => {
-                            setMenuAnchor(e.currentTarget);
-                            setMenuAudit(audit);
-                          }}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      ) : (
-                        <Tooltip title="View" arrow>
-                          <span>
-                            <IconButton
-                              size="small"
-                              aria-label={`View ${audit.auditName}`}
-                              disabled={auditType !== "bom" && auditType !== "cycle_count"}
-                              onClick={() => router.push(auditViewRoute(audit.id, auditType))}
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      )}
+                      <IconButton
+                        size="small"
+                        aria-label={`Actions for ${audit.auditName}`}
+                        onClick={(e) => {
+                          setMenuAnchor(e.currentTarget);
+                          setMenuAudit(audit);
+                        }}
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
                     </TableCell>
-                    <TableCell>{audit.auditNo}</TableCell>
+                    <TableCell>
+                      <MuiLink
+                        component="button"
+                        variant="body2"
+                        onClick={() =>
+                          router.push(auditViewRoute(audit.id, auditType))
+                        }
+                        disabled={!viewAvailable}
+                        aria-label={`Open ${audit.auditNo}`}
+                        sx={{
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          "&:disabled": {
+                            color: "text.primary",
+                            cursor: "default",
+                            textDecoration: "none",
+                          },
+                        }}
+                      >
+                        {audit.auditNo}
+                      </MuiLink>
+                    </TableCell>
                     <TableCell>{audit.auditName}</TableCell>
                     <TableCell>{label}</TableCell>
                     <TableCell>
@@ -480,7 +495,6 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                         onReassign={handleReassign}
                       />
                     </TableCell>
-                    {/* LOCATION - click to list all storage bins (already in the row) */}
                     <TableCell>
                       <MuiLink
                         component="button"
@@ -508,20 +522,35 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                     <TableCell>{formatDateIST(audit.createdAt)}</TableCell>
                     <TableCell>{sourceFile(audit)}</TableCell>
                     <TableCell sx={{ minWidth: 100 }}>
-                      <AuditStatusPill
-                        label={audit.statusLabel}
-                        color={auditStatusColor(audit.status)}
-                      />
-                      {audit.status === "IN_PROGRESS" &&
-                        typeof audit.details.uploadedLocations === "number" && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", mt: 0.25, whiteSpace: "nowrap" }}
-                          >
-                            {audit.details.uploadedLocations} / {audit.storageBinCount} uploaded
-                          </Typography>
-                        )}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "nowrap",
+                        }}
+                      >
+                        <AuditStatusPill
+                          label={audit.statusLabel}
+                          color={auditStatusColor(audit.status)}
+                        />
+
+                        {audit.status === "IN_PROGRESS" &&
+                          typeof audit.details.uploadedLocations ===
+                            "number" && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontSize: "11px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {audit.details.uploadedLocations} /{" "}
+                              {audit.storageBinCount} Uploaded
+                            </Typography>
+                          )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
@@ -559,13 +588,23 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={closeMenu}
+        PaperProps={{
+          sx: {
+            minWidth: 110,
+            "& .MuiMenuItem-root": {
+              minHeight: 36,
+              fontSize: "14px",
+              px: 1.5,
+              py: 0.5,
+            },
+          },
+        }}
       >
         <MenuItem
           disabled={auditType !== "bom" && auditType !== "cycle_count"}
           onClick={() => {
             // View opens the reconciliation page (content depends on the audit status)
-            if (menuAudit)
-              router.push(auditViewRoute(menuAudit.id, auditType));
+            if (menuAudit) router.push(auditViewRoute(menuAudit.id, auditType));
             closeMenu();
           }}
         >
@@ -586,63 +625,13 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
         </MenuItem>
       </Menu>
 
-      <Dialog
+      <DeleteAuditDialog
         open={Boolean(deleteTarget)}
-        onClose={() => (deleting ? undefined : setDeleteTarget(null))}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 2, transition: "max-width 0.2s ease" },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontWeight: 700,
-            fontSize: "20px",
-            letterSpacing: 0.5,
-            color: "error.main",
-            pb: 1,
-            position: "relative",
-          }}
-        >
-          DELETE AUDIT
-          <IconButton
-            onClick={() => setDeleteTarget(null)}
-            disabled={deleting}
-            size="small"
-            sx={{ position: "absolute", right: 12 }}
-          >
-            <CloseIcon size={18} />
-          </IconButton>
-        </DialogTitle>
-
-        <Divider />
-
-        <DialogContent sx={{ pt: 1 }}>
-          <Box mt={1}>
-            <Typography variant="body1">
-              Are you sure you want to delete audit{" "}
-              <strong>{deleteTarget?.auditName}</strong>? The audit and its
-              locations will be deleted permanently. This cannot be undone.
-            </Typography>
-          </Box>
-        </DialogContent>
-
-        <Divider />
-
-        <DialogActions sx={{ px: 1, pb: 1, gap: 1 }}>
-          <CommonButton disabled={deleting} onClick={handleConfirmDelete}>
-            {deleting ? (
-              <CircularProgress size={22} color="inherit" />
-            ) : (
-              "DELETE"
-            )}
-          </CommonButton>
-        </DialogActions>
-      </Dialog>
+        auditName={deleteTarget?.auditName}
+        deleting={deleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </Box>
   );
 }

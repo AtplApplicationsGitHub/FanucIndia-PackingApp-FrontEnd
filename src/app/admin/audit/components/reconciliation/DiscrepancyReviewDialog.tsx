@@ -11,13 +11,20 @@ import {
   IconButton,
   Paper,
   Typography,
+  type SxProps,
+  type Theme,
 } from "@mui/material";
 import { X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
 import ReconDecisionFields from "./ReconDecisionFields";
 import { IssueChip, VarianceStatusChip } from "./ReconChips";
-import { ISSUE_HINTS, formatDateTime } from "../../utils/reconLabels";
+import {
+  DECISION_LABELS,
+  ISSUE_HINTS,
+  SAP_ACTION_LABELS,
+  formatDateTime,
+} from "../../utils/reconLabels";
 import type {
   ReconDecision,
   ReconSapAction,
@@ -54,6 +61,9 @@ export default function DiscrepancyReviewDialog({
   }, [variance]);
 
   const diff = variance ? variance.scannedQty - variance.expectedQty : 0;
+  // Closed audit = view only: saved values show as read-only cards, not input fields.
+  // An audit that is still open keeps the editable fields + SAVE, even for resolved lines.
+  const viewOnly = readOnly;
 
   return (
     <Dialog
@@ -149,15 +159,39 @@ export default function DiscrepancyReviewDialog({
           </Box>
 
           <Box sx={{ mt: 2 }}>
-            <ReconDecisionFields
-              decision={decision}
-              sapAction={sapAction}
-              remarks={remarks}
-              disabled={readOnly || saving}
-              onDecisionChange={setDecision}
-              onSapActionChange={setSapAction}
-              onRemarksChange={setRemarks}
-            />
+            {viewOnly ? (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
+                }}
+              >
+                <ReadOnlyField
+                  label="Decision"
+                  value={variance.decision ? DECISION_LABELS[variance.decision] : ""}
+                />
+                <ReadOnlyField
+                  label="SAP follow-up"
+                  value={SAP_ACTION_LABELS[variance.sapAction]}
+                />
+                <ReadOnlyField
+                  label="Remarks"
+                  value={variance.remarks}
+                  sx={{ gridColumn: "1 / -1" }}
+                />
+              </Box>
+            ) : (
+              <ReconDecisionFields
+                decision={decision}
+                sapAction={sapAction}
+                remarks={remarks}
+                disabled={saving}
+                onDecisionChange={setDecision}
+                onSapActionChange={setSapAction}
+                onRemarksChange={setRemarks}
+              />
+            )}
           </Box>
 
           {(variance.resolvedAt || !readOnly) && (
@@ -259,6 +293,57 @@ function Field({ label, value }: { label: string; value: string | number }) {
         noWrap
       >
         {value}
+      </Typography>
+    </Box>
+  );
+}
+
+/** Read-only counterpart of a form input: label on top, the saved value below (wraps). */
+function ReadOnlyField({
+  label,
+  value,
+  sx,
+}: {
+  label: string;
+  value: string;
+  sx?: SxProps<Theme>;
+}) {
+  return (
+    <Box
+      sx={[
+        {
+          minWidth: 0,
+          px: 1.5,
+          py: 1,
+          borderRadius: 1.5,
+          border: "1px dashed",
+          borderColor: "divider",
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
+    >
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: "text.secondary",
+          lineHeight: 1.4,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          fontSize: 14,
+          fontWeight: 600,
+          lineHeight: 1.5,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {value || "-"}
       </Typography>
     </Box>
   );

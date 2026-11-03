@@ -22,17 +22,19 @@ import CloseIcon from "@mui/icons-material/Close";
 export type AuditTableColumn = {
   label: string;
   align?: "left" | "right" | "center";
+  width?: number;
 };
 
 type Props = {
   open: boolean;
   title: string;
-  /** Columns shown after the S.No column */
   columns: AuditTableColumn[];
-  /** One array per row, one value per column */
   rows: ReactNode[][];
   emptyText?: string;
   onClose: () => void;
+  serialColumnWidth?: number;
+  showTotalCount?: boolean;
+  showSerialNumber?: boolean;
 };
 
 const ROWS_PER_PAGE = 10;
@@ -45,6 +47,9 @@ export default function AuditTableDialog({
   rows,
   emptyText = "No records found.",
   onClose,
+  serialColumnWidth,
+  showTotalCount = false,
+  showSerialNumber = true,
 }: Props) {
   const theme = useTheme();
   const lightYellow = alpha(theme.palette.primary.main, 0.25);
@@ -122,9 +127,21 @@ export default function AuditTableDialog({
             >
               <TableHead>
                 <TableRow>
-                  <TableCell sx={headSx}>S.No</TableCell>
+                  {showSerialNumber && (
+                    <TableCell sx={{ ...headSx, width: serialColumnWidth }}>
+                      S.No
+                    </TableCell>
+                  )}
                   {columns.map((c) => (
-                    <TableCell key={c.label} align={c.align} sx={headSx}>
+                    <TableCell
+                      key={c.label}
+                      align={c.align}
+                      sx={{
+                        ...headSx,
+                        width: c.width,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {c.label}
                     </TableCell>
                   ))}
@@ -135,9 +152,17 @@ export default function AuditTableDialog({
                 {pageRows.length > 0 ? (
                   pageRows.map((cells, index) => (
                     <TableRow key={page * ROWS_PER_PAGE + index} hover>
-                      <TableCell>{page * ROWS_PER_PAGE + index + 1}</TableCell>
+                      {showSerialNumber && (
+                        <TableCell sx={{ width: serialColumnWidth }}>
+                          {page * ROWS_PER_PAGE + index + 1}
+                        </TableCell>
+                      )}
                       {cells.map((cell, i) => (
-                        <TableCell key={i} align={columns[i]?.align}>
+                        <TableCell
+                          key={i}
+                          align={columns[i]?.align}
+                          sx={{ width: columns[i]?.width }}
+                        >
                           {cell}
                         </TableCell>
                       ))}
@@ -146,7 +171,7 @@ export default function AuditTableDialog({
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={columns.length + 1}
+                      colSpan={columns.length + (showSerialNumber ? 1 : 0)}
                       align="center"
                       sx={{ py: 3 }}
                     >
@@ -188,7 +213,7 @@ export default function AuditTableDialog({
             </Table>
           </Box>
 
-          {rows.length > ROWS_PER_PAGE && (
+          {(rows.length > ROWS_PER_PAGE || showTotalCount) && (
             <TablePagination
               component="div"
               count={rows.length}
@@ -196,11 +221,16 @@ export default function AuditTableDialog({
               rowsPerPage={ROWS_PER_PAGE}
               rowsPerPageOptions={[ROWS_PER_PAGE]}
               onPageChange={(_, newPage) => setPage(newPage)}
+              showFirstButton={false}
+              showLastButton={false}
               sx={{
                 borderTop: "1px solid",
                 borderColor: "divider",
                 bgcolor: "background.paper",
                 "& .MuiTablePagination-toolbar": { minHeight: 48, px: 1 },
+                "& .MuiTablePagination-actions": {
+                  display: rows.length <= ROWS_PER_PAGE ? "none" : undefined,
+                },
               }}
             />
           )}

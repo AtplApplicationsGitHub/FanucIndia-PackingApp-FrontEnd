@@ -28,10 +28,12 @@ type Props = {
   extraCard?: ReactNode;
 };
 
-const PENDING = "Awaiting operator upload";
-
 /** Expected / Scanned / Matched / Accuracy / Resolved cards of one audit (reconciliation detail + planning detail). */
-export default function ReconDetailStatCards({ expected, metrics, extraCard }: Props) {
+export default function ReconDetailStatCards({
+  expected,
+  metrics,
+  extraCard,
+}: Props) {
   const gridSx = {
     display: "grid",
     gridTemplateColumns: {
@@ -60,26 +62,23 @@ export default function ReconDetailStatCards({ expected, metrics, extraCard }: P
           title="Scanned"
           value="—"
           icon={<ScanLine size={18} />}
-          caption={PENDING}
         />
         <ReconMetricCard
           title="Matched"
           value="—"
           icon={<CheckCircle2 size={18} />}
-          caption={PENDING}
         />
         <ReconMetricCard
           title="Accuracy"
           value="—"
           icon={<Gauge size={18} />}
-          caption={PENDING}
         />
         <ReconMetricCard
           title="Resolved"
           value="—"
           icon={<ListChecks size={18} />}
-          caption={PENDING}
         />
+        {extraCard}
       </Box>
     );
   }

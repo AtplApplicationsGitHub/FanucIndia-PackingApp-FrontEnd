@@ -3,16 +3,20 @@ import { AUDIT_TYPES } from "./auditLabels";
 
 export const AUDIT_PLANNING_ROUTE = "/admin/audit/planning";
 
-/** The selected stat card (= the audit type listed below it) lives in the URL: ?tab= */
+// Defines the audit types are allowed as tabs
 export type PlanningTab = AuditType;
-/** Audit type shown when the planning page opens without ?tab= */
+
+// Selection of Default tab
 export const DEFAULT_PLANNING_TAB: PlanningTab = "cycle_count";
 
+// Checks whether an Audit type from the URL is valid
 export const isPlanningTab = (value: string | null): value is PlanningTab =>
   value !== null && (AUDIT_TYPES as string[]).includes(value);
 
+// Returns the valid Audit type; otherwise selects Cycle Count
 export const parsePlanningTab = (value: string | null): PlanningTab =>
   isPlanningTab(value) ? value : DEFAULT_PLANNING_TAB;
+
 export const planningRoute = (tab?: PlanningTab) =>
   tab ? `${AUDIT_PLANNING_ROUTE}?tab=${tab}` : AUDIT_PLANNING_ROUTE;
 

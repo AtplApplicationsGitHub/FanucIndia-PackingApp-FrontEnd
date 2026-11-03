@@ -19,6 +19,7 @@ export default function AuditLocationsDialog({
     <AuditTableDialog
       open={open}
       title={title}
+      showTotalCount
       columns={[{ label: "Location" }]}
       rows={locations.map((l) => [l])}
       emptyText="No locations found."

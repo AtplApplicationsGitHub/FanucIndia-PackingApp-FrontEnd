@@ -3,20 +3,25 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  Alert,
   Box,
+  Button,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
   Divider,
   IconButton,
-  Typography,
 } from "@mui/material";
 import { X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
 import ReconDecisionFields from "./ReconDecisionFields";
-import { IssueChip } from "./ReconChips";
-import { ISSUE_ORDER } from "../../utils/reconLabels";
+import {
+  ISSUE_COLORS,
+  ISSUE_LABELS,
+  ISSUE_ORDER,
+} from "../../utils/reconLabels";
 import type {
   ReconDecision,
   ReconSapAction,
@@ -53,13 +58,21 @@ export default function BulkReviewDialog({
     setRemarks("");
   }, [open]);
 
-  const categories = useMemo(
+  // Selected lines per category, e.g. Mismatch 2 / Missing 9
+  const breakdown = useMemo(
     () =>
-      ISSUE_ORDER.filter((type) => variances.some((v) => v.issueType === type)),
+      ISSUE_ORDER.map((type) => ({
+        type,
+        total: variances.filter((v) => v.issueType === type).length,
+      })).filter((c) => c.total > 0),
     [variances],
   );
-  const resolvedCount = variances.filter((v) => v.status === "RESOLVED").length;
+
   const count = variances.length;
+
+  const resolvedCount = variances.filter((v) => v.status === "RESOLVED").length;
+
+  const canSave = Boolean(decision) && Boolean(remarks.trim()) && count > 0;
 
   return (
     <Dialog
@@ -93,68 +106,81 @@ export default function BulkReviewDialog({
           <X size={18} />
         </IconButton>
       </DialogTitle>
+
       <Divider />
 
-      <DialogContent sx={{ pt: "12px !important", pb: 2 }}>
+      <DialogContent sx={{ pt: "16px !important", pb: 2 }}>
+        {/* Category badges - no outer container */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
             flexWrap: "wrap",
-            columnGap: 2,
-            rowGap: 0.5,
-            mb: 2,
+            gap: 1,
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 1,
-            }}
-          >
-            {categories.map((type) => (
-              <IssueChip key={type} type={type} />
-            ))}
-            <Typography variant="caption" color="text.secondary">
-              {count} {count === 1 ? "discrepancy" : "discrepancies"} selected
-            </Typography>
-          </Box>
-          {resolvedCount > 0 && (
-            <Typography
-              variant="caption"
-              color="warning.main"
-              sx={{ ml: "auto" }}
-            >
-              {resolvedCount} already resolved - their review will be replaced
-            </Typography>
-          )}
+          {breakdown.map(({ type, total }) => (
+            <Chip
+              key={type}
+              size="small"
+              variant="outlined"
+              color={ISSUE_COLORS[type]}
+              label={`${ISSUE_LABELS[type]} · ${total}`}
+            />
+          ))}
         </Box>
 
-        <ReconDecisionFields
-          decision={decision}
-          sapAction={sapAction}
-          remarks={remarks}
-          disabled={saving}
-          onDecisionChange={setDecision}
-          onSapActionChange={setSapAction}
-          onRemarksChange={setRemarks}
-        />
+        {/* Warning for already reviewed materials */}
+        {resolvedCount > 0 && (
+          <Alert severity="warning" sx={{ mt: 1.5, py: 0 }}>
+            {resolvedCount} of {count} already{" "}
+            {resolvedCount === 1 ? "has" : "have"} a review - saving will
+            replace {resolvedCount === 1 ? "it" : "them"}.
+          </Alert>
+        )}
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1.5 }}>
+        {/* Decision, SAP Action and Remarks */}
+        <Box sx={{ mt: 2 }}>
+          <ReconDecisionFields
+            decision={decision}
+            sapAction={sapAction}
+            remarks={remarks}
+            disabled={saving}
+            onDecisionChange={setDecision}
+            onSapActionChange={setSapAction}
+            onRemarksChange={setRemarks}
+          />
+        </Box>
+      </DialogContent>
+
+      <Divider />
+
+      {/* Footer actions */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          px: 3,
+          py: 1.5,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Button color="inherit" onClick={onClose} disabled={saving}>
+            CANCEL
+          </Button>
+
           <CommonButton
             variant="contained"
-            disabled={!decision || !remarks.trim() || saving || count === 0}
+            disabled={!canSave || saving}
             onClick={() =>
               decision && onSave(decision, sapAction, remarks.trim())
             }
           >
-            {saving ? "SAVING..." : "SAVE"}
+            {saving ? "SAVING..." : `SAVE ${count}`}
           </CommonButton>
         </Box>
-      </DialogContent>
+      </Box>
     </Dialog>
   );
 }

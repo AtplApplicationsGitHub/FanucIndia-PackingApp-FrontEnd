@@ -50,15 +50,23 @@ import { IssueChip, ReconStatusChip, VarianceStatusChip } from "./ReconChips";
 import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { useReconciliationDetail } from "../../hooks/useReconciliationDetail";
 import {
+  CATEGORY_ALL,
+  CATEGORY_ALL_EXCEPT_VALID,
+  CATEGORY_DEFAULT,
+  CATEGORY_GROUP_LABELS,
   ISSUE_LABELS,
   ISSUE_ORDER,
   formatDateTime,
+  isReviewable,
+  matchesCategory,
 } from "../../utils/reconLabels";
-import type { AuditType } from "../../types/audit";
+import type { AuditRow, AuditType } from "../../types/audit";
 import type {
+  ReconAuditDetail,
+  ReconCategoryFilter,
   ReconDecision,
-  ReconIssueType,
   ReconSapAction,
+  ReconVariance,
   ReconVarianceStatus,
 } from "../../types/reconciliation";
 
@@ -67,27 +75,127 @@ const toast = (message: string, severity: "success" | "error" | "info") =>
     new CustomEvent("show-global-message", { detail: { message, severity } }),
   );
 
+// Shown while there is nothing to reconcile yet (same layout, values "—")
+const EMPTY_RECON_DETAIL: ReconAuditDetail = {
+  id: 0,
+  auditNo: "",
+  auditName: "",
+  auditType: "",
+  status: "",
+  reviewStatus: "NOT_STARTED",
+  operatorId: 0,
+  operatorName: "",
+  fileName: "",
+  createdAt: "",
+  submittedAt: null,
+  totalLocations: 0,
+  expectedComponents: 0,
+  scannedComponents: 0,
+  matchedComponents: 0,
+  accuracy: 0,
+  totalVariances: 0,
+  openVariances: 0,
+  resolvedVariances: 0,
+  locations: [],
+  variances: [],
+  closedAt: null,
+  closedByName: null,
+  canClose: false,
+};
+
+const NO_ROWS: AuditRow[] = [];
+
+// One layout for every status (assigned / in progress / reconciliation / closed):
+// the header, the rows and the empty state all read from this list, so the
+// columns keep the same width and the rows the same height in every state.
+const SELECT_COL_WIDTH = 44;
+const ROW_HEIGHT = 41;
+const COLUMNS: {
+  key: string;
+  label: string;
+  align?: "left" | "right" | "center";
+  width: number;
+}[] = [
+  { key: "sno", label: "S.No", align: "right", width: 64 },
+  { key: "bin", label: "Storage Bin", width: 110 },
+  { key: "material", label: "Material Code", width: 200 },
+  { key: "expected", label: "Expected", align: "right", width: 90 },
+  { key: "scanned", label: "Scanned", align: "right", width: 90 },
+  { key: "diff", label: "Difference", align: "right", width: 100 },
+  { key: "category", label: "Category", width: 130 },
+  { key: "status", label: "Status", width: 100 },
+  { key: "lastScanned", label: "Last Scanned", width: 170 },
+  { key: "completed", label: "Location Completed", width: 170 },
+  { key: "actions", label: "Actions", align: "center", width: 80 },
+];
+
 type Props = {
   auditType: AuditType;
   auditId: number;
+  pendingRows?: AuditRow[];
   onAuditStatusChange?: (status: string) => void;
+  /** true = not submitted yet / type has no reconciliation: no API call, values show "—" */
+  pending?: boolean;
+  /** Expected lines, known from the audit file even while pending */
+  expectedLines?: number;
+  onClosedAtChange?: (closedAt: string | null) => void;
 };
 
 export default function ReconciliationPanel({
   auditType,
   auditId,
   onAuditStatusChange,
+  pending = false,
+  expectedLines = 0,
+  pendingRows = NO_ROWS,
+  onClosedAtChange,
 }: Props) {
   const theme = useTheme();
-  const { detail, loading, error, saveDecision, saveBulkDecision, closeAudit } =
-    useReconciliationDetail(
-      auditType,
-      Number.isFinite(auditId) ? auditId : null,
-    );
+  const {
+    detail: loadedDetail,
+    loading: loadingRaw,
+    error: errorRaw,
+    saveDecision,
+    saveBulkDecision,
+    closeAudit,
+  } = useReconciliationDetail(
+    auditType,
+    !pending && Number.isFinite(auditId) ? auditId : null,
+  );
+
+  const pendingDetail = useMemo<ReconAuditDetail>(
+    () => ({
+      ...EMPTY_RECON_DETAIL,
+      variances: pendingRows.map(
+        (r): ReconVariance => ({
+          id: r.excelRow,
+          storageBin: r.storage,
+          materialCode: r.materialCode,
+          expectedQty: r.quantity,
+          scannedQty: 0,
+          issueType: "MISSING",
+          status: "OPEN",
+          decision: null,
+          sapAction: "NONE",
+          remarks: "",
+          scannedAt: null,
+          locationCompletedAt: null,
+          resolvedAt: null,
+          resolvedByName: null,
+        }),
+      ),
+    }),
+    [pendingRows],
+  );
+
+  const detail = pending ? pendingDetail : loadedDetail;
+  const loading = pending ? false : loadingRaw;
+  const error = pending ? "" : errorRaw;
 
   const [search, setSearch] = useState("");
   const [binFilter, setBinFilter] = useState("ALL");
-  const [issueFilter, setIssueFilter] = useState<ReconIssueType | "ALL">("ALL");
+  const [issueFilter, setIssueFilter] =
+    useState<ReconCategoryFilter>(CATEGORY_DEFAULT);
   const [statusFilter, setStatusFilter] = useState<ReconVarianceStatus | "ALL">(
     "ALL",
   );
@@ -121,8 +229,9 @@ export default function ReconciliationPanel({
     return (detail?.variances ?? []).filter(
       (v) =>
         (binFilter === "ALL" || v.storageBin === binFilter) &&
-        (issueFilter === "ALL" || v.issueType === issueFilter) &&
-        (statusFilter === "ALL" || v.status === statusFilter) &&
+        matchesCategory(v.issueType, issueFilter) &&
+        (statusFilter === "ALL" ||
+          (isReviewable(v.issueType) && v.status === statusFilter)) &&
         (!q ||
           v.storageBin.toLowerCase().includes(q) ||
           v.materialCode.toLowerCase().includes(q)),
@@ -142,6 +251,10 @@ export default function ReconciliationPanel({
   useEffect(() => {
     setSelectedIds([]);
   }, [search, binFilter, issueFilter, statusFilter, page, perPage]);
+
+  useEffect(() => {
+    onClosedAtChange?.(detail?.closedAt ?? null);
+  }, [detail?.closedAt, onClosedAtChange]);
 
   if (loading) {
     return (
@@ -180,7 +293,9 @@ export default function ReconciliationPanel({
     }
   };
 
-  const pageIds = pageRows.map((v) => v.id);
+  const pageIds = pageRows
+    .filter((v) => isReviewable(v.issueType))
+    .map((v) => v.id);
   const pageSelectedCount = pageIds.filter((rowId) =>
     selectedIds.includes(rowId),
   ).length;
@@ -253,20 +368,30 @@ export default function ReconciliationPanel({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       {/* Metrics */}
       <ReconDetailStatCards
-        expected={detail.expectedComponents}
-        metrics={{
-          scanned: detail.scannedComponents,
-          matched: detail.matchedComponents,
-          totalVariances: detail.totalVariances,
-          openVariances: detail.openVariances,
-        }}
+        expected={pending ? expectedLines : detail.expectedComponents}
+        metrics={
+          pending
+            ? null
+            : {
+                scanned: detail.scannedComponents,
+                matched: detail.matchedComponents,
+                totalVariances: detail.totalVariances,
+                openVariances: detail.openVariances,
+              }
+        }
         extraCard={
           <ReconMetricCard
             title="Location Wise Variance"
-            value={`${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`}
-            caption={`${locationsWithVariance} with variance`}
+            value={
+              pending
+                ? "—"
+                : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
+            }
+            caption={
+              pending ? undefined : `${locationsWithVariance} with variance`
+            }
             icon={<MapPinned size={18} />}
-            onClick={() => setLocationsOpen(true)}
+            onClick={pending ? undefined : () => setLocationsOpen(true)}
           />
         }
       />
@@ -344,7 +469,7 @@ export default function ReconciliationPanel({
               )}
             </Box>
 
-            <FormControl size="small" sx={{ minWidth: 140 }}>
+            <FormControl size="small" sx={{ minWidth: 100 }}>
               <Select
                 value={binFilter}
                 onChange={(e) => {
@@ -362,17 +487,22 @@ export default function ReconciliationPanel({
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 160 }}>
+            <FormControl size="small" sx={{ minWidth: 190 }}>
               <Select
                 value={issueFilter}
                 onChange={(e) => {
-                  setIssueFilter(e.target.value as ReconIssueType | "ALL");
+                  setIssueFilter(e.target.value as ReconCategoryFilter);
                   setPage(0);
                 }}
                 inputProps={{ "aria-label": "Category filter" }}
               >
-                <MenuItem value="ALL">All Categories</MenuItem>
-                {ISSUE_ORDER.map((t) => (
+                <MenuItem value={CATEGORY_ALL}>
+                  {CATEGORY_GROUP_LABELS[CATEGORY_ALL]}
+                </MenuItem>
+                <MenuItem value={CATEGORY_ALL_EXCEPT_VALID}>
+                  {CATEGORY_GROUP_LABELS[CATEGORY_ALL_EXCEPT_VALID]}
+                </MenuItem>
+                {[...ISSUE_ORDER, "VALID" as const].map((t) => (
                   <MenuItem key={t} value={t}>
                     {ISSUE_LABELS[t]}
                   </MenuItem>
@@ -411,7 +541,7 @@ export default function ReconciliationPanel({
               <CommonButton
                 variant="contained"
                 startIcon={<Pencil size={16} />}
-                disabled={selectedVariances.length === 0}
+                disabled={pending || selectedVariances.length === 0}
                 onClick={() => setBulkOpen(true)}
               >
                 {selectedVariances.length > 0
@@ -423,7 +553,7 @@ export default function ReconciliationPanel({
             <CommonButton
               variant="contained"
               startIcon={<Download size={16} />}
-              disabled={downloading}
+              disabled={downloading || pending}
               onClick={() => void downloadReport(detail.id, detail.auditNo)}
             >
               {downloading ? "DOWNLOADING..." : "DOWNLOAD REPORT"}
@@ -455,7 +585,7 @@ export default function ReconciliationPanel({
                 {formatDateTime(detail.closedAt)}
               </Typography>
             )}
-            <ReconStatusChip status={detail.reviewStatus} />
+            {!pending && <ReconStatusChip status={detail.reviewStatus} />}
           </Box>
         </Box>
 
@@ -463,6 +593,10 @@ export default function ReconciliationPanel({
           <Table
             size="small"
             sx={{
+              tableLayout: "fixed",
+              minWidth:
+                COLUMNS.reduce((sum, c) => sum + c.width, 0) +
+                (isClosed ? 0 : SELECT_COL_WIDTH),
               "& .MuiTableCell-root": {
                 px: 1,
                 py: 0.75,
@@ -472,6 +606,12 @@ export default function ReconciliationPanel({
               "& .MuiTableCell-head": { fontSize: 12, letterSpacing: 0.2 },
             }}
           >
+            <colgroup>
+              {!isClosed && <col style={{ width: SELECT_COL_WIDTH }} />}
+              {COLUMNS.map((c) => (
+                <col key={c.key} style={{ width: c.width }} />
+              ))}
+            </colgroup>
             <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
               <TableRow>
                 {!isClosed && (
@@ -483,7 +623,7 @@ export default function ReconciliationPanel({
                       size="small"
                       indeterminate={somePageSelected}
                       checked={allPageSelected}
-                      disabled={pageIds.length === 0}
+                      disabled={pageIds.length === 0 || pending}
                       onChange={toggleSelectPage}
                       inputProps={{
                         "aria-label": "Select all rows on this page",
@@ -498,27 +638,11 @@ export default function ReconciliationPanel({
                     />
                   </TableCell>
                 )}
-                <TableCell align="right" sx={headCellSx}>
-                  S.No
-                </TableCell>
-                <TableCell sx={headCellSx}>Storage Bin</TableCell>
-                <TableCell sx={headCellSx}>Material Code</TableCell>
-                <TableCell align="right" sx={headCellSx}>
-                  Expected
-                </TableCell>
-                <TableCell align="right" sx={headCellSx}>
-                  Scanned
-                </TableCell>
-                <TableCell align="right" sx={headCellSx}>
-                  Difference
-                </TableCell>
-                <TableCell sx={headCellSx}>Category</TableCell>
-                <TableCell sx={headCellSx}>Status</TableCell>
-                <TableCell sx={headCellSx}>Last Scanned</TableCell>
-                <TableCell sx={headCellSx}>Location Completed</TableCell>
-                <TableCell align="center" sx={headCellSx}>
-                  Actions
-                </TableCell>
+                {COLUMNS.map((c) => (
+                  <TableCell key={c.key} align={c.align} sx={headCellSx}>
+                    {c.label}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
 
@@ -526,12 +650,12 @@ export default function ReconciliationPanel({
               {rows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={isClosed ? 11 : 12}
+                    colSpan={COLUMNS.length + (isClosed ? 0 : 1)}
                     align="center"
                     sx={{ py: 4 }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      No discrepancies found.
+                      {pending ? "—" : "No discrepancies found."}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -539,11 +663,13 @@ export default function ReconciliationPanel({
                 pageRows.map((v, index) => {
                   const diff = v.scannedQty - v.expectedQty;
                   const action = actionFor(v.status);
+                  const reviewable = isReviewable(v.issueType);
 
                   return (
                     <TableRow
                       key={v.id}
                       sx={{
+                        height: ROW_HEIGHT,
                         backgroundColor:
                           index % 2 === 1
                             ? alpha(theme.palette.primary.main, 0.2)
@@ -555,6 +681,7 @@ export default function ReconciliationPanel({
                           <Checkbox
                             size="small"
                             checked={selectedIds.includes(v.id)}
+                            disabled={pending || !reviewable}
                             onChange={() => toggleSelectOne(v.id)}
                             inputProps={{
                               "aria-label": `Select ${v.materialCode}`,
@@ -571,26 +698,33 @@ export default function ReconciliationPanel({
                         {v.materialCode}
                       </TableCell>
                       <TableCell align="right">{v.expectedQty}</TableCell>
-                      <TableCell align="right">{v.scannedQty}</TableCell>
+                      <TableCell align="right">
+                        {pending ? "-" : v.scannedQty}
+                      </TableCell>
                       <TableCell
                         align="right"
                         sx={{
                           fontWeight: 700,
-                          color:
-                            diff < 0
+                          color: pending
+                            ? "text.secondary"
+                            : diff < 0
                               ? "error.main"
                               : diff > 0
                                 ? "warning.main"
                                 : "text.secondary",
                         }}
                       >
-                        {diff > 0 ? `+${diff}` : diff}
+                        {pending ? "-" : diff > 0 ? `+${diff}` : diff}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        <IssueChip type={v.issueType} />
+                        {pending ? "-" : <IssueChip type={v.issueType} />}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        <VarianceStatusChip status={v.status} />
+                        {pending || !reviewable ? (
+                          "-"
+                        ) : (
+                          <VarianceStatusChip status={v.status} />
+                        )}
                       </TableCell>
                       <TableCell>
                         {v.scannedAt ? formatDateTime(v.scannedAt) : "-"}
@@ -601,24 +735,28 @@ export default function ReconciliationPanel({
                           : "-"}
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title={action.label}>
-                          <IconButton
-                            size="small"
-                            aria-label={action.label}
-                            onClick={() => setReviewId(v.id)}
-                            sx={{
-                              color: "text.primary",
-                              "&:hover": {
-                                bgcolor: alpha(
-                                  theme.palette.primary.main,
-                                  0.35,
-                                ),
-                              },
-                            }}
-                          >
-                            {action.icon}
-                          </IconButton>
-                        </Tooltip>
+                        {pending ? (
+                          "-"
+                        ) : !reviewable ? null : (
+                          <Tooltip title={action.label}>
+                            <IconButton
+                              size="small"
+                              aria-label={action.label}
+                              onClick={() => setReviewId(v.id)}
+                              sx={{
+                                color: "text.primary",
+                                "&:hover": {
+                                  bgcolor: alpha(
+                                    theme.palette.primary.main,
+                                    0.35,
+                                  ),
+                                },
+                              }}
+                            >
+                              {action.icon}
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

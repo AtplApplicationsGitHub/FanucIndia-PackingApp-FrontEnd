@@ -8,20 +8,17 @@ import {
   CalendarPlus,
   ChevronRight,
   Download,
-  Eye,
   FileSpreadsheet,
+  Flag,
   Layers,
   MapPin,
   Package,
-  PlayCircle,
   Send,
-  User,
   UserCheck,
+  CheckCircle2,
 } from "lucide-react";
-
-import ReconDetailStatCards from "./ReconDetailStatCards";
+import AuditTimeline, { type AuditTimelineStep } from "./AuditTimeline";
 import ReconciliationPanel from "./ReconciliationPanel";
-import AuditMaterialsDialog from "../shared/AuditMaterialsDialog";
 import AuditStatusPill from "../shared/AuditStatusPill";
 import AuditTableDialog from "../shared/AuditTableDialog";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
@@ -38,23 +35,55 @@ type Props = {
 
 const EMPTY = "—";
 
-const dateOrEmpty = (value: string | null) =>
-  value ? formatDateTime(value) : EMPTY;
-
 export default function AuditProgressDetail({
   auditType,
   auditId,
   view,
 }: Props) {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadsOpen, setUploadsOpen] = useState(false);
   const [status, setStatus] = useState(view.status);
 
   const awaitingUpload = status === "ASSIGNED" || status === "IN_PROGRESS";
   const uploads = awaitingUpload ? view.locationUploads : null;
   const uploadedCount = uploads?.filter((l) => l.uploadedAt).length ?? 0;
-  const viewLabel = "Audit Materials";
+  const [closedAt, setClosedAt] = useState<string | null>(null);
 
+  const steps: AuditTimelineStep[] = [
+    {
+      key: "created",
+      label: "Created",
+      icon: <CalendarPlus size={18} />,
+      at: view.createdAt,
+      by: view.createdByName,
+    },
+    {
+      key: "downloaded",
+      label: "Downloaded",
+      icon: <Download size={18} />,
+      at: view.downloadedAt,
+    },
+    {
+      key: "started",
+      label: "Started",
+      icon: <Flag size={18} />,
+      at: view.startedAt,
+    },
+    {
+      key: "submitted",
+      label: "Submitted",
+      icon: <Send size={18} />,
+      at: view.submittedAt,
+    },
+    {
+      key: "closed",
+      label: "Closed",
+      icon: <CheckCircle2 size={18} />,
+      at: closedAt,
+    },
+  ].map((s) => ({
+    ...s,
+    reached: Boolean(s.at) || (s.key === "closed" && status === "CLOSED"),
+  }));
   return (
     <Box
       sx={{
@@ -70,27 +99,7 @@ export default function AuditProgressDetail({
         pb: 2,
       }}
     >
-      <Box sx={{ display: "flex", justifyContent: "center", px: 1 }}>
-        <Typography
-          component="h1"
-          sx={{
-            fontWeight: 700,
-            fontSize: { xs: 17, sm: 20 },
-            letterSpacing: 0.5,
-            textAlign: "center",
-            textTransform: "uppercase",
-            wordBreak: "break-word",
-          }}
-        >
-          <Box component="span" sx={{ color: "error.main" }}>
-            {view.auditName}
-          </Box>
-          <Box component="span" sx={{ color: "text.secondary" }}>
-            {" - "}
-            {view.auditNo}
-          </Box>
-        </Typography>
-      </Box>
+      <AuditTimeline steps={steps} />
 
       <Box
         sx={{
@@ -104,7 +113,33 @@ export default function AuditProgressDetail({
           gap: 1.5,
         }}
       >
-        <InfoCard icon={<Layers size={18} />} label="Type" value={AUDIT_LABELS[auditType]} />
+        <InfoCard icon={<Layers size={18} />} label={view.auditNo}>
+          <Typography
+            title={view.auditName}
+            noWrap
+            sx={{
+              fontSize: 14,
+              fontWeight: 700,
+              lineHeight: 1.4,
+              
+            }}
+          >
+            {view.auditName}
+          </Typography>
+
+          <Typography
+            title={AUDIT_LABELS[auditType]}
+            noWrap
+            sx={{
+              fontSize: 12,
+              color: "text.secondary",
+              lineHeight: 1.3,
+            }}
+          >
+            {AUDIT_LABELS[auditType]}
+          </Typography>
+        </InfoCard>
+
         <InfoCard icon={<Activity size={18} />} label="Status">
           <Chip
             size="small"
@@ -113,14 +148,19 @@ export default function AuditProgressDetail({
             sx={{ fontWeight: 700, height: 22 }}
           />
         </InfoCard>
-        <InfoCard icon={<User size={18} />} label="Created By" value={view.createdByName || EMPTY} />
-        <InfoCard icon={<CalendarPlus size={18} />} label="Created At" value={dateOrEmpty(view.createdAt)} />
-        <InfoCard icon={<FileSpreadsheet size={18} />} label="File Name" value={view.sourceFile || EMPTY} />
-        <InfoCard icon={<UserCheck size={18} />} label="Operator Name" value={view.operatorName || EMPTY} />
 
-        <InfoCard icon={<Download size={18} />} label="Downloaded On" value={dateOrEmpty(view.downloadedAt)} />
-        <InfoCard icon={<PlayCircle size={18} />} label="Started On" value={dateOrEmpty(view.startedAt)} />
-        <InfoCard icon={<Send size={18} />} label="Submitted On" value={dateOrEmpty(view.submittedAt)} />
+        <InfoCard
+          icon={<FileSpreadsheet size={18} />}
+          label="File Name"
+          value={view.sourceFile || EMPTY}
+        />
+
+        <InfoCard
+          icon={<UserCheck size={18} />}
+          label="Operator Name"
+          value={view.operatorName || EMPTY}
+        />
+
         {uploads ? (
           <InfoCard
             icon={<MapPin size={18} />}
@@ -129,14 +169,17 @@ export default function AuditProgressDetail({
             onClick={() => setUploadsOpen(true)}
           />
         ) : (
-          <InfoCard icon={<MapPin size={18} />} label="Total Locations" value={view.totalLocations} />
+          <InfoCard
+            icon={<MapPin size={18} />}
+            label="Total Locations"
+            value={view.totalLocations}
+          />
         )}
-        <InfoCard icon={<Package size={18} />} label={view.itemsLabel} value={view.totalItems} />
+
         <InfoCard
-          icon={<Eye size={18} />}
-          label="View"
-          value={viewLabel}
-          onClick={() => setDialogOpen(true)}
+          icon={<Package size={18} />}
+          label={view.itemsLabel}
+          value={view.totalItems}
         />
 
         {view.extraFields.map((field) => (
@@ -149,16 +192,15 @@ export default function AuditProgressDetail({
         ))}
       </Box>
 
-      {!awaitingUpload &&
-        (auditType === "bom" ? (
-          <ReconciliationPanel
-            auditType={auditType}
-            auditId={auditId}
-            onAuditStatusChange={setStatus}
-          />
-        ) : (
-          <ReconDetailStatCards expected={view.totalItems} />
-        ))}
+      <ReconciliationPanel
+        auditType={auditType}
+        auditId={auditId}
+        pending={auditType !== "bom" || awaitingUpload}
+        expectedLines={view.totalItems}
+        onAuditStatusChange={setStatus}
+        onClosedAtChange={setClosedAt}
+        pendingRows={view.rows}
+      />
 
       {uploads && (
         <AuditTableDialog
@@ -184,13 +226,6 @@ export default function AuditProgressDetail({
           onClose={() => setUploadsOpen(false)}
         />
       )}
-
-      <AuditMaterialsDialog
-        open={dialogOpen}
-        title={viewLabel}
-        rows={view.rows}
-        onClose={() => setDialogOpen(false)}
-      />
     </Box>
   );
 }
@@ -281,7 +316,12 @@ function InfoCard({
         {children ?? (
           <Typography
             title={value !== undefined ? String(value) : undefined}
-            sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", lineHeight: 1.4 }}
+            sx={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: "text.primary",
+              lineHeight: 1.4,
+            }}
             noWrap
           >
             {value}

@@ -39,14 +39,33 @@ type Column = {
 };
 
 const COLUMNS: Column[] = [
-  { label: "Sequence No", align: "right", render: (l) => l.sequenceNo },
+  { label: "Sequence No", align: "left", render: (l) => l.sequenceNo },
   { label: "Storage Bin", align: "left", render: (l) => l.storageBin },
-  { label: "Expected Quantity", align: "right", render: (l) => l.expectedMaterials },
-  { label: "Valid", align: "right", color: "success", render: (l) => l.valid },
-  { label: "Mismatch", align: "right", color: "info", render: (l) => l.mismatch },
-  { label: "Missing", align: "right", color: "error", render: (l) => l.missing },
-  { label: "Unexpected", align: "right", color: "warning", render: (l) => l.unexpected },
-  { label: "Open", align: "right", color: "secondary", render: (l) => l.openVariances },
+  {
+    label: "Expected Quantity",
+    align: "left",
+    render: (l) => l.expectedMaterials,
+  },
+  { label: "Valid", align: "left", color: "success", render: (l) => l.valid },
+  {
+    label: "Mismatch",
+    align: "left",
+    color: "info",
+    render: (l) => l.mismatch,
+  },
+  { label: "Missing", align: "left", color: "error", render: (l) => l.missing },
+  {
+    label: "Unexpected",
+    align: "left",
+    color: "warning",
+    render: (l) => l.unexpected,
+  },
+  {
+    label: "Open",
+    align: "left",
+    color: "secondary",
+    render: (l) => l.openVariances,
+  },
   {
     label: "Completed On",
     align: "left",
@@ -54,7 +73,11 @@ const COLUMNS: Column[] = [
   },
 ];
 
-export default function LocationVarianceDialog({ open, locations, onClose }: Props) {
+export default function LocationVarianceDialog({
+  open,
+  locations,
+  onClose,
+}: Props) {
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [perPage, setPerPage] = useState(10);
@@ -66,7 +89,12 @@ export default function LocationVarianceDialog({ open, locations, onClose }: Pro
       onClose={onClose}
       fullWidth
       maxWidth="lg"
-      PaperProps={{ sx: { borderRadius: 2 } }}
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          maxWidth: 1050,
+        },
+      }}
     >
       <DialogTitle
         sx={{
@@ -93,8 +121,20 @@ export default function LocationVarianceDialog({ open, locations, onClose }: Pro
       </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 2, pb: 2.5 }}>
-        <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1.5, overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: 460 }}>
+        <Box
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+            overflow: "hidden",
+          }}
+        >
+          <TableContainer
+            sx={{
+              maxHeight: 460,
+              overflowX: "auto",
+            }}
+          >
             <Table
               size="small"
               stickyHeader
@@ -109,7 +149,11 @@ export default function LocationVarianceDialog({ open, locations, onClose }: Pro
                   fontSize: 13,
                   lineHeight: 1.35,
                 },
-                "& .MuiTableCell-head": { fontSize: 12, letterSpacing: 0.2 },
+                "& .MuiTableCell-head": {
+                  fontSize: 12,
+                  letterSpacing: 0.2,
+                  whiteSpace: "nowrap",
+                },
               }}
             >
               <TableHead>
@@ -133,7 +177,11 @@ export default function LocationVarianceDialog({ open, locations, onClose }: Pro
               <TableBody>
                 {pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={COLUMNS.length} align="center" sx={{ py: 3 }}>
+                    <TableCell
+                      colSpan={COLUMNS.length}
+                      align="center"
+                      sx={{ py: 3 }}
+                    >
                       <Typography variant="body2" color="text.secondary">
                         No locations found.
                       </Typography>
@@ -152,7 +200,9 @@ export default function LocationVarianceDialog({ open, locations, onClose }: Pro
                             sx={{
                               whiteSpace: "nowrap",
                               fontWeight: highlight ? 700 : undefined,
-                              color: highlight ? `${column.color}.main` : undefined,
+                              color: highlight
+                                ? `${column.color}.main`
+                                : undefined,
                             }}
                           >
                             {value}

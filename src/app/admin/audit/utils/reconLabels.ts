@@ -1,5 +1,6 @@
 import type {
   ReconAuditStatus,
+  ReconCategoryFilter,
   ReconDecision,
   ReconIssueType,
   ReconSapAction,
@@ -21,6 +22,7 @@ export const RECON_STATUS_COLORS: Record<ReconAuditStatus, ChipColor> = {
   CLOSED: "default",
 };
 
+// Discrepancy types only (VALID is not a discrepancy, so it is not in this list)
 export const ISSUE_ORDER: ReconIssueType[] = [
   "QUANTITY_MISMATCH",
   "MISSING",
@@ -28,22 +30,47 @@ export const ISSUE_ORDER: ReconIssueType[] = [
 ];
 
 export const ISSUE_LABELS: Record<ReconIssueType, string> = {
+  VALID: "Valid",
   MISSING: "Missing",
   EXCESS: "Unexpected",
   QUANTITY_MISMATCH: "Mismatch",
 };
 
 export const ISSUE_HINTS: Record<ReconIssueType, string> = {
+  VALID: "Scanned quantity matches the expected quantity",
   MISSING: "Expected in the audit file but not scanned",
   EXCESS: "Scanned at the bin but not in the audit file",
   QUANTITY_MISMATCH: "Scanned quantity differs from the expected quantity",
 };
 
 export const ISSUE_COLORS: Record<ReconIssueType, ChipColor> = {
+  VALID: "success",
   MISSING: "error",
   EXCESS: "warning",
   QUANTITY_MISMATCH: "info",
 };
+
+// Category dropdown: group options + the default
+export const CATEGORY_ALL = "ALL";
+export const CATEGORY_ALL_EXCEPT_VALID = "ALL_EXCEPT_VALID";
+export const CATEGORY_DEFAULT: ReconCategoryFilter = CATEGORY_ALL_EXCEPT_VALID;
+
+export const CATEGORY_GROUP_LABELS = {
+  [CATEGORY_ALL]: "All Categories",
+  [CATEGORY_ALL_EXCEPT_VALID]: "All Except Valid",
+} as const;
+
+/** A matched (VALID) line has nothing to review, edit or close. */
+export const isReviewable = (issueType: ReconIssueType) => issueType !== "VALID";
+
+export const matchesCategory = (
+  issueType: ReconIssueType,
+  filter: ReconCategoryFilter,
+) =>
+  filter === CATEGORY_ALL ||
+  (filter === CATEGORY_ALL_EXCEPT_VALID
+    ? isReviewable(issueType)
+    : issueType === filter);
 
 export const DECISION_LABELS: Record<ReconDecision, string> = {
   CORRECT_SYSTEM_RECORD: "Accept physical count (correct SAP / system record)",

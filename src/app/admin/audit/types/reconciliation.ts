@@ -1,7 +1,8 @@
 /**
  * BOM audit reconciliation (Stage C).
  * One audit = one operator (the server creates one audit per operator from the uploaded file).
- * A "variance" is a BomAuditMaterial line whose lineStatus is not VALID:
+ * A "variance" is a BomAuditMaterial line whose lineStatus is not VALID
+ * (VALID lines are also returned, as issueType VALID, for the Valid filter):
  *   backend lineStatus  ->  issueType
  *   MISSING             ->  MISSING            (expected, not scanned)
  *   UNEXPECTED          ->  EXCESS             (scanned, not in the audit file)
@@ -13,7 +14,14 @@ export type ReconAuditStatus =
   | "ALL_REVIEWED"
   | "CLOSED";
 
-export type ReconIssueType = "MISSING" | "EXCESS" | "QUANTITY_MISMATCH";
+export type ReconIssueType =
+  | "MISSING"
+  | "EXCESS"
+  | "QUANTITY_MISMATCH"
+  | "VALID"; // matched line - nothing to review
+
+/** Category dropdown: a real issue type, or one of the two "group" options. */
+export type ReconCategoryFilter = ReconIssueType | "ALL" | "ALL_EXCEPT_VALID";
 
 export type ReconVarianceStatus = "OPEN" | "RESOLVED";
 

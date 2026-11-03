@@ -7,12 +7,17 @@ import { Package, FileText, MapPin, Tag } from "lucide-react";
 
 import AuditTypeCard from "./AuditTypeCard";
 import AuditPlansTable from "./AuditPlansTable";
-
 import { useAuditCounts } from "../../hooks/useAuditCounts";
-
 import type { AuditType } from "../../types/audit";
 import { AUDIT_LABELS } from "../../utils/auditLabels";
-import { parsePlanningTab, planningRoute } from "../../utils/auditRoutes";
+import { useEffect, useState } from "react";
+import {
+  isPlanningTab,
+  DEFAULT_PLANNING_TAB,
+  planningRoute,
+  type PlanningTab,
+} from "../../utils/auditRoutes";
+import { loadPlanningState } from "../../utils/auditPlanningState";
 
 const gridSx = {
   display: "grid",
@@ -36,12 +41,27 @@ export default function AuditPlanning() {
   const searchParams = useSearchParams();
   const { counts, statusCounts } = useAuditCounts();
 
-  // The selected stat card (= the audit type listed below) lives in the URL: ?tab=
-  const selected = parsePlanningTab(searchParams.get("tab"));
+  const [ready, setReady] = useState(false);
+  const [savedTab, setSavedTab] = useState<PlanningTab | null>(null);
+
+  // Load the previously selected tab after mounting
+  useEffect(() => {
+    setSavedTab(loadPlanningState()?.tab ?? null);
+    setReady(true);
+  }, []);
+
+  const urlTab = searchParams.get("tab");
+
+  const selected = isPlanningTab(urlTab)
+    ? urlTab
+    : (savedTab ?? DEFAULT_PLANNING_TAB);
+
+  // Prevent showing the wrong tab before loading
+  if (!ready) return null;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
-      {/* Four audit cards - clicking one loads that audit type in the table below */}
+      {/* Four audit cards */}
       <Box sx={{ ...gridSx, px: 2 }}>
         {CARDS.map((card) => (
           <AuditTypeCard
@@ -51,6 +71,7 @@ export default function AuditPlanning() {
             type={card.type}
             count={counts[card.type]}
             selected={card.type === selected}
+            createDisabled={card.type !== "bom"}
             onSelect={() =>
               router.replace(planningRoute(card.type), { scroll: false })
             }

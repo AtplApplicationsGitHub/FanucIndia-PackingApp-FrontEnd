@@ -36,7 +36,6 @@ import {
   X,
   TrendingUp,
   ClipboardCheck,
-  History,
   Layers3,
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
@@ -104,12 +103,6 @@ const AUDIT_MENU = [
     value: "audit_planning",
     route: "/admin/audit/planning",
     icon: <ClipboardCheck size={16} />,
-  },
-  {
-    label: "AUDIT HISTORY",
-    value: "audit_history",
-    route: "/admin/audit/history",
-    icon: <History size={16} />,
   },
 ];
 const AUDIT_VALUES = AUDIT_MENU.map((a) => a.value);
