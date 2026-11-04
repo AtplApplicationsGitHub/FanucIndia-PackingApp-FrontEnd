@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import {
   alpha,
   Alert,
   Box,
   Checkbox,
+  Chip,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -15,6 +16,8 @@ import {
   FormControl,
   IconButton,
   InputBase,
+  ListItemIcon,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -34,19 +37,24 @@ import {
   Download,
   Eye,
   MapPinned,
-  Pencil,
+  Gauge,
+  ListChecks,
+  Menu as MenuIcon,
   PencilLine,
   X,
 } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import CommonButton from "@/common/components/CommonButton";
 import BulkReviewDialog from "./BulkReviewDialog";
 import DiscrepancyReviewDialog from "./DiscrepancyReviewDialog";
 import LocationVarianceDialog from "./LocationVarianceDialog";
 import ReconDetailStatCards from "./ReconDetailStatCards";
 import ReconMetricCard from "./ReconMetricCard";
-import { IssueChip, ReconStatusChip, VarianceStatusChip } from "./ReconChips";
+import { IssueChip, VarianceStatusChip } from "./ReconChips";
 import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { useReconciliationDetail } from "../../hooks/useReconciliationDetail";
 import { useReconciliationLines } from "../../hooks/useReconciliationLines";
@@ -54,14 +62,12 @@ import {
   CATEGORY_ALL,
   CATEGORY_ALL_EXCEPT_VALID,
   CATEGORY_DEFAULT,
-  CATEGORY_GROUP_LABELS,
-  ISSUE_LABELS,
-  ISSUE_ORDER,
   formatDateTime,
   isReviewable,
   toReviewable,
 } from "../../utils/reconLabels";
 import type { AuditRow, AuditType } from "../../types/audit";
+import type { AuditLocationUpload } from "../../types/auditDetail";
 import type {
   ReconAuditDetail,
   ReconCategoryFilter,
@@ -69,6 +75,7 @@ import type {
   ReconLine,
   ReconSapAction,
   ReconVariance,
+  ReconIssueType,
   ReconVarianceStatus,
 } from "../../types/reconciliation";
 
@@ -138,23 +145,31 @@ const COLUMNS: {
 type Props = {
   auditType: AuditType;
   auditId: number;
+  auditStatus: string;
   pendingRows?: AuditRow[];
+  locationUploads?: AuditLocationUpload[] | null;
+  headerCards?: ReactNode;
   onAuditStatusChange?: (status: string) => void;
   /** true = not downloaded yet / type has no reconciliation: no API call, values show "—" (In Progress loads the uploaded data) */
   pending?: boolean;
   /** Expected lines, known from the audit file even while pending */
   expectedLines?: number;
   onClosedAtChange?: (closedAt: string | null) => void;
+  onClosedByNameChange?: (closedByName: string | null) => void;
 };
 
 export default function ReconciliationPanel({
   auditType,
   auditId,
+  auditStatus,
   onAuditStatusChange,
   pending = false,
   expectedLines = 0,
   pendingRows = NO_ROWS,
+  locationUploads = null,
+  headerCards,
   onClosedAtChange,
+  onClosedByNameChange,
 }: Props) {
   const theme = useTheme();
   const {
@@ -197,8 +212,31 @@ export default function ReconciliationPanel({
 
   const [search, setSearch] = useState("");
   const [binFilter, setBinFilter] = useState("ALL");
-  const [issueFilter, setIssueFilter] =
-    useState<ReconCategoryFilter>(CATEGORY_DEFAULT);
+
+  const getDefaultCategory = (
+    type: AuditType,
+    status: string,
+  ): ReconCategoryFilter => {
+    if (type !== "bom") {
+      return CATEGORY_DEFAULT;
+    }
+
+    switch (status) {
+      case "ASSIGNED":
+      case "IN_PROGRESS":
+      case "CLOSED":
+        return CATEGORY_ALL;
+
+      case "RECONCILIATION_PENDING":
+      default:
+        return CATEGORY_ALL_EXCEPT_VALID;
+    }
+  };
+
+  const [issueFilter, setIssueFilter] = useState<ReconCategoryFilter>(() =>
+    getDefaultCategory(auditType, auditStatus),
+  );
+
   const [statusFilter, setStatusFilter] = useState<ReconVarianceStatus | "ALL">(
     "ALL",
   );
@@ -212,12 +250,21 @@ export default function ReconciliationPanel({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [actionsAnchorEl, setActionsAnchorEl] = useState<HTMLElement | null>(
+    null,
+  );
   const { downloadReport, loading: downloading } = useDownloadBomReport();
+
+  useEffect(() => {
+    setIssueFilter(getDefaultCategory(auditType, auditStatus));
+    setPage(0);
+    setSelectedIds([]);
+  }, [auditType, auditId, auditStatus]);
 
   const headCellSx = {
     fontWeight: "bold",
     color: theme.palette.primary.contrastText,
-    textTransform: "uppercase",
+    textTransform: "none",
   } as const;
 
   const {
@@ -270,6 +317,75 @@ export default function ReconciliationPanel({
   );
   const totalRows = pending ? localRows.length : serverTotal;
 
+  // Full-audit counts, independent of the current category, search, status and page.
+  // The detail API already includes location-wise category totals; no extra API calls.
+  const categoryCounts = useMemo(() => {
+    const totals = (detail?.locations ?? []).reduce(
+      (acc, location) => ({
+        valid: acc.valid + location.valid,
+        mismatch: acc.mismatch + location.mismatch,
+        missing: acc.missing + location.missing,
+        unexpected: acc.unexpected + location.unexpected,
+      }),
+      { valid: 0, mismatch: 0, missing: 0, unexpected: 0 },
+    );
+    const exceptValid = totals.mismatch + totals.missing + totals.unexpected;
+    return {
+      ...totals,
+      exceptValid,
+      // In Progress includes materials from locations not yet uploaded.
+      all: pending
+        ? expectedLines
+        : (detail?.auditExpectedComponents ?? 0) + totals.unexpected,
+      expected: pending ? expectedLines : (detail?.expectedComponents ?? 0),
+      scanned: pending ? 0 : (detail?.scannedComponents ?? 0),
+    };
+  }, [detail, pending, expectedLines]);
+
+  const categoryPills: {
+    value: ReconCategoryFilter;
+    label: string;
+    count: number;
+    color: "primary" | "info" | "error" | "warning" | "success" | "secondary";
+  }[] = [
+    {
+      value: CATEGORY_ALL,
+      label: "All",
+      count: categoryCounts.all,
+      color: "primary",
+    },
+    {
+      value: CATEGORY_ALL_EXCEPT_VALID,
+      label: "Except Valid",
+      count: categoryCounts.exceptValid,
+      color: "secondary",
+    },
+    {
+      value: "QUANTITY_MISMATCH",
+      label: "Mismatch",
+      count: categoryCounts.mismatch,
+      color: "info",
+    },
+    {
+      value: "MISSING",
+      label: "Missing",
+      count: categoryCounts.missing,
+      color: "error",
+    },
+    {
+      value: "EXCESS",
+      label: "Unexpected",
+      count: categoryCounts.unexpected,
+      color: "warning",
+    },
+    {
+      value: "VALID",
+      label: "Valid",
+      count: categoryCounts.valid,
+      color: "success",
+    },
+  ];
+
   const selectedVariances = useMemo(
     () =>
       pageRows
@@ -285,7 +401,13 @@ export default function ReconciliationPanel({
 
   useEffect(() => {
     onClosedAtChange?.(detail?.closedAt ?? null);
-  }, [detail?.closedAt, onClosedAtChange]);
+    onClosedByNameChange?.(detail?.closedByName ?? null);
+  }, [
+    detail?.closedAt,
+    detail?.closedByName,
+    onClosedAtChange,
+    onClosedByNameChange,
+  ]);
 
   if (loading) {
     return (
@@ -403,42 +525,118 @@ export default function ReconciliationPanel({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       {/* Metrics */}
-      <ReconDetailStatCards
-        expected={pending ? expectedLines : detail.expectedComponents}
-        metrics={
-          pending
-            ? null
-            : {
-                scanned: detail.scannedComponents,
-                matched: detail.matchedComponents,
-                totalVariances: detail.totalVariances,
-                openVariances: detail.openVariances,
-                accuracy: detail.accuracy,
-                qtyAccuracy: detail.qtyAccuracy,
-                partial: detail.partial,
-                auditExpected: detail.auditExpectedComponents,
-              }
-        }
-        extraCard={
+      {auditType === "bom" ? (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(1, minmax(0, 1fr))",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(3, minmax(0, 1fr))",
+              lg: "repeat(6, minmax(0, 1fr))",
+            },
+            gap: 1.5,
+          }}
+        >
+          {headerCards}
+          <ReconMetricCard
+            title="Accuracy"
+            value={
+              detail.accuracy === null || pending
+                ? "—"
+                : `${detail.accuracy.toFixed(1)}%`
+            }
+            icon={<Gauge size={18} />}
+            caption={
+              detail.qtyAccuracy === null || pending
+                ? undefined
+                : `Qty ${detail.qtyAccuracy.toFixed(1)}%`
+            }
+            progress={pending ? 0 : (detail.accuracy ?? 0)}
+            progressColor={
+              detail.accuracy === null
+                ? "primary"
+                : detail.accuracy >= 98
+                  ? "success"
+                  : detail.accuracy >= 95
+                    ? "warning"
+                    : "error"
+            }
+          />
+          <ReconMetricCard
+            title="Resolved"
+            value={
+              pending
+                ? "—"
+                : `${detail.resolvedVariances} / ${detail.totalVariances}`
+            }
+            icon={<ListChecks size={18} />}
+            progress={
+              pending
+                ? 0
+                : detail.totalVariances
+                  ? (detail.resolvedVariances / detail.totalVariances) * 100
+                  : 100
+            }
+            progressColor="success"
+            caption={pending ? undefined : `${detail.openVariances} open`}
+          />
           <ReconMetricCard
             title="Location Wise Variance"
             value={
               pending
-                ? "—"
+                ? `${locationUploads?.length ?? 0} Locations`
                 : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
             }
             caption={
               pending
-                ? undefined
+                ? "Upload pending"
                 : detail.partial
                   ? `${detail.uploadedLocations} uploaded · ${locationsWithVariance} with variance`
                   : `${locationsWithVariance} with variance`
             }
             icon={<MapPinned size={18} />}
-            onClick={pending ? undefined : () => setLocationsOpen(true)}
+            onClick={() => setLocationsOpen(true)}
           />
-        }
-      />
+        </Box>
+      ) : (
+        <ReconDetailStatCards
+          expected={pending ? expectedLines : detail.expectedComponents}
+          metrics={
+            pending
+              ? null
+              : {
+                  scanned: detail?.scannedComponents ?? 0,
+                  matched: detail.matchedComponents,
+                  totalVariances: detail.totalVariances,
+                  openVariances: detail.openVariances,
+                  accuracy: detail.accuracy,
+                  qtyAccuracy: detail.qtyAccuracy,
+                  partial: detail.partial,
+                  auditExpected: detail.auditExpectedComponents,
+                }
+          }
+          extraCard={
+            <ReconMetricCard
+              title="Location Wise Variance"
+              value={
+                pending
+                  ? "—"
+                  : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
+              }
+              caption={
+                pending
+                  ? undefined
+                  : detail.partial
+                    ? `${detail.uploadedLocations} uploaded · ${locationsWithVariance} with variance`
+                    : `${locationsWithVariance} with variance`
+              }
+              icon={<MapPinned size={18} />}
+              onClick={pending ? undefined : () => setLocationsOpen(true)}
+            />
+          }
+        />
+      )}
 
       {/* Discrepancies */}
       <Paper
@@ -457,8 +655,10 @@ export default function ReconciliationPanel({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 1.5,
+            flexWrap: auditType === "bom" ? "nowrap" : "wrap",
+            gap: auditType === "bom" ? 1 : 1.5,
+            width: "100%",
+            minWidth: 0,
             px: 1.5,
             pt: 1.25,
             pb: 1.25,
@@ -468,8 +668,10 @@ export default function ReconciliationPanel({
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: "wrap",
-              gap: 1,
+              flexWrap: auditType === "bom" ? "nowrap" : "wrap",
+              gap: auditType === "bom" ? 0.9 : 1,
+              minWidth: 0,
+              flex: 1,
             }}
           >
             <Box
@@ -477,7 +679,9 @@ export default function ReconciliationPanel({
                 p: "2px 4px",
                 display: "flex",
                 alignItems: "center",
-                width: { xs: "100%", sm: 230 },
+                width: auditType === "bom" ? 230 : { xs: "100%", sm: 230 },
+                flex: auditType === "bom" ? "0 0 230px" : undefined,
+                minWidth: auditType === "bom" ? 230 : undefined,
                 border: 1,
                 borderColor: (t) =>
                   t.palette.mode === "dark"
@@ -489,7 +693,7 @@ export default function ReconciliationPanel({
               }}
             >
               <InputBase
-                sx={{ ml: 1, flex: 1, fontSize: "14px" }}
+                sx={{ ml: 1, flex: 1, minWidth: 0, fontSize: "14px" }}
                 placeholder="Search bin / material"
                 inputProps={{ "aria-label": "search discrepancies" }}
                 value={search}
@@ -513,7 +717,14 @@ export default function ReconciliationPanel({
               )}
             </Box>
 
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+            <FormControl
+              size="small"
+              sx={
+                auditType === "bom"
+                  ? { flex: "0 0 115px", minWidth: 115 }
+                  : { minWidth: 100 }
+              }
+            >
               <Select
                 value={binFilter}
                 onChange={(e) => {
@@ -531,111 +742,250 @@ export default function ReconciliationPanel({
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 190 }}>
-              <Select
-                value={issueFilter}
-                onChange={(e) => {
-                  setIssueFilter(e.target.value as ReconCategoryFilter);
-                  setPage(0);
-                }}
-                inputProps={{ "aria-label": "Category filter" }}
-              >
-                <MenuItem value={CATEGORY_ALL}>
-                  {CATEGORY_GROUP_LABELS[CATEGORY_ALL]}
-                </MenuItem>
-                <MenuItem value={CATEGORY_ALL_EXCEPT_VALID}>
-                  {CATEGORY_GROUP_LABELS[CATEGORY_ALL_EXCEPT_VALID]}
-                </MenuItem>
-                {[...ISSUE_ORDER, "VALID" as const].map((t) => (
-                  <MenuItem key={t} value={t}>
-                    {ISSUE_LABELS[t]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl size="small" sx={{ minWidth: 130 }}>
-              <Select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(
-                    e.target.value as ReconVarianceStatus | "ALL",
-                  );
-                  setPage(0);
-                }}
-                inputProps={{ "aria-label": "Discrepancy status filter" }}
-              >
-                <MenuItem value="ALL">All statuses</MenuItem>
-                <MenuItem value="OPEN">Open</MenuItem>
-                <MenuItem value="RESOLVED">Resolved</MenuItem>
-              </Select>
-            </FormControl>
+            {auditType === "bom" ? (
+              <>
+                <FormControl
+                  size="small"
+                  sx={{ flex: "0 0 135px", minWidth: 135 }}
+                >
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(
+                        e.target.value as ReconVarianceStatus | "ALL",
+                      );
+                      setPage(0);
+                    }}
+                    inputProps={{ "aria-label": "Discrepancy status filter" }}
+                  >
+                    <MenuItem value="ALL">All statuses</MenuItem>
+                    <MenuItem value="OPEN">Open</MenuItem>
+                    <MenuItem value="RESOLVED">Resolved</MenuItem>
+                  </Select>
+                </FormControl>
+                <Box
+                  role="group"
+                  aria-label="Audit material counts and category filters"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.8,
+                    flex: "0 0 auto",
+                    minWidth: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`Expected (${categoryCounts.expected})`}
+                    sx={{
+                      height: 30,
+                      fontWeight: 600,
+                      fontSize: "clamp(11px, 0.86vw, 13px)",
+                      "& .MuiChip-label": { px: 1 },
+                    }}
+                  />
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`Scanned (${categoryCounts.scanned})`}
+                    sx={{
+                      height: 30,
+                      fontWeight: 600,
+                      fontSize: "clamp(11px, 0.86vw, 13px)",
+                      "& .MuiChip-label": { px: 1 },
+                    }}
+                  />
+                  {categoryPills.map((item) => {
+                    const selected = issueFilter === item.value;
+                    return (
+                      <Chip
+                        key={item.value}
+                        size="small"
+                        label={`${item.label} (${item.count})`}
+                        color={
+                          item.value === CATEGORY_ALL ||
+                          item.value === CATEGORY_ALL_EXCEPT_VALID
+                            ? undefined
+                            : item.color
+                        }
+                        variant={selected ? "filled" : "outlined"}
+                        clickable
+                        onClick={() => {
+                          setIssueFilter(item.value);
+                          setPage(0);
+                        }}
+                        aria-pressed={selected}
+                        sx={{
+                          height: 30,
+                          fontWeight: selected ? 700 : 500,
+                          fontSize: "clamp(11px, 0.86vw, 13px)",
+                          "& .MuiChip-label": { px: 1 },
+                          ...(item.value === CATEGORY_ALL && {
+                            bgcolor: selected ? "#D4A017" : "transparent",
+                            color: selected ? "#FFFFFF" : "#9A7100",
+                            borderColor: "#D4A017",
+                            "&:hover": {
+                              bgcolor: selected ? "#BE8D12" : "#FFF3CD",
+                            },
+                          }),
+                          ...(item.value === CATEGORY_ALL_EXCEPT_VALID && {
+                            bgcolor: selected ? "#7B1FA2" : "transparent",
+                            color: selected ? "#FFFFFF" : "#7B1FA2",
+                            borderColor: "#7B1FA2",
+                            "&:hover": {
+                              bgcolor: selected ? "#6A1B9A" : "#F3E5F5",
+                            },
+                          }),
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+              </>
+            ) : (
+              <>
+                <FormControl size="small" sx={{ minWidth: 190 }}>
+                  <Select
+                    value={issueFilter}
+                    onChange={(e) => {
+                      setIssueFilter(e.target.value as ReconCategoryFilter);
+                      setPage(0);
+                    }}
+                    inputProps={{ "aria-label": "Category filter" }}
+                  >
+                    <MenuItem value={CATEGORY_ALL}>{"All Categories"}</MenuItem>
+                    <MenuItem value={CATEGORY_ALL_EXCEPT_VALID}>
+                      {"All Except Valid"}
+                    </MenuItem>
+                    {(
+                      [
+                        "QUANTITY_MISMATCH",
+                        "MISSING",
+                        "EXCESS",
+                        "VALID",
+                      ] as ReconIssueType[]
+                    ).map((t) => (
+                      <MenuItem key={t} value={t}>
+                        {
+                          {
+                            QUANTITY_MISMATCH: "Mismatch",
+                            MISSING: "Missing",
+                            EXCESS: "Unexpected",
+                            VALID: "Valid",
+                          }[t]
+                        }
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(
+                        e.target.value as ReconVarianceStatus | "ALL",
+                      );
+                      setPage(0);
+                    }}
+                    inputProps={{ "aria-label": "Discrepancy status filter" }}
+                  >
+                    <MenuItem value="ALL">All statuses</MenuItem>
+                    <MenuItem value="OPEN">Open</MenuItem>
+                    <MenuItem value="RESOLVED">Resolved</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            )}
           </Box>
-
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: "wrap",
+              flexWrap: auditType === "bom" ? "nowrap" : "wrap",
               gap: 1,
               ml: "auto",
+              flexShrink: 0,
             }}
           >
-            {!isClosed && (
-              <CommonButton
-                variant="contained"
-                startIcon={<Pencil size={16} />}
-                disabled={locked || selectedVariances.length === 0}
-                onClick={() => setBulkOpen(true)}
-              >
-                {selectedVariances.length > 0
-                  ? `REVIEW (${selectedVariances.length})`
-                  : "REVIEW"}
-              </CommonButton>
-            )}
-
-            <CommonButton
-              variant="contained"
-              startIcon={<Download size={16} />}
-              disabled={downloading || pending || detail.partial}
-              onClick={() => void downloadReport(detail.id, detail.auditNo)}
-            >
-              {downloading ? "DOWNLOADING..." : "DOWNLOAD REPORT"}
-            </CommonButton>
-
-            {!isClosed && (
-              <Tooltip
-                title={
-                  detail.canClose
-                    ? ""
-                    : "Close Audit is enabled once all discrepancies are resolved."
+            <Tooltip title="Actions">
+              <IconButton
+                aria-label="Discrepancy actions"
+                aria-controls={
+                  actionsAnchorEl ? "discrepancy-actions-menu" : undefined
                 }
+                aria-haspopup="true"
+                aria-expanded={Boolean(actionsAnchorEl)}
+                onClick={(event) => setActionsAnchorEl(event.currentTarget)}
+                sx={{ color: "text.primary" }}
               >
-                <span>
-                  <CommonButton
-                    variant="contained"
-                    color="error"
-                    disabled={!detail.canClose}
-                    onClick={() => setConfirmClose(true)}
-                  >
-                    CLOSE AUDIT
-                  </CommonButton>
-                </span>
-              </Tooltip>
-            )}
-            {isClosed && detail.closedAt && (
-              <Typography variant="caption" color="text.secondary">
-                Closed by {detail.closedByName ?? "-"} on{" "}
-                {formatDateTime(detail.closedAt)}
-              </Typography>
-            )}
-            {detail.partial && (
-              <Typography variant="caption" color="text.secondary">
-                Reconciliation opens once all locations are uploaded (
-                {detail.uploadedLocations} / {detail.totalLocations})
-              </Typography>
-            )}
-            {!pending && <ReconStatusChip status={detail.reviewStatus} />}
+                <MenuIcon size={22} />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              id="discrepancy-actions-menu"
+              anchorEl={actionsAnchorEl}
+              open={Boolean(actionsAnchorEl)}
+              onClose={() => setActionsAnchorEl(null)}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              {!isClosed && (
+                <MenuItem
+                  disabled={locked || selectedVariances.length === 0}
+                  onClick={() => {
+                    setActionsAnchorEl(null);
+                    setBulkOpen(true);
+                  }}
+                >
+                  <ListItemIcon>
+                    <RateReviewOutlinedIcon fontSize="small" />
+                  </ListItemIcon>
+                  {selectedVariances.length > 0
+                    ? `Review (${selectedVariances.length})`
+                    : "Review"}
+                </MenuItem>
+              )}
+              <MenuItem
+                disabled={downloading || pending || detail.partial}
+                onClick={() => {
+                  setActionsAnchorEl(null);
+                  void downloadReport(detail.id, detail.auditNo);
+                }}
+              >
+                <ListItemIcon>
+                  <FileDownloadOutlinedIcon fontSize="small" />
+                </ListItemIcon>
+                {downloading ? "Downloading..." : "Download Report"}
+              </MenuItem>
+              {!isClosed && (
+                <Tooltip
+                  title={
+                    detail.canClose
+                      ? ""
+                      : "Close Audit is enabled once all discrepancies are resolved."
+                  }
+                  placement="left"
+                >
+                  <span>
+                    <MenuItem
+                      disabled={!detail.canClose}
+                      onClick={() => {
+                        setActionsAnchorEl(null);
+                        setConfirmClose(true);
+                      }}
+                      sx={{ color: detail.canClose ? "error.main" : undefined }}
+                    >
+                      <ListItemIcon sx={{ color: "inherit" }}>
+                        <LockOutlinedIcon fontSize="small" />
+                      </ListItemIcon>
+                      Close Audit
+                    </MenuItem>
+                  </span>
+                </Tooltip>
+              )}
+            </Menu>
           </Box>
         </Box>
 
@@ -852,6 +1202,7 @@ export default function ReconciliationPanel({
       <LocationVarianceDialog
         open={locationsOpen}
         locations={detail.locations}
+        locationUploads={locationUploads}
         onClose={() => setLocationsOpen(false)}
       />
 

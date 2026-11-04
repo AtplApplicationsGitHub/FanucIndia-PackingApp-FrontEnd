@@ -47,6 +47,7 @@ export default function AuditProgressDetail({
   const uploads = awaitingUpload ? view.locationUploads : null;
   const uploadedCount = uploads?.filter((l) => l.uploadedAt).length ?? 0;
   const [closedAt, setClosedAt] = useState<string | null>(null);
+  const [closedByName, setClosedByName] = useState<string | null>(null);
 
   const steps: AuditTimelineStep[] = [
     {
@@ -79,6 +80,7 @@ export default function AuditProgressDetail({
       label: "Closed",
       icon: <CheckCircle2 size={18} />,
       at: closedAt,
+      by: closedByName,
     },
   ].map((s) => ({
     ...s,
@@ -101,6 +103,7 @@ export default function AuditProgressDetail({
     >
       <AuditTimeline steps={steps} />
 
+      {auditType !== "bom" && (
       <Box
         sx={{
           display: "grid",
@@ -149,11 +152,13 @@ export default function AuditProgressDetail({
           />
         </InfoCard>
 
-        <InfoCard
-          icon={<FileSpreadsheet size={18} />}
-          label="File Name"
-          value={view.sourceFile || EMPTY}
-        />
+        {auditType !== "bom" && (
+          <InfoCard
+            icon={<FileSpreadsheet size={18} />}
+            label="File Name"
+            value={view.sourceFile || EMPTY}
+          />
+        )}
 
         <InfoCard
           icon={<UserCheck size={18} />}
@@ -161,7 +166,7 @@ export default function AuditProgressDetail({
           value={view.operatorName || EMPTY}
         />
 
-        {uploads ? (
+        {auditType !== "bom" && (uploads ? (
           <InfoCard
             icon={<MapPin size={18} />}
             label="Total Locations"
@@ -174,13 +179,15 @@ export default function AuditProgressDetail({
             label="Total Locations"
             value={view.totalLocations}
           />
-        )}
+        ))}
 
-        <InfoCard
-          icon={<Package size={18} />}
-          label={view.itemsLabel}
-          value={view.totalItems}
-        />
+        {auditType !== "bom" && (
+          <InfoCard
+            icon={<Package size={18} />}
+            label={view.itemsLabel}
+            value={view.totalItems}
+          />
+        )}
 
         {view.extraFields.map((field) => (
           <InfoCard
@@ -192,17 +199,68 @@ export default function AuditProgressDetail({
         ))}
       </Box>
 
+      )}
+
       <ReconciliationPanel
         auditType={auditType}
         auditId={auditId}
+        auditStatus={status}
         pending={auditType !== "bom" || status === "ASSIGNED"}
         expectedLines={view.totalItems}
         onAuditStatusChange={setStatus}
         onClosedAtChange={setClosedAt}
+        onClosedByNameChange={setClosedByName}
         pendingRows={view.rows}
+        locationUploads={view.locationUploads}
+        headerCards={auditType === "bom" ? (
+          <>
+        <InfoCard icon={<Layers size={18} />} label={view.auditNo}>
+          <Typography
+            title={view.auditName}
+            noWrap
+            sx={{
+              fontSize: 14,
+              fontWeight: 700,
+              lineHeight: 1.4,
+              
+            }}
+          >
+            {view.auditName}
+          </Typography>
+
+          <Typography
+            title={AUDIT_LABELS[auditType]}
+            noWrap
+            sx={{
+              fontSize: 12,
+              color: "text.secondary",
+              lineHeight: 1.3,
+            }}
+          >
+            {AUDIT_LABELS[auditType]}
+          </Typography>
+        </InfoCard>
+
+        <InfoCard icon={<Activity size={18} />} label="Status">
+          <Chip
+            size="small"
+            label={auditStatusLabel(status)}
+            color={auditStatusColor(status)}
+            sx={{ fontWeight: 700, height: 22 }}
+          />
+        </InfoCard>
+
+        <InfoCard
+          icon={<UserCheck size={18} />}
+          label="Operator Name"
+          value={view.operatorName || EMPTY}
+        />
+
+          </>
+        ) : undefined}
       />
 
-      {uploads && (
+      {auditType !== "bom" && uploads && (
         <AuditTableDialog
           open={uploadsOpen}
           title={`LOCATION UPLOAD STATUS (${uploadedCount} / ${uploads.length})`}

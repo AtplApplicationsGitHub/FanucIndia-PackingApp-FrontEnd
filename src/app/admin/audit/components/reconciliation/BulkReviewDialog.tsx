@@ -95,7 +95,31 @@ export default function BulkReviewDialog({
           position: "relative",
         }}
       >
-        BULK REVIEW
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            columnGap: 1.5,
+            rowGap: 0.75,
+            pl: 4,
+            pr: 4,
+          }}
+        >
+          <Box component="span">BULK REVIEW</Box>
+          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            {breakdown.map(({ type, total }) => (
+              <Chip
+                key={type}
+                size="small"
+                variant="outlined"
+                color={ISSUE_COLORS[type]}
+                label={`${ISSUE_LABELS[type]} · ${total}`}
+              />
+            ))}
+          </Box>
+        </Box>
         <IconButton
           onClick={onClose}
           size="small"
@@ -110,26 +134,6 @@ export default function BulkReviewDialog({
       <Divider />
 
       <DialogContent sx={{ pt: "16px !important", pb: 2 }}>
-        {/* Category badges - no outer container */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 1,
-          }}
-        >
-          {breakdown.map(({ type, total }) => (
-            <Chip
-              key={type}
-              size="small"
-              variant="outlined"
-              color={ISSUE_COLORS[type]}
-              label={`${ISSUE_LABELS[type]} · ${total}`}
-            />
-          ))}
-        </Box>
-
         {/* Warning for already reviewed materials */}
         {resolvedCount > 0 && (
           <Alert severity="warning" sx={{ mt: 1.5, py: 0 }}>
@@ -166,9 +170,6 @@ export default function BulkReviewDialog({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Button color="inherit" onClick={onClose} disabled={saving}>
-            CANCEL
-          </Button>
 
           <CommonButton
             variant="contained"

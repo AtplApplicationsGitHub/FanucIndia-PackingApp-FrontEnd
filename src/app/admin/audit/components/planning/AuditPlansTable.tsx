@@ -379,7 +379,7 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                 <Chip
                   key={item.status}
                   label={`${item.label} (${count})`}
-                  color={item.color}
+                  color={item.status === "ALL" ? undefined : item.color}
                   variant={selected ? "filled" : "outlined"}
                   clickable
                   disabled={!available}
@@ -392,6 +392,15 @@ export default function AuditPlansTable({ auditType, statusCounts }: Props) {
                   sx={{
                     fontWeight: selected ? 700 : 500,
                     cursor: "pointer",
+
+                    ...(item.status === "ALL" && {
+                      bgcolor: selected ? "#D4A017" : "transparent",
+                      color: selected ? "#FFFFFF" : "#9A7100",
+                      borderColor: "#D4A017",
+                      "&:hover": {
+                        bgcolor: selected ? "#BE8D12" : "#FFF3CD",
+                      },
+                    }),
                   }}
                 />
               );

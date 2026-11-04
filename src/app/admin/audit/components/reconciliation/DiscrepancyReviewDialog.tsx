@@ -9,7 +9,12 @@ import {
   DialogTitle,
   Divider,
   IconButton,
-  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
   type SxProps,
   type Theme,
@@ -134,26 +139,64 @@ export default function DiscrepancyReviewDialog({
             )}
           </Box>
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 1.5,
-            }}
+          <TableContainer
+            sx={{ border: 1, borderColor: "divider", borderRadius: 2 }}
           >
-            <CompareCard
-              title="Expected (audit file)"
-              storageBin={variance.storageBin}
-              materialCode={variance.materialCode}
-              quantity={variance.expectedQty}
-            />
-            <CompareCard
-              title="Actual scanned"
-              storageBin={variance.storageBin}
-              materialCode={variance.materialCode}
-              quantity={`${variance.scannedQty} (${diff > 0 ? "+" : ""}${diff})`}
-            />
-          </Box>
+            <Table
+              size="small"
+              aria-label="Expected and actual scanned comparison"
+              sx={{
+                tableLayout: "fixed",
+                "& .MuiTableCell-root": {
+                  px: { xs: 1, sm: 1.5 },
+                  py: 1,
+                  borderColor: "divider",
+                  overflowWrap: "anywhere",
+                },
+                // Vertical separators between Field, Expected, and Actual.
+                "& .MuiTableCell-root:not(:last-child)": {
+                  borderRight: "1px solid",
+                  borderRightColor: "divider",
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow sx={{ bgcolor: "primary.main", "& .MuiTableCell-head": { color: "primary.contrastText" } }}>
+                  <TableCell sx={{ width: "24%", fontWeight: 700 }}>Field</TableCell>
+                  <TableCell sx={{ width: "38%", fontWeight: 700 }}>
+                    Expected (audit file)
+                  </TableCell>
+                  <TableCell sx={{ width: "38%", fontWeight: 700 }}>
+                    Actual scanned
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Storage Bin</TableCell>
+                  <TableCell>{variance.storageBin}</TableCell>
+                  <TableCell>{variance.storageBin}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Material</TableCell>
+                  <TableCell>{variance.materialCode}</TableCell>
+                  <TableCell>{variance.materialCode}</TableCell>
+                </TableRow>
+                <TableRow sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                  <TableCell sx={{ fontWeight: 600 }}>Quantity</TableCell>
+                  <TableCell>{variance.expectedQty}</TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 700,
+                      color: diff !== 0 ? "error.main" : "text.primary",
+                    }}
+                  >
+                    {variance.scannedQty} ({diff > 0 ? "+" : ""}{diff})
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
 
           <Box sx={{ mt: 2 }}>
             {viewOnly ? (
@@ -224,74 +267,6 @@ export default function DiscrepancyReviewDialog({
         </DialogContent>
       )}
     </Dialog>
-  );
-}
-
-function CompareCard({
-  title,
-  storageBin,
-  materialCode,
-  quantity,
-}: {
-  title: string;
-  storageBin: string;
-  materialCode: string;
-  quantity: string | number;
-}) {
-  return (
-    <Paper variant="outlined" sx={{ px: 1.5, py: 1, borderRadius: 2 }}>
-      <Typography sx={{ fontWeight: 700, fontSize: 14, mb: 0.75 }}>
-        {title}
-      </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns:
-            "minmax(0, 0.9fr) minmax(0, 1.5fr) minmax(0, 0.7fr)",
-          gap: 1,
-        }}
-      >
-        <Field label="Storage Bin" value={storageBin} />
-        <Field label="Material" value={materialCode} />
-        <Field label="Quantity" value={quantity} />
-      </Box>
-    </Paper>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string | number }) {
-  return (
-    <Box
-      sx={{
-        minWidth: 0,
-        px: 1,
-        py: 0.5,
-        borderRadius: 1.5,
-        border: "1px dashed",
-        borderColor: "divider",
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-          color: "text.secondary",
-          lineHeight: 1.4,
-        }}
-        noWrap
-      >
-        {label}
-      </Typography>
-      <Typography
-        title={String(value)}
-        sx={{ fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}
-        noWrap
-      >
-        {value}
-      </Typography>
-    </Box>
   );
 }
 
