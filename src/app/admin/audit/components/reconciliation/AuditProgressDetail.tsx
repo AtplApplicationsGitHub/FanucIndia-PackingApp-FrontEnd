@@ -1,7 +1,5 @@
 "use client";
-
 import { useState, type ReactNode } from "react";
-
 import { alpha, Box, Chip, Paper, Typography } from "@mui/material";
 import {
   Activity,
@@ -26,15 +24,12 @@ import { auditStatusColor, auditStatusLabel } from "../../utils/auditStatus";
 import { formatDateTime } from "../../utils/reconLabels";
 import type { AuditType } from "../../types/audit";
 import type { AuditDetailView } from "../../types/auditDetail";
-
 type Props = {
   auditType: AuditType;
   auditId: number;
   view: AuditDetailView;
 };
-
 const EMPTY = "—";
-
 export default function AuditProgressDetail({
   auditType,
   auditId,
@@ -42,13 +37,11 @@ export default function AuditProgressDetail({
 }: Props) {
   const [uploadsOpen, setUploadsOpen] = useState(false);
   const [status, setStatus] = useState(view.status);
-
   const awaitingUpload = status === "ASSIGNED" || status === "IN_PROGRESS";
   const uploads = awaitingUpload ? view.locationUploads : null;
   const uploadedCount = uploads?.filter((l) => l.uploadedAt).length ?? 0;
   const [closedAt, setClosedAt] = useState<string | null>(null);
   const [closedByName, setClosedByName] = useState<string | null>(null);
-
   const steps: AuditTimelineStep[] = [
     {
       key: "created",
@@ -102,7 +95,6 @@ export default function AuditProgressDetail({
       }}
     >
       <AuditTimeline steps={steps} />
-
       {auditType !== "bom" && (
       <Box
         sx={{
@@ -124,12 +116,10 @@ export default function AuditProgressDetail({
               fontSize: 14,
               fontWeight: 700,
               lineHeight: 1.4,
-              
             }}
           >
             {view.auditName}
           </Typography>
-
           <Typography
             title={AUDIT_LABELS[auditType]}
             noWrap
@@ -142,7 +132,6 @@ export default function AuditProgressDetail({
             {AUDIT_LABELS[auditType]}
           </Typography>
         </InfoCard>
-
         <InfoCard icon={<Activity size={18} />} label="Status">
           <Chip
             size="small"
@@ -151,22 +140,17 @@ export default function AuditProgressDetail({
             sx={{ fontWeight: 700, height: 22 }}
           />
         </InfoCard>
-
-        {auditType !== "bom" && (
-          <InfoCard
-            icon={<FileSpreadsheet size={18} />}
-            label="File Name"
-            value={view.sourceFile || EMPTY}
-          />
-        )}
-
+        <InfoCard
+          icon={<FileSpreadsheet size={18} />}
+          label="File Name"
+          value={view.sourceFile || EMPTY}
+        />
         <InfoCard
           icon={<UserCheck size={18} />}
           label="Operator Name"
           value={view.operatorName || EMPTY}
         />
-
-        {auditType !== "bom" && (uploads ? (
+        {uploads ? (
           <InfoCard
             icon={<MapPin size={18} />}
             label="Total Locations"
@@ -179,16 +163,12 @@ export default function AuditProgressDetail({
             label="Total Locations"
             value={view.totalLocations}
           />
-        ))}
-
-        {auditType !== "bom" && (
-          <InfoCard
-            icon={<Package size={18} />}
-            label={view.itemsLabel}
-            value={view.totalItems}
-          />
         )}
-
+        <InfoCard
+          icon={<Package size={18} />}
+          label={view.itemsLabel}
+          value={view.totalItems}
+        />
         {view.extraFields.map((field) => (
           <InfoCard
             key={field.label}
@@ -198,9 +178,7 @@ export default function AuditProgressDetail({
           />
         ))}
       </Box>
-
       )}
-
       <ReconciliationPanel
         auditType={auditType}
         auditId={auditId}
@@ -222,12 +200,10 @@ export default function AuditProgressDetail({
               fontSize: 14,
               fontWeight: 700,
               lineHeight: 1.4,
-              
             }}
           >
             {view.auditName}
           </Typography>
-
           <Typography
             title={AUDIT_LABELS[auditType]}
             noWrap
@@ -240,7 +216,6 @@ export default function AuditProgressDetail({
             {AUDIT_LABELS[auditType]}
           </Typography>
         </InfoCard>
-
         <InfoCard icon={<Activity size={18} />} label="Status">
           <Chip
             size="small"
@@ -264,17 +239,14 @@ export default function AuditProgressDetail({
             }}
           />
         </InfoCard>
-
         <InfoCard
           icon={<UserCheck size={18} />}
           label="Operator Name"
           value={view.operatorName || EMPTY}
         />
-
           </>
         ) : undefined}
       />
-
       {auditType !== "bom" && uploads && (
         <AuditTableDialog
           open={uploadsOpen}
@@ -305,7 +277,6 @@ export default function AuditProgressDetail({
     </Box>
   );
 }
-
 function InfoCard({
   icon,
   label,
@@ -320,7 +291,6 @@ function InfoCard({
   onClick?: () => void;
 }) {
   const clickable = Boolean(onClick);
-
   return (
     <Paper
       elevation={0}
