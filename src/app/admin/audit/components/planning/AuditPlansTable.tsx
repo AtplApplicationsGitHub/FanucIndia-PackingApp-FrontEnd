@@ -99,12 +99,12 @@ type Props = {
   statusCounts: AuditStatusCounts;
 };
 
-export default function AuditPlansTable({ auditType, statusCounts }: Props) {
+export default function AuditPlansTable({ auditType }: Props) {
   const theme = useTheme();
   const router = useRouter();
   const label = AUDIT_LABELS[auditType];
 
-  const { audits, pagination, params, loading, available, updateParams } =
+  const { audits, pagination, params, loading, available, updateParams, statusCounts } =
     useAuditList(auditType);
 
   const { deleteAudit, loading: deleting } = useDeleteAudit(auditType);

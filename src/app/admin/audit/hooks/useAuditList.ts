@@ -16,6 +16,8 @@ import {
   savePlanningState,
 } from "../utils/auditPlanningState";
 
+const EMPTY_STATUS_COUNTS = { ASSIGNED: 0, IN_PROGRESS: 0, RECONCILIATION_PENDING: 0, CLOSED: 0 };
+
 const EMPTY_PAGINATION: AuditPagination = {
   page: 1,
   limit: 10,
@@ -36,6 +38,7 @@ export function useAuditList(auditType: AuditType) {
       status: "ALL",
     }),
   );
+  const [statusCounts, setStatusCounts] = useState(EMPTY_STATUS_COUNTS);
   const [audits, setAudits] = useState<AuditListRow[]>([]);
   const [pagination, setPagination] =
     useState<AuditPagination>(EMPTY_PAGINATION);
@@ -59,6 +62,8 @@ export function useAuditList(auditType: AuditType) {
         if (!res.ok) {
           throw new Error(getBomAuditError(json, "Failed to load audits."));
         }
+        if (controller.signal.aborted) return;
+        setStatusCounts(json.statusCounts ?? EMPTY_STATUS_COUNTS);
         const list: AuditListRow[] = json.data ?? [];
         const meta: AuditPagination = json.pagination ?? EMPTY_PAGINATION;
         setAudits(list);
@@ -75,6 +80,7 @@ export function useAuditList(auditType: AuditType) {
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setAudits([]);
+        setStatusCounts(EMPTY_STATUS_COUNTS);
         showGlobalMessage(
           e instanceof Error ? e.message : "Failed to load audits.",
           "error",
@@ -108,5 +114,5 @@ export function useAuditList(auditType: AuditType) {
     [],
   );
 
-  return { audits, pagination, params, loading, available, updateParams };
+  return { audits, pagination, params, loading, available, updateParams, statusCounts };
 }

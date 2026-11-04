@@ -246,7 +246,22 @@ export default function AuditProgressDetail({
             size="small"
             label={auditStatusLabel(status)}
             color={auditStatusColor(status)}
-            sx={{ fontWeight: 700, height: 22 }}
+            sx={{
+              fontWeight: 700,
+              fontSize: status === "RECONCILIATION_PENDING" ? 10 : undefined,
+              height: "auto",
+              minHeight: 22,
+              maxWidth: "100%",
+              "& .MuiChip-label": {
+                whiteSpace: "normal",
+                overflow: "visible",
+                textOverflow: "clip",
+                textAlign: "center",
+                lineHeight: 1.3,
+                px: 0.75,
+                py: 0.4,
+              },
+            }}
           />
         </InfoCard>
 

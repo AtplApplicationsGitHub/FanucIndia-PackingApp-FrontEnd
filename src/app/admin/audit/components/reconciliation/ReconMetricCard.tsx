@@ -9,6 +9,7 @@ type Props = {
   title: string;
   value: ReactNode;
   caption?: ReactNode;
+  info?: ReactNode;
   icon: ReactNode;
   progress?: number;
   progressColor?: "primary" | "success" | "warning" | "error" | "info";
@@ -19,6 +20,7 @@ export default function ReconMetricCard({
   title,
   value,
   caption,
+  info,
   icon,
   progress,
   progressColor = "primary",
@@ -81,19 +83,23 @@ export default function ReconMetricCard({
         {icon}
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography
-          sx={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            color: "text.secondary",
-            lineHeight: 1.4,
-          }}
-          noWrap
-        >
-          {title}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+          <Typography
+            sx={{
+              minWidth: 0,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: "text.secondary",
+              lineHeight: 1.4,
+            }}
+            noWrap
+          >
+            {title}
+          </Typography>
+          {info}
+        </Box>
         <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
           <Typography
             sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", lineHeight: 1.4, flexShrink: 0 }}

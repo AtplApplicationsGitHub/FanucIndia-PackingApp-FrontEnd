@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import ReconMetricCard from "./ReconMetricCard";
+import AccuracyInfoCard from "./AccuracyInfoCard";
 
 export type ReconDetailMetrics = {
   scanned: number;
@@ -29,7 +30,7 @@ export type ReconDetailMetrics = {
 };
 
 const formatPercent = (value: number | null) =>
-  value === null ? "—" : `${value.toFixed(1)}%`;
+  value === null ? "—" : `${Math.round(value)}%`;
 
 type Props = {
   expected: number;
@@ -80,6 +81,7 @@ export default function ReconDetailStatCards({
         />
         <ReconMetricCard
           title="Accuracy"
+          info={<AccuracyInfoCard />}
           value="—"
           icon={<Gauge size={18} />}
         />
@@ -140,6 +142,7 @@ export default function ReconDetailStatCards({
       />
       <ReconMetricCard
         title="Accuracy"
+        info={<AccuracyInfoCard />}
         value={formatPercent(accuracy)}
         icon={<Gauge size={18} />}
         caption={`Qty ${formatPercent(qtyAccuracy)}`}

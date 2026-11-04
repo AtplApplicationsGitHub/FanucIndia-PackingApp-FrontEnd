@@ -41,6 +41,8 @@ import {
   ListChecks,
   Menu as MenuIcon,
   PencilLine,
+  Package,
+  ScanLine,
   X,
 } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
@@ -54,6 +56,7 @@ import DiscrepancyReviewDialog from "./DiscrepancyReviewDialog";
 import LocationVarianceDialog from "./LocationVarianceDialog";
 import ReconDetailStatCards from "./ReconDetailStatCards";
 import ReconMetricCard from "./ReconMetricCard";
+import AccuracyInfoCard from "./AccuracyInfoCard";
 import { IssueChip, VarianceStatusChip } from "./ReconChips";
 import { useDownloadBomReport } from "../../hooks/useDownloadBomReport";
 import { useReconciliationDetail } from "../../hooks/useReconciliationDetail";
@@ -270,6 +273,7 @@ export default function ReconciliationPanel({
   const {
     rows: serverRows,
     total: serverTotal,
+    categoryCounts: serverCategoryCounts,
     loading: linesLoading,
     error: linesError,
     reload: reloadLines,
@@ -342,6 +346,18 @@ export default function ReconciliationPanel({
     };
   }, [detail, pending, expectedLines]);
 
+  // Pending rows have no judged category or review status yet.
+  // Count the full search/bin scope before category selection or pagination.
+  const filteredCategoryCounts = useMemo(() => {
+    if (!pending) return serverCategoryCounts;
+    const q = search.trim().toLowerCase();
+    const all = statusFilter !== "ALL" ? 0 : pendingLines.filter((line) =>
+      (binFilter === "ALL" || line.storageBin === binFilter) &&
+      (!q || line.storageBin.toLowerCase().includes(q) || line.materialCode.toLowerCase().includes(q)),
+    ).length;
+    return { ALL: all, ALL_EXCEPT_VALID: 0, QUANTITY_MISMATCH: 0, MISSING: 0, EXCESS: 0, VALID: 0 };
+  }, [pending, serverCategoryCounts, pendingLines, search, binFilter, statusFilter]);
+
   const categoryPills: {
     value: ReconCategoryFilter;
     label: string;
@@ -351,37 +367,37 @@ export default function ReconciliationPanel({
     {
       value: CATEGORY_ALL,
       label: "All",
-      count: categoryCounts.all,
+      count: filteredCategoryCounts.ALL,
       color: "primary",
     },
     {
       value: CATEGORY_ALL_EXCEPT_VALID,
       label: "Except Valid",
-      count: categoryCounts.exceptValid,
+      count: filteredCategoryCounts.ALL_EXCEPT_VALID,
       color: "secondary",
     },
     {
       value: "QUANTITY_MISMATCH",
       label: "Mismatch",
-      count: categoryCounts.mismatch,
+      count: filteredCategoryCounts.QUANTITY_MISMATCH,
       color: "info",
     },
     {
       value: "MISSING",
       label: "Missing",
-      count: categoryCounts.missing,
+      count: filteredCategoryCounts.MISSING,
       color: "error",
     },
     {
       value: "EXCESS",
       label: "Unexpected",
-      count: categoryCounts.unexpected,
+      count: filteredCategoryCounts.EXCESS,
       color: "warning",
     },
     {
       value: "VALID",
       label: "Valid",
-      count: categoryCounts.valid,
+      count: filteredCategoryCounts.VALID,
       color: "success",
     },
   ];
@@ -510,10 +526,6 @@ export default function ReconciliationPanel({
     }
   };
 
-  const locationsWithVariance = detail.locations.filter(
-    (l) => l.totalVariances > 0,
-  ).length;
-
   const actionFor = (status: ReconVarianceStatus | null) => {
     if (isClosed) return { label: "View", icon: <Eye size={18} /> };
     if (status === "OPEN") {
@@ -533,7 +545,7 @@ export default function ReconciliationPanel({
               xs: "repeat(1, minmax(0, 1fr))",
               sm: "repeat(2, minmax(0, 1fr))",
               md: "repeat(3, minmax(0, 1fr))",
-              lg: "repeat(6, minmax(0, 1fr))",
+              lg: "repeat(8, minmax(0, 1fr))",
             },
             gap: 1.5,
           }}
@@ -541,16 +553,17 @@ export default function ReconciliationPanel({
           {headerCards}
           <ReconMetricCard
             title="Accuracy"
+            info={<AccuracyInfoCard />}
             value={
               detail.accuracy === null || pending
                 ? "—"
-                : `${detail.accuracy.toFixed(1)}%`
+                : `${Math.round(detail.accuracy)}%`
             }
             icon={<Gauge size={18} />}
             caption={
               detail.qtyAccuracy === null || pending
                 ? undefined
-                : `Qty ${detail.qtyAccuracy.toFixed(1)}%`
+                : `Qty ${Math.round(detail.qtyAccuracy)}%`
             }
             progress={pending ? 0 : (detail.accuracy ?? 0)}
             progressColor={
@@ -588,15 +601,18 @@ export default function ReconciliationPanel({
                 ? `${locationUploads?.length ?? 0} Locations`
                 : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
             }
-            caption={
-              pending
-                ? "Upload pending"
-                : detail.partial
-                  ? `${detail.uploadedLocations} uploaded · ${locationsWithVariance} with variance`
-                  : `${locationsWithVariance} with variance`
-            }
             icon={<MapPinned size={18} />}
             onClick={() => setLocationsOpen(true)}
+          />
+          <ReconMetricCard
+            title="Expected"
+            value={categoryCounts.expected}
+            icon={<Package size={18} />}
+          />
+          <ReconMetricCard
+            title="Scanned"
+            value={categoryCounts.scanned}
+            icon={<ScanLine size={18} />}
           />
         </Box>
       ) : (
@@ -623,13 +639,6 @@ export default function ReconciliationPanel({
                 pending
                   ? "—"
                   : `${detail.locations.length} ${detail.locations.length === 1 ? "Location" : "Locations"}`
-              }
-              caption={
-                pending
-                  ? undefined
-                  : detail.partial
-                    ? `${detail.uploadedLocations} uploaded · ${locationsWithVariance} with variance`
-                    : `${locationsWithVariance} with variance`
               }
               icon={<MapPinned size={18} />}
               onClick={pending ? undefined : () => setLocationsOpen(true)}
@@ -763,86 +772,6 @@ export default function ReconciliationPanel({
                     <MenuItem value="RESOLVED">Resolved</MenuItem>
                   </Select>
                 </FormControl>
-                <Box
-                  role="group"
-                  aria-label="Audit material counts and category filters"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.8,
-                    flex: "0 0 auto",
-                    minWidth: 0,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`Expected (${categoryCounts.expected})`}
-                    sx={{
-                      height: 30,
-                      fontWeight: 600,
-                      fontSize: "clamp(11px, 0.86vw, 13px)",
-                      "& .MuiChip-label": { px: 1 },
-                    }}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`Scanned (${categoryCounts.scanned})`}
-                    sx={{
-                      height: 30,
-                      fontWeight: 600,
-                      fontSize: "clamp(11px, 0.86vw, 13px)",
-                      "& .MuiChip-label": { px: 1 },
-                    }}
-                  />
-                  {categoryPills.map((item) => {
-                    const selected = issueFilter === item.value;
-                    return (
-                      <Chip
-                        key={item.value}
-                        size="small"
-                        label={`${item.label} (${item.count})`}
-                        color={
-                          item.value === CATEGORY_ALL ||
-                          item.value === CATEGORY_ALL_EXCEPT_VALID
-                            ? undefined
-                            : item.color
-                        }
-                        variant={selected ? "filled" : "outlined"}
-                        clickable
-                        onClick={() => {
-                          setIssueFilter(item.value);
-                          setPage(0);
-                        }}
-                        aria-pressed={selected}
-                        sx={{
-                          height: 30,
-                          fontWeight: selected ? 700 : 500,
-                          fontSize: "clamp(11px, 0.86vw, 13px)",
-                          "& .MuiChip-label": { px: 1 },
-                          ...(item.value === CATEGORY_ALL && {
-                            bgcolor: selected ? "#D4A017" : "transparent",
-                            color: selected ? "#FFFFFF" : "#9A7100",
-                            borderColor: "#D4A017",
-                            "&:hover": {
-                              bgcolor: selected ? "#BE8D12" : "#FFF3CD",
-                            },
-                          }),
-                          ...(item.value === CATEGORY_ALL_EXCEPT_VALID && {
-                            bgcolor: selected ? "#7B1FA2" : "transparent",
-                            color: selected ? "#FFFFFF" : "#7B1FA2",
-                            borderColor: "#7B1FA2",
-                            "&:hover": {
-                              bgcolor: selected ? "#6A1B9A" : "#F3E5F5",
-                            },
-                          }),
-                        }}
-                      />
-                    );
-                  })}
-                </Box>
               </>
             ) : (
               <>
@@ -909,6 +838,66 @@ export default function ReconciliationPanel({
               flexShrink: 0,
             }}
           >
+            {auditType === "bom" && (
+              <Box
+                role="group"
+                aria-label="Category filters"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.8,
+                  flex: "0 0 auto",
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {categoryPills.map((item) => {
+                  const selected = issueFilter === item.value;
+                  return (
+                    <Chip
+                      key={item.value}
+                      size="small"
+                      label={`${item.label} (${item.count})`}
+                      color={
+                        item.value === CATEGORY_ALL ||
+                        item.value === CATEGORY_ALL_EXCEPT_VALID
+                          ? undefined
+                          : item.color
+                      }
+                      variant={selected ? "filled" : "outlined"}
+                      clickable
+                      onClick={() => {
+                        setIssueFilter(item.value);
+                        setPage(0);
+                      }}
+                      aria-pressed={selected}
+                      sx={{
+                        height: 30,
+                        fontWeight: selected ? 700 : 500,
+                        fontSize: "clamp(11px, 0.86vw, 13px)",
+                        "& .MuiChip-label": { px: 1 },
+                        ...(item.value === CATEGORY_ALL && {
+                          bgcolor: selected ? "#D4A017" : "transparent",
+                          color: selected ? "#FFFFFF" : "#9A7100",
+                          borderColor: "#D4A017",
+                          "&:hover": {
+                            bgcolor: selected ? "#BE8D12" : "#FFF3CD",
+                          },
+                        }),
+                        ...(item.value === CATEGORY_ALL_EXCEPT_VALID && {
+                          bgcolor: selected ? "#7B1FA2" : "transparent",
+                          color: selected ? "#FFFFFF" : "#7B1FA2",
+                          borderColor: "#7B1FA2",
+                          "&:hover": {
+                            bgcolor: selected ? "#6A1B9A" : "#F3E5F5",
+                          },
+                        }),
+                      }}
+                    />
+                  );
+                })}
+              </Box>
+            )}
             <Tooltip title="Actions">
               <IconButton
                 aria-label="Discrepancy actions"
