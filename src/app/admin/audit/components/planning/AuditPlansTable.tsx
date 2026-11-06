@@ -125,7 +125,7 @@ export default function AuditPlansTable({ auditType }: Props) {
   };
 
   // Same rule as the "View" menu item: only these types have a view page
-  const viewAvailable = auditType === "bom" || auditType === "cycle_count";
+  const viewAvailable = auditType === "bom";
 
   const headCellSx = {
     fontWeight: 700,
@@ -610,7 +610,7 @@ export default function AuditPlansTable({ auditType }: Props) {
         }}
       >
         <MenuItem
-          disabled={auditType !== "bom" && auditType !== "cycle_count"}
+          disabled={auditType !== "bom"}
           onClick={() => {
             // View opens the reconciliation page (content depends on the audit status)
             if (menuAudit) router.push(auditViewRoute(menuAudit.id, auditType));

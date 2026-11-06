@@ -15,8 +15,17 @@ import {
   loadSavedParams,
   savePlanningState,
 } from "../utils/auditPlanningState";
+import {
+  USE_MOCK_CYCLE_COUNT,
+  listMockCycleCounts,
+} from "../utils/cycleCountMock";
 
-const EMPTY_STATUS_COUNTS = { ASSIGNED: 0, IN_PROGRESS: 0, RECONCILIATION_PENDING: 0, CLOSED: 0 };
+const EMPTY_STATUS_COUNTS = {
+  ASSIGNED: 0,
+  IN_PROGRESS: 0,
+  RECONCILIATION_PENDING: 0,
+  CLOSED: 0,
+};
 
 const EMPTY_PAGINATION: AuditPagination = {
   page: 1,
@@ -25,10 +34,6 @@ const EMPTY_PAGINATION: AuditPagination = {
   totalPages: 0,
 };
 
-/**
- * Rows of the Audit Planning table for ONE audit type (GET /audit/list?auditType=...).
- * The table is mounted with key={auditType}, so clicking another card starts with fresh params.
- */
 export function useAuditList(auditType: AuditType) {
   const [params, setParams] = useState<AuditListParams>(() =>
     loadSavedParams(auditType, {
@@ -42,13 +47,30 @@ export function useAuditList(auditType: AuditType) {
   const [audits, setAudits] = useState<AuditListRow[]>([]);
   const [pagination, setPagination] =
     useState<AuditPagination>(EMPTY_PAGINATION);
-  // false = the BE module of this audit type is not built yet
   const [available, setAvailable] = useState(true);
   const [loading, setLoading] = useState(true);
   const controllerRef = useRef<AbortController | null>(null);
 
   const fetchList = useCallback(
     async (p: AuditListParams) => {
+      // Cycle Count backend is not ready: show the mock audits (BOM and others are unaffected)
+      if (USE_MOCK_CYCLE_COUNT && auditType === "cycle_count") {
+        controllerRef.current?.abort();
+        const mock = listMockCycleCounts(p);
+        setStatusCounts(mock.statusCounts);
+        setAudits(mock.data);
+        setPagination(mock.pagination);
+        setAvailable(true);
+        setLoading(false);
+        if (mock.data.length === 0 && p.page > 1) {
+          setParams((prev) => ({
+            ...prev,
+            page: Math.max(1, mock.pagination.totalPages),
+          }));
+        }
+        return;
+      }
+      // Abort any previous request
       controllerRef.current?.abort();
       const controller = new AbortController();
       controllerRef.current = controller;
@@ -70,7 +92,7 @@ export function useAuditList(auditType: AuditType) {
         setPagination(meta);
         setAvailable(json.available !== false);
 
-        // Last row of the last page was removed -> go to the new last page
+        // If the current page is now empty, go back to the last page with data
         if (list.length === 0 && p.page > 1) {
           setParams((prev) => ({
             ...prev,
@@ -114,5 +136,13 @@ export function useAuditList(auditType: AuditType) {
     [],
   );
 
-  return { audits, pagination, params, loading, available, updateParams, statusCounts };
+  return {
+    audits,
+    pagination,
+    params,
+    loading,
+    available,
+    updateParams,
+    statusCounts,
+  };
 }

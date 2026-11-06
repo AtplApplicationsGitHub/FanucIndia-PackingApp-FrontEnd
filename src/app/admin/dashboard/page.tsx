@@ -25,6 +25,7 @@ import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 import FgLocation from "@/app/admin/components/dashboard/ManualFg";
 import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport";
+import FreeStockAdminScreen from "@/app/admin/components/free-stock/FreeStockAdminScreen";
 
 function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);
@@ -228,6 +229,9 @@ function AdminDashboardContent() {
               <Admindashboard />
             </motion.div>
           )}
+          {/* FREE STOCK VIEW */}
+          {admin.view === "free_stock" && <FreeStockAdminScreen />}
+
           {admin.view === "assignso" && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -418,6 +422,7 @@ function AdminDashboardContent() {
               <EfficiencyReport />
             </motion.div>
           )}
+
           {admin.error && (
             <Box
               sx={{

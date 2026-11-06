@@ -37,6 +37,8 @@ import {
   TrendingUp,
   ClipboardCheck,
   Layers3,
+  Database,
+  PackageOpen,
 } from "lucide-react";
 import UserMenu from "@/common/components/UserMenu";
 import { useRouter, usePathname } from "next/navigation";
@@ -56,7 +58,8 @@ export type ViewType =
   | "customer_report"
   | "fg_report"
   | "archived"
-  | "efficiency_report";
+  | "efficiency_report"
+  | "free_stock";
 
 type Props = {
   userName: string;
@@ -64,39 +67,27 @@ type Props = {
   setView: React.Dispatch<React.SetStateAction<ViewType>>;
   showBackButton?: boolean;
 };
+const DASHBOARD_ITEM = {
+  label: "DASHBOARD",
+  icon: <BarChart3 className="mr-1 h-4 w-4" />,
+  value: "home",
+};
 
-const allMenuItems = [
-  {
-    label: "DASHBOARD",
-    icon: <BarChart3 className="mr-1 h-4 w-4" />,
-    value: "home",
-  },
-  {
-    label: "ASSIGN SO",
-    icon: <ClipboardList className="mr-1 h-4 w-4" />,
-    value: "assignso",
-  },
-  {
-    label: "ORDER LIST",
-    icon: <ClipboardList className="mr-1 h-4 w-4" />,
-    value: "orders",
-  },
-  {
-    label: "SO SEARCH",
-    icon: <Search className="mr-1 h-4 w-4" />,
-    value: "so_search",
-  },
-  {
-    label: "DISPATCH",
-    icon: <Truck className="mr-1 h-4 w-4" />,
-    value: "dispatch",
-  },
-  {
-    label: "FG DASHBOARD",
-    icon: <Grid className="mr-1 h-4 w-4" />,
-    value: "fg_dashboard",
-  },
+const DIMS_MENU = [
+  { label: "ASSIGN SO", value: "assignso", icon: <ClipboardList size={16} /> },
+  { label: "ORDER LIST", value: "orders", icon: <ClipboardList size={16} /> },
+  { label: "SO SEARCH", value: "so_search", icon: <Search size={16} /> },
+  { label: "DISPATCH", value: "dispatch", icon: <Truck size={16} /> },
 ];
+
+const DIMS_VALUES: string[] = DIMS_MENU.map((d) => d.value);
+
+const FREE_STOCK_ITEM = {
+  label: "FREE - STOCK",
+  icon: <PackageOpen size={16} />,
+  value: "free_stock",
+};
+
 const AUDIT_MENU = [
   {
     label: "AUDIT PLANNING",
@@ -105,9 +96,11 @@ const AUDIT_MENU = [
     icon: <ClipboardCheck size={16} />,
   },
 ];
+
 const AUDIT_VALUES = AUDIT_MENU.map((a) => a.value);
 
 const REPORTS_MENU = [
+  { label: "FG DASHBOARD", value: "fg_dashboard", icon: <Grid size={16} /> },
   { label: "STATUS HUB", value: "status_hub", icon: <Activity size={16} /> },
   {
     label: "CUSTOMER REPORT",
@@ -128,28 +121,7 @@ const REPORTS_MENU = [
   },
 ];
 
-const REPORT_VALUES = [
-  "status_hub",
-  "customer_report",
-  "manual_fg",
-  "fg_report",
-  "archived",
-  "efficiency_report",
-];
-
-const MAX_VISIBLE_ITEMS = 8;
-
-// All items for the mobile drawer (flat list)
-const allDrawerItems = [
-  ...allMenuItems,
-  {
-    label: "REPORTS",
-    icon: <FileBarChart className="mr-1 h-4 w-4" />,
-    value: "__reports_header__",
-    isHeader: true,
-  },
-  ...REPORTS_MENU.map((r) => ({ ...r, isSubItem: true })),
-];
+const REPORT_VALUES: string[] = REPORTS_MENU.map((r) => r.value);
 
 export default function AdminDashboardHeader({
   userName,
@@ -161,14 +133,15 @@ export default function AdminDashboardHeader({
   const pathname = usePathname();
   const theme = useTheme();
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const menuOpen = Boolean(anchorEl);
+  const [dimsAnchor, setDimsAnchor] = useState<null | HTMLElement>(null);
+  const dimsOpen = Boolean(dimsAnchor);
 
   const [reportsAnchor, setReportsAnchor] = useState<null | HTMLElement>(null);
   const reportsOpen = Boolean(reportsAnchor);
   const [auditAnchor, setAuditAnchor] = useState<null | HTMLElement>(null); // NEW
   const auditOpen = Boolean(auditAnchor);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerDimsOpen, setDrawerDimsOpen] = useState(false);
   const [drawerReportsOpen, setDrawerReportsOpen] = useState(false);
   const [drawerAuditOpen, setDrawerAuditOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -230,17 +203,13 @@ export default function AdminDashboardHeader({
     return () => observer.disconnect();
   }, [updateNavbarLayout]);
 
-  const visibleItems = allMenuItems.slice(0, MAX_VISIBLE_ITEMS);
-  const hiddenItems = allMenuItems.slice(MAX_VISIBLE_ITEMS);
-
   const getIsSelected = (itemValue: string) => {
     if (pathname.startsWith("/so-search")) return itemValue === "so_search";
     return itemValue === view;
   };
 
-  const handleMoreClick = (event: React.MouseEvent<HTMLElement>) =>
-    setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+  const isDimsSelected =
+    pathname.startsWith("/so-search") || DIMS_VALUES.includes(view);
 
   const handleMenuItemClick = (value: string) => {
     if (value === "so_search") {
@@ -248,13 +217,11 @@ export default function AdminDashboardHeader({
     } else {
       setView(value as ViewType);
     }
-    handleMenuClose();
-    setDrawerOpen(false);
-  };
 
-  const isActiveItemHidden = hiddenItems.some((item) =>
-    getIsSelected(item.value),
-  );
+    setDimsAnchor(null);
+    setDrawerOpen(false);
+    setDrawerDimsOpen(false);
+  };
 
   const navButtonSx = (isSelected: boolean) => ({
     borderRadius: 0,
@@ -364,21 +331,51 @@ export default function AdminDashboardHeader({
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
-              {visibleItems.map((item) => {
-                const isSelected = getIsSelected(item.value);
-                return (
-                  <Button
-                    key={item.value}
-                    disableRipple
-                    variant="text"
-                    onClick={() => handleMenuItemClick(item.value)}
-                    sx={navButtonSx(isSelected)}
+              {/* DASHBOARD */}
+              <Button
+                disableRipple
+                variant="text"
+                onClick={() => handleMenuItemClick(DASHBOARD_ITEM.value)}
+                sx={navButtonSx(
+                  view === "home" && !pathname.startsWith("/so-search"),
+                )}
+              >
+                {DASHBOARD_ITEM.icon}
+                {DASHBOARD_ITEM.label}
+              </Button>
+
+              {/* DIMS dropdown */}
+              <Button
+                disableRipple
+                variant="text"
+                onClick={(e) => setDimsAnchor(e.currentTarget)}
+                endIcon={<ChevronDown size={16} />}
+                sx={navButtonSx(isDimsSelected)}
+              >
+                <Database className="mr-1 h-4 w-4" />
+                DIMS
+              </Button>
+
+              <Menu
+                anchorEl={dimsAnchor}
+                open={dimsOpen}
+                onClose={() => setDimsAnchor(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+                PaperProps={{ sx: { width: 250 } }}
+              >
+                {DIMS_MENU.map((d) => (
+                  <MenuItem
+                    key={d.value}
+                    selected={getIsSelected(d.value)}
+                    onClick={() => handleMenuItemClick(d.value)}
                   >
-                    {item.icon}
-                    {item.label}
-                  </Button>
-                );
-              })}
+                    <ListItemIcon>{d.icon}</ListItemIcon>
+                    <ListItemText>{d.label}</ListItemText>
+                  </MenuItem>
+                ))}
+              </Menu>
+
               {/* REPORTS dropdown */}
               <Button
                 disableRipple
@@ -413,7 +410,7 @@ export default function AdminDashboardHeader({
                 ))}
               </Menu>
 
-              {/* AUDIT dropdown (NEW, next to Reports) */}
+              {/* AUDIT dropdown */}
               <Button
                 disableRipple
                 variant="text"
@@ -460,53 +457,16 @@ export default function AdminDashboardHeader({
                 ))}
               </Menu>
 
-              {/* More overflow */}
-              {hiddenItems.length > 0 && (
-                <>
-                  <Button
-                    disableRipple
-                    variant="text"
-                    onClick={handleMoreClick}
-                    endIcon={<ChevronDown size={20} />}
-                    sx={navButtonSx(isActiveItemHidden)}
-                  >
-                    More
-                  </Button>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={menuOpen}
-                    onClose={handleMenuClose}
-                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                    transformOrigin={{ vertical: "top", horizontal: "right" }}
-                    PaperProps={{
-                      style: { maxHeight: 48 * 4.5, width: "20ch" },
-                      sx: { bgcolor: theme.palette.primary.main, boxShadow: 3 },
-                    }}
-                  >
-                    {hiddenItems.map((item) => {
-                      const isSelected = getIsSelected(item.value);
-                      return (
-                        <MenuItem
-                          key={item.value}
-                          selected={isSelected}
-                          onClick={() => handleMenuItemClick(item.value)}
-                          sx={{
-                            fontWeight: isSelected ? 700 : 500,
-                            color: theme.palette.primary.contrastText,
-                            "&:hover": { bgcolor: "rgba(0,0,0,0.08)" },
-                            "&.Mui-selected": {
-                              bgcolor: "rgba(0,0,0,0.08)",
-                              "&:hover": { bgcolor: "rgba(0,0,0,0.12)" },
-                            },
-                          }}
-                        >
-                          {item.icon} {item.label}
-                        </MenuItem>
-                      );
-                    })}
-                  </Menu>
-                </>
-              )}
+              {/* FREE - STOCK */}
+              <Button
+                disableRipple
+                variant="text"
+                onClick={() => handleMenuItemClick(FREE_STOCK_ITEM.value)}
+                sx={navButtonSx(view === "free_stock")}
+              >
+                {FREE_STOCK_ITEM.icon}
+                {FREE_STOCK_ITEM.label}
+              </Button>
             </Box>
           </Box>
 
@@ -546,6 +506,7 @@ export default function AdminDashboardHeader({
           setDrawerOpen(false);
           setDrawerReportsOpen(false);
           setDrawerAuditOpen(false);
+          setDrawerDimsOpen(false);
         }}
         PaperProps={{
           sx: {
@@ -570,6 +531,7 @@ export default function AdminDashboardHeader({
               setDrawerOpen(false);
               setDrawerReportsOpen(false);
               setDrawerAuditOpen(false);
+              setDrawerDimsOpen(false);
             }}
             sx={{
               color: theme.palette.primary.contrastText,
@@ -584,47 +546,129 @@ export default function AdminDashboardHeader({
         {/* Nav Items */}
         <List disablePadding>
           {/* Main items */}
-          {allMenuItems.map((item) => {
-            const isSelected = getIsSelected(item.value);
-            return (
-              <ListItem key={item.value} disablePadding>
-                <ListItemButton
-                  onClick={() => handleMenuItemClick(item.value)}
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    borderLeft: isSelected
-                      ? `4px solid ${theme.palette.primary.contrastText}`
-                      : "4px solid transparent",
-                    bgcolor: isSelected
-                      ? "rgba(255,255,255,0.1)"
-                      : "transparent",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  <ListItemIcon
+
+          {/* DASHBOARD */}
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => handleMenuItemClick(DASHBOARD_ITEM.value)}
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderLeft:
+                  view === "home"
+                    ? `4px solid ${theme.palette.primary.contrastText}`
+                    : "4px solid transparent",
+                bgcolor:
+                  view === "home" ? "rgba(255,255,255,0.1)" : "transparent",
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: theme.palette.primary.contrastText,
+                  minWidth: 36,
+                }}
+              >
+                {DASHBOARD_ITEM.icon}
+              </ListItemIcon>
+
+              <ListItemText
+                primary={DASHBOARD_ITEM.label}
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  color: theme.palette.primary.contrastText,
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+
+          {/* DIMS DROPDOWN */}
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => setDrawerDimsOpen((prev) => !prev)}
+              aria-expanded={drawerDimsOpen}
+              sx={{
+                px: 2,
+                py: 1.5,
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: theme.palette.primary.contrastText,
+                  minWidth: 32,
+                }}
+              >
+                <Database size={16} />
+              </ListItemIcon>
+
+              <ListItemText
+                primary="DIMS"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                  color: theme.palette.primary.contrastText,
+                }}
+              />
+
+              <ChevronDown
+                size={18}
+                style={{
+                  transform: drawerDimsOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+
+          {drawerDimsOpen &&
+            DIMS_MENU.map((d) => {
+              const isSelected = getIsSelected(d.value);
+
+              return (
+                <ListItem key={d.value} disablePadding>
+                  <ListItemButton
+                    onClick={() => handleMenuItemClick(d.value)}
                     sx={{
-                      color: theme.palette.primary.contrastText,
-                      minWidth: 36,
+                      pl: 4,
+                      py: 1.2,
+                      borderLeft: isSelected
+                        ? `4px solid ${theme.palette.primary.contrastText}`
+                        : "4px solid transparent",
+                      bgcolor: isSelected
+                        ? "rgba(255,255,255,0.1)"
+                        : "transparent",
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.08)",
+                      },
                     }}
                   >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    primaryTypographyProps={{
-                      fontWeight: isSelected ? 700 : 600,
-                      fontSize: "0.85rem",
-                      letterSpacing: 0.5,
-                      color: theme.palette.primary.contrastText,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-          {/* REPORTS sub-section label */}
+                    <ListItemIcon
+                      sx={{
+                        color: theme.palette.primary.contrastText,
+                        minWidth: 32,
+                      }}
+                    >
+                      {d.icon}
+                    </ListItemIcon>
+
+                    <ListItemText
+                      primary={d.label}
+                      primaryTypographyProps={{
+                        fontWeight: isSelected ? 700 : 600,
+                        fontSize: "0.82rem",
+                        color: theme.palette.primary.contrastText,
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
 
           <ListItem disablePadding>
             <ListItemButton
@@ -788,6 +832,46 @@ export default function AdminDashboardHeader({
                 </ListItem>
               );
             })}
+
+          {/* FREE - STOCK */}
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => handleMenuItemClick(FREE_STOCK_ITEM.value)}
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderLeft:
+                  view === "free_stock"
+                    ? `4px solid ${theme.palette.primary.contrastText}`
+                    : "4px solid transparent",
+                bgcolor:
+                  view === "free_stock"
+                    ? "rgba(255,255,255,0.1)"
+                    : "transparent",
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: theme.palette.primary.contrastText,
+                  minWidth: 36,
+                }}
+              >
+                {FREE_STOCK_ITEM.icon}
+              </ListItemIcon>
+
+              <ListItemText
+                primary={FREE_STOCK_ITEM.label}
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  color: theme.palette.primary.contrastText,
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Drawer>
     </>

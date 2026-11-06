@@ -71,7 +71,9 @@ export default function AuditPlanning() {
             type={card.type}
             count={counts[card.type]}
             selected={card.type === selected}
-            createDisabled={card.type !== "bom"}
+            createDisabled={
+              card.type !== "bom" && card.type !== "cycle_count"
+            }
             onSelect={() =>
               router.replace(planningRoute(card.type), { scroll: false })
             }

@@ -1,856 +1,501 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { planningRoute } from "../../utils/auditRoutes";
 import {
-  Alert,
-  Autocomplete,
+  alpha,
   Box,
-  Checkbox,
   Chip,
   CircularProgress,
-  Collapse,
-  Divider,
-  FormControlLabel,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs, { Dayjs } from "dayjs";
+import { Users } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
-import ExcelUpload from "../shared/ExcelUpload";
+import ExcelUploadButton from "../shared/ExcelUploadButton";
+import BomAssignPreview from "../bom/BomAssignPreview";
+import OperatorListDialog from "../bom/OperatorListDialog";
+import { useAuditOperators } from "../../hooks/useAuditOperators";
+import { useCreateCycleCount } from "../../hooks/useCreateCycleCount";
+import { usePreviewCycleCount } from "../../hooks/usePreviewCycleCount";
+import { planningRoute } from "../../utils/auditRoutes";
+import type { ParsedCycleCountFile } from "../../utils/cycleCountExcel";
+import type { AuditOperator, AuditRow } from "../../types/audit";
 
-import {
-  createCycleCount,
-  loadCycleCountOperators,
-  previewCycleCountPlan,
-  uploadCycleCountStock,
-} from "../../utils/cycleCountApi";
-import {
-  notifyAuditsUpdated,
-  showGlobalMessage,
-} from "../../utils/auditEvents";
-import {
-  CNC_FILTER_LABELS,
-  SELECTION_METHOD_LABELS,
-  localYmd,
-} from "../../utils/cycleCountLabels";
-import type {
-  CncFilter,
-  CycleCountOperator,
-  MaterialClass,
-  PlanCriteria,
-  PlanPreview,
-  SelectionMethod,
-  StockUpload,
-} from "../../types/cycleCount";
-import CycleCountPlanPreviewTable from "./CycleCountPlanPreviewTable";
+const MAX_AUDIT_NAME = 255;
+const DATE_FORMAT = "DD-MM-YYYY";
+const API_DATE_FORMAT = "YYYY-MM-DD";
 
-const CLASSES: MaterialClass[] = ["A", "B", "C"];
-const MAX_LOCATIONS = 500;
-const DEFAULT_RANGE_DAYS = 30;
-
-/** Small numbered section box (same look as the BOM create dialog steps). */
-function Step({
-  no,
-  title,
-  hint,
-  children,
-}: {
-  no: string;
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Paper
-      variant="outlined"
-      sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}
-    >
-      <Box>
-        <Typography variant="body2" fontWeight={700}>
-          {no}. {title}
-        </Typography>
-        {hint && (
-          <Typography variant="body2" color="text.secondary">
-            {hint}
-          </Typography>
-        )}
-      </Box>
-      {children}
-    </Paper>
+const showError = (message: string) =>
+  window.dispatchEvent(
+    new CustomEvent("show-global-message", {
+      detail: { message, severity: "error" },
+    }),
   );
-}
 
-function Stat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <Box
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 1,
-        px: 1.5,
-        py: 0.75,
-        minWidth: 120,
-      }}
-    >
-      <Typography fontWeight={700} fontSize={18}>
-        {value}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-    </Box>
-  );
-}
+const UPLOAD_HINT =
+  "Upload a .xlsx file with Location, Qty and Material columns. Operator ID is optional - operators can be assigned after uploading.";
 
 /*
- * Cycle Count - Create audit (Phase A on the web):
- *   1 Upload SAP LX03 stock (validated on the server, zero-stock / invalid rows excluded)
- *   2 Movement period: date range + "Include archived DIMS data"
- *   3 Plan: busiest / random / manual, number of locations, CNC, A/B/C -> Generate plan (preview)
- *   4 Audit name + operators -> Release (one audit per operator)
+ * Date rules (e.g. today = 5 Nov):
+ *  - no future dates (latest = 5 Nov)
+ *  - nothing older than one month (earliest = 5 Oct)
+ *  - the range itself can be at most one month
  */
+const today = () => dayjs().startOf("day");
+const earliestAllowed = () => today().subtract(1, "month");
+
+const getRangeError = (from: Dayjs | null, to: Dayjs | null): string => {
+  if (!from || !to) return "";
+  if (!from.isValid() || !to.isValid()) return "Enter a valid date range";
+  if (to.isBefore(from, "day")) return "To date cannot be before From date";
+  if (from.isBefore(earliestAllowed(), "day"))
+    return `Dates older than ${earliestAllowed().format(DATE_FORMAT)} are not allowed`;
+  if (to.isAfter(today(), "day")) return "Future dates are not allowed";
+  if (to.isAfter(from.add(1, "month"), "day"))
+    return "Date range cannot be more than one month";
+  return "";
+};
+
+type PreviewData = {
+  rows: AuditRow[];
+  fileOperators: Record<string, AuditOperator>;
+};
+
+// Matches the Operator IDs written in the file with the operator list
+const toPreviewData = (
+  parsedFile: ParsedCycleCountFile,
+  operatorList: AuditOperator[],
+): PreviewData => {
+  const fileOperators: Record<string, AuditOperator> = {};
+  for (const [storageBin, operatorId] of Object.entries(
+    parsedFile.binOperatorIds,
+  )) {
+    const operator = operatorList.find((o) => o.id === operatorId);
+    if (!operator) {
+      throw new Error(
+        `Operator ID ${operatorId} (location ${storageBin}) was not found.`,
+      );
+    }
+    fileOperators[storageBin] = operator;
+  }
+  return { rows: parsedFile.rows, fileOperators };
+};
+
 export default function CreateCycleCountForm() {
   const router = useRouter();
-  // 1 - stock
-  const [file, setFile] = useState<File | null>(null);
-  const [upload, setUpload] = useState<StockUpload | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [showExcluded, setShowExcluded] = useState(false);
-  // 2 - movement period
-  const [fromDate, setFromDate] = useState(() => localYmd(DEFAULT_RANGE_DAYS));
-  const [toDate, setToDate] = useState(() => localYmd(0));
-  const [includeArchived, setIncludeArchived] = useState(true);
-  // 3 - plan
-  const [method, setMethod] = useState<SelectionMethod>("BUSIEST");
-  const [count, setCount] = useState(20);
-  const [cnc, setCnc] = useState<CncFilter>("BOTH");
-  const [classes, setClasses] = useState<MaterialClass[]>([...CLASSES]);
-  const [preview, setPreview] = useState<PlanPreview | null>(null);
-  const [manualSel, setManualSel] = useState<Set<string>>(new Set());
-  const [previewing, setPreviewing] = useState(false);
-  // 4 - assign
+
+  const { createCycleCount, loading: creating } = useCreateCycleCount();
+  const { previewCycleCount, loading } = usePreviewCycleCount();
+
   const [auditName, setAuditName] = useState("");
-  const [operators, setOperators] = useState<CycleCountOperator[]>([]);
-  const [selectedOps, setSelectedOps] = useState<CycleCountOperator[]>([]);
-  const [releasing, setReleasing] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
+  const [toDate, setToDate] = useState<Dayjs | null>(null);
 
-  const [error, setError] = useState("");
+  const [parsed, setParsed] = useState<PreviewData | null>(null);
+  const [assignments, setAssignments] = useState<Record<string, AuditOperator>>(
+    {},
+  );
+  const [operatorsOpen, setOperatorsOpen] = useState(false);
+  const { operators: operatorList, loading: operatorsLoading } =
+    useAuditOperators(true);
 
-  useEffect(() => {
-    let active = true;
+  const parseToken = useRef(0);
 
-    loadCycleCountOperators()
-      .then((data) => {
-        if (active) setOperators(data);
-      })
-      .catch((e) => {
-        if (active) {
-          setError(
-            e instanceof Error ? e.message : "Unable to load operators.",
-          );
-        }
-      });
+  const binsOfFile = useMemo(
+    () => [...new Set((parsed?.rows ?? []).map((row) => row.storage))],
+    [parsed],
+  );
+  const locationCount = binsOfFile.length;
+  const unassignedCount = binsOfFile.filter((bin) => !assignments[bin]).length;
 
-    return () => {
-      active = false;
-    };
-  }, []);
+  const cleanName = auditName.replace(/\s+/g, " ").trim();
 
-  const handleClose = () => {
-    if (uploading || previewing || releasing) return;
-
-    router.push(planningRoute("cycle_count"));
-  };
-
-  /** Any change of the criteria makes the shown plan outdated. */
-  const invalidatePlan = () => {
-    setPreview(null);
-    setManualSel(new Set());
-  };
-
-  const criteria = (): PlanCriteria | null =>
-    upload
-      ? {
-          stockUploadId: upload.id,
-          fromDate,
-          toDate,
-          includeArchived,
-          selectionMethod: method,
-          cncFilter: cnc,
-          materialClasses: classes,
-        }
-      : null;
-
-  // ---------------------------------------------------------------- 1 upload
-
-  const handleUpload = async () => {
-    if (!file) {
-      setError("Please choose the LX03 stock file.");
-      return;
-    }
-    setError("");
-    setUploading(true);
-    try {
-      const result = await uploadCycleCountStock(file);
-      setUpload(result);
-      invalidatePlan();
-      if (!result.hasCncColumn) setCnc("BOTH");
-      if (!result.hasClassColumn) setClasses([...CLASSES]);
-    } catch (e) {
-      setUpload(null);
-      setError(
-        e instanceof Error ? e.message : "Failed to upload the stock file.",
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // ---------------------------------------------------------------- 3 generate plan
-
-  const rangeError =
-    fromDate && toDate && fromDate > toDate
-      ? "From date must be on or before To date."
+  const nameError = !cleanName
+    ? "Audit name is required"
+    : cleanName.length > MAX_AUDIT_NAME
+      ? `Audit name must be at most ${MAX_AUDIT_NAME} characters`
       : "";
 
-  const handleGenerate = async () => {
-    const c = criteria();
-    if (!c) return;
-    if (rangeError) {
-      setError(rangeError);
-      return;
-    }
-    if (!classes.length) {
-      setError("Select at least one material class.");
-      return;
-    }
-    setError("");
-    setPreviewing(true);
-    try {
-      const result = await previewCycleCountPlan(
-        method === "MANUAL"
-          ? { ...c, storageBins: [] }
-          : { ...c, locationCount: count },
-      );
-      setPreview(result);
-      setManualSel(new Set());
-    } catch (e) {
-      setPreview(null);
-      setError(e instanceof Error ? e.message : "Failed to generate the plan.");
-    } finally {
-      setPreviewing(false);
+  const showNameError = nameTouched && !!nameError;
+  const rangeError = getRangeError(fromDate, toDate);
+  const busy = creating || loading;
+  const locked = !!parsed; // after UPLOAD: name, file and dates cannot be edited
+
+  // FROM: between (today - 1 month) and today (or the chosen TO)
+  const fromMin = earliestAllowed();
+  const fromMax = toDate && toDate.isValid() ? toDate : today();
+  // TO: from the chosen FROM, at most one month later and never in the future
+  const toMin = fromDate && fromDate.isValid() ? fromDate : earliestAllowed();
+  const toMax =
+    fromDate && fromDate.isValid() && fromDate.add(1, "month").isBefore(today())
+      ? fromDate.add(1, "month")
+      : today();
+
+  const goBack = () => {
+    setParsed(null);
+    setAssignments({});
+  };
+
+  const assignBin = (storageBin: string, operator: AuditOperator) =>
+    setAssignments((prev) => ({ ...prev, [storageBin]: operator }));
+
+  const handleFromChange = (value: Dayjs | null) => {
+    if (locked || busy) return;
+    setFromDate(value);
+    // The chosen TO must stay inside the new one-month window
+    if (
+      value?.isValid() &&
+      toDate?.isValid() &&
+      (toDate.isBefore(value, "day") ||
+        toDate.isAfter(value.add(1, "month"), "day"))
+    ) {
+      setToDate(null);
     }
   };
 
-  /** Bins that will be released: the server plan, or the ticked candidates (MANUAL). */
-  const planRows = useMemo(() => {
-    if (!preview) return [];
-    if (method === "MANUAL")
-      return (preview.candidates ?? []).filter((r) =>
-        manualSel.has(r.storageBin),
-      );
-    return preview.plan;
-  }, [preview, method, manualSel]);
+  const handleToChange = (value: Dayjs | null) => {
+    if (locked || busy) return;
+    setToDate(value);
+  };
 
-  // ---------------------------------------------------------------- 4 release
+  // Handle Excel file selection
+  const handleFileChange = (selected: File | null) => {
+    if (parsed || creating || loading) return;
 
-  const shareInfo = useMemo(() => {
-    if (!planRows.length || !selectedOps.length) return "";
-    const n = Math.min(selectedOps.length, planRows.length);
-    const size = Math.ceil(planRows.length / n);
-    return `${planRows.length} location${planRows.length === 1 ? "" : "s"} shared between ${n} operator${n === 1 ? "" : "s"} (about ${size} each) → ${n} audit${n === 1 ? "" : "s"} will be created.`;
-  }, [planRows, selectedOps]);
+    parseToken.current += 1;
 
-  const handleRelease = async () => {
-    const c = criteria();
-    if (!c || !planRows.length) return;
-    if (!auditName.trim()) {
-      setError("Please enter the Audit Name.");
+    setFile(selected);
+    setParsed(null);
+  };
+
+  // Validate Excel and show preview
+  const handlePreview = async () => {
+    setNameTouched(true);
+
+    if (nameError) {
+      showError(nameError);
       return;
     }
-    if (!selectedOps.length) {
-      setError("Please select at least one operator.");
+    if (!file) {
+      showError("Please upload the Excel file.");
       return;
     }
-    if (selectedOps.length > planRows.length) {
-      setError(
-        `The plan has ${planRows.length} location(s). Select at most ${planRows.length} operator(s).`,
-      );
+    if (!fromDate || !toDate) {
+      showError("Please select the From and To dates.");
       return;
     }
-    setError("");
-    setReleasing(true);
+    if (rangeError) {
+      showError(rangeError);
+      return;
+    }
+    if (operatorsLoading) {
+      showError("Operators are still loading. Please try again in a moment.");
+      return;
+    }
+
+    const token = ++parseToken.current;
+
     try {
-      const result = await createCycleCount({
-        ...c,
-        auditName: auditName.trim(),
-        storageBins: planRows.map((r) => r.storageBin),
-        operatorIds: selectedOps.map((o) => o.id),
+      const result = toPreviewData(await previewCycleCount(file), operatorList);
+
+      if (token !== parseToken.current) return;
+
+      setAssignments({ ...result.fileOperators });
+      setParsed(result);
+    } catch (err) {
+      if (token !== parseToken.current) return;
+
+      showError(
+        err instanceof Error ? err.message : "Unable to read the Excel file.",
+      );
+    }
+  };
+
+  // Release audit after successful preview
+  const confirmAudit = async () => {
+    setNameTouched(true);
+
+    if (
+      !parsed ||
+      !file ||
+      !fromDate ||
+      !toDate ||
+      nameError ||
+      rangeError ||
+      creating ||
+      unassignedCount > 0
+    )
+      return;
+
+    try {
+      await createCycleCount({
+        file,
+        auditName: cleanName,
+        movementFrom: fromDate.format(API_DATE_FORMAT),
+        movementTo: toDate.format(API_DATE_FORMAT),
+        binOperators: binsOfFile.map((storageBin) => ({
+          storageBin,
+          operator: assignments[storageBin],
+        })),
       });
-      showGlobalMessage(result.message, "success");
-      notifyAuditsUpdated();
 
       router.replace(planningRoute("cycle_count"));
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Failed to release the Cycle Count audit.",
+    } catch (err) {
+      goBack();
+
+      showError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create Cycle Count audit.",
       );
-    } finally {
-      setReleasing(false);
     }
   };
 
-  const busy = uploading || previewing || releasing;
-
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: 1400,
-        mx: "auto",
-        p: { xs: 2, md: 3 },
-        bgcolor: "background.paper",
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 2,
-      }}
-    >
-      <Box
-        component="header"
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontWeight: 700,
-          fontSize: "20px",
-          letterSpacing: 0.5,
-          color: "error.main",
-          pb: 1,
-          position: "relative",
-        }}
-      >
-        CYCLE COUNT – CREATE AUDIT
-      </Box>
-      <Divider />
-
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2.5 }}>
-        {/* ---------------- 1. Stock data ---------------- */}
-        <Step
-          no="1"
-          title="Upload SAP stock (LX03)"
-          hint="Required columns: StorageBin, Material, Avail. Rows with zero stock or invalid data are left out of the plan."
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 1.5,
-              alignItems: { md: "center" },
-            }}
-          >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <ExcelUpload
-                file={file}
-                onChange={(f) => {
-                  setFile(f);
-                  setUpload(null);
-                  invalidatePlan();
-                }}
-              />
-            </Box>
-            <CommonButton
-              onClick={handleUpload}
-              disabled={!file || busy || Boolean(upload)}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ width: "100%" }}>
+        <Box sx={{ px: 2, pt: 0, pb: 2, mt: -1 }}>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Paper
+              elevation={0}
+              sx={(t) => ({
+                width: "fit-content",
+                maxWidth: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                px: 2,
+                py: 1,
+                borderRadius: 2,
+                border: `1px solid ${t.palette.divider}`,
+                boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
+                bgcolor: "background.paper",
+              })}
             >
-              {uploading ? (
-                <CircularProgress size={22} color="inherit" />
-              ) : upload ? (
-                "UPLOADED"
-              ) : (
-                "UPLOAD & VALIDATE"
+              {parsed && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    component="h2"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: 18,
+                      letterSpacing: 0.5,
+                      color: "error.main",
+                      textAlign: "center",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    AUDIT PREVIEW
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={`${locationCount} ${locationCount === 1 ? "location" : "locations"}`}
+                    sx={(t) => ({
+                      fontWeight: 600,
+                      bgcolor: alpha(t.palette.primary.main, 0.3),
+                    })}
+                  />
+                </Box>
               )}
-            </CommonButton>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 1.5,
+                }}
+              >
+                {/* AUDIT NAME */}
+                <TextField
+                  size="small"
+                  label="Audit name"
+                  name="auditName"
+                  required
+                  autoComplete="off"
+                  value={auditName}
+                  disabled={busy}
+                  error={showNameError}
+                  onChange={(e) => {
+                    if (locked || busy) return;
+
+                    setAuditName(e.target.value.slice(0, MAX_AUDIT_NAME));
+                  }}
+                  slotProps={{ input: { readOnly: locked } }}
+                  sx={{
+                    width: { xs: "100%", sm: 300 },
+                    "& .MuiFormLabel-asterisk": { color: "error.main" },
+                  }}
+                />
+
+                {/* DATE RANGE (max one month, no future dates) */}
+                <DatePicker
+                  label="FROM"
+                  value={fromDate}
+                  onChange={handleFromChange}
+                  format={DATE_FORMAT}
+                  minDate={fromMin}
+                  maxDate={fromMax}
+                  disabled={busy}
+                  readOnly={locked}
+                  slotProps={{
+                    field: {
+                      clearable: !locked,
+                      onClear: () => handleFromChange(null),
+                    },
+                    textField: {
+                      size: "small",
+                      variant: "outlined",
+                      error: !!rangeError,
+                      sx: {
+                        minWidth: 180,
+                        width: 185,
+                        bgcolor: "background.paper",
+                      },
+                    },
+                  }}
+                />
+                <DatePicker
+                  label="TO"
+                  value={toDate}
+                  onChange={handleToChange}
+                  format={DATE_FORMAT}
+                  minDate={toMin}
+                  maxDate={toMax}
+                  disabled={busy}
+                  readOnly={locked}
+                  slotProps={{
+                    field: {
+                      clearable: !locked,
+                      onClear: () => handleToChange(null),
+                    },
+                    textField: {
+                      size: "small",
+                      variant: "outlined",
+                      error: !!rangeError,
+                      sx: {
+                        minWidth: 180,
+                        width: 185,
+                        bgcolor: "background.paper",
+                      },
+                    },
+                  }}
+                />
+
+                {/* EXCEL UPLOAD */}
+                <Box
+                  sx={{ minWidth: 0, display: "flex", alignItems: "center" }}
+                >
+                  <ExcelUploadButton
+                    file={file}
+                    onChange={handleFileChange}
+                    onError={showError}
+                    disabled={busy}
+                    readOnly={locked}
+                    uploadTooltip={UPLOAD_HINT}
+                  />
+                </Box>
+
+                {!parsed && (
+                  <CommonButton
+                    onClick={handlePreview}
+                    disabled={
+                      !file || !!nameError || !fromDate || !toDate || busy
+                    }
+                  >
+                    {loading ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      "UPLOAD"
+                    )}
+                  </CommonButton>
+                )}
+
+                <CommonButton onClick={goBack} disabled={!parsed || creating}>
+                  BACK
+                </CommonButton>
+
+                <Tooltip
+                  arrow
+                  title={
+                    parsed && unassignedCount > 0
+                      ? `Assign an operator to every storage bin (${unassignedCount} left)`
+                      : ""
+                  }
+                >
+                  <span>
+                    <CommonButton
+                      onClick={confirmAudit}
+                      disabled={!parsed || creating || unassignedCount > 0}
+                    >
+                      {creating ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        "RELEASE AUDIT"
+                      )}
+                    </CommonButton>
+                  </span>
+                </Tooltip>
+
+                <Tooltip arrow title="Operator list (User IDs)">
+                  <span>
+                    <CommonButton
+                      aria-label="Operator list"
+                      onClick={() => setOperatorsOpen(true)}
+                      sx={{ minWidth: 40, px: 1 }}
+                    >
+                      <Users size={18} />
+                    </CommonButton>
+                  </span>
+                </Tooltip>
+              </Box>
+            </Paper>
           </Box>
 
-          {upload && (
-            <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                <Stat label="Rows in file" value={upload.totalRows} />
-                <Stat label="Valid rows" value={upload.validRows} />
-                <Stat label="Excluded rows" value={upload.excludedRows} />
-                <Stat label="Locations" value={upload.totalLocations} />
-                <Stat
-                  label="Packages (Cert. No.)"
-                  value={upload.hasCertNoColumn ? upload.totalPackages : "–"}
-                />
-              </Box>
-              {upload.excludedByReason.length > 0 && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 1,
-                    alignItems: "center",
-                  }}
-                >
-                  {upload.excludedByReason.map((r) => (
-                    <Chip
-                      key={r.reason}
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      label={`${r.label}: ${r.count}`}
-                    />
-                  ))}
-                  <CommonButton
-                    size="small"
-                    onClick={() => setShowExcluded((v) => !v)}
-                    sx={{ height: 28 }}
-                  >
-                    {showExcluded ? "Hide excluded rows" : "View excluded rows"}
-                  </CommonButton>
-                </Box>
-              )}
-              <Collapse in={showExcluded} unmountOnExit>
-                <Box
-                  sx={{
-                    maxHeight: 260,
-                    overflow: "auto",
-                    border: 1,
-                    borderColor: "divider",
-                    borderRadius: 1,
-                  }}
-                >
-                  <Table size="small" stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Excel Row</TableCell>
-                        <TableCell>Reason</TableCell>
-                        <TableCell>Storage Bin</TableCell>
-                        <TableCell>Material</TableCell>
-                        <TableCell align="right">Avail</TableCell>
-                        <TableCell>Cert. No.</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {upload.excludedSample.map((r) => (
-                        <TableRow key={r.rowNo}>
-                          <TableCell>{r.rowNo}</TableCell>
-                          <TableCell>{r.reasonLabel}</TableCell>
-                          <TableCell>{r.storageBin || "–"}</TableCell>
-                          <TableCell>{r.materialCode || "–"}</TableCell>
-                          <TableCell align="right">{r.qty ?? "–"}</TableCell>
-                          <TableCell>{r.certNo ?? "–"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-                {upload.excludedSample.length < upload.excludedRows && (
-                  <Typography variant="caption" color="text.secondary">
-                    Showing the first {upload.excludedSample.length} of{" "}
-                    {upload.excludedRows} excluded rows.
-                  </Typography>
-                )}
-              </Collapse>
-              {(!upload.hasCncColumn ||
-                !upload.hasClassColumn ||
-                !upload.hasCertNoColumn) && (
-                <Alert severity="info">
-                  {[
-                    !upload.hasCertNoColumn &&
-                      "no Cert. No. column (packages cannot be counted)",
-                    !upload.hasCncColumn &&
-                      "no CNC column (CNC filter not available)",
-                    !upload.hasClassColumn &&
-                      "no material class column (A / B / C filter not available)",
-                  ]
-                    .filter(Boolean)
-                    .join("; ")
-                    .replace(/^./, (s) => `This file has ${s}`)}
-                  .
-                </Alert>
-              )}
-            </>
+          {loading && (
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5 }}
+            >
+              <CircularProgress size={18} />
+              <Typography variant="body2" color="text.secondary">
+                Reading the file and checking operators...
+              </Typography>
+            </Box>
           )}
-        </Step>
 
-        {upload && (
-          <>
-            {/* ---------------- 2. Movement period ---------------- */}
-            <Step
-              no="2"
-              title="Movement period"
-              hint="DIMS transfer orders in this period decide which locations are busy. Archived orders can be included."
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 2,
-                  alignItems: "center",
-                }}
-              >
-                <TextField
-                  label="From"
-                  type="date"
-                  size="small"
-                  value={fromDate}
-                  onChange={(e) => {
-                    setFromDate(e.target.value);
-                    invalidatePlan();
-                  }}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ max: toDate || undefined }}
-                  error={Boolean(rangeError)}
-                />
-                <TextField
-                  label="To"
-                  type="date"
-                  size="small"
-                  value={toDate}
-                  onChange={(e) => {
-                    setToDate(e.target.value);
-                    invalidatePlan();
-                  }}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ min: fromDate || undefined }}
-                  error={Boolean(rangeError)}
-                  helperText={rangeError || undefined}
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={includeArchived}
-                      onChange={(e) => {
-                        setIncludeArchived(e.target.checked);
-                        invalidatePlan();
-                      }}
-                    />
-                  }
-                  label="Include archived DIMS data"
-                />
-              </Box>
-            </Step>
+          {/* AUDIT PREVIEW */}
+          <Box sx={{ mt: 1.5 }}>
+            <BomAssignPreview
+              key={parsed ? "parsed" : "empty"}
+              rows={parsed?.rows ?? []}
+              disabled={!parsed}
+              assignments={assignments}
+              operators={operatorList}
+              operatorsLoading={operatorsLoading}
+              onAssign={assignBin}
+            />
+          </Box>
 
-            {/* ---------------- 3. Plan ---------------- */}
-            <Step
-              no="3"
-              title="Plan the count"
-              hint="Choose how many locations and how to pick them, then generate the plan."
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 2.5,
-                  alignItems: "flex-end",
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mb={0.5}
-                  >
-                    How to pick locations
-                  </Typography>
-                  <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={method}
-                    onChange={(_, v: SelectionMethod | null) => {
-                      if (!v) return;
-                      setMethod(v);
-                      invalidatePlan();
-                    }}
-                  >
-                    {(
-                      Object.keys(SELECTION_METHOD_LABELS) as SelectionMethod[]
-                    ).map((m) => (
-                      <ToggleButton
-                        key={m}
-                        value={m}
-                        sx={{ textTransform: "none", px: 1.5 }}
-                      >
-                        {SELECTION_METHOD_LABELS[m]}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
-                </Box>
-
-                {method !== "MANUAL" && (
-                  <TextField
-                    label="Number of locations"
-                    type="number"
-                    size="small"
-                    value={count}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value, 10);
-                      setCount(
-                        Number.isFinite(n)
-                          ? Math.min(MAX_LOCATIONS, Math.max(1, n))
-                          : 1,
-                      );
-                      invalidatePlan();
-                    }}
-                    inputProps={{ min: 1, max: MAX_LOCATIONS }}
-                    sx={{ width: 170 }}
-                  />
-                )}
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mb={0.5}
-                  >
-                    CNC packages
-                  </Typography>
-                  <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={cnc}
-                    disabled={!upload.hasCncColumn}
-                    onChange={(_, v: CncFilter | null) => {
-                      if (!v) return;
-                      setCnc(v);
-                      invalidatePlan();
-                    }}
-                  >
-                    {(Object.keys(CNC_FILTER_LABELS) as CncFilter[]).map(
-                      (v) => (
-                        <ToggleButton
-                          key={v}
-                          value={v}
-                          sx={{ textTransform: "none", px: 1.5 }}
-                        >
-                          {CNC_FILTER_LABELS[v]}
-                        </ToggleButton>
-                      ),
-                    )}
-                  </ToggleButtonGroup>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                  >
-                    Material class
-                  </Typography>
-                  {CLASSES.map((c) => (
-                    <FormControlLabel
-                      key={c}
-                      disabled={!upload.hasClassColumn}
-                      control={
-                        <Checkbox
-                          size="small"
-                          checked={classes.includes(c)}
-                          onChange={(e) => {
-                            setClasses(
-                              (prev) =>
-                                (e.target.checked
-                                  ? [...prev, c].sort()
-                                  : prev.filter(
-                                      (x) => x !== c,
-                                    )) as MaterialClass[],
-                            );
-                            invalidatePlan();
-                          }}
-                        />
-                      }
-                      label={c}
-                    />
-                  ))}
-                </Box>
-
-                <CommonButton onClick={handleGenerate} disabled={busy}>
-                  {previewing ? (
-                    <CircularProgress size={22} color="inherit" />
-                  ) : (
-                    "GENERATE PLAN"
-                  )}
-                </CommonButton>
-              </Box>
-
-              {preview && (
-                <>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    <Stat
-                      label="Movements in period"
-                      value={preview.movement.lines}
-                    />
-                    <Stat
-                      label="From live data"
-                      value={preview.movement.liveLines}
-                    />
-                    <Stat
-                      label="From archived data"
-                      value={preview.movement.archivedLines}
-                    />
-                    <Stat
-                      label="Locations moved"
-                      value={preview.movement.locationsMoved}
-                    />
-                    <Stat
-                      label="Locations matching filters"
-                      value={preview.candidateCount}
-                    />
-                  </Box>
-                  {preview.filters.notes.map((n) => (
-                    <Alert key={n} severity="warning">
-                      {n}
-                    </Alert>
-                  ))}
-                  <Typography variant="body2" fontWeight={700}>
-                    {method === "MANUAL"
-                      ? `Tick the locations to audit – ${manualSel.size} of ${preview.candidates?.length ?? 0} selected`
-                      : `Plan preview – ${preview.plan.length} location${preview.plan.length === 1 ? "" : "s"} (${SELECTION_METHOD_LABELS[method].toLowerCase()})`}
-                  </Typography>
-                  <CycleCountPlanPreviewTable
-                    rows={
-                      method === "MANUAL"
-                        ? (preview.candidates ?? [])
-                        : preview.plan
-                    }
-                    selectable={method === "MANUAL"}
-                    selected={manualSel}
-                    onToggle={(bin) =>
-                      setManualSel((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(bin)) next.delete(bin);
-                        else if (next.size < MAX_LOCATIONS) next.add(bin);
-                        return next;
-                      })
-                    }
-                    onToggleAll={(bins, checked) =>
-                      setManualSel((prev) => {
-                        const next = new Set(prev);
-                        bins.forEach((b) =>
-                          checked
-                            ? next.size < MAX_LOCATIONS && next.add(b)
-                            : next.delete(b),
-                        );
-                        return next;
-                      })
-                    }
-                    showCnc={upload.hasCncColumn}
-                    showClass={upload.hasClassColumn}
-                  />
-                </>
-              )}
-            </Step>
-
-            {/* ---------------- 4. Assign & release ---------------- */}
-            <Step
-              no="4"
-              title="Assign & release"
-              hint="The locations are shared between the selected operators. One audit is created per operator."
-            >
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                <TextField
-                  label="Audit Name"
-                  size="small"
-                  value={auditName}
-                  onChange={(e) => setAuditName(e.target.value)}
-                  inputProps={{ maxLength: 255 }}
-                  sx={{ flex: "1 1 260px" }}
-                />
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={operators}
-                  value={selectedOps}
-                  onChange={(_, v) => setSelectedOps(v)}
-                  getOptionLabel={(o) => `${o.name} (${o.email})`}
-                  isOptionEqualToValue={(a, b) => a.id === b.id}
-                  filterSelectedOptions
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Operators"
-                      placeholder="Select operators"
-                    />
-                  )}
-                  sx={{ flex: "2 1 360px" }}
-                />
-              </Box>
-              {shareInfo && (
-                <Typography variant="body2" color="text.secondary">
-                  {shareInfo}
-                </Typography>
-              )}
-            </Step>
-          </>
-        )}
-
-        {error && (
-          <Alert
-            severity="error"
-            sx={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto" }}
-          >
-            {error}
-          </Alert>
-        )}
+          <OperatorListDialog
+            open={operatorsOpen}
+            operators={operatorList}
+            loading={operatorsLoading}
+            onClose={() => setOperatorsOpen(false)}
+          />
+        </Box>
       </Box>
-      <Divider />
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          gap: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          flexWrap: "wrap",
-        }}
-      >
-        {planRows.length > 0 && (
-          <Typography variant="body2" sx={{ mr: "auto" }}>
-            Release <strong>{planRows.length}</strong> location
-            {planRows.length === 1 ? "" : "s"}
-            {selectedOps.length ? (
-              <>
-                {" "}
-                to{" "}
-                <strong>
-                  {selectedOps.length} operator
-                  {selectedOps.length === 1 ? "" : "s"}
-                </strong>
-              </>
-            ) : null}
-          </Typography>
-        )}
-        <CommonButton onClick={handleClose} disabled={busy}>
-          CANCEL
-        </CommonButton>
-        <CommonButton
-          onClick={handleRelease}
-          disabled={busy || !planRows.length}
-        >
-          {releasing ? (
-            <CircularProgress size={22} color="inherit" />
-          ) : (
-            "RELEASE TO HANDHELD"
-          )}
-        </CommonButton>
-      </Box>
-    </Box>
+    </LocalizationProvider>
   );
 }

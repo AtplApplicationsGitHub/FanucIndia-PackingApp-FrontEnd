@@ -1,4 +1,3 @@
-// BE error body: { code, message (string | string[]), errors?: [{ rowNo, errors[] }] }
 export function getBomAuditError(json: any, fallback: string): string {
   const parts: string[] = [];
   if (Array.isArray(json?.message)) parts.push(...json.message.map(String));

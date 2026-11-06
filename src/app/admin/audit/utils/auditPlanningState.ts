@@ -12,6 +12,7 @@ const STATUSES = [
 
 type Saved = { tab: AuditType; params: AuditListParams };
 
+// Load the saved planning state from sessionStorage
 export function loadPlanningState(): Saved | null {
   try {
     const raw = sessionStorage.getItem(KEY);
@@ -22,7 +23,7 @@ export function loadPlanningState(): Saved | null {
     return null;
   }
 }
-
+//
 export function savePlanningState(tab: AuditType, params: AuditListParams) {
   try {
     sessionStorage.setItem(KEY, JSON.stringify({ tab, params }));
@@ -35,7 +36,7 @@ export function clearPlanningState() {
   } catch {}
 }
 
-// Restores params only if they belong to this tab; else returns defaults
+// Function to load the saved params for the given tab
 export function loadSavedParams(
   tab: AuditType,
   fallback: AuditListParams,

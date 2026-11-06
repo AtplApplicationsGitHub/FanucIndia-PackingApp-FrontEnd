@@ -39,7 +39,6 @@ export type BomAuditStatus =
   | "RECONCILIATION_PENDING"
   | "CLOSED";
 
-/** The 4 statuses shared by every audit type. */
 export type AuditStatus = BomAuditStatus;
 
 export type AuditStatusOption = {
@@ -69,12 +68,9 @@ export type BomAuditPagination = {
   totalPages: number;
 };
 
-/* ---- GET /audit/list : one row shape for every audit type ---- */
-
 export type AuditPagination = BomAuditPagination;
 
 export type AuditListRow = {
-  /** Backend enum: BOM_COMPLETENESS | CYCLE_COUNT | LOCATION_AUDIT | FREE_STOCK */
   auditType: string;
   id: number;
   auditNo: string;
@@ -87,13 +83,11 @@ export type AuditListRow = {
   storageBins: { sequenceNo: number; storageBin: string }[];
   createdByName: string;
   createdAt: string;
-  /** Which row buttons to show */
   actions: {
     canReassign: boolean;
     canDelete: boolean;
     canDownloadReport: boolean;
   };
-  /** Fields only this audit type has (BOM: fileName ...; Cycle Count: stockFileName, movementFrom ...) */
   details: Record<string, unknown>;
 };
 /** Operator (role USER) from GET /audit/operators */
@@ -102,6 +96,7 @@ export type AuditOperator = {
   name: string;
   email: string;
 };
+
 export type AuditListParams = {
   page: number;
   limit: number;
