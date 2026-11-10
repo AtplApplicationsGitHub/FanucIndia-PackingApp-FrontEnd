@@ -19,6 +19,7 @@ import { API } from "@/common/lib/endpoints";
 import AttachmentUploadDialog from "@/app/sales/components/AttachmentUploadDialog";
 import { motion } from "framer-motion";
 import SalesFgStorageReport from "@/app/sales/components/salesdashboard/SalesFgStorageReport";
+import FreeStockAdminScreen from "@/app/admin/audit/components/free-stock/prerequisite/FreeStockAdminScreen";
 
 function SalesDashboardContent() {
   const theme = useTheme();
@@ -129,7 +130,7 @@ function SalesDashboardContent() {
     setChatOrderId(null);
   };
 
-  if (error && !orders.length) {
+  if (error && !orders.length && view !== "free_stock") {
     return (
       <Box
         minHeight="100vh"
@@ -252,6 +253,8 @@ function SalesDashboardContent() {
             <SalesFgStorageReport />
           </motion.div>
         )}
+
+        {view === "free_stock" && <FreeStockAdminScreen role="SALES" />}
 
         {/* Dialogs */}
         <ConfirmDeleteDialog

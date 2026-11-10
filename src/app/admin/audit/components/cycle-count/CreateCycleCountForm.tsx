@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   alpha,
+  Alert,
   Box,
   Chip,
   CircularProgress,
@@ -15,7 +16,7 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import dayjs, { Dayjs } from "dayjs";
+import type { Dayjs } from "dayjs";
 import { Users } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
@@ -26,7 +27,8 @@ import { useAuditOperators } from "../../hooks/useAuditOperators";
 import { useCreateCycleCount } from "../../hooks/useCreateCycleCount";
 import { usePreviewCycleCount } from "../../hooks/usePreviewCycleCount";
 import { planningRoute } from "../../utils/auditRoutes";
-import type { ParsedCycleCountFile } from "../../utils/cycleCountExcel";
+import type { CycleCountPreview, CycleCountSelection } from "../../types/cycleCount";
+import { getCycleCountDateBounds, getCycleCountRangeError } from "../../utils/cycleCountDates";
 import type { AuditOperator, AuditRow } from "../../types/audit";
 
 const MAX_AUDIT_NAME = 255;
@@ -41,52 +43,31 @@ const showError = (message: string) =>
   );
 
 const UPLOAD_HINT =
-  "Upload a .xlsx file with Location, Qty and Material columns. Operator ID is optional - operators can be assigned after uploading.";
-
-/*
- * Date rules (e.g. today = 5 Nov):
- *  - no future dates (latest = 5 Nov)
- *  - nothing older than one month (earliest = 5 Oct)
- *  - the range itself can be at most one month
- */
-const today = () => dayjs().startOf("day");
-const earliestAllowed = () => today().subtract(1, "month");
-
-const getRangeError = (from: Dayjs | null, to: Dayjs | null): string => {
-  if (!from || !to) return "";
-  if (!from.isValid() || !to.isValid()) return "Enter a valid date range";
-  if (to.isBefore(from, "day")) return "To date cannot be before From date";
-  if (from.isBefore(earliestAllowed(), "day"))
-    return `Dates older than ${earliestAllowed().format(DATE_FORMAT)} are not allowed`;
-  if (to.isAfter(today(), "day")) return "Future dates are not allowed";
-  if (to.isAfter(from.add(1, "month"), "day"))
-    return "Date range cannot be more than one month";
-  return "";
-};
+  "Upload the same Excel format as BOM Audit. Only storage bins matching qualifying Sales Orders are included. Operator ID is optional.";
 
 type PreviewData = {
   rows: AuditRow[];
   fileOperators: Record<string, AuditOperator>;
+  selection: CycleCountSelection;
 };
 
-// Matches the Operator IDs written in the file with the operator list
-const toPreviewData = (
-  parsedFile: ParsedCycleCountFile,
-  operatorList: AuditOperator[],
-): PreviewData => {
+const toPreviewData = (preview: CycleCountPreview, operatorList: AuditOperator[]): PreviewData => {
+  let rowNo = 0;
+  const rows: AuditRow[] = preview.locations.flatMap((location) =>
+    location.materials.map((material) => ({
+      storage: location.storageBin,
+      materialCode: material.materialCode,
+      quantity: material.expectedQty,
+      excelRow: ++rowNo,
+    })),
+  );
   const fileOperators: Record<string, AuditOperator> = {};
-  for (const [storageBin, operatorId] of Object.entries(
-    parsedFile.binOperatorIds,
-  )) {
-    const operator = operatorList.find((o) => o.id === operatorId);
-    if (!operator) {
-      throw new Error(
-        `Operator ID ${operatorId} (location ${storageBin}) was not found.`,
-      );
-    }
-    fileOperators[storageBin] = operator;
+  for (const location of preview.locations) {
+    if (location.operatorId === null) continue;
+    fileOperators[location.storageBin] = operatorList.find((operator) => operator.id === location.operatorId)
+      ?? { id: location.operatorId, name: location.operatorName ?? String(location.operatorId), email: "" };
   }
-  return { rows: parsedFile.rows, fileOperators };
+  return { rows, fileOperators, selection: preview.selection };
 };
 
 export default function CreateCycleCountForm() {
@@ -96,6 +77,11 @@ export default function CreateCycleCountForm() {
   const { previewCycleCount, loading } = usePreviewCycleCount();
 
   const [auditName, setAuditName] = useState("");
+  const [error, setError] = useState("");
+  const reportError = (message: string) => {
+    setError(message);
+    showError(message);
+  };
   const [nameTouched, setNameTouched] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fromDate, setFromDate] = useState<Dayjs | null>(null);
@@ -127,21 +113,15 @@ export default function CreateCycleCountForm() {
       : "";
 
   const showNameError = nameTouched && !!nameError;
-  const rangeError = getRangeError(fromDate, toDate);
+  const rangeError = getCycleCountRangeError(fromDate, toDate);
   const busy = creating || loading;
-  const locked = !!parsed; // after UPLOAD: name, file and dates cannot be edited
+  const locked = !!parsed;
 
-  // FROM: between (today - 1 month) and today (or the chosen TO)
-  const fromMin = earliestAllowed();
-  const fromMax = toDate && toDate.isValid() ? toDate : today();
-  // TO: from the chosen FROM, at most one month later and never in the future
-  const toMin = fromDate && fromDate.isValid() ? fromDate : earliestAllowed();
-  const toMax =
-    fromDate && fromDate.isValid() && fromDate.add(1, "month").isBefore(today())
-      ? fromDate.add(1, "month")
-      : today();
+  const { fromMin, fromMax, toMin, toMax } = getCycleCountDateBounds(fromDate, toDate);
 
   const goBack = () => {
+    parseToken.current += 1;
+    setError("");
     setParsed(null);
     setAssignments({});
   };
@@ -151,62 +131,60 @@ export default function CreateCycleCountForm() {
 
   const handleFromChange = (value: Dayjs | null) => {
     if (locked || busy) return;
+    setError("");
     setFromDate(value);
-    // The chosen TO must stay inside the new one-month window
-    if (
-      value?.isValid() &&
-      toDate?.isValid() &&
-      (toDate.isBefore(value, "day") ||
-        toDate.isAfter(value.add(1, "month"), "day"))
-    ) {
-      setToDate(null);
-    }
+
   };
 
   const handleToChange = (value: Dayjs | null) => {
     if (locked || busy) return;
+    setError("");
     setToDate(value);
   };
 
-  // Handle Excel file selection
   const handleFileChange = (selected: File | null) => {
     if (parsed || creating || loading) return;
 
     parseToken.current += 1;
 
+    setError("");
     setFile(selected);
     setParsed(null);
   };
 
-  // Validate Excel and show preview
   const handlePreview = async () => {
     setNameTouched(true);
+    setError("");
 
+    if (busy) return;
     if (nameError) {
-      showError(nameError);
+      reportError(nameError);
       return;
     }
     if (!file) {
-      showError("Please upload the Excel file.");
+      reportError("Please upload the Excel file.");
       return;
     }
     if (!fromDate || !toDate) {
-      showError("Please select the From and To dates.");
+      reportError("Please select the From and To dates.");
       return;
     }
     if (rangeError) {
-      showError(rangeError);
+      reportError(rangeError);
       return;
     }
     if (operatorsLoading) {
-      showError("Operators are still loading. Please try again in a moment.");
+      reportError("Operators are still loading. Please try again in a moment.");
       return;
     }
 
     const token = ++parseToken.current;
 
     try {
-      const result = toPreviewData(await previewCycleCount(file), operatorList);
+      const result = toPreviewData(await previewCycleCount(file, {
+        fromDate: fromDate.format(API_DATE_FORMAT),
+        toDate: toDate.format(API_DATE_FORMAT),
+      }), operatorList);
 
       if (token !== parseToken.current) return;
 
@@ -215,15 +193,15 @@ export default function CreateCycleCountForm() {
     } catch (err) {
       if (token !== parseToken.current) return;
 
-      showError(
+      reportError(
         err instanceof Error ? err.message : "Unable to read the Excel file.",
       );
     }
   };
 
-  // Release audit after successful preview
   const confirmAudit = async () => {
     setNameTouched(true);
+    setError("");
 
     if (
       !parsed ||
@@ -241,11 +219,11 @@ export default function CreateCycleCountForm() {
       await createCycleCount({
         file,
         auditName: cleanName,
-        movementFrom: fromDate.format(API_DATE_FORMAT),
-        movementTo: toDate.format(API_DATE_FORMAT),
+        fromDate: fromDate.format(API_DATE_FORMAT),
+        toDate: toDate.format(API_DATE_FORMAT),
         binOperators: binsOfFile.map((storageBin) => ({
           storageBin,
-          operator: assignments[storageBin],
+          operatorId: assignments[storageBin].id,
         })),
       });
 
@@ -253,7 +231,7 @@ export default function CreateCycleCountForm() {
     } catch (err) {
       goBack();
 
-      showError(
+      reportError(
         err instanceof Error
           ? err.message
           : "Failed to create Cycle Count audit.",
@@ -318,7 +296,6 @@ export default function CreateCycleCountForm() {
                   gap: 1.5,
                 }}
               >
-                {/* AUDIT NAME */}
                 <TextField
                   size="small"
                   label="Audit name"
@@ -339,8 +316,6 @@ export default function CreateCycleCountForm() {
                     "& .MuiFormLabel-asterisk": { color: "error.main" },
                   }}
                 />
-
-                {/* DATE RANGE (max one month, no future dates) */}
                 <DatePicker
                   label="FROM"
                   value={fromDate}
@@ -359,6 +334,7 @@ export default function CreateCycleCountForm() {
                       size: "small",
                       variant: "outlined",
                       error: !!rangeError,
+                      helperText: rangeError || undefined,
                       sx: {
                         minWidth: 180,
                         width: 185,
@@ -385,6 +361,7 @@ export default function CreateCycleCountForm() {
                       size: "small",
                       variant: "outlined",
                       error: !!rangeError,
+                      helperText: rangeError || undefined,
                       sx: {
                         minWidth: 180,
                         width: 185,
@@ -393,15 +370,13 @@ export default function CreateCycleCountForm() {
                     },
                   }}
                 />
-
-                {/* EXCEL UPLOAD */}
                 <Box
                   sx={{ minWidth: 0, display: "flex", alignItems: "center" }}
                 >
                   <ExcelUploadButton
                     file={file}
                     onChange={handleFileChange}
-                    onError={showError}
+                    onError={reportError}
                     disabled={busy}
                     readOnly={locked}
                     uploadTooltip={UPLOAD_HINT}
@@ -412,7 +387,7 @@ export default function CreateCycleCountForm() {
                   <CommonButton
                     onClick={handlePreview}
                     disabled={
-                      !file || !!nameError || !fromDate || !toDate || busy
+                      !file || !!nameError || !fromDate || !toDate || !!rangeError || busy || operatorsLoading
                     }
                   >
                     {loading ? (
@@ -461,8 +436,46 @@ export default function CreateCycleCountForm() {
                   </span>
                 </Tooltip>
               </Box>
+
+              {parsed && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    width: "100%",
+                  }}
+                >
+                  {[
+                    ["SOs in range", parsed.selection.sourceSoCount],
+                    ["Multi-bin SOs", parsed.selection.qualifyingSoCount],
+                    ["DB bins", parsed.selection.sourceBinCount],
+                    ["Excel bins", parsed.selection.uploadedBinCount],
+                    ["Matched bins", parsed.selection.matchedBinCount],
+                    ["Excluded bins", parsed.selection.excludedBinCount],
+                  ].map(([label, count]) => (
+                    <Chip
+                      key={label}
+                      size="small"
+                      label={`${label}: ${count}`}
+                      sx={(theme) => ({
+                        fontWeight: 600,
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
+                      })}
+                    />
+                  ))}
+                </Box>
+              )}
             </Paper>
           </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mt: 1.5, whiteSpace: "pre-line" }} onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
 
           {loading && (
             <Box
@@ -470,12 +483,10 @@ export default function CreateCycleCountForm() {
             >
               <CircularProgress size={18} />
               <Typography variant="body2" color="text.secondary">
-                Reading the file and checking operators...
+                Checking matching storage bins and operators...
               </Typography>
             </Box>
           )}
-
-          {/* AUDIT PREVIEW */}
           <Box sx={{ mt: 1.5 }}>
             <BomAssignPreview
               key={parsed ? "parsed" : "empty"}

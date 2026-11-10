@@ -1,25 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { notifyAuditsUpdated, showGlobalMessage } from "../utils/auditEvents";
-import { releaseMockCycleCount } from "../utils/cycleCountMock";
+import { API, fetchWithAuth } from "@/common/lib/endpoints";
+import type { CreateCycleCountInput, CreateCycleCountResult } from "../types/cycleCount";
+import { getBomAuditError } from "../utils/getBomAuditError";
+import { notifyAuditsUpdated } from "../utils/auditEvents";
 
-type CreateCycleCountInput = Parameters<typeof releaseMockCycleCount>[0];
-
-/**
- * Releases the Cycle Count audit(s).
- * MOCK for now (stored in the browser); replace releaseMockCycleCount with the real API call later.
- */
 export function useCreateCycleCount() {
   const [loading, setLoading] = useState(false);
 
   const createCycleCount = async (data: CreateCycleCountInput) => {
     setLoading(true);
     try {
-      const result = await releaseMockCycleCount(data);
-      showGlobalMessage(result.message, "success");
+      const formData = new FormData();
+      formData.append("file", data.file);
+      formData.append("auditName", data.auditName);
+      formData.append("fromDate", data.fromDate);
+      formData.append("toDate", data.toDate);
+      if (data.binOperators?.length) {
+        formData.append("binOperators", JSON.stringify(data.binOperators));
+      }
+
+      const res = await fetchWithAuth(API.CYCLE_COUNT.BASE, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.status === 413) throw new Error("File larger than 10 MB");
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok)
+        throw new Error(getBomAuditError(json, "Failed to create Cycle Count audit."));
+
+      window.dispatchEvent(
+        new CustomEvent("show-global-message", {
+          detail: { message: json.message, severity: "success" },
+        }),
+      );
       notifyAuditsUpdated();
-      return result.audits;
+      return json.data as CreateCycleCountResult;
     } finally {
       setLoading(false);
     }

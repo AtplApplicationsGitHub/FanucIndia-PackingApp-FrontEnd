@@ -25,7 +25,7 @@ import CustomerReport from "../components/dashboard/CustomerReport";
 import ArchivedOrdersTable from "@/app/admin/components/dashboard/ArchivedOrdersTable";
 import FgLocation from "@/app/admin/components/dashboard/ManualFg";
 import EfficiencyReport from "@/app/admin/components/dashboard/EfficiencyReport";
-import FreeStockAdminScreen from "@/app/admin/components/free-stock/FreeStockAdminScreen";
+import FreeStockAdminScreen from "@/app/admin/audit/components/free-stock/prerequisite/FreeStockAdminScreen";
 
 function AdminDashboardContent() {
   const [editOrder, setEditOrder] = React.useState<SalesOrder | null>(null);

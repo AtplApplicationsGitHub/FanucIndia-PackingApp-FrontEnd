@@ -83,7 +83,7 @@ const DIMS_MENU = [
 const DIMS_VALUES: string[] = DIMS_MENU.map((d) => d.value);
 
 const FREE_STOCK_ITEM = {
-  label: "FREE - STOCK",
+  label: "FREE STOCK",
   icon: <PackageOpen size={16} />,
   value: "free_stock",
 };
@@ -457,7 +457,7 @@ export default function AdminDashboardHeader({
                 ))}
               </Menu>
 
-              {/* FREE - STOCK */}
+              {/* FREE STOCK */}
               <Button
                 disableRipple
                 variant="text"
@@ -833,7 +833,7 @@ export default function AdminDashboardHeader({
               );
             })}
 
-          {/* FREE - STOCK */}
+          {/* FREE STOCK */}
           <ListItem disablePadding>
             <ListItemButton
               onClick={() => handleMenuItemClick(FREE_STOCK_ITEM.value)}

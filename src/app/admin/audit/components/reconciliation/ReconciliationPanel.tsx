@@ -220,7 +220,7 @@ export default function ReconciliationPanel({
     type: AuditType,
     status: string,
   ): ReconCategoryFilter => {
-    if (type !== "bom") {
+    if (type !== "bom" && type !== "cycle_count") {
       return CATEGORY_DEFAULT;
     }
 

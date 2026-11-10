@@ -19,7 +19,7 @@ type NotificationNewPayload = {
   };
 };
 
-export type SalesDashboardView = "home" | "orders" | "dispatched" | "fg-storage";
+export type SalesDashboardView = "home" | "orders" | "dispatched" | "fg-storage" | "free_stock";
 
 export function useSalesDashboard() {
   const router = useRouter();

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { getBomAuditError } from "../utils/getBomAuditError";
+import { cycleCountListRow } from "../utils/cycleCountView";
+import type { CycleCountAuditListItem } from "../types/cycleCount";
 import { AUDIT_TYPE_API } from "../utils/auditLabels";
 import { AUDITS_UPDATED_EVENT, showGlobalMessage } from "../utils/auditEvents";
 import type {
@@ -15,10 +17,7 @@ import {
   loadSavedParams,
   savePlanningState,
 } from "../utils/auditPlanningState";
-import {
-  USE_MOCK_CYCLE_COUNT,
-  listMockCycleCounts,
-} from "../utils/cycleCountMock";
+
 
 const EMPTY_STATUS_COUNTS = {
   ASSIGNED: 0,
@@ -53,23 +52,6 @@ export function useAuditList(auditType: AuditType) {
 
   const fetchList = useCallback(
     async (p: AuditListParams) => {
-      // Cycle Count backend is not ready: show the mock audits (BOM and others are unaffected)
-      if (USE_MOCK_CYCLE_COUNT && auditType === "cycle_count") {
-        controllerRef.current?.abort();
-        const mock = listMockCycleCounts(p);
-        setStatusCounts(mock.statusCounts);
-        setAudits(mock.data);
-        setPagination(mock.pagination);
-        setAvailable(true);
-        setLoading(false);
-        if (mock.data.length === 0 && p.page > 1) {
-          setParams((prev) => ({
-            ...prev,
-            page: Math.max(1, mock.pagination.totalPages),
-          }));
-        }
-        return;
-      }
       // Abort any previous request
       controllerRef.current?.abort();
       const controller = new AbortController();
@@ -77,7 +59,9 @@ export function useAuditList(auditType: AuditType) {
       setLoading(true);
       try {
         const res = await fetchWithAuth(
-          API.AUDIT.LIST({ auditType: AUDIT_TYPE_API[auditType], ...p }),
+          auditType === "cycle_count"
+            ? API.CYCLE_COUNT.LIST(p)
+            : API.AUDIT.LIST({ auditType: AUDIT_TYPE_API[auditType], ...p }),
           { signal: controller.signal },
         );
         const json = await res.json().catch(() => ({}));
@@ -86,7 +70,9 @@ export function useAuditList(auditType: AuditType) {
         }
         if (controller.signal.aborted) return;
         setStatusCounts(json.statusCounts ?? EMPTY_STATUS_COUNTS);
-        const list: AuditListRow[] = json.data ?? [];
+        const list: AuditListRow[] = auditType === "cycle_count"
+          ? ((json.data ?? []) as CycleCountAuditListItem[]).map(cycleCountListRow)
+          : json.data ?? [];
         const meta: AuditPagination = json.pagination ?? EMPTY_PAGINATION;
         setAudits(list);
         setPagination(meta);

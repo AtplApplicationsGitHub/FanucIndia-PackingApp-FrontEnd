@@ -20,6 +20,30 @@ function buildManualFgLocationQuery(params?: ManualFgLocationQuery) {
 }
 
 export const API = {
+  FREE_STOCK: {
+    STOCKS: (params?: { page?: number; limit?: number; search?: string; status?: string; mine?: boolean }) => {
+      const query = new URLSearchParams();
+      if (params?.page !== undefined) query.set("page", String(params.page));
+      if (params?.limit !== undefined) query.set("limit", String(params.limit));
+      if (params?.search) query.set("search", params.search);
+      if (params?.status) query.set("status", params.status);
+      if (params?.mine !== undefined) query.set("mine", String(params.mine));
+      const suffix = query.toString();
+      return `${API_BASE_URL}/free-stock/stocks${suffix ? `?${suffix}` : ""}`;
+    },
+    STOCK_BY_ID: (id: number) => `${API_BASE_URL}/free-stock/stocks/${id}`,
+    RESERVATION_HISTORY: (id: number, page = 1, limit = 10) =>
+      `${API_BASE_URL}/free-stock/stocks/${id}/history?page=${page}&limit=${limit}`,
+    UPLOADS: (page = 1, limit = 10) => `${API_BASE_URL}/free-stock/stock-uploads?page=${page}&limit=${limit}`,
+    UPLOAD_BY_ID: (id: number) => `${API_BASE_URL}/free-stock/stock-uploads/${id}`,
+    PREVIEW_STOCK: `${API_BASE_URL}/free-stock/stock-uploads/preview`,
+    UPLOAD_STOCK: `${API_BASE_URL}/free-stock/stock-uploads`,
+    RESERVATION_TEMPLATE: `${API_BASE_URL}/free-stock/reservations/template`,
+    PREVIEW_RESERVATION: `${API_BASE_URL}/free-stock/reservations/preview`,
+    UPLOAD_RESERVATIONS: `${API_BASE_URL}/free-stock/reservations/upload`,
+    RESERVE: `${API_BASE_URL}/free-stock/reservations`,
+    RELEASE: `${API_BASE_URL}/free-stock/reservations/release`,
+  },
   LOOKUP: {
     PRODUCTS: `${API_BASE_URL}/lookup/products`,
     PRODUCT_BY_ID: (id: string | number) =>
@@ -420,6 +444,18 @@ export const API = {
         `${API_BASE_URL}/audit/reconciliation/${auditType}/${id}/close`,
     },
   },
+  CYCLE_COUNT: {
+    BASE: `${API_BASE_URL}/cycle-count-audit`,
+    PREVIEW: `${API_BASE_URL}/cycle-count-audit/preview`,
+    BY_ID: (id: number) => `${API_BASE_URL}/cycle-count-audit/${id}`,
+    LIST: (params: { page?: number; limit?: number; search?: string; status?: string; fromDate?: string; toDate?: string } = {}) => {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== "") query.set(key, String(value));
+      }
+      return `${API_BASE_URL}/cycle-count-audit${query.size ? `?${query.toString()}` : ""}`;
+    },
+  },
      BOM_AUDIT: {
   BASE: `${API_BASE_URL}/bom-audit`,
   TEMPLATE: `${API_BASE_URL}/bom-audit/template`,
@@ -428,15 +464,6 @@ export const API = {
   REASSIGN: (id: number) =>`${API_BASE_URL}/bom-audit/${id}/operator`,
   REPORT: (id: number) => `${API_BASE_URL}/bom-audit/${id}/report`,
 },
-  CYCLE_COUNT: {
-    BASE: `${API_BASE_URL}/cycle-count`,
-    STOCK_UPLOADS: `${API_BASE_URL}/cycle-count/stock-uploads`,
-    STOCK_UPLOAD_BY_ID: (id: number) =>
-      `${API_BASE_URL}/cycle-count/stock-uploads/${id}`,
-    PLAN_PREVIEW: `${API_BASE_URL}/cycle-count/plan-preview`,
-    OPERATORS: `${API_BASE_URL}/cycle-count/operators`,
-    BY_ID: (id: number) => `${API_BASE_URL}/cycle-count/${id}`,
-  },
 };
 
 export type DispatchSoPatchBody = {

@@ -5,10 +5,7 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { AUDITS_UPDATED_EVENT } from "../utils/auditEvents";
 import { auditTypeFromApi } from "../utils/auditLabels";
 import type { AuditStatus, AuditType } from "../types/audit";
-import {
-  USE_MOCK_CYCLE_COUNT,
-  getMockCycleCountTotals,
-} from "../utils/cycleCountMock";
+
 
 export type AuditCounts = Record<AuditType, number>;
 
@@ -91,13 +88,6 @@ export function useAuditCounts() {
             CLOSED: Number(row.counts?.CLOSED) || 0,
           };
         }
-        // Cycle Count backend is not ready: the card shows the mock audits
-        if (USE_MOCK_CYCLE_COUNT) {
-          const mock = getMockCycleCountTotals();
-          nextCounts.cycle_count = mock.total;
-          nextStatusCounts.cycle_count = mock.statusCounts;
-        }
-
         // Only the latest request can update state
         if (active && currentRequest === requestId) {
           setCounts(nextCounts);

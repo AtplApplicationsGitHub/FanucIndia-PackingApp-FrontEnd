@@ -8,7 +8,6 @@ import type { AuditType } from "../types/audit";
 /** DELETE endpoint of each audit type (permanent delete, only while ASSIGNED). */
 const DELETE_URL: Partial<Record<AuditType, (id: number) => string>> = {
   bom: API.BOM_AUDIT.BY_ID,
-  cycle_count: API.CYCLE_COUNT.BY_ID,
 };
 
 export function useDeleteAudit(auditType: AuditType) {

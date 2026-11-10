@@ -16,7 +16,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
-import { ClipboardList, BarChart3, Search, ArrowLeft, Menu, X } from "lucide-react";
+import { ClipboardList, BarChart3, Search, ArrowLeft, Menu, X, Warehouse, PackageOpen } from "lucide-react";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 import packageJson from "../../../../package.json";
@@ -33,7 +33,8 @@ const menuItems = [
   { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
   { label: "ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
   { label: "DISPATCHED ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "dispatched" },
-  { label: "FG STORAGE", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "fg-storage" },
+  { label: "FG STORAGE", icon: <Warehouse className="mr-1 h-4 w-4" />, value: "fg-storage" },
+  { label: "FREE STOCK", icon: <PackageOpen className="mr-1 h-4 w-4" />, value: "free_stock" },
   { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
 ];
 
