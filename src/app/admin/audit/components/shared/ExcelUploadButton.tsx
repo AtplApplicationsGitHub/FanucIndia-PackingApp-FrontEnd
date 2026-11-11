@@ -22,6 +22,7 @@ type Props = {
   dragDropOnly?: boolean;
   readOnly?: boolean;
   uploadTooltip?: string;
+  hint?: string;
 };
 
 export default function ExcelUploadButton({
@@ -33,6 +34,7 @@ export default function ExcelUploadButton({
   dragDropOnly = false,
   readOnly = false,
   uploadTooltip = "",
+  hint = "Required: .xlsx file with Location, Stock, Material and Operator ID (optional)",
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -167,7 +169,8 @@ export default function ExcelUploadButton({
               color="text.secondary"
               sx={{ fontSize: "0.75rem", textAlign: "center" }}
             >
-              Required: .xlsx file with Location, Qty, Material and Operator ID
+              Required: .xlsx file with Location, Stock, Material and Operator
+              ID (optional)
             </Typography>
           </Box>
         )

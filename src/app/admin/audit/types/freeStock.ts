@@ -34,25 +34,88 @@ export type FreeStockRow = {
   createdAt: string;
   closedAt: string | null;
 };
-export type FreeStockPagination = { page: number; limit: number; total: number; totalPages: number };
-export type FreeStockFilters = { page: number; limit: number; search: string; status: FreeStockStatus | "ALL"; mine: boolean };
-export type FreeStockList = { data: FreeStockRow[]; statusCounts: Record<FreeStockStatus, number>; pagination: FreeStockPagination };
+export type FreeStockPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+export type FreeStockFilters = {
+  page: number;
+  limit: number;
+  search: string;
+  status: FreeStockStatus | "ALL";
+  mine: boolean;
+};
+export type FreeStockSummaryItem = {
+  count: number;
+  stockQty: string;
+};
+
+export type FreeStockStatusSummary = Record<
+  FreeStockStatus | "ALL",
+  FreeStockSummaryItem
+>;
+
+export type FreeStockList = {
+  data: FreeStockRow[];
+  statusCounts: Record<FreeStockStatus, number>;
+  statusSummary: FreeStockStatusSummary;
+  myReservations: FreeStockSummaryItem | null;
+  pagination: FreeStockPagination;
+};
 export type FreeStockUpload = {
-  id: number; fileName: string; uploadedByName: string; status: "PROCESSING" | "COMPLETED" | "FAILED";
-  totalRows: number; insertedRows: number; updatedRows: number; closedRows: number;
-  errorMessage: string | null; createdAt: string; completedAt: string | null;
+  id: number;
+  fileName: string;
+  uploadedByName: string;
+  status: "PROCESSING" | "COMPLETED" | "FAILED";
+  totalRows: number;
+  insertedRows: number;
+  updatedRows: number;
+  closedRows: number;
+  errorMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
 };
 export type FreeStockHistory = {
-  id: number; reservedQty: string; soNumber: string | null; reservedByName: string; reservedZoneName: string;
-  reservedAt: string; releasedAt: string | null; releasedByName: string | null; closedAt: string | null;
+  id: number;
+  reservedQty: string;
+  soNumber: string | null;
+  reservedByName: string;
+  reservedZoneName: string;
+  reservedAt: string;
+  releasedAt: string | null;
+  releasedByName: string | null;
+  closedAt: string | null;
 };
-export type ReservationLine = { materialCode: string; batch: string; qty: string; soNumber?: string };
+export type ReservationLine = {
+  materialCode: string;
+  batch: string;
+  qty: string;
+  soNumber?: string;
+};
 export type StockPreview = {
-  totalRows: number; insertedRows: number; updatedRows: number; wouldCloseRows: number;
+  totalRows: number;
+  insertedRows: number;
+  updatedRows: number;
+  wouldCloseRows: number;
   sample: { materialCode: string; batch: string; stockQty: string }[];
 };
 export type ReservationPreview = {
   totalRows: number;
-  lines: { rowNo: number; stockItemId: number; materialCode: string; batch: string; qty: string; stockQty: string; soNumber: string | null }[];
+  lines: {
+    rowNo: number;
+    stockItemId: number;
+    materialCode: string;
+    batch: string;
+    qty: string;
+    stockQty: string;
+    soNumber: string | null;
+  }[];
 };
-export type FreeStockColumn = { key: keyof FreeStockRow; label: string; date?: boolean; timestamp?: boolean };
+export type FreeStockColumn = {
+  key: keyof FreeStockRow;
+  label: string;
+  date?: boolean;
+  timestamp?: boolean;
+};

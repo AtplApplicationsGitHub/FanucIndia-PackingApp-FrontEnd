@@ -1,6 +1,0 @@
-"use client";
-import { TablePagination } from "@mui/material";
-type Props = { count: number; page: number; size: number; onPage: (value: number) => void; onSize?: (value: number) => void; disabled?: boolean };
-export default function FreeStockPagination({ count, page, size, onPage, onSize, disabled = false }: Props) {
-  return <TablePagination component="div" count={count} page={Math.min(page, Math.max(0, Math.ceil(count / size) - 1))} rowsPerPage={size} rowsPerPageOptions={onSize ? [10, 25, 50, 100, 200] : [size]} labelRowsPerPage="Rows:" onPageChange={(_, value) => { if (!disabled) onPage(value); }} onRowsPerPageChange={(event) => onSize?.(Number(event.target.value))} slotProps={{ select: { disabled }, actions: { nextButton: { disabled: disabled || (page + 1) * size >= count }, previousButton: { disabled: disabled || page === 0 } } }} sx={{ width: "100%", overflow: "visible", "& .MuiTablePagination-toolbar": { flexWrap: "wrap", justifyContent: "flex-end", px: { xs: 0.5, sm: 1 }, gap: 0.5 }, "& .MuiTablePagination-spacer": { display: "none" }, "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": { whiteSpace: "normal", my: 1, fontSize: 12 }, "& .MuiTablePagination-input": { mx: 0.5 }, "& .MuiTablePagination-actions": { ml: 0.5 } }} />;
-}
