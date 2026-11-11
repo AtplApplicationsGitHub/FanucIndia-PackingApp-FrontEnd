@@ -8,13 +8,13 @@ import { getBomAuditError } from "../utils/getBomAuditError";
  * Downloads the report Excel of a submitted BOM audit (GET /bom-audit/:id/report).
  * The server returns the file saved on SFTP (or builds it again if it is not there).
  */
-export function useDownloadBomReport() {
+export function useDownloadBomReport(auditType: "bom" | "cycle_count" = "bom") {
   const [loading, setLoading] = useState(false);
 
   const downloadReport = async (auditId: number, auditNo: string) => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth(API.BOM_AUDIT.REPORT(auditId));
+      const res = await fetchWithAuth(auditType === "cycle_count" ? API.CYCLE_COUNT.REPORT(auditId) : API.BOM_AUDIT.REPORT(auditId));
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(getBomAuditError(json, "Failed to download the report."));

@@ -71,6 +71,9 @@ export type BomAuditPagination = {
 export type AuditPagination = BomAuditPagination;
 
 export type AuditListRow = {
+  /** Cycle Count ERP issue-date selection range (date-only values). */
+  issueFromDate?: string | null;
+  issueToDate?: string | null;
   auditType: string;
   id: number;
   auditNo: string;

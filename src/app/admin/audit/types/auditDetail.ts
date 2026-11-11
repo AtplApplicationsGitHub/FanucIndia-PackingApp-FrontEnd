@@ -16,6 +16,7 @@ export type AuditDetailView = {
   itemsLabel: string;
   /** Fields only this audit type has (label / value pairs shown as extra cards) */
   extraFields: { label: string; value: string }[];
+  issueDateRange?: { from: string; to: string };
   /** Handheld timeline (null until it happens, always null for types without it) */
   downloadedAt: string | null;
   startedAt: string | null;

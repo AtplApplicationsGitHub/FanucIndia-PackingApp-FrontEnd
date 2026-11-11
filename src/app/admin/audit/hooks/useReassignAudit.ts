@@ -4,9 +4,9 @@ import { API, fetchWithAuth } from "@/common/lib/endpoints";
 import { getBomAuditError } from "../utils/getBomAuditError";
 import type { AuditType } from "../types/audit";
 
-/** Reassign endpoint of each audit type (add Cycle Count here when the backend has it). */
 const REASSIGN_URL: Partial<Record<AuditType, (id: number) => string>> = {
   bom: API.BOM_AUDIT.REASSIGN,
+  cycle_count: API.CYCLE_COUNT.REASSIGN,
 };
 
 export function useReassignAudit(auditType: AuditType) {

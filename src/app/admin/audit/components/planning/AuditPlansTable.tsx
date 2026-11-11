@@ -63,6 +63,13 @@ import { Tooltip } from "@mui/material";
 const sourceFile = (row: AuditListRow) =>
   String(row.details.fileName ?? row.details.stockFileName ?? "-");
 
+// Treat the ERP selection dates as calendar dates without timezone conversion.
+const issueDate = (value: unknown) => {
+  if (typeof value !== "string") return "—";
+  const date = dayjs(value.slice(0, 10));
+  return date.isValid() ? date.format("DD-MM-YYYY") : "—";
+};
+
 const STATUS_BADGES: {
   status: AuditStatus | "ALL";
   label: string;
@@ -441,6 +448,9 @@ export default function AuditPlansTable({ auditType }: Props) {
                 <TableCell sx={headCellSx}>AUDIT ID</TableCell>
                 <TableCell sx={headCellSx}>AUDIT NAME</TableCell>
                 <TableCell sx={headCellSx}>TYPE</TableCell>
+                {auditType === "cycle_count" && (
+                  <TableCell sx={headCellSx}>ISSUE UPDATED DATE</TableCell>
+                )}
                 <TableCell sx={headCellSx}>ASSIGNED TO</TableCell>
                 <TableCell sx={headCellSx}>LOCATION</TableCell>
                 <TableCell sx={headCellSx}>CREATED ON</TableCell>
@@ -451,7 +461,7 @@ export default function AuditPlansTable({ auditType }: Props) {
             <TableBody>
               {audits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={auditType === "cycle_count" ? 10 : 9} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       {emptyText}
                     </Typography>
@@ -496,6 +506,11 @@ export default function AuditPlansTable({ auditType }: Props) {
                     </TableCell>
                     <TableCell>{audit.auditName}</TableCell>
                     <TableCell>{label}</TableCell>
+                    {auditType === "cycle_count" && (
+                      <TableCell>
+                        {issueDate(audit.issueFromDate ?? audit.details.issueFromDate)} - {issueDate(audit.issueToDate ?? audit.details.issueToDate)}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <AssignedToCell
                         audit={audit}

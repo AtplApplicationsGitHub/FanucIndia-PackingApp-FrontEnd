@@ -175,6 +175,9 @@ export default function ReconciliationPanel({
   onClosedByNameChange,
 }: Props) {
   const theme = useTheme();
+  const themed = auditType === "bom" || auditType === "cycle_count";
+  const compact = auditType === "cycle_count";
+  const localPending = pending && !compact;
   const {
     detail: loadedDetail,
     loading: loadingRaw,
@@ -184,7 +187,7 @@ export default function ReconciliationPanel({
     closeAudit,
   } = useReconciliationDetail(
     auditType,
-    !pending && Number.isFinite(auditId) ? auditId : null,
+    !localPending && Number.isFinite(auditId) ? auditId : null,
   );
 
   const pendingLines = useMemo<ReconLine[]>(
@@ -209,9 +212,9 @@ export default function ReconciliationPanel({
     [pendingRows],
   );
 
-  const detail = pending ? EMPTY_RECON_DETAIL : loadedDetail;
-  const loading = pending ? false : loadingRaw;
-  const error = pending ? "" : errorRaw;
+  const detail = localPending ? EMPTY_RECON_DETAIL : loadedDetail;
+  const loading = localPending ? false : loadingRaw;
+  const error = localPending ? "" : errorRaw;
 
   const [search, setSearch] = useState("");
   const [binFilter, setBinFilter] = useState("ALL");
@@ -256,7 +259,7 @@ export default function ReconciliationPanel({
   const [actionsAnchorEl, setActionsAnchorEl] = useState<HTMLElement | null>(
     null,
   );
-  const { downloadReport, loading: downloading } = useDownloadBomReport();
+  const { downloadReport, loading: downloading } = useDownloadBomReport(compact ? "cycle_count" : "bom");
 
   useEffect(() => {
     setIssueFilter(getDefaultCategory(auditType, auditStatus));
@@ -279,7 +282,7 @@ export default function ReconciliationPanel({
     reload: reloadLines,
   } = useReconciliationLines(
     auditType,
-    !pending && Number.isFinite(auditId) ? auditId : null,
+    !localPending && Number.isFinite(auditId) ? auditId : null,
     {
       search,
       storageBin: binFilter,
@@ -292,15 +295,15 @@ export default function ReconciliationPanel({
 
   const bins = useMemo(
     () =>
-      pending
+      localPending
         ? Array.from(new Set(pendingLines.map((v) => v.storageBin)))
         : (detail?.locations ?? []).map((l) => l.storageBin),
-    [pending, pendingLines, detail],
+    [localPending, pendingLines, detail],
   );
 
   // Not downloaded yet: the audit file rows are filtered here (only search / bin apply - they have no category or status yet)
   const localRows = useMemo(() => {
-    if (!pending) return [];
+    if (!localPending) return [];
     if (issueFilter !== CATEGORY_ALL || statusFilter !== "ALL") return [];
     const q = search.trim().toLowerCase();
     return pendingLines.filter(
@@ -310,16 +313,16 @@ export default function ReconciliationPanel({
           v.storageBin.toLowerCase().includes(q) ||
           v.materialCode.toLowerCase().includes(q)),
     );
-  }, [pending, pendingLines, search, binFilter, issueFilter, statusFilter]);
+  }, [localPending, pendingLines, search, binFilter, issueFilter, statusFilter]);
 
   const pageRows = useMemo(
     () =>
-      pending
+      localPending
         ? localRows.slice(page * perPage, page * perPage + perPage)
         : serverRows,
-    [pending, localRows, serverRows, page, perPage],
+    [localPending, localRows, serverRows, page, perPage],
   );
-  const totalRows = pending ? localRows.length : serverTotal;
+  const totalRows = localPending ? localRows.length : serverTotal;
 
   // Full-audit counts, independent of the current category, search, status and page.
   // The detail API already includes location-wise category totals; no extra API calls.
@@ -349,14 +352,14 @@ export default function ReconciliationPanel({
   // Pending rows have no judged category or review status yet.
   // Count the full search/bin scope before category selection or pagination.
   const filteredCategoryCounts = useMemo(() => {
-    if (!pending) return serverCategoryCounts;
+    if (!localPending) return serverCategoryCounts;
     const q = search.trim().toLowerCase();
     const all = statusFilter !== "ALL" ? 0 : pendingLines.filter((line) =>
       (binFilter === "ALL" || line.storageBin === binFilter) &&
       (!q || line.storageBin.toLowerCase().includes(q) || line.materialCode.toLowerCase().includes(q)),
     ).length;
     return { ALL: all, ALL_EXCEPT_VALID: 0, QUANTITY_MISMATCH: 0, MISSING: 0, EXCESS: 0, VALID: 0 };
-  }, [pending, serverCategoryCounts, pendingLines, search, binFilter, statusFilter]);
+  }, [localPending, serverCategoryCounts, pendingLines, search, binFilter, statusFilter]);
 
   const categoryPills: {
     value: ReconCategoryFilter;
@@ -537,7 +540,7 @@ export default function ReconciliationPanel({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       {/* Metrics */}
-      {auditType === "bom" ? (
+      {themed ? (
         <Box
           sx={{
             display: "grid",
@@ -547,11 +550,13 @@ export default function ReconciliationPanel({
               md: "repeat(3, minmax(0, 1fr))",
               lg: "repeat(8, minmax(0, 1fr))",
             },
+            gridAutoRows: "1fr",
             gap: 1.5,
           }}
         >
           {headerCards}
           <ReconMetricCard
+            compact={false}
             title="Accuracy"
             info={<AccuracyInfoCard />}
             value={
@@ -577,6 +582,7 @@ export default function ReconciliationPanel({
             }
           />
           <ReconMetricCard
+            compact={false}
             title="Resolved"
             value={
               pending
@@ -595,6 +601,7 @@ export default function ReconciliationPanel({
             caption={pending ? undefined : `${detail.openVariances} open`}
           />
           <ReconMetricCard
+            compact={false}
             title="Location Wise Variance"
             value={
               pending
@@ -605,11 +612,13 @@ export default function ReconciliationPanel({
             onClick={() => setLocationsOpen(true)}
           />
           <ReconMetricCard
+            compact={false}
             title="Expected"
             value={categoryCounts.expected}
             icon={<Package size={18} />}
           />
           <ReconMetricCard
+            compact={false}
             title="Scanned"
             value={categoryCounts.scanned}
             icon={<ScanLine size={18} />}
@@ -634,6 +643,7 @@ export default function ReconciliationPanel({
           }
           extraCard={
             <ReconMetricCard
+            compact={false}
               title="Location Wise Variance"
               value={
                 pending
@@ -664,8 +674,8 @@ export default function ReconciliationPanel({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            flexWrap: auditType === "bom" ? "nowrap" : "wrap",
-            gap: auditType === "bom" ? 1 : 1.5,
+            flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
+            gap: themed ? 1 : 1.5,
             width: "100%",
             minWidth: 0,
             px: 1.5,
@@ -677,8 +687,8 @@ export default function ReconciliationPanel({
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: auditType === "bom" ? "nowrap" : "wrap",
-              gap: auditType === "bom" ? 0.9 : 1,
+              flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
+              gap: themed ? 0.9 : 1,
               minWidth: 0,
               flex: 1,
             }}
@@ -688,9 +698,9 @@ export default function ReconciliationPanel({
                 p: "2px 4px",
                 display: "flex",
                 alignItems: "center",
-                width: auditType === "bom" ? 230 : { xs: "100%", sm: 230 },
-                flex: auditType === "bom" ? "0 0 230px" : undefined,
-                minWidth: auditType === "bom" ? 230 : undefined,
+                width: themed ? 230 : { xs: "100%", sm: 230 },
+                flex: themed ? "0 0 230px" : undefined,
+                minWidth: themed ? 230 : undefined,
                 border: 1,
                 borderColor: (t) =>
                   t.palette.mode === "dark"
@@ -729,7 +739,7 @@ export default function ReconciliationPanel({
             <FormControl
               size="small"
               sx={
-                auditType === "bom"
+                themed
                   ? { flex: "0 0 115px", minWidth: 115 }
                   : { minWidth: 100 }
               }
@@ -751,7 +761,7 @@ export default function ReconciliationPanel({
               </Select>
             </FormControl>
 
-            {auditType === "bom" ? (
+            {themed ? (
               <>
                 <FormControl
                   size="small"
@@ -832,13 +842,13 @@ export default function ReconciliationPanel({
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: auditType === "bom" ? "nowrap" : "wrap",
+              flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
               gap: 1,
               ml: "auto",
               flexShrink: 0,
             }}
           >
-            {auditType === "bom" && (
+            {themed && (
               <Box
                 role="group"
                 aria-label="Category filters"
@@ -849,6 +859,7 @@ export default function ReconciliationPanel({
                   flex: "0 0 auto",
                   minWidth: 0,
                   whiteSpace: "nowrap",
+                  flexWrap: compact ? "wrap" : "nowrap",
                 }}
               >
                 {categoryPills.map((item) => {

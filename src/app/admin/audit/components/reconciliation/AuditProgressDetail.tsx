@@ -35,6 +35,8 @@ export default function AuditProgressDetail({
   auditId,
   view,
 }: Props) {
+  const themed = auditType === "bom" || auditType === "cycle_count";
+  const compact = false;
   const [uploadsOpen, setUploadsOpen] = useState(false);
   const [status, setStatus] = useState(view.status);
   const awaitingUpload = status === "ASSIGNED" || status === "IN_PROGRESS";
@@ -95,7 +97,7 @@ export default function AuditProgressDetail({
       }}
     >
       <AuditTimeline steps={steps} />
-      {auditType !== "bom" && (
+      {!themed && (
       <Box
         sx={{
           display: "grid",
@@ -113,7 +115,7 @@ export default function AuditProgressDetail({
             title={view.auditName}
             noWrap
             sx={{
-              fontSize: 14,
+              fontSize: compact ? 12 : 14,
               fontWeight: 700,
               lineHeight: 1.4,
             }}
@@ -183,21 +185,21 @@ export default function AuditProgressDetail({
         auditType={auditType}
         auditId={auditId}
         auditStatus={status}
-        pending={auditType !== "bom" || status === "ASSIGNED"}
+        pending={!themed || status === "ASSIGNED"}
         expectedLines={view.totalItems}
         onAuditStatusChange={setStatus}
         onClosedAtChange={setClosedAt}
         onClosedByNameChange={setClosedByName}
         pendingRows={view.rows}
         locationUploads={view.locationUploads}
-        headerCards={auditType === "bom" ? (
+        headerCards={themed ? (
           <>
-        <InfoCard icon={<Layers size={18} />} label={view.auditNo}>
+        <InfoCard compact={compact} icon={<Layers size={18} />} label={view.auditNo}>
           <Typography
             title={view.auditName}
             noWrap
             sx={{
-              fontSize: 14,
+              fontSize: compact ? 12 : 14,
               fontWeight: 700,
               lineHeight: 1.4,
             }}
@@ -208,7 +210,7 @@ export default function AuditProgressDetail({
             title={AUDIT_LABELS[auditType]}
             noWrap
             sx={{
-              fontSize: 12,
+              fontSize: compact ? 10 : 12,
               color: "text.secondary",
               lineHeight: 1.3,
             }}
@@ -216,14 +218,14 @@ export default function AuditProgressDetail({
             {AUDIT_LABELS[auditType]}
           </Typography>
         </InfoCard>
-        <InfoCard icon={<Activity size={18} />} label="Status">
+        <InfoCard compact={compact} icon={<Activity size={18} />} label="Status">
           <Chip
             size="small"
             label={auditStatusLabel(status)}
             color={auditStatusColor(status)}
             sx={{
               fontWeight: 700,
-              fontSize: status === "RECONCILIATION_PENDING" ? 10 : undefined,
+              fontSize: compact ? 10 : status === "RECONCILIATION_PENDING" ? 10 : undefined,
               height: "auto",
               minHeight: 22,
               maxWidth: "100%",
@@ -233,6 +235,7 @@ export default function AuditProgressDetail({
                 textOverflow: "clip",
                 textAlign: "center",
                 lineHeight: 1.3,
+                overflowWrap: "anywhere",
                 px: 0.75,
                 py: 0.4,
               },
@@ -240,14 +243,16 @@ export default function AuditProgressDetail({
           />
         </InfoCard>
         <InfoCard
+          compact={compact}
           icon={<UserCheck size={18} />}
           label="Operator Name"
           value={view.operatorName || EMPTY}
         />
+
           </>
         ) : undefined}
       />
-      {auditType !== "bom" && uploads && (
+      {!themed && uploads && (
         <AuditTableDialog
           open={uploadsOpen}
           title={`LOCATION UPLOAD STATUS (${uploadedCount} / ${uploads.length})`}
@@ -283,12 +288,14 @@ function InfoCard({
   value,
   children,
   onClick,
+  compact = false,
 }: {
   icon: ReactNode;
   label: string;
   value?: string | number;
   children?: ReactNode;
   onClick?: () => void;
+  compact?: boolean;
 }) {
   const clickable = Boolean(onClick);
   return (
@@ -310,11 +317,14 @@ function InfoCard({
       sx={(theme) => ({
         display: "flex",
         alignItems: "center",
-        gap: 1.25,
+        flexDirection: "row",
+        position: "relative",
+        gap: compact ? 0.75 : 1.25,
         minWidth: 0,
-        minHeight: 64,
-        px: 1.5,
-        py: 1.25,
+        minHeight: compact ? 68 : 64,
+        px: compact ? 1 : 1.5,
+        py: compact ? 0.75 : 1.25,
+        ...(compact && clickable ? { pr: 2.75 } : {}),
         borderRadius: 2,
         border: `1px solid ${theme.palette.divider}`,
         boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
@@ -333,8 +343,9 @@ function InfoCard({
     >
       <Box
         sx={{
-          width: 36,
-          height: 36,
+          alignSelf: "center",
+          width: compact ? 24 : 36,
+          height: compact ? 24 : 36,
           flexShrink: 0,
           display: "grid",
           placeItems: "center",
@@ -348,14 +359,14 @@ function InfoCard({
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
           sx={{
-            fontSize: 11,
+            fontSize: compact ? 10 : 11,
             fontWeight: 600,
             letterSpacing: "0.04em",
             textTransform: "uppercase",
             color: "text.secondary",
             lineHeight: 1.4,
           }}
-          noWrap
+          noWrap={!compact}
         >
           {label}
         </Typography>
@@ -363,18 +374,18 @@ function InfoCard({
           <Typography
             title={value !== undefined ? String(value) : undefined}
             sx={{
-              fontSize: 14,
+              fontSize: compact ? 12 : 14,
               fontWeight: 700,
               color: "text.primary",
               lineHeight: 1.4,
             }}
-            noWrap
+            noWrap={!compact}
           >
             {value}
           </Typography>
         )}
       </Box>
-      {clickable && <ChevronRight size={18} />}
+      {clickable && <ChevronRight size={18} style={compact ? { position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" } : undefined} />}
     </Paper>
   );
 }

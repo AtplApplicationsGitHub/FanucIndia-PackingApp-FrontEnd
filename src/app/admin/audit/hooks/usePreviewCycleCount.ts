@@ -21,7 +21,9 @@ export function usePreviewCycleCount() {
         body: formData,
       });
 
-      if (res.status === 413) throw new Error("File larger than 10 MB");
+      if (res.status === 413) {
+        throw new Error("The server or proxy rejected the upload. Please check its upload settings.");
+      }
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok)

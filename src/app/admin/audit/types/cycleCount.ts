@@ -38,6 +38,11 @@ export type CycleCountAuditSummary = {
   totalMaterials: number;
   createdByName: string;
   createdAt: string;
+  downloadedAt: string | null;
+  startedAt: string | null;
+  submittedAt: string | null;
+  closedAt: string | null;
+  closedByName: string | null;
   uploadBatchId: string;
   issueFromDate: string;
   issueToDate: string;
@@ -62,5 +67,5 @@ export type CycleCountAuditListItem = CycleCountAuditSummary & {
 
 export type CycleCountAuditDetail = CycleCountAuditSummary & {
   updatedAt: string;
-  locations: Pick<BomAuditLocation, "id" | "sequenceNo" | "storageBin" | "expectedMaterials" | "materials">[];
+  locations: Pick<BomAuditLocation, "id" | "sequenceNo" | "storageBin" | "expectedMaterials" | "materials" | "verifiedAt" | "uploadedAt">[];
 };

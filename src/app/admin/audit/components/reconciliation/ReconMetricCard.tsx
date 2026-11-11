@@ -14,6 +14,7 @@ type Props = {
   progress?: number;
   progressColor?: "primary" | "success" | "warning" | "error" | "info";
   onClick?: () => void;
+  compact?: boolean;
 };
 
 export default function ReconMetricCard({
@@ -25,6 +26,7 @@ export default function ReconMetricCard({
   progress,
   progressColor = "primary",
   onClick,
+  compact = false,
 }: Props) {
   const clickable = Boolean(onClick);
 
@@ -47,11 +49,14 @@ export default function ReconMetricCard({
       sx={(theme) => ({
         display: "flex",
         alignItems: "center",
-        gap: 1.25,
+        flexDirection: "row",
+        position: "relative",
+        gap: compact ? 0.75 : 1.25,
         minWidth: 0,
-        minHeight: 64,
-        px: 1.5,
-        py: 1.25,
+        minHeight: compact ? 68 : 64,
+        px: compact ? 1 : 1.5,
+        py: compact ? 0.75 : 1.25,
+        ...(compact && clickable ? { pr: 2.75 } : {}),
         borderRadius: 2,
         border: `1px solid ${theme.palette.divider}`,
         boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
@@ -70,8 +75,9 @@ export default function ReconMetricCard({
     >
       <Box
         sx={{
-          width: 36,
-          height: 36,
+          alignSelf: "center",
+          width: compact ? 24 : 36,
+          height: compact ? 24 : 36,
           flexShrink: 0,
           display: "grid",
           placeItems: "center",
@@ -87,22 +93,22 @@ export default function ReconMetricCard({
           <Typography
             sx={{
               minWidth: 0,
-              fontSize: 11,
+              fontSize: compact ? 10 : 11,
               fontWeight: 600,
               letterSpacing: "0.04em",
               textTransform: "uppercase",
               color: "text.secondary",
               lineHeight: 1.4,
             }}
-            noWrap
+            noWrap={!compact}
           >
             {title}
           </Typography>
           {info}
         </Box>
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0, flexWrap: compact ? "wrap" : "nowrap" }}>
           <Typography
-            sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", lineHeight: 1.4, flexShrink: 0 }}
+            sx={{ fontSize: compact ? 12 : 14, fontWeight: 700, color: "text.primary", lineHeight: 1.4, flexShrink: compact ? 1 : 0 }}
             noWrap
           >
             {value}
@@ -126,7 +132,7 @@ export default function ReconMetricCard({
           />
         )}
       </Box>
-      {clickable && <ChevronRight size={18} />}
+      {clickable && <ChevronRight size={18} style={compact ? { position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" } : undefined} />}
     </Paper>
   );
 }

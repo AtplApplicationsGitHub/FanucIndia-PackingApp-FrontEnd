@@ -445,7 +445,9 @@ export const API = {
     },
   },
   CYCLE_COUNT: {
+    REPORT: (id: number) => `${API_BASE_URL}/cycle-count-audit/${id}/report`,
     BASE: `${API_BASE_URL}/cycle-count-audit`,
+    REASSIGN: (id: number) => `${API_BASE_URL}/cycle-count-audit/${id}/operator`,
     PREVIEW: `${API_BASE_URL}/cycle-count-audit/preview`,
     BY_ID: (id: number) => `${API_BASE_URL}/cycle-count-audit/${id}`,
     LIST: (params: { page?: number; limit?: number; search?: string; status?: string; fromDate?: string; toDate?: string } = {}) => {

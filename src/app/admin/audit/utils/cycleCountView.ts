@@ -12,7 +12,7 @@ export function cycleCountListRow(audit: CycleCountAuditListItem): AuditListRow 
     id, auditNo, auditName, status, operatorId, operatorName, createdByName, createdAt,
     storageBinCount, storageBins,
     statusLabel: auditStatusLabel(status),
-    actions: { canReassign: false, canDelete: false, canDownloadReport: false },
+    actions: { canReassign: status === "ASSIGNED", canDelete: false, canDownloadReport: status === "RECONCILIATION_PENDING" || status === "CLOSED" },
     details,
   };
 }
@@ -33,15 +33,25 @@ export function cycleCountDetailToView(detail: CycleCountAuditDetail): AuditDeta
       { label: "Issue Updated Date From", value: dayjs(detail.issueFromDate.slice(0, 10)).format("DD-MM-YYYY") },
       { label: "Issue Updated Date To", value: dayjs(detail.issueToDate.slice(0, 10)).format("DD-MM-YYYY") },
     ],
-    downloadedAt: null,
-    startedAt: null,
-    submittedAt: null,
+    issueDateRange: {
+      from: dayjs(detail.issueFromDate.slice(0, 10)).format("DD-MM-YYYY"),
+      to: dayjs(detail.issueToDate.slice(0, 10)).format("DD-MM-YYYY"),
+    },
+    downloadedAt: detail.downloadedAt ?? null,
+    startedAt: detail.startedAt ?? null,
+    submittedAt: detail.submittedAt ?? null,
     rows: detail.locations.flatMap((location) => location.materials.map((material) => ({
       storage: location.storageBin,
       materialCode: material.materialCode,
       quantity: material.expectedQty,
       excelRow: material.id,
     }))),
-    locationUploads: null,
+    locationUploads: detail.locations.map((location) => ({
+      sequenceNo: location.sequenceNo,
+      storageBin: location.storageBin,
+      expectedMaterials: location.expectedMaterials,
+      completedAt: location.verifiedAt ?? null,
+      uploadedAt: location.uploadedAt ?? null,
+    })),
   };
 }

@@ -13,8 +13,6 @@ import { FileSpreadsheet, Upload, X } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
 
-const MAX_BYTES = 10 * 1024 * 1024;
-
 type Props = {
   file: File | null;
   onChange: (file: File | null) => void;
@@ -44,12 +42,6 @@ export default function ExcelUploadButton({
     // Validate file type
     if (!selected.name.toLowerCase().endsWith(".xlsx")) {
       onError?.("Invalid file type. Please upload a .xlsx file.");
-      return;
-    }
-
-    // Validate file size
-    if (selected.size > MAX_BYTES) {
-      onError?.("File larger than 10 MB");
       return;
     }
 
