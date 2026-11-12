@@ -83,17 +83,6 @@ export default function FreeStockReleaseDialog({
         </CommonButton>
       }
     >
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{
-          fontSize: "0.875rem",
-          mb: 2,
-        }}
-      >
-        Releasing these reservations will make the stock available for new
-        reservations.
-      </Typography>
       <FreeStockDataTable<FreeStockRow>
         columns={[
           {

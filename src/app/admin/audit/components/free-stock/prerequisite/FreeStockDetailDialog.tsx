@@ -1,21 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Alert, Box, CircularProgress, Typography } from "@mui/material";
+import { Alert, Box, Typography } from "@mui/material";
 import type { ChipProps } from "@mui/material";
-import {
-  Layers,
-  Factory,
-  MapPin,
-  PackageCheck,
-  FileText,
-  Truck,
-  CalendarClock,
-  UserRound,
-  CalendarDays,
-  TriangleAlert,
-  Package,
-  Hash,
-} from "lucide-react";
 import { formatDateTimeIST } from "@/common/utils/dateTime";
 import { FREE_STOCK_COLUMNS } from "../../../utils/free-stock/freeStockColumns";
 import type {
@@ -40,7 +26,6 @@ const statusMeta = (
     : status === "RESERVED"
       ? { label: "Reserved", color: "warning" }
       : { label: "Closed", color: "default" };
-
 export default function FreeStockDetailDialog({
   id,
   role,
@@ -86,7 +71,6 @@ export default function FreeStockDetailDialog({
   }, [id, page]);
   const detailValue = (key: keyof FreeStockRow) => {
     const column = FREE_STOCK_COLUMNS.find((item) => item.key === key);
-
     return row && column ? stockCell(row, column) : "—";
   };
   const historyColumns: FreeStockDataColumn<FreeStockHistory>[] = [
@@ -98,7 +82,12 @@ export default function FreeStockDetailDialog({
       width: 65,
       render: (entry) => entry.reservedQty,
     },
-    { key: "so", label: "SO Number", render: (entry) => entry.soNumber || "—" },
+    {
+      key: "so", label: "SO Number",
+      render: (entry) => entry.soNumber?.trim()
+        ? <Typography component="span" sx={{ fontSize: "inherit", fontWeight: 700 }}>{entry.soNumber}</Typography>
+        : "—",
+    },
     {
       key: "reservedOn",
       label: "Reserved On",
@@ -171,9 +160,31 @@ export default function FreeStockDetailDialog({
               },
               gap: 1,
               mb: 1.5,
+              "& .MuiPaper-root p:first-of-type": {
+                fontSize: 11,
+                fontWeight: 700,
+                color: "text.primary",
+                letterSpacing: "0.04em",
+                lineHeight: 1.4,
+                mb: 0.25,
+              },
+              "& .MuiPaper-root p:last-of-type": {
+                fontSize: 14,
+                fontWeight: 500,
+                color: "text.primary",
+                lineHeight: 1.4,
+              },
+              "& .MuiPaper-root p:last-of-type span": {
+                fontSize: "inherit",
+                fontWeight: "inherit",
+              },
             }}
           >
             {[
+              {
+                title: "Storage Bin",
+                value: detailValue("storageBin"),
+              },
               {
                 title: "Material",
                 value: row.materialCode,
@@ -215,38 +226,8 @@ export default function FreeStockDetailDialog({
                 value: detailValue("lastChanger"),
               },
               {
-                title: "Reserved Date",
-                value: row.reservedDate ? (
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "inline-flex",
-                      flexDirection: "column",
-                      fontSize: 13,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{ whiteSpace: "nowrap", fontWeight: 700 }}
-                    >
-                      {formatDateTimeIST(row.reservedDate).split(", ")[0]}
-                    </Box>
-
-                    <Box
-                      component="span"
-                      sx={{ whiteSpace: "nowrap", fontWeight: 500 }}
-                    >
-                      {formatDateTimeIST(row.reservedDate).split(", ")[1] ?? ""}
-                    </Box>
-                  </Box>
-                ) : (
-                  "—"
-                ),
-              },
-              {
-                title: "Shortage Qty",
-                value: detailValue("shortageQty"),
+                title: "SO Number",
+                value: row.soNumber || "—",
               },
             ].map((card) => (
               <FreeStockMetricCard
@@ -267,6 +248,7 @@ export default function FreeStockDetailDialog({
               ? "Reservation History"
               : "My Reservation History"}
           </Typography>
+          <Box sx={{ "& thead th": { textTransform: "none" } }}>
           <FreeStockDataTable
             columns={historyColumns}
             rows={history}
@@ -281,6 +263,7 @@ export default function FreeStockDetailDialog({
               disabled: busy,
             }}
           />
+          </Box>
         </>
       )}
     </FreeStockDialog>

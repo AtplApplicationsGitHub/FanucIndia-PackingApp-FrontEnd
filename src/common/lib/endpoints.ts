@@ -21,13 +21,15 @@ function buildManualFgLocationQuery(params?: ManualFgLocationQuery) {
 
 export const API = {
   FREE_STOCK: {
-    STOCKS: (params?: { page?: number; limit?: number; search?: string; status?: string; mine?: boolean }) => {
+    STOCKS: (params?: { page?: number; limit?: number; search?: string; status?: string; mine?: boolean; zoneId?: number; reservedDays?: string }) => {
       const query = new URLSearchParams();
       if (params?.page !== undefined) query.set("page", String(params.page));
       if (params?.limit !== undefined) query.set("limit", String(params.limit));
       if (params?.search) query.set("search", params.search);
       if (params?.status) query.set("status", params.status);
       if (params?.mine !== undefined) query.set("mine", String(params.mine));
+      if (params?.zoneId !== undefined) query.set("zoneId", String(params.zoneId));
+      if (params?.reservedDays && params.reservedDays !== "ALL") query.set("reservedDays", params.reservedDays);
       const suffix = query.toString();
       return `${API_BASE_URL}/free-stock/stocks${suffix ? `?${suffix}` : ""}`;
     },
@@ -41,6 +43,10 @@ export const API = {
     RESERVATION_TEMPLATE: `${API_BASE_URL}/free-stock/reservations/template`,
     PREVIEW_RESERVATION: `${API_BASE_URL}/free-stock/reservations/preview`,
     UPLOAD_RESERVATIONS: `${API_BASE_URL}/free-stock/reservations/upload`,
+    SELECTED_PREVIEW: `${API_BASE_URL}/free-stock/reservations/selected/preview`,
+    SELECTED_CONFIRM: `${API_BASE_URL}/free-stock/reservations/selected/confirm`,
+    BULK_PREVIEW: `${API_BASE_URL}/free-stock/reservations/bulk/preview`,
+    BULK_CONFIRM: `${API_BASE_URL}/free-stock/reservations/bulk/confirm`,
     RESERVE: `${API_BASE_URL}/free-stock/reservations`,
     RELEASE: `${API_BASE_URL}/free-stock/reservations/release`,
   },

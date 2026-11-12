@@ -13,6 +13,7 @@ import {
   Menu as MuiMenu,
   MenuItem,
   Stack,
+  TextField,
   Tooltip,
 } from "@mui/material";
 
@@ -32,13 +33,20 @@ import {
 import CommonButton from "@/common/components/CommonButton";
 import type {
   FreeStockRow,
-  FreeStockSummaryItem,
+  FreeStockReservedDays,
+  FreeStockZone,
 } from "../../../types/freeStock";
 
 type Props = {
   admin: boolean;
   search: string;
   onSearch: (value: string) => void;
+  zoneId: number | "";
+  zones: FreeStockZone[];
+  onZoneChange: (value: number | "") => void;
+  reservedDays: FreeStockReservedDays;
+  onReservedDaysChange: (value: FreeStockReservedDays) => void;
+  onClearFilters: () => void;
   selectedCount: number;
   selectedRows: FreeStockRow[];
   pending: boolean;
@@ -55,6 +63,7 @@ export default function FreeStockToolbar({
   admin,
   search,
   onSearch,
+  zoneId, zones, onZoneChange, reservedDays, onReservedDaysChange, onClearFilters,
   selectedCount,
   selectedRows,
   pending,
@@ -126,6 +135,32 @@ export default function FreeStockToolbar({
           </IconButton>
         </Box>
 
+        <TextField
+          select size="small" label="Zone" value={zoneId}
+          slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+          onChange={(event) => onZoneChange(event.target.value === "" ? "" : Number(event.target.value))}
+          sx={{ width: { xs: "100%", sm: 150 }, "& .MuiInputBase-root": { height: 38, fontSize: 14 } }}
+        >
+          <MenuItem value="">All zones</MenuItem>
+          {zones.map((zone) => <MenuItem key={zone.id} value={zone.id}>{zone.name}</MenuItem>)}
+        </TextField>
+        <TextField
+          select size="small" label="Reserved Days" value={reservedDays}
+          onChange={(event) => onReservedDaysChange(event.target.value as FreeStockReservedDays)}
+          sx={{ width: { xs: "100%", sm: 170 }, "& .MuiInputBase-root": { height: 38, fontSize: 14 } }}
+        >
+          <MenuItem value="ALL">All</MenuItem>
+          <MenuItem value="0_30">0–30 days</MenuItem>
+          <MenuItem value="31_90">31–90 days</MenuItem>
+          <MenuItem value="OVER_90">More than 90 days</MenuItem>
+        </TextField>
+        {(zoneId !== "" || reservedDays !== "ALL") && (
+          <Tooltip title="Clear filters">
+            <IconButton size="small" aria-label="Clear reservation filters" onClick={onClearFilters}>
+              <ClearIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+        )}
         <Box sx={{ flexGrow: 1 }} />
 
         {selectedCount > 0 && (
@@ -146,7 +181,7 @@ export default function FreeStockToolbar({
             startIcon={<Upload size={17} />}
             onClick={() => onUpload("stock")}
           >
-            Upload Excel
+            UPLOAD EXCEL
           </CommonButton>
         )}
 
@@ -157,14 +192,14 @@ export default function FreeStockToolbar({
               disabled={downloading}
               onClick={() => void onDownload(true)}
             >
-              Download Template
+              DOWNLOAD TEMPLATE
             </CommonButton>
 
             <CommonButton
               startIcon={<Upload size={17} />}
               onClick={() => onUpload("reservation")}
             >
-              Upload Excel
+              UPLOAD EXCEL
             </CommonButton>
           </>
         )}
@@ -174,7 +209,7 @@ export default function FreeStockToolbar({
           disabled={pending || downloading || !hasData}
           onClick={() => void onDownload(false)}
         >
-          {downloading ? "Downloading..." : "Export Excel"}
+          {downloading ? "DOWNLOADING..." : "EXPORT EXCEL"}
         </CommonButton>
 
         <Tooltip title="Actions">

@@ -4,6 +4,8 @@ import type {
   FreeStockFilters,
   FreeStockList,
   FreeStockStatus,
+  FreeStockReservedDays,
+  FreeStockZone,
 } from "../../types/freeStock";
 import { freeStockApi } from "../../services/freeStock.service";
 export function useFreeStock() {
@@ -11,6 +13,9 @@ export function useFreeStock() {
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState<FreeStockFilters["status"]>("ALL");
   const [mine, setMine] = useState(false);
+  const [zoneId, setZoneId] = useState<number | "">("");
+  const [reservedDays, setReservedDays] = useState<FreeStockReservedDays>("ALL");
+  const [zones, setZones] = useState<FreeStockZone[]>([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [version, setVersion] = useState(0);
@@ -38,8 +43,9 @@ export function useFreeStock() {
   }, [search, debounced]);
 
   const filters = useMemo<FreeStockFilters>(
-    () => ({ search: debounced, page: page + 1, limit: size, status, mine }),
-    [debounced, page, size, status, mine],
+    () => ({ search: debounced, page: page + 1, limit: size, status, mine,
+      zoneId: zoneId === "" ? undefined : zoneId, reservedDays }),
+    [debounced, page, size, status, mine, zoneId, reservedDays],
   );
 
   useEffect(() => {
@@ -49,6 +55,7 @@ export function useFreeStock() {
     if (existing) {
       setData(existing);
       setCounts(existing.statusCounts);
+      setZones(existing.filterOptions?.zones ?? []);
       setLoading(false);
       return;
     }
@@ -63,6 +70,7 @@ export function useFreeStock() {
         cache.current.set(key, result);
         setData(result);
         setCounts(result.statusCounts);
+        setZones(result.filterOptions?.zones ?? []);
         if (filters.page > 1 && !result.data.length)
           setPage(Math.max(0, result.pagination.totalPages - 1));
       })
@@ -103,7 +111,12 @@ export function useFreeStock() {
       setPage(0);
     }
   };
+  const changeZone = (value: number | "") => { setZoneId(value); setPage(0); };
+  const changeReservedDays = (value: FreeStockReservedDays) => { setReservedDays(value); setPage(0); };
+  const clearReservationFilters = () => { setZoneId(""); setReservedDays("ALL"); setPage(0); };
   return {
+    zoneId, zones, changeZone,
+    reservedDays, changeReservedDays, clearReservationFilters,
     search,
     setSearch,
     status,

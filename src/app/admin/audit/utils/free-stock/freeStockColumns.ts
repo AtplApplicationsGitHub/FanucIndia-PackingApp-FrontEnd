@@ -25,19 +25,18 @@ export const FREE_STOCK_COLUMNS: FreeStockColumn[] = [
   { key: "shortageQty", label: "Shortage Qty" },
 ];
 
-export const FREE_STOCK_TABLE_COLUMNS: (FreeStockColumn & { width: string })[] =
-  [
-    { key: "storageBin", label: "Bin", width: "5%" },
-    { key: "materialCode", label: "Material", width: "11%" },
-    { key: "batch", label: "Batch", width: "10%" },
-    { key: "certificateNo", label: "Cert. No.", width: "9%" },
-    { key: "grDate", label: "GR Date", date: true, width: "8%" },
-    { key: "stockQty", label: "Stock", width: "5%" },
-    { key: "status", label: "Status", width: "8%" },
-    { key: "name", label: "Reserved By", width: "7%" },
-    { key: "zone", label: "Zone", width: "5%" },
-    { key: "reservedQty", label: "Reserved Qty", width: "6%" },
-    { key: "soNumber", label: "SO Number", width: "6%" },
-    { key: "reservedDays", label: "Reserved Days", width: "6%" },
-    { key: "ageFromGrDays", label: "Age from GR (Days)", width: "6%" },
-  ];
+// Main table only. Keep FREE_STOCK_COLUMNS complete for details and exports.
+// These widths total 93%; the Actions column uses the remaining 7%.
+export const FREE_STOCK_TABLE_COLUMNS: (FreeStockColumn & { width: string })[] = [
+  { key: "storageBin", label: "Bin", width: "6%" },
+  { key: "materialCode", label: "Material", width: "10%" },
+  { key: "batch", label: "Batch", width: "8%" },
+  { key: "certificateNo", label: "Cert. No.", width: "8%" },
+  { key: "grDate", label: "GR Date / Age", date: true, width: "10%" },
+  { key: "reservedDate", label: "Reserved Date / Days", date: true, width: "10%" },
+  { key: "status", label: "Status", width: "8%" },
+  { key: "stockQty", label: "Stock", width: "5%" },
+  { key: "reservedQty", label: "Reserved Qty", width: "7%" },
+  { key: "name", label: "Reserved By / Zone", width: "10%" },
+  { key: "shortageQty", label: "Shortage Qty", width: "11%" },
+];

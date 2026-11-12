@@ -23,7 +23,6 @@ import { FREE_STOCK_TABLE_COLUMNS } from "../../../utils/free-stock/freeStockCol
 import type { FreeStockRow } from "../../../types/freeStock";
 import { stockCell } from "../../../utils/free-stock/freeStockFormat";
 import AuditStatusPill from "../../shared/AuditStatusPill";
-
 type Props = {
   rows: FreeStockRow[];
   total: number;
@@ -37,13 +36,11 @@ type Props = {
   onView: (id: number) => void;
   onRelease: (row: FreeStockRow) => void;
 };
-
 const STATUS_PILL = {
   OPEN: { label: "Open", color: "success" },
   RESERVED: { label: "Reserved", color: "warning" },
   CLOSED: { label: "Closed", color: "default" },
 } as const;
-
 export default function FreeStockTable({
   rows,
   total,
@@ -63,18 +60,18 @@ export default function FreeStockTable({
     .map((r) => r.id);
   const all =
     selectable.length > 0 && selectable.every((id) => selected.includes(id));
-
   // Same header cell style as the Audit Planning table
   const headCellSx = {
-    fontWeight: 700,
+    fontWeight: 600,
     color: theme.palette.primary.contrastText,
     textTransform: "uppercase" as const,
     verticalAlign: "middle",
+    fontSize: "0.87rem",
+    lineHeight: 1.3,
   };
-
   return (
     <Box
-      sx={{ width: "100%", bgcolor: "background.paper", position: "relative" }}
+      sx={{ width: "100%", bgcolor: "background.paper", position: "relative", minWidth: 0 }}
     >
       <TableContainer
         component={Paper}
@@ -83,34 +80,41 @@ export default function FreeStockTable({
           borderRadius: 0,
           width: "100%",
           maxWidth: "100%",
+          minWidth: 0,
           overflowX: "auto",
         }}
       >
         <Table
           sx={{
-            minWidth: 1500,
-
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "100%",
+            tableLayout: "fixed",
             "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
               backgroundColor: alpha(theme.palette.primary.main, 0.25),
             },
-
             "& .MuiTableBody-root .MuiTableRow-root:hover": {
               backgroundColor: alpha(theme.palette.primary.main, 0.2),
             },
-
+            "& .MuiTableHead-root .MuiTableCell-root": {
+              fontSize: "0.87rem",
+            },
             "& .MuiTableCell-root": {
               borderBottom: "none",
               py: 0.5,
-              px: 1,
-              fontSize: "0.875rem",
-              whiteSpace: "nowrap",
+              px: 0.75,
+              boxSizing: "border-box",
+              wordBreak: "normal",
+              fontSize: "0.8rem",
+              whiteSpace: "normal",
+              overflowWrap: "anywhere",
             },
           }}
         >
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow sx={{ height: 40 }}>
-              <TableCell sx={{ ...headCellSx, width: "8%" }}>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+              <TableCell sx={{ ...headCellSx, width: "7%" }}>
+                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", minWidth: 0 }}>
                   <Checkbox
                     size="small"
                     sx={{
@@ -136,7 +140,9 @@ export default function FreeStockTable({
                   key={column.key}
                   sx={{ ...headCellSx, width: column.width }}
                 >
-                  {column.label}
+                  <Box component="span" sx={{ display: "block", maxWidth: "100%", whiteSpace: "normal", overflowWrap: "anywhere" }}>
+                    {column.label}
+                  </Box>
                 </TableCell>
               ))}
             </TableRow>
@@ -158,7 +164,7 @@ export default function FreeStockTable({
               rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", minWidth: 0 }}>
                       <Checkbox
                         size="small"
                         sx={{ p: 0.4 }}
@@ -182,6 +188,7 @@ export default function FreeStockTable({
                           <IconButton
                             aria-label={`View ${row.materialCode} ${row.batch}`}
                             size="small"
+                            sx={{ p: 0.25 }}
                             disabled={loading}
                             onClick={() => onView(row.id)}
                           >
@@ -196,6 +203,7 @@ export default function FreeStockTable({
                               aria-label={`Release ${row.materialCode} ${row.batch}`}
                               size="small"
                               color="error"
+                              sx={{ p: 0.25 }}
                               disabled={loading}
                               onClick={() => onRelease(row)}
                             >
@@ -209,9 +217,28 @@ export default function FreeStockTable({
                   {FREE_STOCK_TABLE_COLUMNS.map((column) => (
                     <TableCell key={column.key}>
                       {column.key === "status" ? (
-                        <AuditStatusPill {...STATUS_PILL[row.status]} />
+                        <Box sx={{ minWidth: 0, "& > .MuiBox-root": { minWidth: 0, maxWidth: "100%", boxSizing: "border-box", whiteSpace: "normal", overflowWrap: "anywhere", px: 0.5 } }}>
+                          <AuditStatusPill {...STATUS_PILL[row.status]} />
+                        </Box>
                       ) : (
-                        stockCell(row, column)
+                        column.key === "name" ? (
+                          <Typography
+                            component="span"
+                            title={row.name ? `${row.name}${row.zone ? ` (${row.zone})` : ""}` : undefined}
+                            noWrap
+                            sx={{ display: "block", minWidth: 0, maxWidth: "100%", fontSize: "inherit" }}
+                          >
+                            {row.name ? `${row.name}${row.zone ? ` (${row.zone})` : ""}` : "—"}
+                          </Typography>
+                        ) : column.key === "grDate" ? (
+                          `${stockCell(row, column)}${row.grDate && row.ageFromGrDays !== null ? ` (${row.ageFromGrDays} days)` : ""}`
+                        ) : column.key === "reservedDate" ? (
+                          `${stockCell(row, column)}${row.reservedDate && row.reservedDays !== null ? ` (${row.reservedDays} days)` : ""}`
+                        ) : column.key === "shortageQty" ? (
+                          <Typography component="span" sx={{ fontSize: "inherit", color: row.hasShortage ? "error.main" : "text.primary", fontWeight: row.hasShortage ? 700 : 400 }}>
+                            {stockCell(row, column)}
+                          </Typography>
+                        ) : stockCell(row, column)
                       )}
                     </TableCell>
                   ))}
@@ -221,12 +248,14 @@ export default function FreeStockTable({
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         sx={{
           borderTop: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
+          maxWidth: "100%",
+          "& .MuiTablePagination-toolbar": { minWidth: 0, flexWrap: "wrap", px: 1 },
+          "& .MuiTablePagination-spacer": { flex: "1 1 auto" },
         }}
         rowsPerPageOptions={[10, 25, 50, 100, 200]}
         component="div"

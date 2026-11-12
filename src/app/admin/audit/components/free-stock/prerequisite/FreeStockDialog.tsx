@@ -45,6 +45,9 @@ export default function FreeStockDialog({
           width: { xs: "calc(100% - 24px)", sm: "calc(100% - 64px)" },
           maxHeight: "calc(100% - 32px)",
           minWidth: 0,
+          "& .MuiButton-root": {
+            textTransform: "uppercase",
+          },
         },
       }}
     >

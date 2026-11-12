@@ -40,7 +40,11 @@ export type FreeStockPagination = {
   total: number;
   totalPages: number;
 };
+export type FreeStockReservedDays = 'ALL' | '0_30' | '31_90' | 'OVER_90';
+export type FreeStockZone = { id: number; name: string };
 export type FreeStockFilters = {
+  zoneId?: number;
+  reservedDays?: FreeStockReservedDays;
   page: number;
   limit: number;
   search: string;
@@ -58,6 +62,7 @@ export type FreeStockStatusSummary = Record<
 >;
 
 export type FreeStockList = {
+  filterOptions?: { zones: FreeStockZone[] };
   data: FreeStockRow[];
   statusCounts: Record<FreeStockStatus, number>;
   statusSummary: FreeStockStatusSummary;
@@ -89,21 +94,33 @@ export type FreeStockHistory = {
   closedAt: string | null;
 };
 export type ReservationLine = {
+  storageBin: string;
   materialCode: string;
   batch: string;
   qty: string;
   soNumber?: string;
 };
+export type StockRowIssue = {
+  rowNo: number; storageBin: string; materialCode: string; batch: string;
+  column: string; value: string; reason: string;
+};
 export type StockPreview = {
+  validRows: number;
+  skippedRows: number;
+  protectedRows: number;
+  issues: StockRowIssue[];
+  canImport: boolean;
+  previewToken: string;
   totalRows: number;
   insertedRows: number;
   updatedRows: number;
   wouldCloseRows: number;
-  sample: { materialCode: string; batch: string; stockQty: string }[];
+  sample: { storageBin: string; materialCode: string; batch: string; stockQty: string }[];
 };
 export type ReservationPreview = {
   totalRows: number;
   lines: {
+    storageBin: string;
     rowNo: number;
     stockItemId: number;
     materialCode: string;
@@ -118,4 +135,34 @@ export type FreeStockColumn = {
   label: string;
   date?: boolean;
   timestamp?: boolean;
+};
+
+/** Bulk allocation uses exact Material+Batch; pending quantities are not SAP shortages. */
+export type BulkReservationRow = {
+  storageBin: string;
+  rowNo: number;
+  stockItemId: number | null;
+  materialCode: string;
+  batch: string;
+  qty: string;
+  soNumber: string | null;
+  stockQty: string;
+  allocatedQty: string;
+  pendingQty: string;
+  status: "ALLOCATED" | "PARTIAL" | "NOT_ALLOCATED";
+  remarks: string;
+};
+export type BulkReservationPreview = {
+  totalRows: number;
+  sourceFileName?: string;
+  previewToken?: string;
+  lines: BulkReservationRow[];
+  summary: {
+    allocated: number; partial: number; notAllocated: number;
+    requestedQty: string; allocatedQty: string; pendingQty: string;
+  };
+  canConfirm: boolean;
+};
+export type BulkReservationResult = BulkReservationPreview & {
+  bulkReservationId: string; reservedAt: string; reservedRows: number;
 };

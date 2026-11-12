@@ -18,6 +18,7 @@ import FreeStockStatusCards from "./FreeStockStatusCards";
 import FreeStockToolbar from "./FreeStockToolbar";
 import FreeStockDetailDialog from "./FreeStockDetailDialog";
 import FreeStockUploadDialog from "./FreeStockUploadDialog";
+import FreeStockBulkReservationDialog from "./FreeStockBulkReservationDialog";
 import FreeStockReserveDialog from "./FreeStockReserveDialog";
 import FreeStockReleaseDialog from "./FreeStockReleaseDialog";
 import FreeStockUploadHistory from "./FreeStockUploadHistory";
@@ -116,6 +117,12 @@ export default function FreeStockAdminScreen({
             admin={admin}
             search={stock.search}
             onSearch={stock.setSearch}
+            zoneId={stock.zoneId}
+            zones={stock.zones}
+            onZoneChange={stock.changeZone}
+            reservedDays={stock.reservedDays}
+            onReservedDaysChange={stock.changeReservedDays}
+            onClearFilters={stock.clearReservationFilters}
             selectedCount={selected.length}
             selectedRows={selectedRows}
             pending={pending}
@@ -159,7 +166,13 @@ export default function FreeStockAdminScreen({
         />
       )}
 
-      {upload && (
+      {upload === "reservation" && (
+        <FreeStockBulkReservationDialog
+          onClose={() => setUpload(null)}
+          onChanged={refresh}
+        />
+      )}
+      {upload === "stock" && (
         <FreeStockUploadDialog
           mode={upload}
           onClose={() => setUpload(null)}
