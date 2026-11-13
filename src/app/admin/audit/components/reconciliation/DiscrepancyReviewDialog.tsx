@@ -161,8 +161,15 @@ export default function DiscrepancyReviewDialog({
               }}
             >
               <TableHead>
-                <TableRow sx={{ bgcolor: "primary.main", "& .MuiTableCell-head": { color: "primary.contrastText" } }}>
-                  <TableCell sx={{ width: "24%", fontWeight: 700 }}>Field</TableCell>
+                <TableRow
+                  sx={{
+                    bgcolor: "primary.main",
+                    "& .MuiTableCell-head": { color: "primary.contrastText" },
+                  }}
+                >
+                  <TableCell sx={{ width: "24%", fontWeight: 700 }}>
+                    Field
+                  </TableCell>
                   <TableCell sx={{ width: "38%", fontWeight: 700 }}>
                     Expected (audit file)
                   </TableCell>
@@ -191,7 +198,8 @@ export default function DiscrepancyReviewDialog({
                       color: diff !== 0 ? "error.main" : "text.primary",
                     }}
                   >
-                    {variance.scannedQty} ({diff > 0 ? "+" : ""}{diff})
+                    {variance.scannedQty} ({diff > 0 ? "+" : ""}
+                    {diff})
                   </TableCell>
                 </TableRow>
               </TableBody>

@@ -83,10 +83,19 @@ export default function FreeStockDetailDialog({
       render: (entry) => entry.reservedQty,
     },
     {
-      key: "so", label: "SO Number",
-      render: (entry) => entry.soNumber?.trim()
-        ? <Typography component="span" sx={{ fontSize: "inherit", fontWeight: 700 }}>{entry.soNumber}</Typography>
-        : "—",
+      key: "so",
+      label: "SO Number",
+      render: (entry) =>
+        entry.soNumber?.trim() ? (
+          <Typography
+            component="span"
+            sx={{ fontSize: "inherit", fontWeight: 700 }}
+          >
+            {entry.soNumber}
+          </Typography>
+        ) : (
+          "—"
+        ),
     },
     {
       key: "reservedOn",
@@ -249,20 +258,20 @@ export default function FreeStockDetailDialog({
               : "My Reservation History"}
           </Typography>
           <Box sx={{ "& thead th": { textTransform: "none" } }}>
-          <FreeStockDataTable
-            columns={historyColumns}
-            rows={history}
-            rowKey={(entry) => entry.id}
-            stackBelow="md"
-            emptyText="No reservation history."
-            pagination={{
-              count: pagination?.total ?? 0,
-              page,
-              size: 10,
-              onPage: setPage,
-              disabled: busy,
-            }}
-          />
+            <FreeStockDataTable
+              columns={historyColumns}
+              rows={history}
+              rowKey={(entry) => entry.id}
+              stackBelow="md"
+              emptyText="No reservation history."
+              pagination={{
+                count: pagination?.total ?? 0,
+                page,
+                size: 10,
+                onPage: setPage,
+                disabled: busy,
+              }}
+            />
           </Box>
         </>
       )}

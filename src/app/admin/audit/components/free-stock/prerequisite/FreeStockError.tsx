@@ -1,5 +1,6 @@
 import { Alert, Box, Typography } from "@mui/material";
 import { FreeStockApiError } from "../../../utils/free-stock/freeStockErrors";
+
 export default function FreeStockError({ error }: { error: Error | null }) {
   if (!error) return null;
   return (

@@ -98,88 +98,88 @@ export default function AuditProgressDetail({
     >
       <AuditTimeline steps={steps} />
       {!themed && (
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "repeat(1, minmax(0, 1fr))",
-            sm: "repeat(2, minmax(0, 1fr))",
-            md: "repeat(3, minmax(0, 1fr))",
-            lg: "repeat(6, minmax(0, 1fr))",
-          },
-          gap: 1.5,
-        }}
-      >
-        <InfoCard icon={<Layers size={18} />} label={view.auditNo}>
-          <Typography
-            title={view.auditName}
-            noWrap
-            sx={{
-              fontSize: compact ? 12 : 14,
-              fontWeight: 700,
-              lineHeight: 1.4,
-            }}
-          >
-            {view.auditName}
-          </Typography>
-          <Typography
-            title={AUDIT_LABELS[auditType]}
-            noWrap
-            sx={{
-              fontSize: 12,
-              color: "text.secondary",
-              lineHeight: 1.3,
-            }}
-          >
-            {AUDIT_LABELS[auditType]}
-          </Typography>
-        </InfoCard>
-        <InfoCard icon={<Activity size={18} />} label="Status">
-          <Chip
-            size="small"
-            label={auditStatusLabel(status)}
-            color={auditStatusColor(status)}
-            sx={{ fontWeight: 700, height: 22 }}
-          />
-        </InfoCard>
-        <InfoCard
-          icon={<FileSpreadsheet size={18} />}
-          label="File Name"
-          value={view.sourceFile || EMPTY}
-        />
-        <InfoCard
-          icon={<UserCheck size={18} />}
-          label="Operator Name"
-          value={view.operatorName || EMPTY}
-        />
-        {uploads ? (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(1, minmax(0, 1fr))",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(3, minmax(0, 1fr))",
+              lg: "repeat(6, minmax(0, 1fr))",
+            },
+            gap: 1.5,
+          }}
+        >
+          <InfoCard icon={<Layers size={18} />} label={view.auditNo}>
+            <Typography
+              title={view.auditName}
+              noWrap
+              sx={{
+                fontSize: compact ? 12 : 14,
+                fontWeight: 700,
+                lineHeight: 1.4,
+              }}
+            >
+              {view.auditName}
+            </Typography>
+            <Typography
+              title={AUDIT_LABELS[auditType]}
+              noWrap
+              sx={{
+                fontSize: 12,
+                color: "text.secondary",
+                lineHeight: 1.3,
+              }}
+            >
+              {AUDIT_LABELS[auditType]}
+            </Typography>
+          </InfoCard>
+          <InfoCard icon={<Activity size={18} />} label="Status">
+            <Chip
+              size="small"
+              label={auditStatusLabel(status)}
+              color={auditStatusColor(status)}
+              sx={{ fontWeight: 700, height: 22 }}
+            />
+          </InfoCard>
           <InfoCard
-            icon={<MapPin size={18} />}
-            label="Total Locations"
-            value={`${view.totalLocations} · ${uploadedCount} uploaded`}
-            onClick={() => setUploadsOpen(true)}
+            icon={<FileSpreadsheet size={18} />}
+            label="File Name"
+            value={view.sourceFile || EMPTY}
           />
-        ) : (
           <InfoCard
-            icon={<MapPin size={18} />}
-            label="Total Locations"
-            value={view.totalLocations}
+            icon={<UserCheck size={18} />}
+            label="Operator Name"
+            value={view.operatorName || EMPTY}
           />
-        )}
-        <InfoCard
-          icon={<Package size={18} />}
-          label={view.itemsLabel}
-          value={view.totalItems}
-        />
-        {view.extraFields.map((field) => (
+          {uploads ? (
+            <InfoCard
+              icon={<MapPin size={18} />}
+              label="Total Locations"
+              value={`${view.totalLocations} · ${uploadedCount} uploaded`}
+              onClick={() => setUploadsOpen(true)}
+            />
+          ) : (
+            <InfoCard
+              icon={<MapPin size={18} />}
+              label="Total Locations"
+              value={view.totalLocations}
+            />
+          )}
           <InfoCard
-            key={field.label}
-            icon={<Layers size={18} />}
-            label={field.label}
-            value={field.value || EMPTY}
+            icon={<Package size={18} />}
+            label={view.itemsLabel}
+            value={view.totalItems}
           />
-        ))}
-      </Box>
+          {view.extraFields.map((field) => (
+            <InfoCard
+              key={field.label}
+              icon={<Layers size={18} />}
+              label={field.label}
+              value={field.value || EMPTY}
+            />
+          ))}
+        </Box>
       )}
       <ReconciliationPanel
         auditType={auditType}
@@ -192,65 +192,78 @@ export default function AuditProgressDetail({
         onClosedByNameChange={setClosedByName}
         pendingRows={view.rows}
         locationUploads={view.locationUploads}
-        headerCards={themed ? (
-          <>
-        <InfoCard compact={compact} icon={<Layers size={18} />} label={view.auditNo}>
-          <Typography
-            title={view.auditName}
-            noWrap
-            sx={{
-              fontSize: compact ? 12 : 14,
-              fontWeight: 700,
-              lineHeight: 1.4,
-            }}
-          >
-            {view.auditName}
-          </Typography>
-          <Typography
-            title={AUDIT_LABELS[auditType]}
-            noWrap
-            sx={{
-              fontSize: compact ? 10 : 12,
-              color: "text.secondary",
-              lineHeight: 1.3,
-            }}
-          >
-            {AUDIT_LABELS[auditType]}
-          </Typography>
-        </InfoCard>
-        <InfoCard compact={compact} icon={<Activity size={18} />} label="Status">
-          <Chip
-            size="small"
-            label={auditStatusLabel(status)}
-            color={auditStatusColor(status)}
-            sx={{
-              fontWeight: 700,
-              fontSize: compact ? 10 : status === "RECONCILIATION_PENDING" ? 10 : undefined,
-              height: "auto",
-              minHeight: 22,
-              maxWidth: "100%",
-              "& .MuiChip-label": {
-                whiteSpace: "normal",
-                overflow: "visible",
-                textOverflow: "clip",
-                textAlign: "center",
-                lineHeight: 1.3,
-                overflowWrap: "anywhere",
-                px: 0.75,
-                py: 0.4,
-              },
-            }}
-          />
-        </InfoCard>
-        <InfoCard
-          compact={compact}
-          icon={<UserCheck size={18} />}
-          label="Operator Name"
-          value={view.operatorName || EMPTY}
-        />
-
-          </>
-        ) : undefined}
+        headerCards={
+          themed ? (
+            <>
+              <InfoCard
+                compact={compact}
+                icon={<Layers size={18} />}
+                label={view.auditNo}
+              >
+                <Typography
+                  title={view.auditName}
+                  noWrap
+                  sx={{
+                    fontSize: compact ? 12 : 14,
+                    fontWeight: 700,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {view.auditName}
+                </Typography>
+                <Typography
+                  title={AUDIT_LABELS[auditType]}
+                  noWrap
+                  sx={{
+                    fontSize: compact ? 10 : 12,
+                    color: "text.secondary",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {AUDIT_LABELS[auditType]}
+                </Typography>
+              </InfoCard>
+              <InfoCard
+                compact={compact}
+                icon={<Activity size={18} />}
+                label="Status"
+              >
+                <Chip
+                  size="small"
+                  label={auditStatusLabel(status)}
+                  color={auditStatusColor(status)}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: compact
+                      ? 10
+                      : status === "RECONCILIATION_PENDING"
+                        ? 10
+                        : undefined,
+                    height: "auto",
+                    minHeight: 22,
+                    maxWidth: "100%",
+                    "& .MuiChip-label": {
+                      whiteSpace: "normal",
+                      overflow: "visible",
+                      textOverflow: "clip",
+                      textAlign: "center",
+                      lineHeight: 1.3,
+                      overflowWrap: "anywhere",
+                      px: 0.75,
+                      py: 0.4,
+                    },
+                  }}
+                />
+              </InfoCard>
+              <InfoCard
+                compact={compact}
+                icon={<UserCheck size={18} />}
+                label="Operator Name"
+                value={view.operatorName || EMPTY}
+              />
+            </>
+          ) : undefined
+        }
       />
       {!themed && uploads && (
         <AuditTableDialog
@@ -271,7 +284,11 @@ export default function AuditProgressDetail({
               label={l.uploadedAt ? "Uploaded" : "Pending"}
               color={l.uploadedAt ? "success" : "warning"}
             />,
-            <Box key="uploadedOn" component="span" sx={{ whiteSpace: "nowrap" }}>
+            <Box
+              key="uploadedOn"
+              component="span"
+              sx={{ whiteSpace: "nowrap" }}
+            >
               {l.uploadedAt ? formatDateTime(l.uploadedAt) : EMPTY}
             </Box>,
           ])}
@@ -385,7 +402,21 @@ function InfoCard({
           </Typography>
         )}
       </Box>
-      {clickable && <ChevronRight size={18} style={compact ? { position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" } : undefined} />}
+      {clickable && (
+        <ChevronRight
+          size={18}
+          style={
+            compact
+              ? {
+                  position: "absolute",
+                  right: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }
+              : undefined
+          }
+        />
+      )}
     </Paper>
   );
 }

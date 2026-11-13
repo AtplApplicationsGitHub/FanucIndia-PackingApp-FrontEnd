@@ -131,7 +131,7 @@ export default function FreeStockDialog({
       {actions && (
         <>
           <Divider />
-          <DialogActions sx={{ px: 2, py: 1.5, flexWrap: "wrap", gap: 1 }}>
+          <DialogActions sx={{ px: 2, py: 1.5, flexWrap: "wrap" }}>
             {actions}
           </DialogActions>
         </>

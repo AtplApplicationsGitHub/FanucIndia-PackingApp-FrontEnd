@@ -126,23 +126,26 @@ const NO_ROWS: AuditRow[] = [];
 // columns keep the same width and the rows the same height in every state.
 const SELECT_COL_WIDTH = 44;
 const ROW_HEIGHT = 41;
+
 const COLUMNS: {
   key: string;
   label: string;
   align?: "left" | "right" | "center";
   width: number;
 }[] = [
-  { key: "sno", label: "S.No", align: "right", width: 64 },
+  { key: "sno", label: "S.No", width: 64 },
   { key: "bin", label: "Storage Bin", width: 110 },
-  { key: "material", label: "Material Code", width: 200 },
-  { key: "expected", label: "Expected", align: "right", width: 90 },
-  { key: "scanned", label: "Scanned", align: "right", width: 90 },
-  { key: "diff", label: "Difference", align: "right", width: 100 },
+  { key: "material", label: "Material Code", width: 175 },
+  { key: "batch", label: "Batch", width: 130 },
+  { key: "certNo", label: "Cert No.", width: 135 },
+  { key: "expected", label: "Expected", width: 90 },
+  { key: "scanned", label: "Scanned", width: 90 },
+  { key: "diff", label: "Difference", width: 100 },
   { key: "category", label: "Category", width: 130 },
   { key: "status", label: "Status", width: 100 },
   { key: "lastScanned", label: "Last Scanned", width: 170 },
   { key: "completed", label: "Location Completed", width: 170 },
-  { key: "actions", label: "Actions", align: "center", width: 80 },
+  { key: "actions", label: "Actions", width: 80 },
 ];
 
 type Props = {
@@ -259,7 +262,9 @@ export default function ReconciliationPanel({
   const [actionsAnchorEl, setActionsAnchorEl] = useState<HTMLElement | null>(
     null,
   );
-  const { downloadReport, loading: downloading } = useDownloadBomReport(compact ? "cycle_count" : "bom");
+  const { downloadReport, loading: downloading } = useDownloadBomReport(
+    compact ? "cycle_count" : "bom",
+  );
 
   useEffect(() => {
     setIssueFilter(getDefaultCategory(auditType, auditStatus));
@@ -313,7 +318,14 @@ export default function ReconciliationPanel({
           v.storageBin.toLowerCase().includes(q) ||
           v.materialCode.toLowerCase().includes(q)),
     );
-  }, [localPending, pendingLines, search, binFilter, issueFilter, statusFilter]);
+  }, [
+    localPending,
+    pendingLines,
+    search,
+    binFilter,
+    issueFilter,
+    statusFilter,
+  ]);
 
   const pageRows = useMemo(
     () =>
@@ -354,12 +366,32 @@ export default function ReconciliationPanel({
   const filteredCategoryCounts = useMemo(() => {
     if (!localPending) return serverCategoryCounts;
     const q = search.trim().toLowerCase();
-    const all = statusFilter !== "ALL" ? 0 : pendingLines.filter((line) =>
-      (binFilter === "ALL" || line.storageBin === binFilter) &&
-      (!q || line.storageBin.toLowerCase().includes(q) || line.materialCode.toLowerCase().includes(q)),
-    ).length;
-    return { ALL: all, ALL_EXCEPT_VALID: 0, QUANTITY_MISMATCH: 0, MISSING: 0, EXCESS: 0, VALID: 0 };
-  }, [localPending, serverCategoryCounts, pendingLines, search, binFilter, statusFilter]);
+    const all =
+      statusFilter !== "ALL"
+        ? 0
+        : pendingLines.filter(
+            (line) =>
+              (binFilter === "ALL" || line.storageBin === binFilter) &&
+              (!q ||
+                line.storageBin.toLowerCase().includes(q) ||
+                line.materialCode.toLowerCase().includes(q)),
+          ).length;
+    return {
+      ALL: all,
+      ALL_EXCEPT_VALID: 0,
+      QUANTITY_MISMATCH: 0,
+      MISSING: 0,
+      EXCESS: 0,
+      VALID: 0,
+    };
+  }, [
+    localPending,
+    serverCategoryCounts,
+    pendingLines,
+    search,
+    binFilter,
+    statusFilter,
+  ]);
 
   const categoryPills: {
     value: ReconCategoryFilter;
@@ -643,7 +675,7 @@ export default function ReconciliationPanel({
           }
           extraCard={
             <ReconMetricCard
-            compact={false}
+              compact={false}
               title="Location Wise Variance"
               value={
                 pending
@@ -1097,19 +1129,30 @@ export default function ReconciliationPanel({
                           />
                         </TableCell>
                       )}
-                      <TableCell align="right">
-                        {page * perPage + index + 1}
-                      </TableCell>
+
+                      <TableCell>{page * perPage + index + 1}</TableCell>
+
                       <TableCell>{v.storageBin}</TableCell>
+
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
                         {v.materialCode}
                       </TableCell>
-                      <TableCell align="right">{v.expectedQty}</TableCell>
-                      <TableCell align="right">
-                        {rowPending ? "-" : v.scannedQty}
+
+                      {/* Batch */}
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {v.batch || "-"}
                       </TableCell>
+
+                      {/* Certificate Number */}
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {v.certNo || "-"}
+                      </TableCell>
+
+                      <TableCell>{v.expectedQty}</TableCell>
+
+                      <TableCell>{rowPending ? "-" : v.scannedQty}</TableCell>
+
                       <TableCell
-                        align="right"
                         sx={{
                           fontWeight: 700,
                           color: rowPending
@@ -1145,7 +1188,7 @@ export default function ReconciliationPanel({
                           ? formatDateTime(v.locationCompletedAt)
                           : "-"}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell>
                         {rowPending || (locked && !isClosed) ? (
                           "-"
                         ) : !reviewable ? null : (

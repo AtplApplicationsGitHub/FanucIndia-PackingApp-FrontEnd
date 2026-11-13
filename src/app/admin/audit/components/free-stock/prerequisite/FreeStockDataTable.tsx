@@ -31,6 +31,7 @@ type PaginationProps = {
 type Props<T> = {
   columns: FreeStockDataColumn<T>[];
   rows: T[];
+  compactIssueHeader?: boolean;
   rowKey: (row: T) => string | number;
   emptyText?: string;
   stackBelow?: Breakpoint | false;
@@ -40,6 +41,7 @@ type Props<T> = {
 export default function FreeStockDataTable<T>({
   columns,
   rows,
+  compactIssueHeader = false,
   rowKey,
   emptyText = "No records found.",
   stackBelow = "sm",
@@ -76,8 +78,10 @@ export default function FreeStockDataTable<T>({
               bgcolor: "primary.main",
               color: "primary.contrastText",
               fontWeight: 700,
-              textTransform: "uppercase",
-              height: 40,
+              textTransform: compactIssueHeader ? "capitalize" : "uppercase",
+              height: compactIssueHeader ? 30 : 40,
+              py: compactIssueHeader ? "4px !important" : undefined,
+              fontSize: compactIssueHeader ? 12 : undefined,
               verticalAlign: "middle",
             },
             "& th, & td": {
@@ -228,7 +232,7 @@ export default function FreeStockDataTable<T>({
           sx={{
             width: "100%",
             overflow: "visible",
-            bgcolor: "background.paper",
+            bgcolor: "transparent",
             borderTop: "1px solid",
             borderColor: "divider",
             "& .MuiTablePagination-toolbar": {

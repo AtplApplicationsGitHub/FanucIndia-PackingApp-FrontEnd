@@ -106,9 +106,23 @@ export default function ReconMetricCard({
           </Typography>
           {info}
         </Box>
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, minWidth: 0, flexWrap: compact ? "wrap" : "nowrap" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 0.75,
+            minWidth: 0,
+            flexWrap: compact ? "wrap" : "nowrap",
+          }}
+        >
           <Typography
-            sx={{ fontSize: compact ? 12 : 14, fontWeight: 700, color: "text.primary", lineHeight: 1.4, flexShrink: compact ? 1 : 0 }}
+            sx={{
+              fontSize: compact ? 12 : 14,
+              fontWeight: 700,
+              color: "text.primary",
+              lineHeight: 1.4,
+              flexShrink: compact ? 1 : 0,
+            }}
             noWrap
           >
             {value}
@@ -116,7 +130,12 @@ export default function ReconMetricCard({
           {caption && (
             <Typography
               title={typeof caption === "string" ? caption : undefined}
-              sx={{ fontSize: 11, color: "text.secondary", lineHeight: 1.4, minWidth: 0 }}
+              sx={{
+                fontSize: 11,
+                color: "text.secondary",
+                lineHeight: 1.4,
+                minWidth: 0,
+              }}
               noWrap
             >
               {caption}
@@ -132,7 +151,21 @@ export default function ReconMetricCard({
           />
         )}
       </Box>
-      {clickable && <ChevronRight size={18} style={compact ? { position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" } : undefined} />}
+      {clickable && (
+        <ChevronRight
+          size={18}
+          style={
+            compact
+              ? {
+                  position: "absolute",
+                  right: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }
+              : undefined
+          }
+        />
+      )}
     </Paper>
   );
 }

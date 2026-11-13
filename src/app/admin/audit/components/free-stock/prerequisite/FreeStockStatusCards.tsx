@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Paper, Typography, alpha } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import {
   Layers3,
   Box as BoxIcon,
@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   UserRoundCheck,
 } from "lucide-react";
+
 import type {
   FreeStockFilters,
   FreeStockStatusSummary,
@@ -40,16 +41,15 @@ export default function FreeStockStatusCards({
   myReservations,
   onMineChange,
 }: Props) {
-  const totalLines = summary?.ALL?.count ?? 0;
   const cards = admin
     ? CARDS
     : [
-        ...CARDS,
         {
           key: "MINE" as const,
           title: "My Reservations",
           Icon: UserRoundCheck,
         },
+        ...CARDS,
       ];
 
   return (
@@ -61,7 +61,7 @@ export default function FreeStockStatusCards({
           sm: "repeat(2, minmax(0, 1fr))",
           lg: admin ? "repeat(4, minmax(0, 1fr))" : "repeat(5, minmax(0, 1fr))",
         },
-        gap: 1.5,
+        gap: 1,
         mb: 1.2,
       }}
     >
@@ -74,16 +74,10 @@ export default function FreeStockStatusCards({
 
         const count = metrics?.count ?? 0;
         const lines = count.toLocaleString();
-        const units = metrics?.stockQty ?? "0";
 
-        const percentage =
-          card.key === "ALL"
-            ? 100
-            : totalLines > 0
-              ? (count / totalLines) * 100
-              : 0;
-
-        const progress = Math.min(100, Math.max(0, percentage));
+        const units = Number(metrics?.stockQty ?? 0).toLocaleString("en-IN", {
+          maximumFractionDigits: 3,
+        });
 
         const Icon = card.Icon;
 
@@ -114,115 +108,140 @@ export default function FreeStockStatusCards({
               }
             }}
             sx={(theme) => ({
-              px: 1.75,
-              py: 1.4,
+              px: 1.5,
+              py: 0.8,
               minWidth: 0,
               borderRadius: 2,
+              height: "100%",
               display: "flex",
-              flexDirection: "column",
-              gap: 0.4,
+              alignItems: "center",
+              gap: 1,
               cursor: "pointer",
+
+              // Same styling as Audit Planning cards
               bgcolor: "background.paper",
-              borderColor: isSelected
-                ? theme.palette.primary.main
-                : theme.palette.divider,
-              boxShadow: "none",
-              transition: "border-color 0.2s, box-shadow 0.2s",
+
+              borderColor: isSelected ? theme.palette.primary.main : undefined,
+
+              boxShadow: isSelected
+                ? `0 0 0 1px ${theme.palette.primary.main}`
+                : "none",
+
+              transition: "border-color 0.15s, box-shadow 0.15s",
+
               "&:hover": {
                 borderColor: theme.palette.primary.main,
               },
+
               "&:focus-visible": {
                 outline: `3px solid ${theme.palette.primary.main}`,
                 outlineOffset: 2,
               },
             })}
           >
-            {/* Top: text on the left, icon on the right */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 1.5,
-                minWidth: 0,
-              }}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                {/* Title */}
+            {/* Left: title, lines and units */}
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              {/* Card title */}
+              <Typography
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "text.primary",
+                  lineHeight: 1.2,
+                  mb: 0.5,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {card.title}
+              </Typography>
+
+              {/* Lines and units side by side */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.75,
+                  minWidth: 0,
+                }}
+              >
+                {/* Total lines */}
                 <Typography
                   sx={{
-                    fontSize: 15,
-                    fontWeight: 600,
+                    width: 85,
+                    flexShrink: 0,
+                    fontSize: 22,
+                    fontWeight: 800,
+                    lineHeight: 1.1,
                     color: "text.primary",
-                    lineHeight: 1,
-                    mb: 0.6,
+                    fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {card.title}
+                  {lines}
                 </Typography>
 
-                {/* Lines count */}
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.6 }}>
+                {/* Vertical divider */}
+                <Box
+                  sx={{
+                    width: "1px",
+                    height: 30,
+                    flexShrink: 0,
+                    bgcolor: "divider",
+                  }}
+                />
+
+                {/* Total units */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 0.5,
+                    minWidth: 0,
+                  }}
+                >
                   <Typography
                     sx={{
-                      fontSize: 30,
-                      fontWeight: 800,
-                      lineHeight: 1,
+                      fontSize: 12,
+                      fontWeight: 600,
                       color: "text.primary",
+                      lineHeight: 1.2,
                       fontVariantNumeric: "tabular-nums",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {lines}
+                    {units}
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      fontSize: 13,
+                      color: "text.secondary",
+                      lineHeight: 1.2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    units
                   </Typography>
                 </Box>
-
-                {/* Units */}
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "text.secondary",
-                  }}
-                >
-                  {units} units
-                </Typography>
-              </Box>
-
-              {/* Icon (right) */}
-              <Box
-                sx={(theme) => ({
-                  width: 40,
-                  height: 40,
-                  flexShrink: 0,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 2,
-                  bgcolor: theme.palette.primary.main,
-                  color: theme.palette.primary.contrastText,
-                })}
-              >
-                <Icon size={21} strokeWidth={1.9} />
               </Box>
             </Box>
 
-            {/* Progress bar (yellow) */}
+            {/* Right: yellow icon */}
             <Box
-              sx={(theme) => ({
-                height: 6,
-                borderRadius: 5,
-                bgcolor: alpha(theme.palette.primary.main, 0.2),
-                overflow: "hidden",
-              })}
+              sx={{
+                width: 38,
+                height: 40,
+                flexShrink: 0,
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                borderRadius: 1,
+                display: "grid",
+                placeItems: "center",
+              }}
             >
-              <Box
-                sx={(theme) => ({
-                  height: "100%",
-                  width: `${progress}%`,
-                  bgcolor: theme.palette.primary.main,
-                  borderRadius: 5,
-                  transition: "width 0.3s ease",
-                })}
-              />
+              <Icon size={18} strokeWidth={1.9} />
             </Box>
           </Paper>
         );

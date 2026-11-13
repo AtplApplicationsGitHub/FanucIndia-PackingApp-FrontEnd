@@ -34,7 +34,10 @@ export type ReconDecision =
 export type ReconSapAction = "NONE" | "FLAG_FOR_ADJUSTMENT";
 
 /** One dropdown option of the review form (GET /audit/reconciliation/options - backend constants) */
-export type ReconOption<T extends string = string> = { value: T; label: string };
+export type ReconOption<T extends string = string> = {
+  value: T;
+  label: string;
+};
 
 export type ReconOptions = {
   decisions: ReconOption<ReconDecision>[];
@@ -73,6 +76,8 @@ export type ReconLine = Omit<
   status: ReconVarianceStatus | null;
   sapAction: ReconSapAction | null;
   pending: boolean;
+  batch?: string | null;
+  certNo?: string | null;
 };
 
 export type ReconLineFilters = {

@@ -43,7 +43,7 @@ export default function FreeStockAdminScreen({
   const admin = role === "ADMIN";
   const rows = data?.data ?? [];
   const selectedRows = rows.filter((row) => selected.includes(row.id));
-  const pending = stock.loading || stock.search !== filters.search;
+  const pending = stock.loading;
 
   useEffect(() => {
     setSelected([]);
@@ -115,8 +115,10 @@ export default function FreeStockAdminScreen({
         <Box sx={{ px: 2, py: 1 }}>
           <FreeStockToolbar
             admin={admin}
-            search={stock.search}
-            onSearch={stock.setSearch}
+            search={stock.searchInput}
+            onSearch={stock.setSearchInput}
+            onSubmitSearch={stock.submitSearch}
+            onClearSearch={stock.clearSearch}
             zoneId={stock.zoneId}
             zones={stock.zones}
             onZoneChange={stock.changeZone}

@@ -71,7 +71,12 @@ export default function FreeStockTable({
   };
   return (
     <Box
-      sx={{ width: "100%", bgcolor: "background.paper", position: "relative", minWidth: 0 }}
+      sx={{
+        width: "100%",
+        bgcolor: "background.paper",
+        position: "relative",
+        minWidth: 0,
+      }}
     >
       <TableContainer
         component={Paper}
@@ -114,7 +119,14 @@ export default function FreeStockTable({
           <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
             <TableRow sx={{ height: 40 }}>
               <TableCell sx={{ ...headCellSx, width: "7%" }}>
-                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", minWidth: 0 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    minWidth: 0,
+                  }}
+                >
                   <Checkbox
                     size="small"
                     sx={{
@@ -140,7 +152,15 @@ export default function FreeStockTable({
                   key={column.key}
                   sx={{ ...headCellSx, width: column.width }}
                 >
-                  <Box component="span" sx={{ display: "block", maxWidth: "100%", whiteSpace: "normal", overflowWrap: "anywhere" }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "block",
+                      maxWidth: "100%",
+                      whiteSpace: "normal",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
                     {column.label}
                   </Box>
                 </TableCell>
@@ -164,7 +184,14 @@ export default function FreeStockTable({
               rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        minWidth: 0,
+                      }}
+                    >
                       <Checkbox
                         size="small"
                         sx={{ p: 0.4 }}
@@ -217,28 +244,60 @@ export default function FreeStockTable({
                   {FREE_STOCK_TABLE_COLUMNS.map((column) => (
                     <TableCell key={column.key}>
                       {column.key === "status" ? (
-                        <Box sx={{ minWidth: 0, "& > .MuiBox-root": { minWidth: 0, maxWidth: "100%", boxSizing: "border-box", whiteSpace: "normal", overflowWrap: "anywhere", px: 0.5 } }}>
+                        <Box
+                          sx={{
+                            minWidth: 0,
+                            "& > .MuiBox-root": {
+                              minWidth: 0,
+                              maxWidth: "100%",
+                              boxSizing: "border-box",
+                              whiteSpace: "normal",
+                              overflowWrap: "anywhere",
+                              px: 0.5,
+                            },
+                          }}
+                        >
                           <AuditStatusPill {...STATUS_PILL[row.status]} />
                         </Box>
+                      ) : column.key === "name" ? (
+                        <Typography
+                          component="span"
+                          title={
+                            row.name
+                              ? `${row.name}${row.zone ? ` (${row.zone})` : ""}`
+                              : undefined
+                          }
+                          noWrap
+                          sx={{
+                            display: "block",
+                            minWidth: 0,
+                            maxWidth: "100%",
+                            fontSize: "inherit",
+                          }}
+                        >
+                          {row.name
+                            ? `${row.name}${row.zone ? ` (${row.zone})` : ""}`
+                            : "—"}
+                        </Typography>
+                      ) : column.key === "grDate" ? (
+                        `${stockCell(row, column)}${row.grDate && row.ageFromGrDays !== null ? ` (${row.ageFromGrDays} days)` : ""}`
+                      ) : column.key === "reservedDate" ? (
+                        `${stockCell(row, column)}${row.reservedDate && row.reservedDays !== null ? ` (${row.reservedDays} days)` : ""}`
+                      ) : column.key === "shortageQty" ? (
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: "inherit",
+                            color: row.hasShortage
+                              ? "error.main"
+                              : "text.primary",
+                            fontWeight: row.hasShortage ? 700 : 400,
+                          }}
+                        >
+                          {stockCell(row, column)}
+                        </Typography>
                       ) : (
-                        column.key === "name" ? (
-                          <Typography
-                            component="span"
-                            title={row.name ? `${row.name}${row.zone ? ` (${row.zone})` : ""}` : undefined}
-                            noWrap
-                            sx={{ display: "block", minWidth: 0, maxWidth: "100%", fontSize: "inherit" }}
-                          >
-                            {row.name ? `${row.name}${row.zone ? ` (${row.zone})` : ""}` : "—"}
-                          </Typography>
-                        ) : column.key === "grDate" ? (
-                          `${stockCell(row, column)}${row.grDate && row.ageFromGrDays !== null ? ` (${row.ageFromGrDays} days)` : ""}`
-                        ) : column.key === "reservedDate" ? (
-                          `${stockCell(row, column)}${row.reservedDate && row.reservedDays !== null ? ` (${row.reservedDays} days)` : ""}`
-                        ) : column.key === "shortageQty" ? (
-                          <Typography component="span" sx={{ fontSize: "inherit", color: row.hasShortage ? "error.main" : "text.primary", fontWeight: row.hasShortage ? 700 : 400 }}>
-                            {stockCell(row, column)}
-                          </Typography>
-                        ) : stockCell(row, column)
+                        stockCell(row, column)
                       )}
                     </TableCell>
                   ))}
@@ -254,7 +313,11 @@ export default function FreeStockTable({
           borderColor: "divider",
           bgcolor: "background.paper",
           maxWidth: "100%",
-          "& .MuiTablePagination-toolbar": { minWidth: 0, flexWrap: "wrap", px: 1 },
+          "& .MuiTablePagination-toolbar": {
+            minWidth: 0,
+            flexWrap: "wrap",
+            px: 1,
+          },
           "& .MuiTablePagination-spacer": { flex: "1 1 auto" },
         }}
         rowsPerPageOptions={[10, 25, 50, 100, 200]}

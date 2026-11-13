@@ -27,8 +27,14 @@ import { useAuditOperators } from "../../hooks/useAuditOperators";
 import { useCreateCycleCount } from "../../hooks/useCreateCycleCount";
 import { usePreviewCycleCount } from "../../hooks/usePreviewCycleCount";
 import { planningRoute } from "../../utils/auditRoutes";
-import type { CycleCountPreview, CycleCountSelection } from "../../types/cycleCount";
-import { getCycleCountDateBounds, getCycleCountRangeError } from "../../utils/cycleCountDates";
+import type {
+  CycleCountPreview,
+  CycleCountSelection,
+} from "../../types/cycleCount";
+import {
+  getCycleCountDateBounds,
+  getCycleCountRangeError,
+} from "../../utils/cycleCountDates";
 import type { AuditOperator, AuditRow } from "../../types/audit";
 
 const MAX_AUDIT_NAME = 255;
@@ -51,7 +57,10 @@ type PreviewData = {
   selection: CycleCountSelection;
 };
 
-const toPreviewData = (preview: CycleCountPreview, operatorList: AuditOperator[]): PreviewData => {
+const toPreviewData = (
+  preview: CycleCountPreview,
+  operatorList: AuditOperator[],
+): PreviewData => {
   let rowNo = 0;
   const rows: AuditRow[] = preview.locations.flatMap((location) =>
     location.materials.map((material) => ({
@@ -64,8 +73,13 @@ const toPreviewData = (preview: CycleCountPreview, operatorList: AuditOperator[]
   const fileOperators: Record<string, AuditOperator> = {};
   for (const location of preview.locations) {
     if (location.operatorId === null) continue;
-    fileOperators[location.storageBin] = operatorList.find((operator) => operator.id === location.operatorId)
-      ?? { id: location.operatorId, name: location.operatorName ?? String(location.operatorId), email: "" };
+    fileOperators[location.storageBin] = operatorList.find(
+      (operator) => operator.id === location.operatorId,
+    ) ?? {
+      id: location.operatorId,
+      name: location.operatorName ?? String(location.operatorId),
+      email: "",
+    };
   }
   return { rows, fileOperators, selection: preview.selection };
 };
@@ -117,7 +131,10 @@ export default function CreateCycleCountForm() {
   const busy = creating || loading;
   const locked = !!parsed;
 
-  const { fromMin, fromMax, toMin, toMax } = getCycleCountDateBounds(fromDate, toDate);
+  const { fromMin, fromMax, toMin, toMax } = getCycleCountDateBounds(
+    fromDate,
+    toDate,
+  );
 
   const goBack = () => {
     parseToken.current += 1;
@@ -133,7 +150,6 @@ export default function CreateCycleCountForm() {
     if (locked || busy) return;
     setError("");
     setFromDate(value);
-
   };
 
   const handleToChange = (value: Dayjs | null) => {
@@ -181,10 +197,13 @@ export default function CreateCycleCountForm() {
     const token = ++parseToken.current;
 
     try {
-      const result = toPreviewData(await previewCycleCount(file, {
-        fromDate: fromDate.format(API_DATE_FORMAT),
-        toDate: toDate.format(API_DATE_FORMAT),
-      }), operatorList);
+      const result = toPreviewData(
+        await previewCycleCount(file, {
+          fromDate: fromDate.format(API_DATE_FORMAT),
+          toDate: toDate.format(API_DATE_FORMAT),
+        }),
+        operatorList,
+      );
 
       if (token !== parseToken.current) return;
 
@@ -387,7 +406,13 @@ export default function CreateCycleCountForm() {
                   <CommonButton
                     onClick={handlePreview}
                     disabled={
-                      !file || !!nameError || !fromDate || !toDate || !!rangeError || busy || operatorsLoading
+                      !file ||
+                      !!nameError ||
+                      !fromDate ||
+                      !toDate ||
+                      !!rangeError ||
+                      busy ||
+                      operatorsLoading
                     }
                   >
                     {loading ? (
@@ -472,7 +497,11 @@ export default function CreateCycleCountForm() {
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mt: 1.5, whiteSpace: "pre-line" }} onClose={() => setError("")}>
+            <Alert
+              severity="error"
+              sx={{ mt: 1.5, whiteSpace: "pre-line" }}
+              onClose={() => setError("")}
+            >
               {error}
             </Alert>
           )}

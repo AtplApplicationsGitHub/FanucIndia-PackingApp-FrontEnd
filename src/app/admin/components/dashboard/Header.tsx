@@ -84,7 +84,7 @@ const DIMS_VALUES: string[] = DIMS_MENU.map((d) => d.value);
 
 const FREE_STOCK_ITEM = {
   label: "FREE STOCK",
-  icon: <PackageOpen size={16} />,
+  icon: <PackageOpen size={16} style={{ marginRight: 3 }} />,
   value: "free_stock",
 };
 

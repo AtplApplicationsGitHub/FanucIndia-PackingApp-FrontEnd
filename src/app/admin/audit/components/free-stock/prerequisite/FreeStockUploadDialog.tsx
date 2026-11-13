@@ -61,12 +61,9 @@ export default function FreeStockUploadDialog({
 
   const selectFile = (next: File | null) => {
     setFile(next);
-
     setPreview(null);
-
     setPage(0);
     setIssuePage(0);
-
     setError(null);
   };
 
@@ -100,7 +97,8 @@ export default function FreeStockUploadDialog({
   };
 
   const commit = async () => {
-    if (!file || !preview || busy || (stock && !stockPreview?.canImport)) return;
+    if (!file || !preview || busy || (stock && !stockPreview?.canImport))
+      return;
 
     setBusy(true);
 
@@ -108,7 +106,11 @@ export default function FreeStockUploadDialog({
 
     try {
       const result = stock
-        ? await freeStockApi.uploadStock(file, stockPreview!, stockPreview!.skippedRows > 0)
+        ? await freeStockApi.uploadStock(
+            file,
+            stockPreview!,
+            stockPreview!.skippedRows > 0,
+          )
         : await freeStockApi.uploadReservation(file);
 
       onSuccess(result.message);
@@ -157,34 +159,43 @@ export default function FreeStockUploadDialog({
   ];
 
   const issueColumns: FreeStockDataColumn<StockRowIssue>[] = [
-    { key: "row", label: "Excel Row", render: (row) => row.rowNo },
-    { key: "bin", label: "Storage Bin", render: (row) => row.storageBin || "—" },
-    { key: "material", label: "Material", render: (row) => row.materialCode || "—" },
-    { key: "batch", label: "Batch", render: (row) => row.batch || "—" },
-    { key: "column", label: "Issue Column", render: (row) => row.column },
-    { key: "value", label: "Invalid Value", render: (row) => row.value || "—" },
-    { key: "reason", label: "Reason", render: (row) => row.reason },
+    {
+      key: "bin",
+      label: "Storage Bin",
+      render: (row) => row.storageBin || "—",
+    },
+    {
+      key: "material",
+      label: "Material Code",
+      width: "25%",
+      render: (row) => row.materialCode || "—",
+    },
+    {
+      key: "batch",
+      label: "Batch",
+      render: (row) => row.batch || "—",
+    },
+    {
+      key: "column",
+      label: "issue column",
+      render: (row) => row.column,
+    },
+    {
+      key: "value",
+      label: "invalid value",
+      render: (row) => row.value || "—",
+    },
   ];
-
-  const stockInformation = (
-    <Alert severity="info" sx={{ mb: 1 }}>
-      Stock genuinely absent from this file will be marked CLOSED. Existing stock matching skipped invalid rows will retain its saved values, status and reservations.
-    </Alert>
-  );
 
   return (
     <FreeStockDialog
       title={stock ? "Upload Excel" : "Reserve from Excel"}
       onClose={onClose}
-      maxWidth={stockPreview?.skippedRows ? "xl" : "lg"}
+      maxWidth="md"
       busy={busy}
       actions={
         <>
-          {stockPreview && stockPreview.skippedRows === 0 && stockInformation}
-          {stockPreview && stockPreview.skippedRows > 0 && (
-            <CommonButton disabled={busy} onClick={onClose}>Cancel</CommonButton>
-          )}
-          {stock && file && !busy && !stockPreview?.skippedRows && (
+          {file && !busy && (
             <CommonButton
               disabled={busy}
               onClick={() => {
@@ -196,7 +207,12 @@ export default function FreeStockUploadDialog({
           )}
 
           <CommonButton
-            disabled={!file || busy || Boolean(stockPreview && !stockPreview.canImport)}
+            disabled={
+              !file ||
+              busy ||
+              Boolean(error) ||
+              Boolean(stockPreview && !stockPreview.canImport)
+            }
             onClick={() => (preview ? void commit() : void check())}
           >
             {busy
@@ -208,46 +224,38 @@ export default function FreeStockUploadDialog({
                   ? "Review Stock"
                   : "Preview"
                 : stock
-                  ? stockPreview?.skippedRows ? "Upload valid rows only" : "Import Stock"
+                  ? stockPreview?.skippedRows
+                    ? "Upload valid rows only"
+                    : "Import Stock"
                   : "Confirm Reservation"}
           </CommonButton>
         </>
       }
     >
-      {file ? (
+      <Box sx={{ "& .MuiAlert-root": { mt: 0 } }}>
+        <FreeStockError error={error} />
+      </Box>
+      {file && preview ? null : file ? (
         <Box
           sx={{
             display: "flex",
-
             alignItems: "center",
-
             gap: 1.5,
-
             p: 1.5,
-
             border: "1px solid",
-
             borderColor: "divider",
-
             borderRadius: 2,
           }}
         >
           <Box
             sx={{
               width: 36,
-
               height: 36,
-
               borderRadius: 1.5,
-
               bgcolor: "primary.main",
-
               color: "primary.contrastText",
-
               display: "grid",
-
               placeItems: "center",
-
               flexShrink: 0,
             }}
           >
@@ -274,11 +282,8 @@ export default function FreeStockUploadDialog({
           hint={HINTS[mode]}
         />
       )}
-
-      <FreeStockError error={error} />
-
       {preview && (
-        <Box sx={{ mt: 1 }}>
+        <Box>
           {stockPreview ? (
             <Box
               sx={{
@@ -287,8 +292,8 @@ export default function FreeStockUploadDialog({
                   xs: "repeat(2, minmax(0, 1fr))",
                   md: "repeat(4, minmax(0, 1fr))",
                 },
-                gap: 1,
-                mb: 2,
+                gap: 0.9,
+                mb: 0.5,
               }}
             >
               {[
@@ -310,7 +315,7 @@ export default function FreeStockUploadDialog({
                 >
                   <Typography
                     variant="body2"
-                    sx={{ display: "block", mb: 0.5 }}
+                    sx={{ display: "block", mb: 0.2 }}
                   >
                     {label}
                   </Typography>
@@ -331,21 +336,44 @@ export default function FreeStockUploadDialog({
           )}
 
           {stockPreview && stockPreview.skippedRows > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Alert severity="warning" sx={{ mb: 1 }}>
-                {stockPreview.validRows.toLocaleString()} valid rows can be imported; {stockPreview.skippedRows.toLocaleString()} invalid rows will be skipped.
-                {" "}{stockPreview.protectedRows.toLocaleString()} existing stock rows will be preserved because of these issues.
-                {" "}No stock has been changed yet.
+            <Box sx={{ mb: 0.5 }}>
+              <Alert severity="warning" sx={{ mb: 0.5 }}>
+                {stockPreview.validRows.toLocaleString()} valid rows can be
+                imported; {stockPreview.skippedRows.toLocaleString()} invalid
+                rows will be skipped.{" "}
+                {stockPreview.protectedRows.toLocaleString()} existing stock
+                rows will be preserved because of these issues. No stock has
+                been changed yet.
               </Alert>
-              {!stockPreview.canImport && <Alert severity="error" sx={{ mb: 1 }}>There are no valid rows to import. Cancel and correct the file.</Alert>}
-              {stockInformation}
-              <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>Rows with issues</Typography>
+              {!stockPreview.canImport && (
+                <Alert severity="error" sx={{ mb: 0.5 }}>
+                  There are no valid rows to import. Go back and correct the
+                  file.
+                </Alert>
+              )}
+              <Typography variant="inherit" fontWeight={700} sx={{ mb: 1 }}>
+                Invalid Rows
+              </Typography>
               <FreeStockDataTable
+                compactIssueHeader
                 columns={issueColumns}
-                rows={stockPreview.issues.slice(issuePage * 50, (issuePage + 1) * 50)}
+                rows={stockPreview.issues.slice(
+                  issuePage * 5,
+                  (issuePage + 1) * 5,
+                )}
                 rowKey={(row) => row.rowNo}
                 maxHeight={320}
-                pagination={{ count: stockPreview.skippedRows, page: issuePage, size: 50, onPage: setIssuePage, disabled: busy }}
+                pagination={
+                  stockPreview.skippedRows > 5
+                    ? {
+                        count: stockPreview.skippedRows,
+                        page: issuePage,
+                        size: 5,
+                        onPage: setIssuePage,
+                        disabled: busy,
+                      }
+                    : undefined
+                }
               />
             </Box>
           )}
@@ -362,7 +390,9 @@ export default function FreeStockUploadDialog({
               <FreeStockDataTable
                 columns={columns}
                 rows={rows.slice(page * 50, (page + 1) * 50)}
-                rowKey={(row) => JSON.stringify([row.storageBin, row.materialCode, row.batch])}
+                rowKey={(row) =>
+                  JSON.stringify([row.storageBin, row.materialCode, row.batch])
+                }
                 maxHeight={260}
                 pagination={{
                   count: rows.length,

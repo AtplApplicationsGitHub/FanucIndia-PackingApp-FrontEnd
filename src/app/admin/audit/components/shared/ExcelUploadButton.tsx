@@ -124,7 +124,9 @@ export default function ExcelUploadButton({
             }}
             onDragLeave={(e) => {
               e.preventDefault();
-              setDragging(false);
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                setDragging(false);
+              }
             }}
             onDrop={(e) => {
               e.preventDefault();
@@ -136,7 +138,7 @@ export default function ExcelUploadButton({
               borderColor: dragging ? "primary.main" : "divider",
               bgcolor: dragging
                 ? (theme) => alpha(theme.palette.primary.main, 0.08)
-                : "background.paper",
+                : "transparent",
               borderRadius: 2,
               minHeight: 76,
               px: 2,
@@ -153,15 +155,7 @@ export default function ExcelUploadButton({
           >
             <FileSpreadsheet size={20} style={{ flexShrink: 0 }} />
 
-            <Typography
-              variant="body2"
-              fontWeight={600}
-              sx={{
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+            <Typography variant="body2" fontWeight={600}>
               Drag & drop Excel file here
             </Typography>
             <Typography
@@ -169,8 +163,7 @@ export default function ExcelUploadButton({
               color="text.secondary"
               sx={{ fontSize: "0.75rem", textAlign: "center" }}
             >
-              Required: .xlsx file with Location, Stock, Material and Operator
-              ID (optional)
+              {hint}
             </Typography>
           </Box>
         )

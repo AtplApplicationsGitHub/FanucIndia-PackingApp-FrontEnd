@@ -41,6 +41,8 @@ type Props = {
   admin: boolean;
   search: string;
   onSearch: (value: string) => void;
+  onSubmitSearch: () => void;
+  onClearSearch: () => void;
   zoneId: number | "";
   zones: FreeStockZone[];
   onZoneChange: (value: number | "") => void;
@@ -63,7 +65,14 @@ export default function FreeStockToolbar({
   admin,
   search,
   onSearch,
-  zoneId, zones, onZoneChange, reservedDays, onReservedDaysChange, onClearFilters,
+  onSubmitSearch,
+  onClearSearch,
+  zoneId,
+  zones,
+  onZoneChange,
+  reservedDays,
+  onReservedDaysChange,
+  onClearFilters,
   selectedCount,
   selectedRows,
   pending,
@@ -93,7 +102,10 @@ export default function FreeStockToolbar({
       >
         <Box
           component="form"
-          onSubmit={(event: FormEvent) => event.preventDefault()}
+          onSubmit={(event: FormEvent) => {
+            event.preventDefault();
+            onSubmitSearch();
+          }}
           sx={{
             p: "2px 4px",
             display: "flex",
@@ -124,7 +136,7 @@ export default function FreeStockToolbar({
             <IconButton
               sx={{ p: "5px" }}
               aria-label="clear search"
-              onClick={() => onSearch("")}
+              onClick={onClearSearch}
             >
               <ClearIcon sx={{ fontSize: 20 }} />
             </IconButton>
@@ -136,18 +148,43 @@ export default function FreeStockToolbar({
         </Box>
 
         <TextField
-          select size="small" label="Zone" value={zoneId}
-          slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-          onChange={(event) => onZoneChange(event.target.value === "" ? "" : Number(event.target.value))}
-          sx={{ width: { xs: "100%", sm: 150 }, "& .MuiInputBase-root": { height: 38, fontSize: 14 } }}
+          select
+          size="small"
+          label="Zone"
+          value={zoneId}
+          slotProps={{
+            select: { displayEmpty: true },
+            inputLabel: { shrink: true },
+          }}
+          onChange={(event) =>
+            onZoneChange(
+              event.target.value === "" ? "" : Number(event.target.value),
+            )
+          }
+          sx={{
+            width: { xs: "100%", sm: 150 },
+            "& .MuiInputBase-root": { height: 38, fontSize: 14 },
+          }}
         >
           <MenuItem value="">All zones</MenuItem>
-          {zones.map((zone) => <MenuItem key={zone.id} value={zone.id}>{zone.name}</MenuItem>)}
+          {zones.map((zone) => (
+            <MenuItem key={zone.id} value={zone.id}>
+              {zone.name}
+            </MenuItem>
+          ))}
         </TextField>
         <TextField
-          select size="small" label="Reserved Days" value={reservedDays}
-          onChange={(event) => onReservedDaysChange(event.target.value as FreeStockReservedDays)}
-          sx={{ width: { xs: "100%", sm: 170 }, "& .MuiInputBase-root": { height: 38, fontSize: 14 } }}
+          select
+          size="small"
+          label="Reserved Days"
+          value={reservedDays}
+          onChange={(event) =>
+            onReservedDaysChange(event.target.value as FreeStockReservedDays)
+          }
+          sx={{
+            width: { xs: "100%", sm: 150 },
+            "& .MuiInputBase-root": { height: 38, fontSize: 14 },
+          }}
         >
           <MenuItem value="ALL">All</MenuItem>
           <MenuItem value="0_30">0–30 days</MenuItem>
@@ -156,7 +193,11 @@ export default function FreeStockToolbar({
         </TextField>
         {(zoneId !== "" || reservedDays !== "ALL") && (
           <Tooltip title="Clear filters">
-            <IconButton size="small" aria-label="Clear reservation filters" onClick={onClearFilters}>
+            <IconButton
+              size="small"
+              aria-label="Clear reservation filters"
+              onClick={onClearFilters}
+            >
               <ClearIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>

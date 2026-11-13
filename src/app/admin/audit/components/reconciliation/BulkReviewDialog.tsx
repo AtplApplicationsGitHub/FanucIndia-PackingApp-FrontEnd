@@ -108,7 +108,14 @@ export default function BulkReviewDialog({
           }}
         >
           <Box component="span">BULK REVIEW</Box>
-          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1,
+            }}
+          >
             {breakdown.map(({ type, total }) => (
               <Chip
                 key={type}
@@ -170,7 +177,6 @@ export default function BulkReviewDialog({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-
           <CommonButton
             variant="contained"
             disabled={!canSave || saving}

@@ -44,19 +44,59 @@ type Column = {
 
 const COLUMNS: Column[] = [
   { label: "S.No", align: "left", width: "5%", render: (l) => l.sequenceNo },
-  { label: "Storage Bin", align: "left", width: "15%", render: (l) => l.storageBin },
+  {
+    label: "Storage Bin",
+    align: "left",
+    width: "15%",
+    render: (l) => l.storageBin,
+  },
   {
     label: "Status",
     align: "left",
     width: "11%",
-    render: (l) => l.uploadedAt || l.uploaded ? "Uploaded" : "Pending",
+    render: (l) => (l.uploadedAt || l.uploaded ? "Uploaded" : "Pending"),
   },
-  { label: "Exp.", align: "left", width: "6%", render: (l) => l.expectedMaterials },
-  { label: "Valid", align: "left", width: "7%", color: "success", render: (l) => l.valid },
-  { label: "Mismatch", align: "left", width: "9%", color: "info", render: (l) => l.mismatch },
-  { label: "Missing", align: "left", width: "8%", color: "error", render: (l) => l.missing },
-  { label: "Unexpected", align: "left", width: "11%", color: "warning", render: (l) => l.unexpected },
-  { label: "Open", align: "left", width: "8%", color: "secondary", render: (l) => l.openVariances },
+  {
+    label: "Exp.",
+    align: "left",
+    width: "6%",
+    render: (l) => l.expectedMaterials,
+  },
+  {
+    label: "Valid",
+    align: "left",
+    width: "7%",
+    color: "success",
+    render: (l) => l.valid,
+  },
+  {
+    label: "Mismatch",
+    align: "left",
+    width: "9%",
+    color: "info",
+    render: (l) => l.mismatch,
+  },
+  {
+    label: "Missing",
+    align: "left",
+    width: "8%",
+    color: "error",
+    render: (l) => l.missing,
+  },
+  {
+    label: "Unexpected",
+    align: "left",
+    width: "11%",
+    color: "warning",
+    render: (l) => l.unexpected,
+  },
+  {
+    label: "Open",
+    align: "left",
+    width: "8%",
+    color: "secondary",
+    render: (l) => l.openVariances,
+  },
   {
     label: "Uploaded On",
     align: "left",
@@ -93,7 +133,10 @@ export default function LocationVarianceDialog({
         openVariances: 0,
         resolvedVariances: 0,
       }));
-  const pageRows = displayLocations.slice(page * perPage, page * perPage + perPage);
+  const pageRows = displayLocations.slice(
+    page * perPage,
+    page * perPage + perPage,
+  );
 
   return (
     <Dialog
@@ -219,7 +262,9 @@ export default function LocationVarianceDialog({
                             key={column.label}
                             align={column.align}
                             sx={{
-                              whiteSpace: column.label.endsWith(" On") ? "normal" : "nowrap",
+                              whiteSpace: column.label.endsWith(" On")
+                                ? "normal"
+                                : "nowrap",
                               overflowWrap: "anywhere",
                               fontWeight: highlight ? 700 : undefined,
                               color: highlight
@@ -230,7 +275,9 @@ export default function LocationVarianceDialog({
                             {column.label === "Status" ? (
                               <AuditStatusPill
                                 label={String(value)}
-                                color={value === "Uploaded" ? "success" : "warning"}
+                                color={
+                                  value === "Uploaded" ? "success" : "warning"
+                                }
                               />
                             ) : (
                               value

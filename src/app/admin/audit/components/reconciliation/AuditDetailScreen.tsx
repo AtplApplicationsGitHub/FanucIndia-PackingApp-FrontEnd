@@ -66,11 +66,7 @@ function PlanningAuditDetail({
   }
 
   return (
-    <AuditProgressDetail
-      auditType={auditType}
-      auditId={auditId}
-      view={view}
-    />
+    <AuditProgressDetail auditType={auditType} auditId={auditId} view={view} />
   );
 }
 

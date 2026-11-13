@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, Paper, Typography, alpha } from "@mui/material";
+
 export default function FreeStockMetricCard({
   title,
   value,
