@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent } from "react";
-
+import type { FormEvent, ReactNode } from "react";
 import {
   Box,
   Chip,
@@ -61,6 +60,41 @@ type Props = {
   onHistory: (open: boolean) => void;
 };
 
+type ToolbarButtonProps = {
+  label: string;
+  icon: ReactNode;
+  disabled?: boolean;
+  onClick: () => void;
+};
+
+// Icon + text on large screens, icon only (with tooltip) below `lg`.
+function ToolbarButton({ label, icon, disabled, onClick }: ToolbarButtonProps) {
+  return (
+    <Tooltip title={label}>
+      {/* span lets the tooltip work even when the button is disabled */}
+      <Box component="span" sx={{ display: "inline-flex" }}>
+        <CommonButton
+          aria-label={label}
+          startIcon={icon}
+          disabled={disabled}
+          onClick={onClick}
+          sx={{
+            minWidth: { xs: 40, lg: 80 },
+            px: { xs: 0, lg: 2 },
+            "& .MuiButton-startIcon": {
+              mr: { xs: 0, lg: 1 },
+              ml: { xs: 0, lg: -0.5 },
+            },
+          }}
+        >
+          <Box component="span" sx={{ display: { xs: "none", lg: "inline" } }}>
+            {label}
+          </Box>
+        </CommonButton>
+      </Box>
+    </Tooltip>
+  );
+}
 export default function FreeStockToolbar({
   admin,
   search,
@@ -218,40 +252,36 @@ export default function FreeStockToolbar({
         )}
 
         {admin && (
-          <CommonButton
-            startIcon={<Upload size={17} />}
+          <ToolbarButton
+            label="UPLOAD EXCEL"
+            icon={<Upload size={17} />}
             onClick={() => onUpload("stock")}
-          >
-            UPLOAD EXCEL
-          </CommonButton>
+          />
         )}
 
         {!admin && (
           <>
-            <CommonButton
-              startIcon={<FileSpreadsheet size={17} />}
+            <ToolbarButton
+              label="DOWNLOAD TEMPLATE"
+              icon={<FileSpreadsheet size={17} />}
               disabled={downloading}
               onClick={() => void onDownload(true)}
-            >
-              DOWNLOAD TEMPLATE
-            </CommonButton>
+            />
 
-            <CommonButton
-              startIcon={<Upload size={17} />}
+            <ToolbarButton
+              label="UPLOAD EXCEL"
+              icon={<Upload size={17} />}
               onClick={() => onUpload("reservation")}
-            >
-              UPLOAD EXCEL
-            </CommonButton>
+            />
           </>
         )}
 
-        <CommonButton
-          startIcon={<Download size={17} />}
+        <ToolbarButton
+          label={downloading ? "DOWNLOADING..." : "EXPORT EXCEL"}
+          icon={<Download size={17} />}
           disabled={pending || downloading || !hasData}
           onClick={() => void onDownload(false)}
-        >
-          {downloading ? "DOWNLOADING..." : "EXPORT EXCEL"}
-        </CommonButton>
+        />
 
         <Tooltip title="Actions">
           <IconButton

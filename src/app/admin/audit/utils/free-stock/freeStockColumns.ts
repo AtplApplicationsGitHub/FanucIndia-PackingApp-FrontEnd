@@ -29,14 +29,14 @@ export const FREE_STOCK_COLUMNS: FreeStockColumn[] = [
 // These widths total 93%; the Actions column uses the remaining 7%.
 export const FREE_STOCK_TABLE_COLUMNS: (FreeStockColumn & { width: string })[] = [
   { key: "storageBin", label: "Bin", width: "6%" },
-  { key: "materialCode", label: "Material", width: "10%" },
+  { key: "materialCode", label: "Material", width: "9%" },
   { key: "batch", label: "Batch", width: "8%" },
   { key: "certificateNo", label: "Cert. No.", width: "8%" },
-  { key: "grDate", label: "GR Date / Age", date: true, width: "10%" },
-  { key: "reservedDate", label: "Reserved Date / Days", date: true, width: "10%" },
+  { key: "grDate", label: "GR Date / Age", date: true, width: "13%" },
+  { key: "reservedDate", label: "Reserved Date / Days", date: true, width: "13%" },
   { key: "status", label: "Status", width: "8%" },
   { key: "stockQty", label: "Stock", width: "5%" },
   { key: "reservedQty", label: "Reserved Qty", width: "7%" },
-  { key: "name", label: "Reserved By / Zone", width: "10%" },
-  { key: "shortageQty", label: "Shortage Qty", width: "11%" },
+  { key: "name", label: "Reserved By / Zone", width: "9%" },
+  { key: "shortageQty", label: "Shortage Qty", width: "7%" },
 ];

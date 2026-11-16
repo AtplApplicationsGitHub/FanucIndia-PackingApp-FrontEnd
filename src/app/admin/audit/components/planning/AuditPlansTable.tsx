@@ -111,8 +111,15 @@ export default function AuditPlansTable({ auditType }: Props) {
   const router = useRouter();
   const label = AUDIT_LABELS[auditType];
 
-  const { audits, pagination, params, loading, available, updateParams, statusCounts } =
-    useAuditList(auditType);
+  const {
+    audits,
+    pagination,
+    params,
+    loading,
+    available,
+    updateParams,
+    statusCounts,
+  } = useAuditList(auditType);
 
   const { deleteAudit, loading: deleting } = useDeleteAudit(auditType);
   const { reassignAudit } = useReassignAudit(auditType);
@@ -181,10 +188,10 @@ export default function AuditPlansTable({ auditType }: Props) {
       : `No audits found.`;
 
   return (
-    <Box sx={{ mt: 1, width: "100%" }}>
+    <Box sx={{ width: "100%", px: 2 }}>
       <Box
         sx={{
-          mt: 2,
+          mt: 1,
           width: "100%",
           bgcolor: "background.paper",
           px: 0,
@@ -198,7 +205,8 @@ export default function AuditPlansTable({ auditType }: Props) {
             justifyContent: "space-between",
             flexWrap: "wrap",
             gap: 1,
-            p: 2,
+            px: 2,
+            py: 1,
           }}
         >
           <Box
@@ -364,15 +372,16 @@ export default function AuditPlansTable({ auditType }: Props) {
               )}
             </LocalizationProvider>
           </Box>
-          {/* STATUS BADGES - RIGHT SIDE */}
+          {/* STATUS BADGES */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 1,
               flexWrap: "wrap",
-              justifyContent: "flex-end",
-              ml: "auto",
+              justifyContent: { xs: "flex-start", lg: "flex-end" },
+              ml: { xs: 0, lg: "auto" },
+              width: { xs: "100%", lg: "auto" },
             }}
           >
             {STATUS_BADGES.map((item) => {
@@ -461,7 +470,11 @@ export default function AuditPlansTable({ auditType }: Props) {
             <TableBody>
               {audits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={auditType === "cycle_count" ? 10 : 9} align="center" sx={{ py: 4 }}>
+                  <TableCell
+                    colSpan={auditType === "cycle_count" ? 10 : 9}
+                    align="center"
+                    sx={{ py: 4 }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       {emptyText}
                     </Typography>
@@ -508,7 +521,13 @@ export default function AuditPlansTable({ auditType }: Props) {
                     <TableCell>{label}</TableCell>
                     {auditType === "cycle_count" && (
                       <TableCell>
-                        {issueDate(audit.issueFromDate ?? audit.details.issueFromDate)} - {issueDate(audit.issueToDate ?? audit.details.issueToDate)}
+                        {issueDate(
+                          audit.issueFromDate ?? audit.details.issueFromDate,
+                        )}{" "}
+                        -{" "}
+                        {issueDate(
+                          audit.issueToDate ?? audit.details.issueToDate,
+                        )}
                       </TableCell>
                     )}
                     <TableCell>

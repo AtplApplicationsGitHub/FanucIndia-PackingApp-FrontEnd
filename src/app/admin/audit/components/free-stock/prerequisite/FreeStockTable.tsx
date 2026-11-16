@@ -41,6 +41,8 @@ const STATUS_PILL = {
   RESERVED: { label: "Reserved", color: "warning" },
   CLOSED: { label: "Closed", color: "default" },
 } as const;
+
+const NO_WRAP_COLUMNS = new Set<string>(["grDate", "reservedDate"]);
 export default function FreeStockTable({
   rows,
   total,
@@ -92,8 +94,7 @@ export default function FreeStockTable({
         <Table
           sx={{
             width: "100%",
-            minWidth: 0,
-            maxWidth: "100%",
+            minWidth: { xs: 1700, xl: 1500 },
             tableLayout: "fixed",
             "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
               backgroundColor: alpha(theme.palette.primary.main, 0.25),
@@ -113,6 +114,10 @@ export default function FreeStockTable({
               fontSize: "0.8rem",
               whiteSpace: "normal",
               overflowWrap: "anywhere",
+            },
+            "& .MuiTableCell-root[data-nowrap='true']": {
+              whiteSpace: "nowrap",
+              overflowWrap: "normal",
             },
           }}
         >
@@ -241,8 +246,14 @@ export default function FreeStockTable({
                       )}
                     </Box>
                   </TableCell>
+
                   {FREE_STOCK_TABLE_COLUMNS.map((column) => (
-                    <TableCell key={column.key}>
+                    <TableCell
+                      key={column.key}
+                      data-nowrap={
+                        NO_WRAP_COLUMNS.has(column.key) ? "true" : undefined
+                      }
+                    >
                       {column.key === "status" ? (
                         <Box
                           sx={{
@@ -320,7 +331,7 @@ export default function FreeStockTable({
           },
           "& .MuiTablePagination-spacer": { flex: "1 1 auto" },
         }}
-        rowsPerPageOptions={[10, 25, 50, 100, 200]}
+        rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"
         count={total}
         rowsPerPage={size}

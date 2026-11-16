@@ -26,7 +26,19 @@ export async function exportStock(filters: FreeStockFilters) {
     for (const row of result.data) {
       if (seen.has(row.id)) throw new Error("Stock changed during export. Please export again.");
       seen.add(row.id);
-      sheet.addRow({ status: row.status, ...Object.fromEntries(FREE_STOCK_COLUMNS.map((c) => [c.key, stockCell(row, c)])) });
+sheet.addRow({
+  status: row.status,
+  ...Object.fromEntries(
+    FREE_STOCK_COLUMNS.map((c) => [
+      c.key,
+      row[c.key] === null ||
+      row[c.key] === undefined ||
+      row[c.key] === ""
+        ? null
+        : stockCell(row, c),
+    ]),
+  ),
+});
     }
     if (page >= result.pagination.totalPages) break;
   }

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Chip, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { formatDateTimeIST } from "@/common/utils/dateTime";
 import type {
   FreeStockPagination as Pagination,
@@ -11,7 +11,6 @@ import FreeStockError from "./FreeStockError";
 import FreeStockDialog from "./FreeStockDialog";
 import FreeStockDataTable from "./FreeStockDataTable";
 import type { FreeStockDataColumn } from "./FreeStockDataTable";
-import FreeStockMetricCard from "./FreeStockMetricCard";
 export default function FreeStockUploadHistory({
   onClose,
 }: {
@@ -70,24 +69,6 @@ export default function FreeStockUploadHistory({
       ),
     },
     {
-      key: "status",
-      label: "Status",
-      width: "18%",
-      render: (row) => (
-        <Chip
-          size="small"
-          label={row.status}
-          color={
-            row.status === "COMPLETED"
-              ? "success"
-              : row.status === "FAILED"
-                ? "error"
-                : "warning"
-          }
-        />
-      ),
-    },
-    {
       key: "rows",
       label: "Rows",
       width: "11%",
@@ -117,7 +98,7 @@ export default function FreeStockUploadHistory({
       <FreeStockDialog
         title="SAP Upload History"
         onClose={onClose}
-        maxWidth="lg"
+        maxWidth="md"
       >
         <FreeStockError error={error} />
         <FreeStockDataTable

@@ -70,7 +70,7 @@ export default function FreeStockDataTable<T>({
               borderBottom: "none",
               py: 0.5,
               px: 1,
-              fontSize: "0.875rem",
+              fontSize: "0.8rem",
               fontFamily: "inherit",
               verticalAlign: "middle",
             },
@@ -81,7 +81,7 @@ export default function FreeStockDataTable<T>({
               textTransform: compactIssueHeader ? "capitalize" : "uppercase",
               height: compactIssueHeader ? 30 : 40,
               py: compactIssueHeader ? "4px !important" : undefined,
-              fontSize: compactIssueHeader ? 12 : undefined,
+              fontSize: compactIssueHeader ? "0.87rem" : undefined,
               verticalAlign: "middle",
             },
             "& th, & td": {

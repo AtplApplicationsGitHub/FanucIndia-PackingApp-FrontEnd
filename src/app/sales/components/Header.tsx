@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   AppBar,
@@ -16,7 +16,16 @@ import {
   ListItemText,
 } from "@mui/material";
 import { SalesDashboardView } from "@/app/sales/components/hooks/useSalesDashboard";
-import { ClipboardList, BarChart3, Search, ArrowLeft, Menu, X, Warehouse, PackageOpen } from "lucide-react";
+import {
+  ClipboardList,
+  BarChart3,
+  Search,
+  ArrowLeft,
+  Menu,
+  X,
+  Warehouse,
+  PackageOpen,
+} from "lucide-react";
 import Image from "next/image";
 import UserMenu from "@/common/components/UserMenu";
 import packageJson from "../../../../package.json";
@@ -30,19 +39,110 @@ type Props = {
 };
 
 const menuItems = [
-  { label: "DASHBOARD", icon: <BarChart3 className="mr-1 h-4 w-4" />, value: "home" },
-  { label: "ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "orders" },
-  { label: "DISPATCHED ORDERS", icon: <ClipboardList className="mr-1 h-4 w-4" />, value: "dispatched" },
-  { label: "FG STORAGE", icon: <Warehouse className="mr-1 h-4 w-4" />, value: "fg-storage" },
-  { label: "FREE STOCK", icon: <PackageOpen className="mr-1 h-4 w-4" />, value: "free_stock" },
-  { label: "SO SEARCH", icon: <Search className="mr-1 h-4 w-4" />, value: "so_search" },
+  {
+    label: "DASHBOARD",
+    icon: <BarChart3 className="mr-1 h-4 w-4" />,
+    value: "home",
+  },
+  {
+    label: "ORDERS",
+    icon: <ClipboardList className="mr-1 h-4 w-4" />,
+    value: "orders",
+  },
+  {
+    label: "DISPATCHED ORDERS",
+    icon: <ClipboardList className="mr-1 h-4 w-4" />,
+    value: "dispatched",
+  },
+  {
+    label: "FG STORAGE",
+    icon: <Warehouse className="mr-1 h-4 w-4" />,
+    value: "fg-storage",
+  },
+  {
+    label: "FREE STOCK",
+    icon: <PackageOpen className="mr-1 h-4 w-4" />,
+    value: "free_stock",
+  },
+  {
+    label: "SO SEARCH",
+    icon: <Search className="mr-1 h-4 w-4" />,
+    value: "so_search",
+  },
 ];
 
-export default function SalesDashboardHeader({ userName, salesZone, view, setView, showBackButton }: Props) {
+export default function SalesDashboardHeader({
+  userName,
+  salesZone,
+  view,
+  setView,
+  showBackButton,
+}: Props) {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const zoneRef = useRef<HTMLParagraphElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+
+  const [showDesktopNav, setShowDesktopNav] = useState(false);
+
+  // Show the full nav only when it fits; otherwise show the hamburger.
+  const updateNavbarLayout = useCallback(() => {
+    const toolbar = toolbarRef.current;
+    const logo = logoRef.current;
+    const nav = navRef.current;
+    const zone = zoneRef.current;
+    const user = userRef.current;
+
+    if (!toolbar || !logo || !nav || !zone || !user) return;
+
+    const styles = window.getComputedStyle(toolbar);
+
+    const availableWidth =
+      toolbar.clientWidth -
+      parseFloat(styles.paddingLeft) -
+      parseFloat(styles.paddingRight);
+
+    const backWidth = backRef.current
+      ? backRef.current.getBoundingClientRect().width +
+        parseFloat(window.getComputedStyle(backRef.current).marginRight)
+      : 0;
+
+    const requiredWidth =
+      backWidth +
+      logo.getBoundingClientRect().width +
+      nav.getBoundingClientRect().width +
+      zone.getBoundingClientRect().width +
+      user.getBoundingClientRect().width +
+      32;
+
+    setShowDesktopNav(requiredWidth <= availableWidth);
+  }, []);
+
+  useEffect(() => {
+    const observer = new ResizeObserver(updateNavbarLayout);
+
+    [
+      toolbarRef.current,
+      logoRef.current,
+      navRef.current,
+      zoneRef.current,
+      userRef.current,
+      backRef.current,
+    ].forEach((element) => {
+      if (element) observer.observe(element);
+    });
+
+    document.fonts.ready.then(updateNavbarLayout);
+    updateNavbarLayout();
+
+    return () => observer.disconnect();
+  }, [updateNavbarLayout]);
 
   const getIsSelected = (itemValue: string) => {
     if (pathname.startsWith("/so-search")) {
@@ -73,8 +173,9 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
         }}
       >
         <Toolbar
+          ref={toolbarRef}
           sx={{
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
             pl: { xs: 1.5, md: 4 },
             pr: { xs: 1, md: 2 },
             py: 0.5,
@@ -84,6 +185,7 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
           {/* Back Button */}
           {showBackButton && (
             <IconButton
+              ref={backRef}
               onClick={() => router.back()}
               sx={{
                 mr: 1,
@@ -97,8 +199,10 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
 
           {/* Logo + Version */}
           <Box
+            ref={logoRef}
             sx={{
-              flexGrow: 1,
+              flexGrow: 0,
+              flexShrink: 0,
               mr: 1,
               cursor: "pointer",
               display: "flex",
@@ -131,9 +235,19 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
 
           {/* Desktop Nav Menu — hidden on mobile */}
           <Box
+            ref={navRef}
+            aria-hidden={!showDesktopNav}
+            inert={!showDesktopNav}
             sx={{
-              display: { xs: "none", md: "flex" },
+              display: "flex",
               justifyContent: "flex-end",
+              flexShrink: 0,
+              ml: "auto",
+              width: "max-content",
+              position: showDesktopNav ? "static" : "absolute",
+              visibility: showDesktopNav ? "visible" : "hidden",
+              pointerEvents: showDesktopNav ? "auto" : "none",
+              left: showDesktopNav ? "auto" : "-9999px",
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.1 }}>
@@ -161,6 +275,7 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
                         opacity: 0.8,
                       },
                       textTransform: "uppercase",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {item.icon}
@@ -174,7 +289,7 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
           {/* Right Section: Zone + Hamburger (mobile only) + User */}
           <Box
             sx={{
-              ml: { xs: 0.5, md: 0 },
+              ml: showDesktopNav ? 0 : "auto",
               mb: 0.5,
               display: "flex",
               alignItems: "center",
@@ -182,6 +297,7 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
             }}
           >
             <Typography
+              ref={zoneRef}
               variant="body2"
               sx={{
                 color: "white",
@@ -197,11 +313,15 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
               ZONE: {salesZone.toUpperCase()}
             </Typography>
 
-            {/* Hamburger Menu Icon — visible only on mobile, sits between Zone and UserMenu */}
+            <Box ref={userRef} sx={{ flexShrink: 0 }}>
+              <UserMenu username={userName} userRole="SALES" variant="full" />
+            </Box>
+
+            {/* Hamburger Menu Icon — shown only when the nav doesn't fit */}
             <IconButton
               onClick={() => setDrawerOpen(true)}
               sx={{
-                display: { xs: "flex", md: "none" },
+                display: showDesktopNav ? "none" : "flex",
                 color: theme.palette.primary.contrastText,
                 p: 0.5,
                 "&:hover": { bgcolor: "rgba(0,0,0,0.1)" },
@@ -210,8 +330,6 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
             >
               <Menu size={22} />
             </IconButton>
-
-            <UserMenu username={userName} userRole="SALES" variant="full" />
           </Box>
         </Toolbar>
       </AppBar>
@@ -266,7 +384,9 @@ export default function SalesDashboardHeader({ userName, salesZone, view, setVie
                     borderLeft: isSelected
                       ? `4px solid ${theme.palette.primary.contrastText}`
                       : "4px solid transparent",
-                    bgcolor: isSelected ? "rgba(255,255,255,0.1)" : "transparent",
+                    bgcolor: isSelected
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
                     "&:hover": {
                       bgcolor: "rgba(255,255,255,0.08)",
                     },

@@ -313,10 +313,7 @@ export default function FreeStockUploadDialog({
                     minWidth: 0,
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    sx={{ display: "block", mb: 0.2 }}
-                  >
+                  <Typography variant="body2" sx={{ display: "block" }}>
                     {label}
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
