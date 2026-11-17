@@ -1,5 +1,6 @@
 "use client";
 
+import { SkippedRemarksDialog, UnexpectedRemarksDialog } from "./AuditRemarksDialogs";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import {
@@ -17,6 +18,7 @@ import {
   IconButton,
   InputBase,
   ListItemIcon,
+  Link,
   Menu,
   MenuItem,
   Paper,
@@ -256,6 +258,8 @@ export default function ReconciliationPanel({
   const [confirmClose, setConfirmClose] = useState(false);
   const [closing, setClosing] = useState(false);
   const [locationsOpen, setLocationsOpen] = useState(false);
+  const [skippedOpen, setSkippedOpen] = useState(false);
+  const [unexpectedRemarks, setUnexpectedRemarks] = useState<ReconLine | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
@@ -268,6 +272,8 @@ export default function ReconciliationPanel({
 
   useEffect(() => {
     setIssueFilter(getDefaultCategory(auditType, auditStatus));
+    setSkippedOpen(false);
+    setUnexpectedRemarks(null);
     setPage(0);
     setSelectedIds([]);
   }, [auditType, auditId, auditStatus]);
@@ -472,6 +478,7 @@ export default function ReconciliationPanel({
     return <Alert severity="error">{error || "Audit not found."}</Alert>;
   }
 
+  const skippedLocations = detail.locations.filter((location) => Boolean(location.skipReason?.trim()));
   const isClosed = detail.status === "CLOSED";
   const locked = pending || (!isClosed && !detail.canReview);
   const reviewingLine = pageRows.find((v) => v.id === reviewId);
@@ -869,6 +876,22 @@ export default function ReconciliationPanel({
                 </FormControl>
               </>
             )}
+            {themed && (
+              <Chip
+                size="small"
+                label={`Skipped (${skippedLocations.length})`}
+                onClick={() => setSkippedOpen(true)}
+                sx={{
+                  height: 32,
+                  fontWeight: 700,
+                  bgcolor: alpha(theme.palette.warning.main, 0.12),
+                  color: "text.primary",
+                  border: 1,
+                  borderColor: alpha(theme.palette.warning.main, 0.45),
+                  "&:hover": { bgcolor: alpha(theme.palette.warning.main, 0.22) },
+                }}
+              />
+            )}
           </Box>
           <Box
             sx={{
@@ -1135,7 +1158,18 @@ export default function ReconciliationPanel({
                       <TableCell>{v.storageBin}</TableCell>
 
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {v.materialCode}
+                        {v.issueType === "EXCESS" ? (
+                          <Link
+                            component="button"
+                            type="button"
+                            underline="always"
+                            onClick={() => setUnexpectedRemarks(v)}
+                            sx={{ font: "inherit", textAlign: "left" }}
+                            aria-label={`View operator remarks for ${v.materialCode}`}
+                          >
+                            {v.materialCode}
+                          </Link>
+                        ) : v.materialCode}
                       </TableCell>
 
                       {/* Batch */}
@@ -1145,7 +1179,7 @@ export default function ReconciliationPanel({
 
                       {/* Certificate Number */}
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {v.certNo || "-"}
+                        {v.ydNumber || v.certNo || "-"}
                       </TableCell>
 
                       <TableCell>{v.expectedQty}</TableCell>
@@ -1233,6 +1267,17 @@ export default function ReconciliationPanel({
           }}
         />
       </Paper>
+
+      <SkippedRemarksDialog
+        key={`skipped-${auditType}-${auditId}`}
+        open={skippedOpen}
+        locations={skippedLocations}
+        onClose={() => setSkippedOpen(false)}
+      />
+      <UnexpectedRemarksDialog
+        line={unexpectedRemarks}
+        onClose={() => setUnexpectedRemarks(null)}
+      />
 
       <BulkReviewDialog
         open={bulkOpen}

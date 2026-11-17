@@ -1,5 +1,6 @@
 "use client";
 
+import OperatorAuditEvidence from "./OperatorAuditEvidence";
 import { useEffect, useState } from "react";
 
 import {
@@ -206,6 +207,14 @@ export default function DiscrepancyReviewDialog({
             </Table>
           </TableContainer>
 
+          <Box sx={{ mt: 2 }}>
+            <OperatorAuditEvidence
+              ydNumber={variance.ydNumber}
+              soNumber={variance.soNumber}
+              operatorRemarks={variance.operatorRemarks}
+              skipReason={variance.skipReason}
+            />
+          </Box>
           <Box sx={{ mt: 2 }}>
             {viewOnly ? (
               <Box

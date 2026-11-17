@@ -49,6 +49,11 @@ export type ReconVariance = {
   id: number; // BomAuditMaterial.id
   storageBin: string;
   materialCode: string;
+  ydNumber?: string | null;
+  soNumber?: string | null;
+  operatorRemarks?: string | null;
+  skipReason?: string | null;
+  skippedAt?: string | null;
   expectedQty: number;
   scannedQty: number; // actualQty (0 when not scanned)
   issueType: ReconIssueType;
@@ -90,6 +95,8 @@ export type ReconLineFilters = {
 };
 
 export type ReconLocationSummary = {
+  skipReason?: string | null;
+  skippedAt?: string | null;
   sequenceNo: number;
   storageBin: string;
   expectedMaterials: number;

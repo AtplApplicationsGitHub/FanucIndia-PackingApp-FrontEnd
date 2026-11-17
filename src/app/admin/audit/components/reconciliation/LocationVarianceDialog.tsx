@@ -280,7 +280,14 @@ export default function LocationVarianceDialog({
                                 }
                               />
                             ) : (
-                              value
+                              <>
+                                {value}
+                                {column.label === "Storage Bin" && location.skipReason && (
+                                  <Typography variant="caption" component="div" color="warning.main" sx={{ whiteSpace: "normal", maxWidth: 240 }}>
+                                    Skipped: {location.skipReason}
+                                  </Typography>
+                                )}
+                              </>
                             )}
                           </TableCell>
                         );
