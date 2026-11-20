@@ -13,8 +13,10 @@ import {
   ListItemIcon,
   Button,
   Divider,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
-import { ChevronDown, Download } from "lucide-react";
+import { ChevronDown, Download, QrCode } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -23,6 +25,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm, { LoginFormInputs } from "@/app/login/components/LoginForm";
 import LoginSnackbar from "@/app/login/components/LoginSnackbar";
 import LoginHeader from "@/app/login/components/LoginHeader";
+import MobileApiQrCard from "@/app/login/components/MobileApiQrCard";
 import apiClient from "@/common/lib/apiClient";
 import packageJson from "../../../package.json";
 import Image from "next/image";
@@ -90,6 +93,8 @@ export default function LoginContent() {
   const router = useRouter();
   const [loggedOutSnackbar, setLoggedOutSnackbar] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+
+  const [showApiCard, setShowApiCard] = useState(false);
 
   // APK Dropdown state
   const [apkAnchorEl, setApkAnchorEl] = useState<null | HTMLElement>(null);
@@ -315,7 +320,22 @@ export default function LoginContent() {
           </Box>
 
           {/* App Download Links using Dropdown */}
-          <Box sx={{ mr: 6 }}>
+          <Box sx={{ mr: 6, display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Tooltip title="Mobile API QR code">
+              <IconButton
+                aria-label="Mobile API QR code"
+                aria-expanded={showApiCard}
+                aria-controls={showApiCard ? "mobile-api-qr-card" : undefined}
+                onClick={() => setShowApiCard((visible) => !visible)}
+                size="small"
+                sx={{
+                  color: "#000000",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.05)" },
+                }}
+              >
+                <QrCode size={20} />
+              </IconButton>
+            </Tooltip>
             <Button
               onClick={handleApkClick}
               endIcon={<ChevronDown size={16} />}
@@ -464,6 +484,8 @@ export default function LoginContent() {
         <Box sx={{ position: "absolute", top: 16, right: 16, zIndex: 1000 }}>
           <UserMenu variant="minimal" />
         </Box>
+
+        {showApiCard && <MobileApiQrCard id="mobile-api-qr-card" />}
       </AppBar>
 
       <Box
