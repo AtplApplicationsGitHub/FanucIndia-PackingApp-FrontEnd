@@ -48,7 +48,7 @@ export default function FreeStockStatusCards({
 }: Props) {
   const distinctSoCard = {
     key: "DISTINCT_SO" as const,
-    title: admin ? "Distinct SO Count" : "My Distinct SOs",
+    title: admin ? "SO Count" : "My SOs",
     Icon: ListOrdered,
   };
 

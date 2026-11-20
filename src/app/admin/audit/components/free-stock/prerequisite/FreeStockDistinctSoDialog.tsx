@@ -74,9 +74,7 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
 
   return (
     <FreeStockDialog
-      title={
-        role === "ADMIN" ? "Distinct SO Numbers" : "My Distinct SO Numbers"
-      }
+      title={role === "ADMIN" ? "SO Numbers" : "My SO Numbers"}
       maxWidth="xs"
       onClose={onClose}
     >
