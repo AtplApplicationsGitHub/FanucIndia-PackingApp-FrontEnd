@@ -43,6 +43,8 @@ export const API = {
     suffix ? `?${suffix}` : ""
   }`;
 },
+    DISTINCT_SO_EXPORT: (soNumber: string) =>
+      `${API_BASE_URL}/free-stock/distinct-so/export?soNumber=${encodeURIComponent(soNumber)}`,
     STOCKS: (params?: { page?: number; limit?: number; search?: string; status?: string; mine?: boolean; zoneId?: number; reservedDays?: string }) => {
       const query = new URLSearchParams();
       if (params?.page !== undefined) query.set("page", String(params.page));

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box } from "@mui/material";
-
+import { Box, Link } from "@mui/material";
+import { secureDownload } from "@/common/lib/secure-download";
 import { freeStockApi } from "../../../services/freeStock.service";
 import type {
   FreeStockDistinctSoRow,
@@ -71,6 +71,26 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
 
     return () => controller.abort();
   }, [page]);
+  const [downloadingSo, setDownloadingSo] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<Error | null>(null);
+
+  const handleDownload = async (soNumber: string) => {
+    if (downloadingSo) return;
+    setDownloadingSo(soNumber);
+    setDownloadError(null);
+    try {
+      const blob = await freeStockApi.exportSo(soNumber);
+      secureDownload(blob, `SO_${soNumber}.xlsx`);
+    } catch (reason) {
+      setDownloadError(
+        reason instanceof Error
+          ? reason
+          : new Error("Unable to download SO Excel."),
+      );
+    } finally {
+      setDownloadingSo(null);
+    }
+  };
 
   return (
     <FreeStockDialog
@@ -106,7 +126,27 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
             {
               key: "soNumber",
               label: "SO Number",
-              render: (row) => row.soNumber,
+              render: (row) => (
+                <Link
+                  component="button"
+                  type="button"
+                  variant="body2"
+                  onClick={() => void handleDownload(row.soNumber)}
+                  disabled={Boolean(downloadingSo)}
+                  aria-label={`Download Excel for SO ${row.soNumber}`}
+                  sx={{
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    "&:disabled": {
+                      color: "text.disabled",
+                      cursor: "progress",
+                      textDecoration: "none",
+                    },
+                  }}
+                >
+                  {row.soNumber}
+                </Link>
+              ),
             },
           ]}
           rows={rows}
@@ -133,7 +173,7 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
         />
       </Box>
 
-      <FreeStockError error={error} />
+      <FreeStockError error={error ?? downloadError} />
     </FreeStockDialog>
   );
 }

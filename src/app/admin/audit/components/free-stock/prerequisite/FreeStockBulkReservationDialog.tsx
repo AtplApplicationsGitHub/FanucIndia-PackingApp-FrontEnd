@@ -99,7 +99,7 @@ export default function FreeStockBulkReservationDialog({
     <CommonButton onClick={onClose}>Done</CommonButton>
   ) : !preview || needsPreview ? (
     <CommonButton disabled={!file || busy} onClick={() => void check()}>
-      {busy ? "Checking..." : "Preview Allocation"}
+      {busy ? "Checking..." : "Preview"}
     </CommonButton>
   ) : (
     <CommonButton
@@ -119,6 +119,8 @@ export default function FreeStockBulkReservationDialog({
       onBack={data && !result ? reset : undefined}
       disableBackdropClose
     >
+      <FreeStockError error={error} />
+
       <Box
         sx={{
           display: "flex",
@@ -126,7 +128,7 @@ export default function FreeStockBulkReservationDialog({
           flexWrap: "wrap",
           justifyContent: "flex-start",
           gap: 1.5,
-          mb: 1.5,
+          mb: 1,
         }}
       >
         {data && (
@@ -218,18 +220,24 @@ export default function FreeStockBulkReservationDialog({
           sx={{
             display: "flex",
             justifyContent: "flex-end",
+            gap: 1,
             mt: 1.5,
             mb: 1,
           }}
         >
-          <CommonButton disabled={!file || busy} onClick={() => void check()}>
-            {busy ? "Checking..." : "Preview Allocation"}
+          {error && file && (
+            <CommonButton disabled={busy} onClick={reset}>
+              Back
+            </CommonButton>
+          )}
+          <CommonButton
+            disabled={!file || busy || Boolean(error)}
+            onClick={() => void check()}
+          >
+            {busy ? "Checking..." : "Preview"}
           </CommonButton>
         </Box>
       )}
-
-      <FreeStockError error={error} />
-
       {data && (
         <>
           {result && (

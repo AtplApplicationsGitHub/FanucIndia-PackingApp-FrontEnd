@@ -185,6 +185,7 @@ export default function FreeStockAdminScreen({
 
         {data?.groupedBy === "SO_NUMBER" ? (
           <FreeStockGroupedTable
+            role={role}
             groups={data.data}
             total={data.pagination.total}
             page={stock.page}
@@ -200,6 +201,7 @@ export default function FreeStockAdminScreen({
         ) : (
           <FreeStockTable
             rows={rows}
+            role={role}
             total={data?.pagination.total ?? 0}
             page={stock.page}
             size={stock.size}

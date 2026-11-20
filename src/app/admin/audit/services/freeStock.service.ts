@@ -81,6 +81,15 @@ export const freeStockApi = {
     request<FreeStockDistinctSoResponse>(API.FREE_STOCK.DISTINCT_SO(params), {
       signal,
     }),
+  // Download one SO's rows as Excel - ADMIN
+  exportSo: async (soNumber: string): Promise<Blob> => {
+    const response = await checked(
+      await fetchWithAuth(API.FREE_STOCK.DISTINCT_SO_EXPORT(soNumber), {
+        cache: "no-store",
+      }),
+    );
+    return response.blob();
+  },
   // View details
   detail: (id: number, signal?: AbortSignal) =>
     request<{ data: FreeStockRow }>(API.FREE_STOCK.STOCK_BY_ID(id), { signal }),

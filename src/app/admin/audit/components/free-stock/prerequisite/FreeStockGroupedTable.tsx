@@ -19,12 +19,17 @@ import {
 import { Package } from "lucide-react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { LockOpen } from "lucide-react";
-import { FREE_STOCK_TABLE_COLUMNS } from "../../../utils/free-stock/freeStockColumns";
-import type { FreeStockRow, FreeStockSoGroup } from "../../../types/freeStock";
+import { getFreeStockTableColumns } from "../../../utils/free-stock/freeStockColumns";
+import type {
+  FreeStockRole,
+  FreeStockRow,
+  FreeStockSoGroup,
+} from "../../../types/freeStock";
 import { stockCell } from "../../../utils/free-stock/freeStockFormat";
 import AuditStatusPill from "../../shared/AuditStatusPill";
 
 type Props = {
+  role: FreeStockRole;
   groups: FreeStockSoGroup[];
   total: number; // number of SO groups (the API paginates by SO)
   page: number;
@@ -49,6 +54,7 @@ const NO_WRAP_COLUMNS = new Set<string>(["grDate", "reservedDate"]);
 const isSelectable = (row: FreeStockRow) => row.canReserve || row.canRelease;
 
 export default function FreeStockGroupedTable({
+  role,
   groups,
   total,
   page,
@@ -62,7 +68,7 @@ export default function FreeStockGroupedTable({
   onRelease,
 }: Props) {
   const theme = useTheme();
-
+  const columns = getFreeStockTableColumns(role);
   const selectable = groups.flatMap((group) =>
     group.items.filter(isSelectable).map((row) => row.id),
   );
@@ -168,7 +174,7 @@ export default function FreeStockGroupedTable({
                   Actions
                 </Box>
               </TableCell>
-              {FREE_STOCK_TABLE_COLUMNS.map((column) => (
+              {columns.map((column) => (
                 <TableCell
                   key={column.key}
                   sx={{ ...headCellSx, width: column.width }}
@@ -193,7 +199,7 @@ export default function FreeStockGroupedTable({
             {groups.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={FREE_STOCK_TABLE_COLUMNS.length + 1}
+                  colSpan={columns.length + 1}
                   align="center"
                   sx={{ py: 4 }}
                 >
@@ -224,7 +230,7 @@ export default function FreeStockGroupedTable({
                     }}
                   >
                     <TableCell
-                      colSpan={FREE_STOCK_TABLE_COLUMNS.length + 1}
+                      colSpan={columns.length + 1}
                       sx={{ py: "2px !important" }}
                     >
                       <Box
@@ -269,7 +275,7 @@ export default function FreeStockGroupedTable({
                     </TableCell>
                   </TableRow>,
 
-                  // stock rows of this SO 
+                  // stock rows of this SO
                   ...group.items.map((row) => (
                     <TableRow key={row.id} className="so-data-row">
                       <TableCell>
@@ -329,7 +335,7 @@ export default function FreeStockGroupedTable({
                         </Box>
                       </TableCell>
 
-                      {FREE_STOCK_TABLE_COLUMNS.map((column) => (
+                      {columns.map((column) => (
                         <TableCell
                           key={column.key}
                           data-nowrap={

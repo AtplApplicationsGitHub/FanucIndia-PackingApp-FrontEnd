@@ -225,7 +225,7 @@ export default function FreeStockUploadDialog({
                   : "Preview"
                 : stock
                   ? stockPreview?.skippedRows
-                    ? "Upload valid rows only"
+                    ? "Upload valid only"
                     : "Import Stock"
                   : "Confirm Reservation"}
           </CommonButton>
@@ -284,6 +284,24 @@ export default function FreeStockUploadDialog({
       )}
       {preview && (
         <Box>
+          {stockPreview && stockPreview.skippedRows > 0 && (
+            <Box sx={{ mb: 0.75 }}>
+              {!stockPreview.canImport && (
+                <Alert severity="error" sx={{ mb: 0.5 }}>
+                  There are no valid rows to import.
+                </Alert>
+              )}
+              <Alert severity="warning" sx={{ mb: 0.5 }}>
+                {stockPreview.validRows.toLocaleString()} valid rows can be
+                imported; {stockPreview.skippedRows.toLocaleString()} invalid
+                rows will be skipped.{" "}
+                {stockPreview.protectedRows.toLocaleString()} existing stock
+                rows will be preserved because of these issues. No stock has
+                been changed yet.
+              </Alert>
+            </Box>
+          )}
+
           {stockPreview ? (
             <Box
               sx={{
@@ -334,20 +352,6 @@ export default function FreeStockUploadDialog({
 
           {stockPreview && stockPreview.skippedRows > 0 && (
             <Box sx={{ mb: 0.5 }}>
-              <Alert severity="warning" sx={{ mb: 0.5 }}>
-                {stockPreview.validRows.toLocaleString()} valid rows can be
-                imported; {stockPreview.skippedRows.toLocaleString()} invalid
-                rows will be skipped.{" "}
-                {stockPreview.protectedRows.toLocaleString()} existing stock
-                rows will be preserved because of these issues. No stock has
-                been changed yet.
-              </Alert>
-              {!stockPreview.canImport && (
-                <Alert severity="error" sx={{ mb: 0.5 }}>
-                  There are no valid rows to import. Go back and correct the
-                  file.
-                </Alert>
-              )}
               <Typography variant="inherit" fontWeight={700} sx={{ mb: 1 }}>
                 Invalid Rows
               </Typography>

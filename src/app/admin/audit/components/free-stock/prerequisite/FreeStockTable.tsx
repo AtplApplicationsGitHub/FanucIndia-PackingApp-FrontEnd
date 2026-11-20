@@ -19,11 +19,13 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { LockOpen } from "lucide-react";
-import { FREE_STOCK_TABLE_COLUMNS } from "../../../utils/free-stock/freeStockColumns";
-import type { FreeStockRow } from "../../../types/freeStock";
+import { getFreeStockTableColumns } from "../../../utils/free-stock/freeStockColumns";
+import type { FreeStockRole, FreeStockRow } from "../../../types/freeStock";
 import { stockCell } from "../../../utils/free-stock/freeStockFormat";
 import AuditStatusPill from "../../shared/AuditStatusPill";
+
 type Props = {
+  role: FreeStockRole;
   rows: FreeStockRow[];
   total: number;
   page: number;
@@ -44,6 +46,7 @@ const STATUS_PILL = {
 
 const NO_WRAP_COLUMNS = new Set<string>(["grDate", "reservedDate"]);
 export default function FreeStockTable({
+  role,
   rows,
   total,
   page,
@@ -57,6 +60,7 @@ export default function FreeStockTable({
   onRelease,
 }: Props) {
   const theme = useTheme();
+  const columns = getFreeStockTableColumns(role);
   const selectable = rows
     .filter((r) => r.canReserve || r.canRelease)
     .map((r) => r.id);
@@ -152,7 +156,7 @@ export default function FreeStockTable({
                   Actions
                 </Box>
               </TableCell>
-              {FREE_STOCK_TABLE_COLUMNS.map((column) => (
+              {columns.map((column) => (
                 <TableCell
                   key={column.key}
                   sx={{ ...headCellSx, width: column.width }}
@@ -176,7 +180,7 @@ export default function FreeStockTable({
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={FREE_STOCK_TABLE_COLUMNS.length + 1}
+                  colSpan={columns.length + 1}
                   align="center"
                   sx={{ py: 4 }}
                 >
@@ -247,7 +251,7 @@ export default function FreeStockTable({
                     </Box>
                   </TableCell>
 
-                  {FREE_STOCK_TABLE_COLUMNS.map((column) => (
+                  {columns.map((column) => (
                     <TableCell
                       key={column.key}
                       data-nowrap={

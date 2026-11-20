@@ -23,7 +23,7 @@ import {
   ArrowLeft,
   Menu,
   X,
-  Warehouse,
+  Boxes,
   PackageOpen,
 } from "lucide-react";
 import Image from "next/image";
@@ -54,9 +54,9 @@ const menuItems = [
     icon: <ClipboardList className="mr-1 h-4 w-4" />,
     value: "dispatched",
   },
-  {
+   {
     label: "FG STORAGE",
-    icon: <Warehouse className="mr-1 h-4 w-4" />,
+    icon: <Boxes className="mr-1 h-4 w-4" />,
     value: "fg-storage",
   },
   {

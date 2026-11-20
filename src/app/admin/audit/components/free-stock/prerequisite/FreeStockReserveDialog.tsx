@@ -306,6 +306,7 @@ export default function FreeStockReserveDialog({
   return (
     <>
       <FreeStockDialog
+        disableBackdropClose
         title={
           result
             ? "Selected Stock Reservation Result"

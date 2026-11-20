@@ -1,4 +1,5 @@
-import type { FreeStockColumn } from "../../types/freeStock";
+import type { FreeStockColumn, FreeStockRole } from "../../types/freeStock";
+
 export const FREE_STOCK_COLUMNS: FreeStockColumn[] = [
   { key: "storageType", label: "Typ" },
   { key: "storageBin", label: "Storage Bin" },
@@ -27,16 +28,28 @@ export const FREE_STOCK_COLUMNS: FreeStockColumn[] = [
 
 // Main table only. Keep FREE_STOCK_COLUMNS complete for details and exports.
 // These widths total 93%; the Actions column uses the remaining 7%.
-export const FREE_STOCK_TABLE_COLUMNS: (FreeStockColumn & { width: string })[] = [
-  { key: "storageBin", label: "Bin", width: "6%" },
-  { key: "materialCode", label: "Material", width: "9%" },
-  { key: "batch", label: "Batch", width: "8%" },
-  { key: "certificateNo", label: "Cert. No.", width: "8%" },
-  { key: "grDate", label: "GR Date / Age", date: true, width: "13%" },
-  { key: "reservedDate", label: "Reserved Date / Days", date: true, width: "13%" },
-  { key: "status", label: "Status", width: "8%" },
-  { key: "stockQty", label: "Stock", width: "5%" },
-  { key: "reservedQty", label: "Reserved Qty", width: "7%" },
-  { key: "name", label: "Reserved By / Zone", width: "9%" },
-  { key: "shortageQty", label: "Shortage Qty", width: "7%" },
-];
+export const FREE_STOCK_TABLE_COLUMNS: (FreeStockColumn & { width: string })[] =
+  [
+    { key: "storageBin", label: "Bin", width: "6%" },
+    { key: "materialCode", label: "Material", width: "9%" },
+    { key: "batch", label: "Batch", width: "8%" },
+    { key: "certificateNo", label: "Cert. No.", width: "8%" },
+    { key: "grDate", label: "GR Date / Age", date: true, width: "13%" },
+    {
+      key: "reservedDate",
+      label: "Reserved Date / Days",
+      date: true,
+      width: "13%",
+    },
+    { key: "status", label: "Status", width: "8%" },
+    { key: "stockQty", label: "Stock", width: "5%" },
+    { key: "reservedQty", label: "Reserved Qty", width: "7%" },
+    { key: "name", label: "Reserved By / Zone", width: "9%" },
+    { key: "shortageQty", label: "Shortage Qty", width: "7%" },
+  ];
+
+// SALES does not see Shortage Qty in the main table; ADMIN sees all columns.
+export const getFreeStockTableColumns = (role: FreeStockRole) =>
+  role === "SALES"
+    ? FREE_STOCK_TABLE_COLUMNS.filter((c) => c.key !== "shortageQty")
+    : FREE_STOCK_TABLE_COLUMNS;
