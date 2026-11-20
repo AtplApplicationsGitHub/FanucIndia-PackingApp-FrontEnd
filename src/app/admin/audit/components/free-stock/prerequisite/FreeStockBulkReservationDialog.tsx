@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Box, Chip, Typography } from "@mui/material";
+import { Alert, Box, Typography } from "@mui/material";
 import { FileSpreadsheet } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
 import ExcelUploadButton from "../../shared/ExcelUploadButton";
@@ -9,19 +9,13 @@ import { freeStockApi } from "../../../services/freeStock.service";
 import type {
   BulkReservationPreview,
   BulkReservationResult,
-  BulkReservationRow,
 } from "../../../types/freeStock";
 import FreeStockDialog from "./FreeStockDialog";
-import FreeStockDataTable, {
-  type FreeStockDataColumn,
-} from "./FreeStockDataTable";
+import FreeStockReservationTables, {
+  ReservationFilterChips,
+  type ReservationFilter,
+} from "./FreeStockReservationTables";
 import FreeStockError from "./FreeStockError";
-
-const statusMeta = {
-  ALLOCATED: { label: "Allocated", color: "success" },
-  PARTIAL: { label: "Partially allocated", color: "warning" },
-  NOT_ALLOCATED: { label: "Not allocated", color: "error" },
-} as const;
 
 export default function FreeStockBulkReservationDialog({
   onClose,
@@ -36,7 +30,7 @@ export default function FreeStockBulkReservationDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [needsPreview, setNeedsPreview] = useState(false);
-  const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<ReservationFilter>("ALL");
 
   const data = result ?? preview;
 
@@ -45,20 +39,22 @@ export default function FreeStockBulkReservationDialog({
     setPreview(null);
     setResult(null);
     setError(null);
-    setPage(0);
+    setFilter("ALL");
     setNeedsPreview(false);
   };
 
   const check = async () => {
     if (!file || busy) return;
+
     setBusy(true);
     setError(null);
 
     try {
       const response = await freeStockApi.previewBulk(file);
+
       setPreview(response.data);
       setNeedsPreview(false);
-      setPage(0);
+      setFilter("ALL");
     } catch (reason) {
       setError(reason instanceof Error ? reason : new Error("Preview failed."));
       setNeedsPreview(true);
@@ -68,14 +64,18 @@ export default function FreeStockBulkReservationDialog({
   };
 
   const confirm = async () => {
-    if (!file || !preview?.canConfirm || needsPreview || busy || result) return;
+    if (!file || !preview?.canConfirm || needsPreview || busy || result) {
+      return;
+    }
+
     setBusy(true);
     setError(null);
 
     try {
       const response = await freeStockApi.confirmBulk(file, preview);
+
       setResult(response.data);
-      setPage(0);
+      setFilter("ALL");
       onChanged();
     } catch (reason) {
       setError(
@@ -85,7 +85,9 @@ export default function FreeStockBulkReservationDialog({
               "Confirmation failed. Refresh the preview before trying again.",
             ),
       );
-      // A lost response may already have committed. Always re-read before another attempt.
+
+      // A lost response may already have committed.
+      // Always re-read before another attempt.
       setNeedsPreview(true);
       onChanged();
     } finally {
@@ -93,106 +95,72 @@ export default function FreeStockBulkReservationDialog({
     }
   };
 
-  const cards = data
-    ? [
-        {
-          key: "rows",
-          title: "Total Stock",
-          value: data.totalRows.toLocaleString(),
-        },
-        {
-          key: "requested",
-          title: "Requested Qty",
-          value: data.summary.requestedQty,
-        },
-        ...(result
-          ? [
-              {
-                key: "reserved",
-                title: "Reserved Qty",
-                value: data.summary.allocatedQty,
-              },
-            ]
-          : []),
-        {
-          key: "shortage",
-          title: "Pending Qty",
-          value: data.summary.pendingQty,
-        },
-      ]
-    : [];
-
-  const columns: FreeStockDataColumn<BulkReservationRow>[] = [
-    { key: "bin", label: "Storage Bin", render: (row) => row.storageBin },
-    {
-      key: "material",
-      label: "Material Code",
-      render: (row) => row.materialCode,
-    },
-    { key: "batch", label: "Batch", render: (row) => row.batch },
-    { key: "so", label: "SO Number", render: (row) => row.soNumber || "—" },
-
-    { key: "qty", label: "Requested Qty", render: (row) => row.qty },
-    { key: "stock", label: "Stock", render: (row) => row.stockQty },
-    ...(result
-      ? [
-          {
-            key: "allocated",
-            label: "Reserved Qty",
-            render: (row: BulkReservationRow) => row.allocatedQty,
-          },
-        ]
-      : []),
-    { key: "pending", label: "Shortage Qty", render: (row) => row.pendingQty },
-    {
-      key: "status",
-      label: "Allocation Status",
-      render: (row) => (
-        <Chip
-          size="small"
-          label={statusMeta[row.status].label}
-          color={statusMeta[row.status].color}
-          variant="outlined"
-        />
-      ),
-    },
-  ];
+  const actionButtons = result ? (
+    <CommonButton onClick={onClose}>Done</CommonButton>
+  ) : !preview || needsPreview ? (
+    <CommonButton disabled={!file || busy} onClick={() => void check()}>
+      {busy ? "Checking..." : "Preview Allocation"}
+    </CommonButton>
+  ) : (
+    <CommonButton
+      disabled={!preview.canConfirm || busy}
+      onClick={() => void confirm()}
+    >
+      {busy ? "Reserving..." : "Confirm Reservation"}
+    </CommonButton>
+  );
 
   return (
     <FreeStockDialog
       title="Import Reservations"
       onClose={onClose}
       busy={busy}
-      maxWidth={data ? "lg" : "md"}
-      actions={
-        result ? (
-          <CommonButton onClick={onClose}>Done</CommonButton>
-        ) : (
-          <>
-            {file && (
-              <CommonButton disabled={busy} onClick={reset}>
-                Back
-              </CommonButton>
-            )}
-            {!preview || needsPreview ? (
-              <CommonButton
-                disabled={!file || busy}
-                onClick={() => void check()}
-              >
-                {busy ? "Checking..." : "Preview Allocation"}
-              </CommonButton>
-            ) : (
-              <CommonButton
-                disabled={!preview.canConfirm || busy}
-                onClick={() => void confirm()}
-              >
-                {busy ? "Reserving..." : "Confirm Reservation"}
-              </CommonButton>
-            )}
-          </>
-        )
-      }
+      maxWidth={data ? "xl" : "md"}
+      onBack={data && !result ? reset : undefined}
+      disableBackdropClose
     >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          justifyContent: "flex-start",
+          gap: 1.5,
+          mb: 1.5,
+        }}
+      >
+        {data && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 0.75,
+            }}
+          >
+            <ReservationFilterChips
+              rows={data.lines}
+              filter={filter}
+              onFilterChange={setFilter}
+              disabled={busy}
+            />
+          </Box>
+        )}
+
+        {data && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              ml: "auto",
+            }}
+          >
+            {actionButtons}
+          </Box>
+        )}
+      </Box>
+
       {!data &&
         (file ? (
           <Box
@@ -242,9 +210,23 @@ export default function FreeStockBulkReservationDialog({
             onError={(message) => setError(new Error(message))}
             disabled={busy}
             dragDropOnly
-            hint="Required: .xlsx with Storage Bin, Material, Batch and Qty / Req Qty. SO Number is optional."
+            hint="Required: .xlsx with Material, Qty and SO Number."
           />
         ))}
+      {!data && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            mt: 1.5,
+            mb: 1,
+          }}
+        >
+          <CommonButton disabled={!file || busy} onClick={() => void check()}>
+            {busy ? "Checking..." : "Preview Allocation"}
+          </CommonButton>
+        </Box>
+      )}
 
       <FreeStockError error={error} />
 
@@ -257,91 +239,18 @@ export default function FreeStockBulkReservationDialog({
             </Alert>
           )}
 
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(2, minmax(0, 1fr))",
-                md: `repeat(${cards.length}, minmax(0, 1fr))`,
-              },
-              gap: 0.9,
-              mb: 1.5,
-            }}
-          >
-            {cards.map(({ key, title, value }) => (
-              <Box
-                key={key}
-                sx={{
-                  p: 0.75,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 2,
-                  bgcolor: "transparent",
-                  minWidth: 0,
-                }}
-              >
-                <Typography variant="body2" sx={{ display: "block", mb: 0.2 }}>
-                  {title}
-                </Typography>
-                <Typography variant="h6" fontWeight={700}>
-                  {value}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: 1,
-              mb: 1.25,
-            }}
-          >
-            <Chip
-              size="small"
-              color="success"
-              variant="outlined"
-              label={`Allocated (${data.summary.allocated})`}
-            />
-            <Chip
-              size="small"
-              color="warning"
-              variant="outlined"
-              label={`Partial (${data.summary.partial})`}
-            />
-            <Chip
-              size="small"
-              color="error"
-              variant="outlined"
-              label={`Not allocated (${data.summary.notAllocated})`}
-            />
-          </Box>
-
           {!result && !data.canConfirm && (
             <Alert severity="warning" sx={{ mb: 1 }}>
               None of the requested material–batch rows can be reserved.
             </Alert>
           )}
 
-          <Box sx={{ "& thead th": { textTransform: "none" } }}>
-            <FreeStockDataTable
-              columns={columns}
-              rows={data.lines.slice(page * 50, (page + 1) * 50)}
-              rowKey={(row) => row.rowNo}
-              stackBelow={false}
-              maxHeight={420}
-              pagination={{
-                count: data.totalRows,
-                page,
-                size: 50,
-                onPage: setPage,
-                disabled: busy,
-              }}
-            />
-          </Box>
+          <FreeStockReservationTables
+            rows={data.lines}
+            filter={filter}
+            showReserved
+            disabled={busy}
+          />
         </>
       )}
     </FreeStockDialog>

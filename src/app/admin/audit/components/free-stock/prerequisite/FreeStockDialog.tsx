@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import type { DialogProps } from "@mui/material";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 type Props = {
   title: string;
   titleDetails?: ReactNode;
@@ -20,6 +20,9 @@ type Props = {
   busy?: boolean;
   maxWidth?: DialogProps["maxWidth"];
   stackTitleDetails?: boolean;
+  onBack?: () => void;
+  disableBackdropClose?: boolean;
+  dialogHeight?: string;
 };
 export default function FreeStockDialog({
   title,
@@ -30,6 +33,9 @@ export default function FreeStockDialog({
   busy = false,
   maxWidth = "md",
   stackTitleDetails = false,
+  onBack,
+  disableBackdropClose = false,
+  dialogHeight,
 }: Props) {
   return (
     <Dialog
@@ -37,13 +43,21 @@ export default function FreeStockDialog({
       fullWidth
       maxWidth={maxWidth}
       disableEscapeKeyDown={busy}
-      onClose={busy ? undefined : onClose}
+      onClose={
+        busy
+          ? undefined
+          : (_event, reason) => {
+              if (disableBackdropClose && reason === "backdropClick") return;
+              onClose();
+            }
+      }
       PaperProps={{
         sx: {
           borderRadius: 2,
           m: { xs: 1.5, sm: 4 },
           width: { xs: "calc(100% - 24px)", sm: "calc(100% - 64px)" },
           maxHeight: "calc(100% - 32px)",
+          height: dialogHeight ?? undefined,
           minWidth: 0,
           "& .MuiButton-root": {
             textTransform: "uppercase",
@@ -102,6 +116,26 @@ export default function FreeStockDialog({
             </Box>
           )}
         </Box>
+        {onBack && (
+          <IconButton
+            onClick={onBack}
+            disabled={busy}
+            size="small"
+            aria-label="Back to Excel upload"
+            sx={{
+              position: "absolute",
+              left: 12,
+              top: stackTitleDetails ? 4 : 10,
+              color: "text.primary",
+              bgcolor: "transparent",
+              "&:hover": {
+                bgcolor: "action.hover",
+              },
+            }}
+          >
+            <ArrowLeft size={20} />
+          </IconButton>
+        )}
         <IconButton
           onClick={onClose}
           disabled={busy}

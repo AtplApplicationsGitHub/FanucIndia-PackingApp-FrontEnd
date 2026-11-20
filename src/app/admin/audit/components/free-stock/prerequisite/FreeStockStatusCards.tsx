@@ -7,6 +7,7 @@ import {
   Bookmark,
   LockKeyhole,
   UserRoundCheck,
+  ListOrdered,
 } from "lucide-react";
 
 import type {
@@ -23,6 +24,8 @@ type Props = {
   mine: boolean;
   myReservations: FreeStockSummaryItem | null;
   onMineChange: (value: boolean) => void;
+  distinctSoCount: number | null;
+  onDistinctSoClick: () => void;
 };
 
 const CARDS = [
@@ -40,9 +43,17 @@ export default function FreeStockStatusCards({
   mine,
   myReservations,
   onMineChange,
+  distinctSoCount,
+  onDistinctSoClick,
 }: Props) {
+  const distinctSoCard = {
+    key: "DISTINCT_SO" as const,
+    title: admin ? "Distinct SO Count" : "My Distinct SOs",
+    Icon: ListOrdered,
+  };
+
   const cards = admin
-    ? CARDS
+    ? [...CARDS, distinctSoCard]
     : [
         {
           key: "MINE" as const,
@@ -50,6 +61,7 @@ export default function FreeStockStatusCards({
           Icon: UserRoundCheck,
         },
         ...CARDS,
+        distinctSoCard,
       ];
 
   return (
@@ -59,7 +71,7 @@ export default function FreeStockStatusCards({
         gridTemplateColumns: {
           xs: "repeat(1, minmax(0, 1fr))",
           sm: "repeat(2, minmax(0, 1fr))",
-          lg: admin ? "repeat(4, minmax(0, 1fr))" : "repeat(5, minmax(0, 1fr))",
+          lg: admin ? "repeat(5, minmax(0, 1fr))" : "repeat(6, minmax(0, 1fr))",
         },
         gap: 1,
         mb: 1.2,
@@ -67,12 +79,23 @@ export default function FreeStockStatusCards({
     >
       {cards.map((card) => {
         const isMine = card.key === "MINE";
+        const isDistinctSo = card.key === "DISTINCT_SO";
 
-        const isSelected = isMine ? mine : !mine && status === card.key;
+        const isSelected = isDistinctSo
+          ? false
+          : isMine
+            ? mine
+            : !mine && status === card.key;
 
-        const metrics = isMine ? myReservations : summary?.[card.key];
+        const metrics = isDistinctSo
+          ? null
+          : isMine
+            ? myReservations
+            : summary?.[card.key];
 
-        const count = metrics?.count ?? 0;
+        const count = isDistinctSo
+          ? (distinctSoCount ?? "-")
+          : (metrics?.count ?? "-");
         const lines = count.toLocaleString();
 
         const units = Number(metrics?.stockQty ?? 0).toLocaleString("en-IN", {
@@ -82,7 +105,9 @@ export default function FreeStockStatusCards({
         const Icon = card.Icon;
 
         const handleClick = () => {
-          if (isMine) {
+          if (isDistinctSo) {
+            onDistinctSoClick();
+          } else if (isMine) {
             onMineChange(!mine);
           } else {
             onChange(card.key);
@@ -96,7 +121,11 @@ export default function FreeStockStatusCards({
             role="button"
             tabIndex={0}
             aria-pressed={isSelected}
-            aria-label={`${card.title}: ${lines} lines, ${units} units`}
+            aria-label={
+              isDistinctSo
+                ? `${card.title}: ${lines} unique Sales Orders`
+                : `${card.title}: ${lines} lines, ${units} units`
+            }
             onClick={handleClick}
             onKeyDown={(event) => {
               if (
@@ -181,50 +210,53 @@ export default function FreeStockStatusCards({
                 >
                   {lines}
                 </Typography>
+                {!isDistinctSo && (
+                  <>
+                    {/* Vertical divider */}
+                    <Box
+                      sx={{
+                        width: "1px",
+                        height: 30,
+                        flexShrink: 0,
+                        bgcolor: "divider",
+                      }}
+                    />
 
-                {/* Vertical divider */}
-                <Box
-                  sx={{
-                    width: "1px",
-                    height: 30,
-                    flexShrink: 0,
-                    bgcolor: "divider",
-                  }}
-                />
+                    {/* Total units */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 0.5,
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "text.primary",
+                          lineHeight: 1.2,
+                          fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {units}
+                      </Typography>
 
-                {/* Total units */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 0.5,
-                    minWidth: 0,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "text.primary",
-                      lineHeight: 1.2,
-                      fontVariantNumeric: "tabular-nums",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {units}
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      fontSize: 13,
-                      color: "text.secondary",
-                      lineHeight: 1.2,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    units
-                  </Typography>
-                </Box>
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          color: "text.secondary",
+                          lineHeight: 1.2,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        units
+                      </Typography>
+                    </Box>
+                  </>
+                )}
               </Box>
             </Box>
 

@@ -101,13 +101,13 @@ export function useFreeStock() {
   }, [filters, version]);
 
   const changeStatus = (value: FreeStockFilters["status"]) => {
+    // clicking the already-selected card = no-op (no toggle back to ALL)
+    if (!mine && status === value) return;
+
     setMine(false);
-
-    setStatus((current) => (mine ? value : current === value ? "ALL" : value));
-
+    setStatus(value);
     setPage(0);
   };
-
   const changeMine = (value: boolean) => {
     if (value !== mine) {
       setMine(value);

@@ -40,7 +40,7 @@ export type FreeStockPagination = {
   total: number;
   totalPages: number;
 };
-export type FreeStockReservedDays = 'ALL' | '0_30' | '31_90' | 'OVER_90';
+export type FreeStockReservedDays = "ALL" | "0_30" | "31_90" | "OVER_90";
 export type FreeStockZone = { id: number; name: string };
 export type FreeStockFilters = {
   zoneId?: number;
@@ -61,14 +61,29 @@ export type FreeStockStatusSummary = Record<
   FreeStockSummaryItem
 >;
 
-export type FreeStockList = {
+// One SO group, returned by the API for status=RESERVED (and mine=true).
+export type FreeStockSoGroup = {
+  soNumber: string | null;
+  rowCount: number;
+  stockQty: string;
+  reservedQty: string;
+  items: FreeStockRow[];
+};
+
+type FreeStockListBase = {
   filterOptions?: { zones: FreeStockZone[] };
-  data: FreeStockRow[];
   statusCounts: Record<FreeStockStatus, number>;
   statusSummary: FreeStockStatusSummary;
   myReservations: FreeStockSummaryItem | null;
   pagination: FreeStockPagination;
 };
+
+// Reserved tab -> grouped by SO number. Every other tab -> flat stock rows.
+export type FreeStockList = FreeStockListBase &
+  (
+    | { groupedBy: "SO_NUMBER"; data: FreeStockSoGroup[] }
+    | { groupedBy: null; data: FreeStockRow[] }
+  );
 export type FreeStockUpload = {
   id: number;
   fileName: string;
@@ -94,15 +109,18 @@ export type FreeStockHistory = {
   closedAt: string | null;
 };
 export type ReservationLine = {
+  materialCode: string;
+  qty: string;
+  soNumber: string;
+};
+export type StockRowIssue = {
+  rowNo: number;
   storageBin: string;
   materialCode: string;
   batch: string;
-  qty: string;
-  soNumber?: string;
-};
-export type StockRowIssue = {
-  rowNo: number; storageBin: string; materialCode: string; batch: string;
-  column: string; value: string; reason: string;
+  column: string;
+  value: string;
+  reason: string;
 };
 export type StockPreview = {
   validRows: number;
@@ -115,7 +133,12 @@ export type StockPreview = {
   insertedRows: number;
   updatedRows: number;
   wouldCloseRows: number;
-  sample: { storageBin: string; materialCode: string; batch: string; stockQty: string }[];
+  sample: {
+    storageBin: string;
+    materialCode: string;
+    batch: string;
+    stockQty: string;
+  }[];
 };
 export type ReservationPreview = {
   totalRows: number;
@@ -137,32 +160,56 @@ export type FreeStockColumn = {
   timestamp?: boolean;
 };
 
-/** Bulk allocation uses exact Material+Batch; pending quantities are not SAP shortages. */
-export type BulkReservationRow = {
+export type BulkReservationAllocation = {
+  stockItemId: number;
   storageBin: string;
-  rowNo: number;
-  stockItemId: number | null;
-  materialCode: string;
   batch: string;
+  certificateNo: string | null;
+  stockQty: string;
+  allocatedQty: string;
+};
+
+export type BulkReservationRow = {
+  rowNo: number;
+  materialCode: string;
   qty: string;
   soNumber: string | null;
-  stockQty: string;
+  requestedQty: string;
   allocatedQty: string;
   pendingQty: string;
   status: "ALLOCATED" | "PARTIAL" | "NOT_ALLOCATED";
   remarks: string;
+  allocations: BulkReservationAllocation[];
 };
+
 export type BulkReservationPreview = {
   totalRows: number;
   sourceFileName?: string;
   previewToken?: string;
   lines: BulkReservationRow[];
   summary: {
-    allocated: number; partial: number; notAllocated: number;
-    requestedQty: string; allocatedQty: string; pendingQty: string;
+    allocated: number;
+    partial: number;
+    notAllocated: number;
+    requestedQty: string;
+    allocatedQty: string;
+    pendingQty: string;
   };
   canConfirm: boolean;
 };
 export type BulkReservationResult = BulkReservationPreview & {
-  bulkReservationId: string; reservedAt: string; reservedRows: number;
+  bulkReservationId: string;
+  reservedAt: string;
+  reservedRows: number;
+};
+export type FreeStockDistinctSoRow = {
+  soNumber: string;
+  rowCount: number;
+  reservedQty: string;
+};
+
+export type FreeStockDistinctSoResponse = {
+  distinctSoCount: number;
+  data: FreeStockDistinctSoRow[];
+  pagination: FreeStockPagination;
 };

@@ -21,6 +21,28 @@ function buildManualFgLocationQuery(params?: ManualFgLocationQuery) {
 
 export const API = {
   FREE_STOCK: {
+   DISTINCT_SO: (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) => {
+  const query = new URLSearchParams();
+
+  if (params?.page !== undefined)
+    query.set("page", String(params.page));
+
+  if (params?.limit !== undefined)
+    query.set("limit", String(params.limit));
+
+  if (params?.search)
+    query.set("search", params.search);
+
+  const suffix = query.toString();
+
+  return `${API_BASE_URL}/free-stock/distinct-so${
+    suffix ? `?${suffix}` : ""
+  }`;
+},
     STOCKS: (params?: { page?: number; limit?: number; search?: string; status?: string; mine?: boolean; zoneId?: number; reservedDays?: string }) => {
       const query = new URLSearchParams();
       if (params?.page !== undefined) query.set("page", String(params.page));
@@ -37,7 +59,6 @@ export const API = {
     RESERVATION_HISTORY: (id: number, page = 1, limit = 10) =>
       `${API_BASE_URL}/free-stock/stocks/${id}/history?page=${page}&limit=${limit}`,
     UPLOADS: (page = 1, limit = 10) => `${API_BASE_URL}/free-stock/stock-uploads?page=${page}&limit=${limit}`,
-    UPLOAD_BY_ID: (id: number) => `${API_BASE_URL}/free-stock/stock-uploads/${id}`,
     PREVIEW_STOCK: `${API_BASE_URL}/free-stock/stock-uploads/preview`,
     UPLOAD_STOCK: `${API_BASE_URL}/free-stock/stock-uploads`,
     RESERVATION_TEMPLATE: `${API_BASE_URL}/free-stock/reservations/template`,

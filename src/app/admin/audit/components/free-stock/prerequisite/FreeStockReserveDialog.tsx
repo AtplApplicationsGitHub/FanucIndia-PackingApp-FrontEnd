@@ -1,30 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Alert,
-  Box,
-  Chip,
-  Paper,
-  TextField,
-  Typography,
-  alpha,
-} from "@mui/material";
-import { Layers3, Package, Bookmark, CircleAlert } from "lucide-react";
+import { Alert, Box, Snackbar, TextField } from "@mui/material";
+
 import CommonButton from "@/common/components/CommonButton";
+
 import type {
   BulkReservationPreview,
   BulkReservationResult,
-  BulkReservationRow,
   FreeStockRow,
   ReservationLine,
 } from "../../../types/freeStock";
+
 import { freeStockApi } from "../../../services/freeStock.service";
-import FreeStockError from "./FreeStockError";
 import FreeStockDialog from "./FreeStockDialog";
+
 import FreeStockDataTable, {
   type FreeStockDataColumn,
 } from "./FreeStockDataTable";
+
+import FreeStockReservationTables, {
+  ReservationFilterChips,
+  type ReservationFilter,
+} from "./FreeStockReservationTables";
 
 type Props = {
   rows: FreeStockRow[];
@@ -32,11 +30,15 @@ type Props = {
   onSuccess: (message: string) => void;
   onChanged: () => void;
 };
-const STATUS = {
-  ALLOCATED: { label: "Allocated", color: "success" },
-  PARTIAL: { label: "Partially allocated", color: "warning" },
-  NOT_ALLOCATED: { label: "Not allocated", color: "error" },
-} as const;
+
+type SnackbarSeverity = "success" | "error" | "warning";
+
+type SnackbarState = {
+  open: boolean;
+  message: string;
+  severity: SnackbarSeverity;
+  id: number;
+};
 
 export default function FreeStockReserveDialog({
   rows,
@@ -44,57 +46,121 @@ export default function FreeStockReserveDialog({
   onSuccess,
   onChanged,
 }: Props) {
+  // Store Requested Qty and SO Number for each selected row.
   const [values, setValues] = useState(() =>
     Object.fromEntries(rows.map((row) => [row.id, { qty: "", soNumber: "" }])),
   );
+
   const [preview, setPreview] = useState<BulkReservationPreview | null>(null);
+
   const [result, setResult] = useState<{
     message: string;
     data: BulkReservationResult;
   } | null>(null);
+
   const [needsPreview, setNeedsPreview] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [page, setPage] = useState(0);
-  // Requests above current Stock are valid; the backend proposes a partial allocation.
+
+  const [filter, setFilter] = useState<ReservationFilter>("ALL");
+
+  // Snackbar notifications.
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    open: false,
+    message: "",
+    severity: "success",
+    id: 0,
+  });
+
+  const showSnackbar = (
+    message: string,
+    severity: SnackbarSeverity = "success",
+  ) => {
+    setSnackbar((previous) => ({
+      open: true,
+      message,
+      severity,
+      id: previous.id + 1,
+    }));
+  };
+
+  const closeSnackbar = () => {
+    setSnackbar((previous) => ({
+      ...previous,
+      open: false,
+    }));
+  };
+
+  // Validate Requested Qty and SO Number.
+  // Requested Qty must be a positive whole number.
+  // Backend handles partial allocation when Qty exceeds stock.
   const valid =
     rows.length > 0 &&
     rows.every(
       (row) =>
-        /^\d+(?:\.\d{1,3})?$/.test(values[row.id].qty) &&
-        Number(values[row.id].qty) > 0,
+        /^\d+$/.test(values[row.id].qty) &&
+        Number(values[row.id].qty) > 0 &&
+        values[row.id].soNumber.trim().length > 0 &&
+        values[row.id].soNumber.trim().length <= 100,
     );
+
+  // Prepare the manual reservation API payload.
   const requestLines = (): ReservationLine[] =>
     rows.map((row) => ({
-      storageBin: row.storageBin ?? "",
       materialCode: row.materialCode,
-      batch: row.batch,
       qty: values[row.id].qty,
-      soNumber: values[row.id].soNumber.trim() || undefined,
+      soNumber: values[row.id].soNumber.trim(),
     }));
-  const close = () => (result ? onSuccess(result.message) : onClose());
+
+  const close = () => {
+    closeSnackbar();
+
+    if (result) {
+      onClose();
+      return;
+    }
+
+    onClose();
+  };
+  // Return from allocation preview to input table.
   const back = () => {
     setPreview(null);
     setNeedsPreview(false);
-    setError(null);
-    setPage(0);
+    setFilter("ALL");
   };
+
+  // Preview selected stock without saving reservations.
   const check = async () => {
     if (!valid || busy) return;
+
     setBusy(true);
-    setError(null);
+
     try {
       const response = await freeStockApi.previewSelected(requestLines());
+
+      // Store API preview to display batch-wise allocation.
       setPreview(response.data);
+
+      if (!response.data.canConfirm) {
+        showSnackbar(
+          "None of the selected rows can currently be reserved.",
+          "warning",
+        );
+      }
+
       setNeedsPreview(false);
-      setPage(0);
+      setFilter("ALL");
     } catch (reason) {
-      setError(reason instanceof Error ? reason : new Error("Preview failed."));
+      const err =
+        reason instanceof Error ? reason : new Error("Preview failed.");
+
+      showSnackbar(err.message, "error");
       setNeedsPreview(true);
     } finally {
       setBusy(false);
     }
   };
+
+  // Confirm selected stock reservation.
   const confirm = async () => {
     if (
       !preview?.canConfirm ||
@@ -102,363 +168,299 @@ export default function FreeStockReserveDialog({
       needsPreview ||
       result ||
       busy
-    )
+    ) {
       return;
+    }
+
     setBusy(true);
-    setError(null);
+
     try {
       const response = await freeStockApi.confirmSelected(
         requestLines(),
         preview.previewToken,
       );
-      // Keep the saved results visible. Closing triggers the parent's success/refresh flow.
+
+      // Keep the confirmed result visible until Done.
       setResult(response);
-      setPage(0);
+      setFilter("ALL");
+
+      showSnackbar(
+        `Successfully reserved ${response.data.reservedRows} stock ${
+          response.data.reservedRows === 1 ? "row" : "rows"
+        }. Any pending quantities remain unreserved.`,
+      );
     } catch (reason) {
-      setError(
+      const err =
         reason instanceof Error
           ? reason
           : new Error(
               "Reservation failed. Refresh the preview before trying again.",
-            ),
-      );
+            );
+
+      showSnackbar(err.message, "error");
+
       setNeedsPreview(true);
       onChanged();
     } finally {
       setBusy(false);
     }
   };
-  const inputSerials = new Map(rows.map((row, index) => [row.id, index + 1]));
+
+  // Columns for initial manual reservation entry.
   const inputColumns: FreeStockDataColumn<FreeStockRow>[] = [
-    { key: "serial", label: "S.No", render: (row) => inputSerials.get(row.id) },
     {
-      key: "bin",
-      label: "Storage Bin",
-      render: (row) => row.storageBin || "—",
+      key: "material",
+      label: "Material",
+      width: "19%",
+      render: (row) => row.materialCode,
     },
-    { key: "material", label: "Material", render: (row) => row.materialCode },
-    { key: "batch", label: "Batch", render: (row) => row.batch },
-    { key: "stock", label: "Stock", render: (row) => row.stockQty },
+    {
+      key: "stock",
+      label: "Stock",
+      width: "7%",
+      render: (row) => row.stockQty,
+    },
     {
       key: "qty",
       label: "Requested Qty",
+      width: "12%",
       render: (row) => (
         <TextField
+          variant="standard"
           fullWidth
           size="small"
           value={values[row.id].qty}
           disabled={busy}
           inputProps={{
-            "aria-label": `Quantity for ${row.storageBin} ${row.materialCode} ${row.batch}`,
-            inputMode: "decimal",
-            maxLength: 32,
+            "aria-label": `Quantity for ${row.materialCode}`,
+            inputMode: "numeric",
+            maxLength: 2,
           }}
-          onChange={(event) =>
+          sx={{
+            "& .MuiInputBase-root": {
+              fontSize: "0.8rem",
+            },
+            "& .MuiInputBase-input": {
+              py: 0.5,
+              px: 0.5,
+            },
+          }}
+          onChange={(event) => {
+            const value = event.target.value;
+
+            // Prevent alphabets, decimals and special characters.
+            if (!/^\d*$/.test(value)) return;
+
             setValues((previous) => ({
               ...previous,
-              [row.id]: { ...previous[row.id], qty: event.target.value },
-            }))
-          }
+              [row.id]: {
+                ...previous[row.id],
+                qty: value,
+              },
+            }));
+          }}
         />
       ),
     },
     {
       key: "so",
-      label: "SO Number (optional)",
+      label: "SO Number",
+      width: "20%",
       render: (row) => (
         <TextField
+          variant="standard"
           fullWidth
           size="small"
           value={values[row.id].soNumber}
           disabled={busy}
           inputProps={{
-            "aria-label": `SO Number for ${row.storageBin} ${row.materialCode} ${row.batch}`,
-            maxLength: 100,
+            "aria-label": `SO Number for ${row.materialCode}`,
+            maxLength: 10,
+          }}
+          sx={{
+            "& .MuiInputBase-root": {
+              fontSize: "0.8rem",
+            },
+            "& .MuiInputBase-input": {
+              py: 0.5,
+              px: 0.5,
+            },
           }}
           onChange={(event) =>
             setValues((previous) => ({
               ...previous,
-              [row.id]: { ...previous[row.id], soNumber: event.target.value },
+              [row.id]: {
+                ...previous[row.id],
+                soNumber: event.target.value,
+              },
             }))
           }
         />
       ),
     },
   ];
+
+  // Display preview data or confirmed reservation data.
   const data = result?.data ?? preview;
-  const resultSerials = new Map(
-    data?.lines.map((row, index) => [row.rowNo, index + 1]) ?? [],
-  );
-  const requested = Number(data?.summary.requestedQty ?? 0);
-  const percentage = (value: string) =>
-    requested > 0
-      ? Math.min(100, Math.max(0, (Number(value) / requested) * 100))
-      : 0;
-  const cards = data
-    ? [
-        {
-          key: "rows",
-          title: "Selected Rows",
-          value: data.totalRows.toLocaleString(),
-          unit: "rows",
-          Icon: Layers3,
-          progress: 100,
-        },
-        {
-          key: "requested",
-          title: "Requested Qty",
-          value: data.summary.requestedQty,
-          unit: "units",
-          Icon: Package,
-          progress: 100,
-        },
-        ...(result
-          ? [
-              {
-                key: "reserved",
-                title: "Reserved Qty",
-                value: data.summary.allocatedQty,
-                unit: "units",
-                Icon: Bookmark,
-                progress: percentage(data.summary.allocatedQty),
-              },
-            ]
-          : []),
-        {
-          key: "pending",
-          title: "Pending Qty",
-          value: data.summary.pendingQty,
-          unit: "units",
-          Icon: CircleAlert,
-          progress: percentage(data.summary.pendingQty),
-        },
-      ]
-    : [];
-  const resultColumns: FreeStockDataColumn<BulkReservationRow>[] = [
-    {
-      key: "serial",
-      label: "S.No",
-      render: (row) => resultSerials.get(row.rowNo),
-    },
-    { key: "bin", label: "Storage Bin", render: (row) => row.storageBin },
-    { key: "material", label: "Material", render: (row) => row.materialCode },
-    { key: "batch", label: "Batch", render: (row) => row.batch },
-    { key: "stock", label: "Stock", render: (row) => row.stockQty },
-    { key: "qty", label: "Requested Qty", render: (row) => row.qty },
-    ...(result
-      ? [
-          {
-            key: "allocated",
-            label: "Reserved Qty",
-            render: (row: BulkReservationRow) => row.allocatedQty,
-          },
-        ]
-      : []),
-    { key: "pending", label: "Pending Qty", render: (row) => row.pendingQty },
-    { key: "so", label: "SO Number", render: (row) => row.soNumber || "—" },
-    {
-      key: "status",
-      label: "Allocation Status",
-      render: (row) => (
-        <Chip
-          size="small"
-          variant="outlined"
-          color={STATUS[row.status].color}
-          label={STATUS[row.status].label}
-        />
-      ),
-    },
-  ];
+
   return (
-    <FreeStockDialog
-      title={
-        result
-          ? "Selected Stock Reservation Result"
-          : `Reserve Selected Stock (${rows.length})`
-      }
-      maxWidth={data ? "xl" : "lg"}
-      onClose={close}
-      busy={busy}
-      actions={
-        result ? (
-          <CommonButton onClick={close}>Done</CommonButton>
-        ) : (
-          <>
-            {preview && (
-              <CommonButton disabled={busy} onClick={back}>
-                Back
-              </CommonButton>
-            )}
-            {!preview || needsPreview ? (
-              <CommonButton
-                disabled={!valid || busy}
-                onClick={() => void check()}
-              >
-                {busy ? "Checking..." : "Preview Allocation"}
-              </CommonButton>
-            ) : (
-              <CommonButton
-                disabled={!preview.canConfirm || !preview.previewToken || busy}
-                onClick={() => void confirm()}
-              >
-                {busy ? "Reserving..." : "Confirm Reservation"}
-              </CommonButton>
-            )}
-          </>
-        )
-      }
-    >
-      {result && (
-        <Alert severity="success" sx={{ mb: 1.5 }}>
-          {result.data.reservedRows} stock rows reserved in your name. Pending
-          quantities were not reserved.
-        </Alert>
-      )}
-      <FreeStockError error={error} />
-      {needsPreview && (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          Refresh the preview and review current availability before confirming
-          again.
-        </Alert>
-      )}
-      {!data ? (
-        <FreeStockDataTable
-          columns={inputColumns}
-          rows={rows}
-          rowKey={(row) => row.id}
-          maxHeight={420}
-        />
-      ) : (
-        <>
-          {!result && !data.canConfirm && (
-            <Alert severity="warning" sx={{ mb: 1 }}>
-              None of the selected rows can currently be reserved.
-            </Alert>
-          )}
+    <>
+      <FreeStockDialog
+        title={
+          result
+            ? "Selected Stock Reservation Result"
+            : "Reserve Selected Stock"
+        }
+        // Show selected-row count only before preview.
+        titleDetails={
+          !data ? (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 24,
+                height: 24,
+                px: 0.5,
+                borderRadius: "50%",
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+              }}
+            >
+              {rows.length}
+            </Box>
+          ) : undefined
+        }
+        // Small input popup and XL allocation preview.
+        maxWidth={data ? "xl" : "sm"}
+        // Back arrow in header only during preview.
+        onBack={preview && !result ? back : undefined}
+        onClose={close}
+        busy={busy}
+        // Preview button stays in footer of initial screen.
+        actions={
+          result ? null : !preview || needsPreview ? (
+            <CommonButton
+              disabled={!valid || busy}
+              onClick={() => void check()}
+            >
+              {busy ? "Checking..." : "Preview"}
+            </CommonButton>
+          ) : null
+        }
+      >
+        {!data ? (
+          // Initial manual reservation table.
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(1, minmax(0, 1fr))",
-                sm: "repeat(2, minmax(0, 1fr))",
-                md: `repeat(${cards.length}, minmax(0, 1fr))`,
+              "& .MuiTableCell-head": {
+                py: "4px !important",
+                px: "8px !important",
+                height: "30px !important",
+                fontSize: "0.75rem",
+                textTransform: "none !important",
               },
-              gap: 1.5,
-              mb: 1.2,
+              "& .MuiTableCell-body": {
+                py: "4px !important",
+                px: "8px !important",
+                fontSize: "0.8rem",
+              },
             }}
           >
-            {cards.map(({ key, title, value, unit, Icon, progress }) => (
-              <Paper
-                key={key}
-                variant="outlined"
+            <FreeStockDataTable
+              columns={inputColumns}
+              rows={rows}
+              rowKey={(row) => row.id}
+              maxHeight={420}
+            />
+          </Box>
+        ) : (
+          <>
+            {/* Allocation badges and action button in same row */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
+                mb: 1.5,
+              }}
+            >
+              {/* Left: Allocation filter badges */}
+              <Box
                 sx={{
-                  px: 1.75,
-                  py: 1.4,
-                  minWidth: 0,
-                  borderRadius: 2,
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 0.4,
-                  bgcolor: "background.paper",
-                  borderColor: "divider",
-                  boxShadow: "none",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 0.75,
+                  minWidth: 0,
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: 1.5,
-                    minWidth: 0,
-                  }}
-                >
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      sx={{
-                        fontSize: 15,
-                        fontWeight: 600,
-                        color: "text.primary",
-                        lineHeight: 1,
-                        mb: 0.6,
-                      }}
-                    >
-                      {title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 30,
-                        fontWeight: 800,
-                        lineHeight: 1,
-                        color: "text.primary",
-                        fontVariantNumeric: "tabular-nums",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "text.secondary",
-                      }}
-                    >
-                      {unit}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      flexShrink: 0,
-                      display: "grid",
-                      placeItems: "center",
-                      borderRadius: 2,
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
-                    }}
+                <ReservationFilterChips
+                  rows={data.lines}
+                  filter={filter}
+                  onFilterChange={setFilter}
+                  disabled={busy}
+                />
+              </Box>
+
+              {/* Right: Confirm Reservation or Done */}
+              {result ? (
+                <CommonButton onClick={close}>Done</CommonButton>
+              ) : (
+                preview &&
+                !needsPreview && (
+                  <CommonButton
+                    disabled={
+                      !preview.canConfirm || !preview.previewToken || busy
+                    }
+                    onClick={() => void confirm()}
                   >
-                    <Icon size={21} strokeWidth={1.9} />
-                  </Box>
-                </Box>
-                <Box
-                  sx={(theme) => ({
-                    height: 6,
-                    borderRadius: 5,
-                    bgcolor: alpha(theme.palette.primary.main, 0.2),
-                    overflow: "hidden",
-                  })}
-                >
-                  <Box
-                    sx={{
-                      height: "100%",
-                      width: `${progress}%`,
-                      bgcolor: "primary.main",
-                      borderRadius: 5,
-                      transition: "width 0.3s ease",
-                    }}
-                  />
-                </Box>
-              </Paper>
-            ))}
-          </Box>
-          <FreeStockDataTable
-            columns={resultColumns}
-            rows={data.lines.slice(page * 50, (page + 1) * 50)}
-            rowKey={(row) => row.rowNo}
-            stackBelow={false}
-            maxHeight={420}
-            pagination={{
-              count: data.totalRows,
-              page,
-              size: 50,
-              onPage: setPage,
-              disabled: busy,
-            }}
-          />
-        </>
-      )}
-    </FreeStockDialog>
+                    {busy ? "Reserving..." : "Confirm Reservation"}
+                  </CommonButton>
+                )
+              )}
+            </Box>
+
+            {/* Same split batch-wise allocation table as Excel */}
+            <FreeStockReservationTables
+              rows={data.lines}
+              filter={filter}
+              showReserved
+              disabled={busy}
+            />
+          </>
+        )}
+      </FreeStockDialog>
+
+      {/* DispatchView-style toast notification */}
+      <Snackbar
+        key={snackbar.id}
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        sx={{
+          zIndex: (theme) => theme.zIndex.modal + 10,
+        }}
+      >
+        <Alert
+          onClose={closeSnackbar}
+          severity={snackbar.severity}
+          sx={{
+            width: "100%",
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }

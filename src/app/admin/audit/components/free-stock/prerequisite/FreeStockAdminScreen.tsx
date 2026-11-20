@@ -9,11 +9,13 @@ import {
   downloadReservationTemplate,
   exportStock,
 } from "../../../utils/free-stock/freeStockExport";
-
+import FreeStockDistinctSoDialog from "./FreeStockDistinctSoDialog";
+import { freeStockApi } from "../../../services/freeStock.service";
 import { useFreeStock } from "../../../hooks/free-stock/useFreeStock";
 import { showGlobalMessage } from "../../../utils/auditEvents";
 
 import FreeStockTable from "./FreeStockTable";
+import FreeStockGroupedTable from "./FreeStockGroupedTable";
 import FreeStockStatusCards from "./FreeStockStatusCards";
 import FreeStockToolbar from "./FreeStockToolbar";
 import FreeStockDetailDialog from "./FreeStockDetailDialog";
@@ -37,17 +39,50 @@ export default function FreeStockAdminScreen({
   const [reserveRows, setReserveRows] = useState<FreeStockRow[] | null>(null);
   const [releaseRows, setReleaseRows] = useState<FreeStockRow[] | null>(null);
   const [history, setHistory] = useState(false);
+  const [distinctSoOpen, setDistinctSoOpen] = useState(false);
+  const [distinctSoCount, setDistinctSoCount] = useState<number | null>(null);
+  const [distinctSoError, setDistinctSoError] = useState<Error | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [actionError, setActionError] = useState<Error | null>(null);
 
   const admin = role === "ADMIN";
-  const rows = data?.data ?? [];
+  // Reserved tab comes grouped by SO; every other tab is a flat list.
+  const rows: FreeStockRow[] = !data
+    ? []
+    : data.groupedBy === "SO_NUMBER"
+      ? data.data.flatMap((group) => group.items)
+      : data.data;
   const selectedRows = rows.filter((row) => selected.includes(row.id));
   const pending = stock.loading;
 
   useEffect(() => {
     setSelected([]);
   }, [filters, data]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void freeStockApi
+      .distinctSo({ page: 1, limit: 1 }, controller.signal)
+      .then((result) => {
+        if (controller.signal.aborted) return;
+
+        setDistinctSoCount(result.distinctSoCount);
+        setDistinctSoError(null);
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return;
+
+        setDistinctSoCount(null);
+        setDistinctSoError(
+          reason instanceof Error
+            ? reason
+            : new Error("Unable to load Distinct SO Count."),
+        );
+      });
+
+    return () => controller.abort();
+  }, [data]);
 
   const success = (message: string) => {
     setUpload(null);
@@ -102,6 +137,8 @@ export default function FreeStockAdminScreen({
         mine={stock.mine}
         myReservations={myReservations}
         onMineChange={stock.changeMine}
+        distinctSoCount={distinctSoCount}
+        onDistinctSoClick={() => setDistinctSoOpen(true)}
       />
 
       <Box
@@ -138,26 +175,43 @@ export default function FreeStockAdminScreen({
           />
         </Box>
 
-        {(stock.error || actionError) && (
+        {(stock.error || actionError || distinctSoError) && (
           <Box sx={{ px: 2 }}>
             <FreeStockError error={stock.error} />
             <FreeStockError error={actionError} />
+            <FreeStockError error={distinctSoError} />
           </Box>
         )}
 
-        <FreeStockTable
-          rows={rows}
-          total={data?.pagination.total ?? 0}
-          page={stock.page}
-          size={stock.size}
-          loading={pending}
-          selected={selected}
-          onSelect={setSelected}
-          onPage={stock.setPage}
-          onSize={stock.changeSize}
-          onView={setDetailId}
-          onRelease={release}
-        />
+        {data?.groupedBy === "SO_NUMBER" ? (
+          <FreeStockGroupedTable
+            groups={data.data}
+            total={data.pagination.total}
+            page={stock.page}
+            size={stock.size}
+            loading={pending}
+            selected={selected}
+            onSelect={setSelected}
+            onPage={stock.setPage}
+            onSize={stock.changeSize}
+            onView={setDetailId}
+            onRelease={release}
+          />
+        ) : (
+          <FreeStockTable
+            rows={rows}
+            total={data?.pagination.total ?? 0}
+            page={stock.page}
+            size={stock.size}
+            loading={pending}
+            selected={selected}
+            onSelect={setSelected}
+            onPage={stock.setPage}
+            onSize={stock.changeSize}
+            onView={setDetailId}
+            onRelease={release}
+          />
+        )}
       </Box>
 
       {detailId !== null && (
@@ -194,6 +248,7 @@ export default function FreeStockAdminScreen({
 
       {releaseRows && (
         <FreeStockReleaseDialog
+          role={role}
           rows={releaseRows}
           onClose={() => setReleaseRows(null)}
           onSuccess={success}
@@ -202,6 +257,13 @@ export default function FreeStockAdminScreen({
       )}
 
       {history && <FreeStockUploadHistory onClose={() => setHistory(false)} />}
+
+      {distinctSoOpen && (
+        <FreeStockDistinctSoDialog
+          role={role}
+          onClose={() => setDistinctSoOpen(false)}
+        />
+      )}
     </Box>
   );
 }
