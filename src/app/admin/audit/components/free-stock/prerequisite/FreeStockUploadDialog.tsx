@@ -9,6 +9,7 @@ import type {
   StockPreview,
   StockRowIssue,
 } from "../../../types/freeStock";
+import { useClearFreeStockPreview } from "../../../hooks/free-stock/useFreeStockPreviewActivity";
 import { freeStockApi } from "../../../services/freeStock.service";
 import ExcelUploadButton from "../../shared/ExcelUploadButton";
 import FreeStockError from "./FreeStockError";
@@ -56,6 +57,8 @@ export default function FreeStockUploadDialog({
   const stockPreview = preview && "sample" in preview ? preview : null;
 
   const reservationPreview = preview && "lines" in preview ? preview : null;
+
+  useClearFreeStockPreview(reservationPreview?.previewActivityId);
 
   // Picking or removing a file always clears the previous preview
 

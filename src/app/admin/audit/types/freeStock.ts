@@ -141,6 +141,7 @@ export type StockPreview = {
   }[];
 };
 export type ReservationPreview = {
+  previewActivityId?: string;
   totalRows: number;
   lines: {
     storageBin: string;
@@ -183,6 +184,7 @@ export type BulkReservationRow = {
 };
 
 export type BulkReservationPreview = {
+  previewActivityId?: string;
   totalRows: number;
   sourceFileName?: string;
   previewToken?: string;

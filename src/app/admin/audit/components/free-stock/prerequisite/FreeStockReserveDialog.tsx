@@ -12,6 +12,7 @@ import type {
   ReservationLine,
 } from "../../../types/freeStock";
 
+import { useClearFreeStockPreview } from "../../../hooks/free-stock/useFreeStockPreviewActivity";
 import { freeStockApi } from "../../../services/freeStock.service";
 import FreeStockDialog from "./FreeStockDialog";
 
@@ -62,6 +63,10 @@ export default function FreeStockReserveDialog({
   const [busy, setBusy] = useState(false);
 
   const [filter, setFilter] = useState<ReservationFilter>("ALL");
+
+  useClearFreeStockPreview(
+    !result && !needsPreview ? preview?.previewActivityId : undefined,
+  );
 
   // Snackbar notifications.
   const [snackbar, setSnackbar] = useState<SnackbarState>({

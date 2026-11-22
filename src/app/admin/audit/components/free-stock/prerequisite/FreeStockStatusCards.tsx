@@ -186,19 +186,21 @@ export default function FreeStockStatusCards({
                 {card.title}
               </Typography>
 
-              {/* Lines and units side by side */}
+              {/* Keep counts readable when the card gets narrower. */}
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 1.75,
+                  flexWrap: "wrap",
+                  columnGap: 0.75,
+                  rowGap: 0.25,
                   minWidth: 0,
                 }}
               >
                 {/* Total lines */}
                 <Typography
                   sx={{
-                    width: 85,
+                    minWidth: 80,
                     flexShrink: 0,
                     fontSize: 22,
                     fontWeight: 800,
@@ -211,51 +213,42 @@ export default function FreeStockStatusCards({
                   {lines}
                 </Typography>
                 {!isDistinctSo && (
-                  <>
-                    {/* Vertical divider */}
-                    <Box
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 0.5,
+                      maxWidth: "100%",
+                      flexWrap: "wrap",
+                      borderLeft: 1,
+                      borderColor: "divider",
+                      pl: 0.75,
+                      py: 0.5,
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        width: "1px",
-                        height: 30,
-                        flexShrink: 0,
-                        bgcolor: "divider",
-                      }}
-                    />
-
-                    {/* Total units */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        gap: 0.5,
-                        minWidth: 0,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "text.primary",
+                        lineHeight: 1.2,
+                        fontVariantNumeric: "tabular-nums",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      <Typography
-                        sx={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: "text.primary",
-                          lineHeight: 1.2,
-                          fontVariantNumeric: "tabular-nums",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {units}
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: "text.secondary",
-                          lineHeight: 1.2,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        units
-                      </Typography>
-                    </Box>
-                  </>
+                      {units}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        color: "text.secondary",
+                        lineHeight: 1.2,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      units
+                    </Typography>
+                  </Box>
                 )}
               </Box>
             </Box>

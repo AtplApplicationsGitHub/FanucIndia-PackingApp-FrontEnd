@@ -5,6 +5,7 @@ import { Alert, Box, Typography } from "@mui/material";
 import { FileSpreadsheet } from "lucide-react";
 import CommonButton from "@/common/components/CommonButton";
 import ExcelUploadButton from "../../shared/ExcelUploadButton";
+import { useClearFreeStockPreview } from "../../../hooks/free-stock/useFreeStockPreviewActivity";
 import { freeStockApi } from "../../../services/freeStock.service";
 import type {
   BulkReservationPreview,
@@ -31,6 +32,10 @@ export default function FreeStockBulkReservationDialog({
   const [error, setError] = useState<Error | null>(null);
   const [needsPreview, setNeedsPreview] = useState(false);
   const [filter, setFilter] = useState<ReservationFilter>("ALL");
+
+  useClearFreeStockPreview(
+    !result && !needsPreview ? preview?.previewActivityId : undefined,
+  );
 
   const data = result ?? preview;
 

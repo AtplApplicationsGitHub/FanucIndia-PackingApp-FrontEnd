@@ -125,7 +125,9 @@ export default function FreeStockGroupedTable({
               backgroundColor: alpha(theme.palette.primary.main, 0.12),
             },
             "& .MuiTableHead-root .MuiTableCell-root": {
-              fontSize: "0.87rem",
+              fontSize: { xs: "0.76rem", lg: "0.8rem", xl: "0.87rem" },
+              whiteSpace: "nowrap",
+              overflowWrap: "normal",
             },
             "& .MuiTableCell-root": {
               borderBottom: "none",
@@ -140,6 +142,8 @@ export default function FreeStockGroupedTable({
             "& .MuiTableCell-root[data-nowrap='true']": {
               whiteSpace: "nowrap",
               overflowWrap: "normal",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             },
           }}
         >
@@ -150,7 +154,7 @@ export default function FreeStockGroupedTable({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    flexWrap: "wrap",
+                    whiteSpace: "nowrap",
                     minWidth: 0,
                   }}
                 >
@@ -184,9 +188,11 @@ export default function FreeStockGroupedTable({
                     sx={{
                       display: "block",
                       maxWidth: "100%",
-                      whiteSpace: "normal",
-                      overflowWrap: "anywhere",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
+                    title={column.label}
                   >
                     {column.label}
                   </Box>

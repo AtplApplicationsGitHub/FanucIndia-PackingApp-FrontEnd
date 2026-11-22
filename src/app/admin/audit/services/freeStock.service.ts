@@ -39,6 +39,19 @@ function form(file: File, complete = false): FormData {
 }
 
 export const freeStockApi = {
+  previewActivity: (stockItemIds: string, signal: AbortSignal) =>
+    request<{ stockItemIds: number[] }>(
+      API.FREE_STOCK.PREVIEW_ACTIVITY(stockItemIds),
+      { signal },
+    ),
+  cancelPreviewActivity: async (previewId: string) => {
+    await checked(
+      await fetchWithAuth(API.FREE_STOCK.CANCEL_PREVIEW_ACTIVITY(previewId), {
+        method: "DELETE",
+        keepalive: true,
+      }),
+    );
+  },
   // Preview manually selected stock - SALES
   previewSelected: (lines: ReservationLine[]) =>
     request<{ data: BulkReservationPreview }>(

@@ -22,6 +22,7 @@ import { LockOpen } from "lucide-react";
 import { getFreeStockTableColumns } from "../../../utils/free-stock/freeStockColumns";
 import type { FreeStockRole, FreeStockRow } from "../../../types/freeStock";
 import { stockCell } from "../../../utils/free-stock/freeStockFormat";
+import { useFreeStockPreviewActivity } from "../../../hooks/free-stock/useFreeStockPreviewActivity";
 import AuditStatusPill from "../../shared/AuditStatusPill";
 
 type Props = {
@@ -61,6 +62,11 @@ export default function FreeStockTable({
 }: Props) {
   const theme = useTheme();
   const columns = getFreeStockTableColumns(role);
+  const visibleOpenRows =
+    role === "SALES"
+      ? rows.filter((row) => row.status === "OPEN").map((row) => row.id).join(",")
+      : "";
+  const beingPreviewed = useFreeStockPreviewActivity(visibleOpenRows);
   const selectable = rows
     .filter((r) => r.canReserve || r.canRelease)
     .map((r) => r.id);
@@ -107,7 +113,9 @@ export default function FreeStockTable({
               backgroundColor: alpha(theme.palette.primary.main, 0.2),
             },
             "& .MuiTableHead-root .MuiTableCell-root": {
-              fontSize: "0.87rem",
+              fontSize: { xs: "0.76rem", lg: "0.8rem", xl: "0.87rem" },
+              whiteSpace: "nowrap",
+              overflowWrap: "normal",
             },
             "& .MuiTableCell-root": {
               borderBottom: "none",
@@ -122,6 +130,8 @@ export default function FreeStockTable({
             "& .MuiTableCell-root[data-nowrap='true']": {
               whiteSpace: "nowrap",
               overflowWrap: "normal",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             },
           }}
         >
@@ -132,7 +142,7 @@ export default function FreeStockTable({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    flexWrap: "wrap",
+                    whiteSpace: "nowrap",
                     minWidth: 0,
                   }}
                 >
@@ -166,9 +176,11 @@ export default function FreeStockTable({
                     sx={{
                       display: "block",
                       maxWidth: "100%",
-                      whiteSpace: "normal",
-                      overflowWrap: "anywhere",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
+                    title={column.label}
                   >
                     {column.label}
                   </Box>
@@ -261,8 +273,12 @@ export default function FreeStockTable({
                       {column.key === "status" ? (
                         <Box
                           sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.5,
                             minWidth: 0,
-                            "& > .MuiBox-root": {
+                            maxWidth: "100%",
+                            "& > div.MuiBox-root": {
                               minWidth: 0,
                               maxWidth: "100%",
                               boxSizing: "border-box",
@@ -273,6 +289,42 @@ export default function FreeStockTable({
                           }}
                         >
                           <AuditStatusPill {...STATUS_PILL[row.status]} />
+                          {row.status === "OPEN" && beingPreviewed.has(row.id) && (
+                            <Tooltip title="Someone is previewing this stock" arrow>
+                              <Box
+                                component="span"
+                                role="img"
+                                tabIndex={0}
+                                sx={{
+                                  display: "inline-grid",
+                                  placeItems: "center",
+                                  width: 16,
+                                  height: 16,
+                                  flexShrink: 0,
+                                  borderRadius: "50%",
+                                  "&:focus-visible": {
+                                    outline: "2px solid",
+                                    outlineColor: "info.main",
+                                  },
+                                  "&::before": {
+                                    content: '""',
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: "50%",
+                                    bgcolor: "info.main",
+                                    animation: "free-stock-preview-blink 1.4s ease-in-out infinite",
+                                  },
+                                  "@keyframes free-stock-preview-blink": {
+                                    "0%, 100%": { opacity: 1 },
+                                    "50%": { opacity: 0.35 },
+                                  },
+                                  "@media (prefers-reduced-motion: reduce)": {
+                                    "&::before": { animation: "none" },
+                                  },
+                                }}
+                              />
+                            </Tooltip>
+                          )}
                         </Box>
                       ) : column.key === "name" ? (
                         <Typography

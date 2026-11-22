@@ -68,6 +68,10 @@ export const API = {
     UPLOAD_RESERVATIONS: `${API_BASE_URL}/free-stock/reservations/upload`,
     SELECTED_PREVIEW: `${API_BASE_URL}/free-stock/reservations/selected/preview`,
     SELECTED_CONFIRM: `${API_BASE_URL}/free-stock/reservations/selected/confirm`,
+    PREVIEW_ACTIVITY: (stockItemIds: string) =>
+      `${API_BASE_URL}/free-stock/reservation-preview-activity?stockItemIds=${encodeURIComponent(stockItemIds)}`,
+    CANCEL_PREVIEW_ACTIVITY: (previewId: string) =>
+      `${API_BASE_URL}/free-stock/reservation-preview-activity/${encodeURIComponent(previewId)}`,
     BULK_PREVIEW: `${API_BASE_URL}/free-stock/reservations/bulk/preview`,
     BULK_CONFIRM: `${API_BASE_URL}/free-stock/reservations/bulk/confirm`,
     RESERVE: `${API_BASE_URL}/free-stock/reservations`,
