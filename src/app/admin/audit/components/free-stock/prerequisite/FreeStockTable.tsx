@@ -38,6 +38,7 @@ type Props = {
   onSize: (size: number) => void;
   onView: (id: number) => void;
   onRelease: (row: FreeStockRow) => void;
+  onStockChanged: () => void;
 };
 const STATUS_PILL = {
   OPEN: { label: "Open", color: "success" },
@@ -59,6 +60,7 @@ export default function FreeStockTable({
   onSize,
   onView,
   onRelease,
+  onStockChanged,
 }: Props) {
   const theme = useTheme();
   const columns = getFreeStockTableColumns(role);
@@ -66,7 +68,11 @@ export default function FreeStockTable({
     role === "SALES"
       ? rows.filter((row) => row.status === "OPEN").map((row) => row.id).join(",")
       : "";
-  const beingPreviewed = useFreeStockPreviewActivity(visibleOpenRows);
+  const beingPreviewed = useFreeStockPreviewActivity(
+    visibleOpenRows,
+    loading,
+    onStockChanged,
+  );
   const selectable = rows
     .filter((r) => r.canReserve || r.canRelease)
     .map((r) => r.id);

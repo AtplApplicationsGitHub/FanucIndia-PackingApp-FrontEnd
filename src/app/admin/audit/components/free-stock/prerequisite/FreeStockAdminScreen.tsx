@@ -202,6 +202,7 @@ export default function FreeStockAdminScreen({
           <FreeStockTable
             rows={rows}
             role={role}
+            onStockChanged={refresh}
             total={data?.pagination.total ?? 0}
             page={stock.page}
             size={stock.size}

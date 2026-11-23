@@ -40,7 +40,7 @@ function form(file: File, complete = false): FormData {
 
 export const freeStockApi = {
   previewActivity: (stockItemIds: string, signal: AbortSignal) =>
-    request<{ stockItemIds: number[] }>(
+    request<{ stockItemIds: number[]; staleStockItemIds?: number[] }>(
       API.FREE_STOCK.PREVIEW_ACTIVITY(stockItemIds),
       { signal },
     ),

@@ -6,14 +6,18 @@ import { freeStockApi } from "../../services/freeStock.service";
 const POLL_INTERVAL_MS = 5000;
 const NO_ACTIVITY: ReadonlySet<number> = new Set();
 
-export function useFreeStockPreviewActivity(stockItemIds: string): ReadonlySet<number> {
+export function useFreeStockPreviewActivity(
+  stockItemIds: string,
+  loading: boolean,
+  onStockChanged: () => void,
+): ReadonlySet<number> {
   const [activity, setActivity] = useState<{
     scope: string;
     ids: ReadonlySet<number>;
   } | null>(null);
 
   useEffect(() => {
-    if (!stockItemIds) return;
+    if (!stockItemIds || loading) return;
 
     const lifecycle = new AbortController();
     let timer: number | undefined;
@@ -26,8 +30,12 @@ export function useFreeStockPreviewActivity(stockItemIds: string): ReadonlySet<n
         ]);
         try {
           const response = await freeStockApi.previewActivity(stockItemIds, signal);
-          if (!lifecycle.signal.aborted) {
-            setActivity({ scope: stockItemIds, ids: new Set(response.stockItemIds) });
+          if (lifecycle.signal.aborted) return;
+
+          setActivity({ scope: stockItemIds, ids: new Set(response.stockItemIds) });
+          if (response.staleStockItemIds?.length) {
+            // Refresh the current filters so rows, pagination and counts agree.
+            onStockChanged();
           }
         } catch {
           if (!lifecycle.signal.aborted) {
@@ -46,7 +54,7 @@ export function useFreeStockPreviewActivity(stockItemIds: string): ReadonlySet<n
       lifecycle.abort();
       window.clearTimeout(timer);
     };
-  }, [stockItemIds]);
+  }, [stockItemIds, loading, onStockChanged]);
 
   return activity?.scope === stockItemIds ? activity.ids : NO_ACTIVITY;
 }
