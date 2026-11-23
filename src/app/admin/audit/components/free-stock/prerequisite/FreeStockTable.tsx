@@ -47,6 +47,7 @@ const STATUS_PILL = {
 } as const;
 
 const NO_WRAP_COLUMNS = new Set<string>(["grDate", "reservedDate"]);
+
 export default function FreeStockTable({
   role,
   rows,
@@ -66,7 +67,10 @@ export default function FreeStockTable({
   const columns = getFreeStockTableColumns(role);
   const visibleOpenRows =
     role === "SALES"
-      ? rows.filter((row) => row.status === "OPEN").map((row) => row.id).join(",")
+      ? rows
+          .filter((row) => row.status === "OPEN")
+          .map((row) => row.id)
+          .join(",")
       : "";
   const beingPreviewed = useFreeStockPreviewActivity(
     visibleOpenRows,
@@ -237,16 +241,40 @@ export default function FreeStockTable({
                           "aria-label": `Select ${row.materialCode} ${row.batch}`,
                         }}
                       />
-                      <Tooltip title="View details">
+                      <Tooltip
+                        title={
+                          row.status === "OPEN" && beingPreviewed.has(row.id)
+                            ? "Someone is previewing this stock - View details"
+                            : "View details"
+                        }
+                        arrow
+                      >
                         <span>
                           <IconButton
                             aria-label={`View ${row.materialCode} ${row.batch}`}
                             size="small"
-                            sx={{ p: 0.25 }}
+                            sx={{
+                              p: 0.25,
+                              color:
+                                row.status === "OPEN" &&
+                                beingPreviewed.has(row.id)
+                                  ? "info.main"
+                                  : "inherit",
+                              ...(row.status === "OPEN" &&
+                                beingPreviewed.has(row.id) && {
+                                  bgcolor: alpha(theme.palette.info.main, 0.12),
+                                  "&:hover": {
+                                    bgcolor: alpha(
+                                      theme.palette.info.main,
+                                      0.2,
+                                    ),
+                                  },
+                                }),
+                            }}
                             disabled={loading}
                             onClick={() => onView(row.id)}
                           >
-                            <VisibilityIcon fontSize="small" />{" "}
+                            <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>
@@ -268,7 +296,6 @@ export default function FreeStockTable({
                       )}
                     </Box>
                   </TableCell>
-
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}
@@ -295,42 +322,6 @@ export default function FreeStockTable({
                           }}
                         >
                           <AuditStatusPill {...STATUS_PILL[row.status]} />
-                          {row.status === "OPEN" && beingPreviewed.has(row.id) && (
-                            <Tooltip title="Someone is previewing this stock" arrow>
-                              <Box
-                                component="span"
-                                role="img"
-                                tabIndex={0}
-                                sx={{
-                                  display: "inline-grid",
-                                  placeItems: "center",
-                                  width: 16,
-                                  height: 16,
-                                  flexShrink: 0,
-                                  borderRadius: "50%",
-                                  "&:focus-visible": {
-                                    outline: "2px solid",
-                                    outlineColor: "info.main",
-                                  },
-                                  "&::before": {
-                                    content: '""',
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: "50%",
-                                    bgcolor: "info.main",
-                                    animation: "free-stock-preview-blink 1.4s ease-in-out infinite",
-                                  },
-                                  "@keyframes free-stock-preview-blink": {
-                                    "0%, 100%": { opacity: 1 },
-                                    "50%": { opacity: 0.35 },
-                                  },
-                                  "@media (prefers-reduced-motion: reduce)": {
-                                    "&::before": { animation: "none" },
-                                  },
-                                }}
-                              />
-                            </Tooltip>
-                          )}
                         </Box>
                       ) : column.key === "name" ? (
                         <Typography

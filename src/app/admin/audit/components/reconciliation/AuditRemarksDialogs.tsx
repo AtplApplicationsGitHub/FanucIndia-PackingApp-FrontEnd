@@ -16,7 +16,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Typography,
   useTheme,
 } from "@mui/material";
 import { X } from "lucide-react";
@@ -85,60 +84,84 @@ export function SkippedRemarksDialog({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
-  const [perPage, setPerPage] = useState(10);
+  const perPage = 10;
+  const theme = useTheme();
+  const lightYellow = alpha(theme.palette.primary.main, 0.25);
+
   useEffect(() => {
     setPage(0);
   }, [open]);
+
   const safePage = Math.min(
     page,
     Math.max(0, Math.ceil(locations.length / perPage) - 1),
   );
+
   const rows = locations.slice(safePage * perPage, (safePage + 1) * perPage);
+
   return (
-    <RemarksDialog open={open} title="SKIPPED REMARKS" onClose={onClose}>
+    <RemarksDialog open={open} title="SKIPPED LOCATION" onClose={onClose}>
       <Box
         sx={{
           border: 1,
           borderColor: "divider",
-          borderRadius: 1.5,
+          borderRadius: 1,
           overflow: "hidden",
+          bgcolor: "background.paper",
         }}
       >
-        <TableContainer sx={{ maxHeight: 460 }}>
-          <Table size="small" stickyHeader aria-label="Skipped bin remarks">
+        <TableContainer sx={{ maxHeight: 400 }}>
+          <Table
+            size="small"
+            stickyHeader
+            aria-label="Skipped location"
+            sx={{
+              "& .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd)": {
+                backgroundColor: lightYellow,
+              },
+              "& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root":
+                {
+                  borderBottom: 0,
+                },
+            }}
+          >
             <TableHead>
               <TableRow
                 sx={{
                   "& th": {
-                    bgcolor: "#FFDD00",
-                    color: "#111827",
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
                     fontWeight: 700,
                   },
                 }}
               >
-                <TableCell sx={{ width: 65 }}>S.No</TableCell>
-                <TableCell sx={{ width: 150 }}>Storage Bin</TableCell>
-                <TableCell>Skipped Remarks</TableCell>
-                <TableCell sx={{ width: 190 }}>Skipped On</TableCell>
+                <TableCell sx={{ width: "20%" }}>Storage Bin</TableCell>
+                <TableCell sx={{ width: "40%" }}>Remarks</TableCell>
+                <TableCell sx={{ width: "40%" }}>Skipped On</TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                    No skipped bins.
+                  <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
+                    No remarks found.
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((location, index) => (
+                rows.map((location) => (
                   <TableRow key={location.storageBin} hover>
-                    <TableCell>{safePage * perPage + index + 1}</TableCell>
                     <TableCell>{location.storageBin}</TableCell>
+
                     <TableCell
-                      sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                      }}
                     >
                       {location.skipReason}
                     </TableCell>
+
                     <TableCell>
                       {location.skippedAt
                         ? formatDateTime(location.skippedAt)
@@ -150,16 +173,24 @@ export function SkippedRemarksDialog({
             </TableBody>
           </Table>
         </TableContainer>
+
         <TablePagination
           component="div"
           count={locations.length}
           page={safePage}
           rowsPerPage={perPage}
-          rowsPerPageOptions={[10, 25, 50]}
+          rowsPerPageOptions={[]}
           onPageChange={(_, next) => setPage(next)}
-          onRowsPerPageChange={(event) => {
-            setPerPage(Number(event.target.value));
-            setPage(0);
+          showFirstButton={false}
+          showLastButton={false}
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            "& .MuiTablePagination-toolbar": {
+              minHeight: 48,
+              px: 1,
+            },
           }}
         />
       </Box>
@@ -183,6 +214,7 @@ export function UnexpectedRemarksDialog({
         ["Operator Remarks", line.operatorRemarks],
       ]
     : [];
+
   return (
     <RemarksDialog
       open={line !== null}
@@ -192,7 +224,11 @@ export function UnexpectedRemarksDialog({
       {line && (
         <>
           <TableContainer
-            sx={{ border: 1, borderColor: "divider", borderRadius: 1.5 }}
+            sx={{
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1.5,
+            }}
           >
             <Table
               size="small"
@@ -212,14 +248,24 @@ export function UnexpectedRemarksDialog({
                   <TableCell>Operator Details</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {fields.map(([label, value]) => (
                   <TableRow key={label}>
-                    <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        verticalAlign: "top",
+                      }}
+                    >
                       {label}
                     </TableCell>
+
                     <TableCell
-                      sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                      }}
                     >
                       {value || "—"}
                     </TableCell>

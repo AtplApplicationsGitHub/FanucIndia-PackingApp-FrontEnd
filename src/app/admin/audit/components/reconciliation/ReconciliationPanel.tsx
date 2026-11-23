@@ -1,6 +1,9 @@
 "use client";
 
-import { SkippedRemarksDialog, UnexpectedRemarksDialog } from "./AuditRemarksDialogs";
+import {
+  SkippedRemarksDialog,
+  UnexpectedRemarksDialog,
+} from "./AuditRemarksDialogs";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import {
@@ -259,7 +262,9 @@ export default function ReconciliationPanel({
   const [closing, setClosing] = useState(false);
   const [locationsOpen, setLocationsOpen] = useState(false);
   const [skippedOpen, setSkippedOpen] = useState(false);
-  const [unexpectedRemarks, setUnexpectedRemarks] = useState<ReconLine | null>(null);
+  const [unexpectedRemarks, setUnexpectedRemarks] = useState<ReconLine | null>(
+    null,
+  );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
@@ -478,7 +483,9 @@ export default function ReconciliationPanel({
     return <Alert severity="error">{error || "Audit not found."}</Alert>;
   }
 
-  const skippedLocations = detail.locations.filter((location) => Boolean(location.skipReason?.trim()));
+  const skippedLocations = detail.locations.filter((location) =>
+    Boolean(location.skipReason?.trim()),
+  );
   const isClosed = detail.status === "CLOSED";
   const locked = pending || (!isClosed && !detail.canReview);
   const reviewingLine = pageRows.find((v) => v.id === reviewId);
@@ -713,7 +720,7 @@ export default function ReconciliationPanel({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
+            flexWrap: "wrap",
             gap: themed ? 1 : 1.5,
             width: "100%",
             minWidth: 0,
@@ -726,7 +733,7 @@ export default function ReconciliationPanel({
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
+              flexWrap: "wrap",
               gap: themed ? 0.9 : 1,
               minWidth: 0,
               flex: 1,
@@ -888,7 +895,9 @@ export default function ReconciliationPanel({
                   color: "text.primary",
                   border: 1,
                   borderColor: alpha(theme.palette.warning.main, 0.45),
-                  "&:hover": { bgcolor: alpha(theme.palette.warning.main, 0.22) },
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.warning.main, 0.22),
+                  },
                 }}
               />
             )}
@@ -897,18 +906,65 @@ export default function ReconciliationPanel({
             sx={{
               display: "flex",
               alignItems: "center",
-              flexWrap: compact ? "wrap" : themed ? "nowrap" : "wrap",
+              flexWrap: "wrap",
               gap: 1,
               ml: "auto",
               flexShrink: 0,
             }}
           >
             {themed && (
+              <FormControl
+                size="small"
+                sx={{
+                  display: { xs: "flex", xl: "none" },
+                  minWidth: 170,
+                  maxWidth: "100%",
+                }}
+              >
+                <Select
+                  value={issueFilter}
+                  onChange={(event) => {
+                    setIssueFilter(event.target.value as ReconCategoryFilter);
+                    setPage(0);
+                  }}
+                  renderValue={(value) => {
+                    const selected = categoryPills.find(
+                      (item) => item.value === value,
+                    );
+                    return selected
+                      ? `${selected.label} (${selected.count})`
+                      : "Categories";
+                  }}
+                  inputProps={{ "aria-label": "Category filter" }}
+                  sx={{ height: 36, fontSize: 13, fontWeight: 600 }}
+                >
+                  {categoryPills.map((item) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 3,
+                          width: "100%",
+                        }}
+                      >
+                        <Typography variant="body2">{item.label}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.count}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            {themed && (
               <Box
                 role="group"
                 aria-label="Category filters"
                 sx={{
-                  display: "flex",
+                  display: { xs: "none", xl: "flex" },
                   alignItems: "center",
                   gap: 0.8,
                   flex: "0 0 auto",
@@ -1169,7 +1225,9 @@ export default function ReconciliationPanel({
                           >
                             {v.materialCode}
                           </Link>
-                        ) : v.materialCode}
+                        ) : (
+                          v.materialCode
+                        )}
                       </TableCell>
 
                       {/* Batch */}

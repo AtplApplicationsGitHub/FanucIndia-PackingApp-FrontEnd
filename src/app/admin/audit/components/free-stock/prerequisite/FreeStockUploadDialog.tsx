@@ -287,23 +287,13 @@ export default function FreeStockUploadDialog({
       )}
       {preview && (
         <Box>
-          {stockPreview && stockPreview.skippedRows > 0 && (
-            <Box sx={{ mb: 0.75 }}>
-              {!stockPreview.canImport && (
-                <Alert severity="error" sx={{ mb: 0.5 }}>
-                  There are no valid rows to import.
-                </Alert>
-              )}
-              <Alert severity="warning" sx={{ mb: 0.5 }}>
-                {stockPreview.validRows.toLocaleString()} valid rows can be
-                imported; {stockPreview.skippedRows.toLocaleString()} invalid
-                rows will be skipped.{" "}
-                {stockPreview.protectedRows.toLocaleString()} existing stock
-                rows will be preserved because of these issues. No stock has
-                been changed yet.
+          {stockPreview &&
+            stockPreview.skippedRows > 0 &&
+            !stockPreview.canImport && (
+              <Alert severity="error" sx={{ mb: 0.75 }}>
+                There are no valid rows to import.
               </Alert>
-            </Box>
-          )}
+            )}
 
           {stockPreview ? (
             <Box
