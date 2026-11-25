@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { ChevronDown, Download, QrCode } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 import { API } from "@/common/lib/endpoints";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -95,6 +95,18 @@ export default function LoginContent() {
   const [alertMessage, setAlertMessage] = useState<string>("");
 
   const [showApiCard, setShowApiCard] = useState(false);
+  const apiQrButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleApiQrClickAway = (event: MouseEvent | TouchEvent) => {
+    const trigger = apiQrButtonRef.current;
+    if (trigger && event.composedPath().includes(trigger)) return;
+    setShowApiCard(false);
+  };
+
+  const handleApiQrClose = () => {
+    setShowApiCard(false);
+    apiQrButtonRef.current?.focus();
+  };
 
   // APK Dropdown state
   const [apkAnchorEl, setApkAnchorEl] = useState<null | HTMLElement>(null);
@@ -323,6 +335,7 @@ export default function LoginContent() {
           <Box sx={{ mr: 6, display: "flex", alignItems: "center", gap: 0.5 }}>
             <Tooltip title="Mobile API QR code">
               <IconButton
+                ref={apiQrButtonRef}
                 aria-label="Mobile API QR code"
                 aria-expanded={showApiCard}
                 aria-controls={showApiCard ? "mobile-api-qr-card" : undefined}
@@ -485,7 +498,13 @@ export default function LoginContent() {
           <UserMenu variant="minimal" />
         </Box>
 
-        {showApiCard && <MobileApiQrCard id="mobile-api-qr-card" />}
+        {showApiCard && (
+          <MobileApiQrCard
+            id="mobile-api-qr-card"
+            onClickAway={handleApiQrClickAway}
+            onClose={handleApiQrClose}
+          />
+        )}
       </AppBar>
 
       <Box

@@ -4,10 +4,12 @@ import {
   Alert,
   Box,
   CircularProgress,
+  ClickAwayListener,
+  IconButton,
   Paper,
   Typography,
 } from "@mui/material";
-import { QrCode } from "lucide-react";
+import { QrCode, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import apiClient from "@/common/lib/apiClient";
@@ -18,7 +20,17 @@ type ApiUrlState =
   | { status: "ready"; apiUrl: string }
   | { status: "error" };
 
-export default function MobileApiQrCard({ id }: { id: string }) {
+interface MobileApiQrCardProps {
+  id: string;
+  onClickAway: (event: MouseEvent | TouchEvent) => void;
+  onClose: () => void;
+}
+
+export default function MobileApiQrCard({
+  id,
+  onClickAway,
+  onClose,
+}: MobileApiQrCardProps) {
   const [apiUrlState, setApiUrlState] = useState<ApiUrlState>({ status: "loading" });
   const titleId = `${id}-title`;
 
@@ -49,94 +61,104 @@ export default function MobileApiQrCard({ id }: { id: string }) {
   }, []);
 
   return (
-    <Paper
-      id={id}
-      component="section"
-      aria-labelledby={titleId}
-      aria-busy={apiUrlState.status === "loading"}
-      elevation={0}
-      sx={{
-        position: "absolute",
-        top: "100%",
-        right: { xs: 2, md: 3 },
-        mt: 1.5,
-        width: "calc(100% - 32px)",
-        boxSizing: "border-box",
-        maxWidth: 296,
-        px: 1.5,
-        py: 1.25,
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 2,
-        boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
-        bgcolor: "background.paper",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-        <Box
-          aria-hidden="true"
-          sx={{
-            width: 36,
-            height: 36,
-            display: "grid",
-            placeItems: "center",
-            borderRadius: 1.5,
-            color: "primary.contrastText",
-            bgcolor: "primary.main",
-          }}
-        >
-          <QrCode size={18} />
-        </Box>
-        <Typography
-          id={titleId}
-          component="h2"
-          sx={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.04em",
-            color: "text.secondary",
-            lineHeight: 1.4,
-          }}
-        >
-          API
-        </Typography>
-      </Box>
-
-      {apiUrlState.status === "loading" && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <CircularProgress size={28} aria-label="Loading mobile API URL" />
-        </Box>
-      )}
-      {apiUrlState.status === "error" && (
-        <Alert severity="error" sx={{ mt: 1.5 }}>
-          Mobile API URL is unavailable.
-        </Alert>
-      )}
-      {apiUrlState.status === "ready" && (
-        <Box sx={{ display: "grid", justifyItems: "center", gap: 1, mt: 1 }}>
-          <QRCodeSVG
-            value={apiUrlState.apiUrl}
-            size={224}
-            marginSize={4}
-            bgColor="#ffffff"
-            fgColor="#000000"
-            title="Mobile API QR code"
-            style={{ maxWidth: "100%", height: "auto", aspectRatio: "1 / 1" }}
-          />
-          <Typography
-            align="center"
+    <ClickAwayListener onClickAway={onClickAway}>
+      <Paper
+        id={id}
+        component="section"
+        aria-labelledby={titleId}
+        aria-busy={apiUrlState.status === "loading"}
+        elevation={0}
+        sx={{
+          position: "absolute",
+          top: "100%",
+          right: { xs: 2, md: 3 },
+          mt: 1.5,
+          width: "calc(100% - 32px)",
+          boxSizing: "border-box",
+          maxWidth: 296,
+          px: 1.5,
+          py: 1.25,
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 2,
+          boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+          <Box
+            aria-hidden="true"
             sx={{
-              fontSize: 14,
-              fontWeight: 700,
-              lineHeight: 1.4,
-              overflowWrap: "anywhere",
-              maxWidth: "100%",
+              width: 36,
+              height: 36,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: 1.5,
+              color: "primary.contrastText",
+              bgcolor: "primary.main",
             }}
           >
-            {apiUrlState.apiUrl}
+            <QrCode size={18} />
+          </Box>
+          <Typography
+            id={titleId}
+            component="h2"
+            sx={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              color: "text.secondary",
+              lineHeight: 1.4,
+            }}
+          >
+            API
           </Typography>
+          <IconButton
+            aria-label="Close mobile API QR card"
+            onClick={onClose}
+            size="small"
+            sx={{ ml: "auto", alignSelf: "flex-start" }}
+          >
+            <X size={18} />
+          </IconButton>
         </Box>
-      )}
-    </Paper>
+
+        {apiUrlState.status === "loading" && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <CircularProgress size={28} aria-label="Loading mobile API URL" />
+          </Box>
+        )}
+        {apiUrlState.status === "error" && (
+          <Alert severity="error" sx={{ mt: 1.5 }}>
+            Mobile API URL is unavailable.
+          </Alert>
+        )}
+        {apiUrlState.status === "ready" && (
+          <Box sx={{ display: "grid", justifyItems: "center", gap: 1, mt: 1 }}>
+            <QRCodeSVG
+              value={apiUrlState.apiUrl}
+              size={224}
+              marginSize={4}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              title="Mobile API QR code"
+              style={{ maxWidth: "100%", height: "auto", aspectRatio: "1 / 1" }}
+            />
+            <Typography
+              align="center"
+              sx={{
+                fontSize: 14,
+                fontWeight: 700,
+                lineHeight: 1.4,
+                overflowWrap: "anywhere",
+                maxWidth: "100%",
+              }}
+            >
+              {apiUrlState.apiUrl}
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+    </ClickAwayListener>
   );
 }
