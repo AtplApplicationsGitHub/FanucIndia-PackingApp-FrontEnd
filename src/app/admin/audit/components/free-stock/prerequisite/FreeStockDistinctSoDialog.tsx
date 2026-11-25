@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Link } from "@mui/material";
+import { Box, IconButton, InputAdornment, Link, TextField } from "@mui/material";
+import { Search, X } from "lucide-react";
 import { secureDownload } from "@/common/lib/secure-download";
+import { formatDateTimeIST } from "@/common/utils/dateTime";
 import { freeStockApi } from "../../../services/freeStock.service";
 import type {
   FreeStockDistinctSoRow,
@@ -27,6 +29,8 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
     null,
   );
 
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -42,6 +46,7 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
         {
           page: page + 1,
           limit: PAGE_SIZE,
+          search,
         },
         controller.signal,
       )
@@ -70,9 +75,14 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
       });
 
     return () => controller.abort();
-  }, [page]);
+  }, [page, search]);
   const [downloadingSo, setDownloadingSo] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<Error | null>(null);
+
+  const applySearch = (value: string) => {
+    setSearch(value.trim());
+    setPage(0);
+  };
 
   const handleDownload = async (soNumber: string) => {
     if (downloadingSo) return;
@@ -95,10 +105,52 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
   return (
     <FreeStockDialog
       title={role === "ADMIN" ? "SO Numbers" : "My SO Numbers"}
-      maxWidth="xs"
+      maxWidth="sm"
       onClose={onClose}
     >
       <Box
+        component="form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          applySearch(searchInput);
+        }}
+        sx={{ mb: 1.5, mx: "auto", width: { xs: "100%", sm: 260 } }}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search SO Number"
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          slotProps={{
+            htmlInput: { "aria-label": "Search SO Number", maxLength: 255 },
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  {searchInput && (
+                    <IconButton
+                      type="button"
+                      size="small"
+                      aria-label="Clear SO search"
+                      onClick={() => {
+                        setSearchInput("");
+                        applySearch("");
+                      }}
+                    >
+                      <X size={16} />
+                    </IconButton>
+                  )}
+                  <IconButton type="submit" size="small" aria-label="Search SO numbers">
+                    <Search size={18} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
+      <Box
+        aria-busy={loading}
         sx={{
           "& .MuiTableCell-head": {
             fontSize: "0.72rem !important",
@@ -126,6 +178,7 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
             {
               key: "soNumber",
               label: "SO Number",
+              width: "28%",
               render: (row) => (
                 <Link
                   component="button"
@@ -148,22 +201,36 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
                 </Link>
               ),
             },
+            {
+              key: "requestedBy",
+              label: "Requested By",
+              width: "34%",
+              render: (row) => row.requestedBy ?? "—",
+            },
+            {
+              key: "requestedAt",
+              label: "Requested At",
+              width: "38%",
+              render: (row) => formatDateTimeIST(row.requestedAt),
+            },
           ]}
           rows={rows}
           rowKey={(row) => row.soNumber}
           emptyText={
             loading
-              ? "Loading..."
+              ? ""
               : error
                 ? "Unable to load SO Numbers."
-                : "No SO Numbers found."
+                : search
+                  ? "No SO Numbers match your search."
+                  : "No SO Numbers found."
           }
           maxHeight={350}
           pagination={
             pagination
               ? {
                   count: pagination.total,
-                  page,
+                  page: pagination.page - 1,
                   size: PAGE_SIZE,
                   onPage: setPage,
                   disabled: loading,

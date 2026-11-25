@@ -206,6 +206,8 @@ export type BulkReservationResult = BulkReservationPreview & {
 };
 export type FreeStockDistinctSoRow = {
   soNumber: string;
+  requestedBy: string | null;
+  requestedAt: string | null;
   rowCount: number;
   reservedQty: string;
 };
