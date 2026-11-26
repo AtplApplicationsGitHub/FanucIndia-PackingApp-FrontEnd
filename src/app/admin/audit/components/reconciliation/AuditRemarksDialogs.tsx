@@ -16,25 +16,30 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Typography,
   useTheme,
 } from "@mui/material";
-import { X } from "lucide-react";
+import { FileText, MapPin, ScanLine, X } from "lucide-react";
+import ReconMetricCard from "./ReconMetricCard";
 import type {
   ReconLine,
   ReconLocationSummary,
 } from "../../types/reconciliation";
 import { formatDateTime } from "../../utils/reconLabels";
+import AuditTableDialog from "../shared/AuditTableDialog";
 
 function RemarksDialog({
   open,
   title,
   onClose,
   children,
+  width,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
+  width?: number;
 }) {
   return (
     <Dialog
@@ -42,7 +47,7 @@ function RemarksDialog({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 2 } }}
+      PaperProps={{ sx: { borderRadius: 2, maxWidth: width } }}
     >
       <DialogTitle
         sx={{
@@ -205,77 +210,78 @@ export function UnexpectedRemarksDialog({
   line: ReconLine | null;
   onClose: () => void;
 }) {
-  const fields: [string, string | null | undefined][] = line
-    ? [
-        ["Storage Bin", line.storageBin],
-        ["Material Code", line.materialCode],
-        ["Cert. No. (YD)", line.certNo || line.ydNumber],
-        ["SO Number", line.soNumber],
-        ["Operator Remarks", line.operatorRemarks],
-      ]
-    : [];
+  if (!line) return null;
+
+  const details = [
+    {
+      title: "Storage Bin",
+      value: line.storageBin,
+      icon: <MapPin size={16} />,
+    },
+    {
+      title: "Cert. No. (YD)",
+      value: line.certNo || line.ydNumber,
+      icon: <ScanLine size={16} />,
+    },
+    {
+      title: "SO Number",
+      value: line.soNumber,
+      icon: <FileText size={16} />,
+    },
+  ];
 
   return (
-    <RemarksDialog
-      open={line !== null}
-      title="UNEXPECTED MATERIAL REMARKS"
-      onClose={onClose}
-    >
-      {line && (
-        <>
-          <TableContainer
-            sx={{
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1.5,
-            }}
-          >
-            <Table
-              size="small"
-              aria-label="Unexpected material operator remarks"
-            >
-              <TableHead>
-                <TableRow
+    <RemarksDialog open title={line.materialCode} onClose={onClose} width={600}>
+      <Box sx={{ display: "grid", gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 1,
+          }}
+        >
+          {details.map(({ title, value, icon }) => (
+            <ReconMetricCard
+              key={title}
+              title={title}
+              icon={icon}
+              compact
+              value={
+                <Box
+                  component="span"
                   sx={{
-                    "& th": {
-                      bgcolor: "#FFDD00",
-                      color: "#111827",
-                      fontWeight: 700,
-                    },
+                    display: "block",
+                    whiteSpace: "normal",
+                    overflowWrap: "anywhere",
                   }}
                 >
-                  <TableCell sx={{ width: "30%" }}>Field</TableCell>
-                  <TableCell>Operator Details</TableCell>
-                </TableRow>
-              </TableHead>
+                  {value || "—"}
+                </Box>
+              }
+            />
+          ))}
+        </Box>
 
-              <TableBody>
-                {fields.map(([label, value]) => (
-                  <TableRow key={label}>
-                    <TableCell
-                      sx={{
-                        fontWeight: 600,
-                        verticalAlign: "top",
-                      }}
-                    >
-                      {label}
-                    </TableCell>
-
-                    <TableCell
-                      sx={{
-                        whiteSpace: "pre-wrap",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {value || "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+        <Box
+          sx={(theme) => ({
+            p: 1.5,
+            border: "1px solid",
+            borderColor: alpha(theme.palette.primary.main, 0.45),
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.15),
+          })}
+        >
+          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+            Operator Remarks
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+          >
+            {line.operatorRemarks?.trim() ? line.operatorRemarks : "—"}
+          </Typography>
+        </Box>
+      </Box>
     </RemarksDialog>
   );
 }

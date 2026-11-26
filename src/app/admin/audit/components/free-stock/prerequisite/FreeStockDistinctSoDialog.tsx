@@ -221,8 +221,6 @@ export default function FreeStockDistinctSoDialog({ role, onClose }: Props) {
               ? ""
               : error
                 ? "Unable to load SO Numbers."
-                : search
-                  ? "No SO Numbers match your search."
                   : "No SO Numbers found."
           }
           maxHeight={350}
