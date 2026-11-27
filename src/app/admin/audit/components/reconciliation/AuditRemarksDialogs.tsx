@@ -19,12 +19,12 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { FileText, MapPin, ScanLine, X } from "lucide-react";
-import ReconMetricCard from "./ReconMetricCard";
+import { X } from "lucide-react";
 import type {
   ReconLine,
   ReconLocationSummary,
 } from "../../types/reconciliation";
+import FreeStockMetricCard from "../free-stock/prerequisite/FreeStockMetricCard";
 import { formatDateTime } from "../../utils/reconLabels";
 import AuditTableDialog from "../shared/AuditTableDialog";
 
@@ -47,7 +47,16 @@ function RemarksDialog({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 2, maxWidth: width } }}
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          maxWidth: width,
+          fontFamily: "inherit",
+          "& .MuiTypography-root, & .MuiDialogTitle-root": {
+            fontFamily: "inherit",
+          },
+        },
+      }}
     >
       <DialogTitle
         sx={{
@@ -213,70 +222,74 @@ export function UnexpectedRemarksDialog({
   if (!line) return null;
 
   const details = [
-    {
-      title: "Storage Bin",
-      value: line.storageBin,
-      icon: <MapPin size={16} />,
-    },
-    {
-      title: "Cert. No. (YD)",
-      value: line.certNo || line.ydNumber,
-      icon: <ScanLine size={16} />,
-    },
-    {
-      title: "SO Number",
-      value: line.soNumber,
-      icon: <FileText size={16} />,
-    },
+    { title: "Storage Bin", value: line.storageBin },
+    { title: "Cert. No. (YD)", value: line.certNo || line.ydNumber },
+    { title: "SO Number", value: line.soNumber },
   ];
 
   return (
     <RemarksDialog open title={line.materialCode} onClose={onClose} width={600}>
-      <Box sx={{ display: "grid", gap: 1.5 }}>
+      <Box sx={{ display: "grid", gap: 0.9 }}>
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
             gap: 1,
+            "& .MuiPaper-root p:first-of-type": {
+              fontSize: 11,
+              fontWeight: 700,
+              color: "text.primary",
+              letterSpacing: "0.04em",
+              lineHeight: 1.4,
+              mb: 0.25,
+            },
+            "& .MuiPaper-root p:last-of-type": {
+              fontSize: 14,
+              fontWeight: 500,
+              color: "text.primary",
+              lineHeight: 1.4,
+            },
           }}
         >
-          {details.map(({ title, value, icon }) => (
-            <ReconMetricCard
+          {details.map(({ title, value }) => (
+            <FreeStockMetricCard
               key={title}
               title={title}
-              icon={icon}
-              compact
-              value={
-                <Box
-                  component="span"
-                  sx={{
-                    display: "block",
-                    whiteSpace: "normal",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {value || "—"}
-                </Box>
-              }
+              value={value || "—"}
             />
           ))}
         </Box>
 
         <Box
-          sx={(theme) => ({
+          sx={{
             p: 1.5,
             border: "1px solid",
-            borderColor: alpha(theme.palette.primary.main, 0.45),
+            borderColor: "divider",
             borderRadius: 2,
-            bgcolor: alpha(theme.palette.primary.main, 0.15),
-          })}
+            bgcolor: "background.paper",
+          }}
         >
-          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-            Operator Remarks
+          <Typography
+            sx={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "text.primary",
+              letterSpacing: "0.04em",
+              lineHeight: 1.4,
+              mb: 0.25,
+            }}
+          >
+            OPERATOR REMARKS
           </Typography>
           <Typography
-            variant="body2"
-            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "text.primary",
+              lineHeight: 1.4,
+              whiteSpace: "pre-wrap",
+              overflowWrap: "anywhere",
+            }}
           >
             {line.operatorRemarks?.trim() ? line.operatorRemarks : "—"}
           </Typography>

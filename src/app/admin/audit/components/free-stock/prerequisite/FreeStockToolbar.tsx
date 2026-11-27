@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
+  alpha,
   Box,
   Chip,
   IconButton,
@@ -14,6 +15,7 @@ import {
   Stack,
   TextField,
   Tooltip,
+  Typography,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,6 +29,7 @@ import {
   Menu,
   Unlock,
   Upload,
+  Users,
 } from "lucide-react";
 
 import CommonButton from "@/common/components/CommonButton";
@@ -67,28 +70,32 @@ type ToolbarButtonProps = {
   onClick: () => void;
 };
 
-// Icon + text on large screens, icon only (with tooltip) below `lg`.
 function ToolbarButton({ label, icon, disabled, onClick }: ToolbarButtonProps) {
   return (
-    <Tooltip title={label}>
-      {/* span lets the tooltip work even when the button is disabled */}
+    <Tooltip title={label} arrow>
       <Box component="span" sx={{ display: "inline-flex" }}>
         <CommonButton
+          type="button"
           aria-label={label}
-          startIcon={icon}
           disabled={disabled}
           onClick={onClick}
           sx={{
-            minWidth: { xs: 40, lg: 80 },
-            px: { xs: 0, lg: 2 },
-            "& .MuiButton-startIcon": {
-              mr: { xs: 0, lg: 1 },
-              ml: { xs: 0, lg: -0.5 },
+            width: 44,
+            minWidth: 44,
+            height: 44,
+            p: 0,
+            "&.Mui-focusVisible": {
+              outline: "2px solid currentColor",
+              outlineOffset: -4,
             },
           }}
         >
-          <Box component="span" sx={{ display: { xs: "none", lg: "inline" } }}>
-            {label}
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ display: "inline-flex" }}
+          >
+            {icon}
           </Box>
         </CommonButton>
       </Box>
@@ -196,7 +203,7 @@ export default function FreeStockToolbar({
             )
           }
           sx={{
-            width: { xs: "100%", sm: 150 },
+            width: { xs: "100%", sm: 130 },
             "& .MuiInputBase-root": { height: 38, fontSize: 14 },
           }}
         >
@@ -236,6 +243,45 @@ export default function FreeStockToolbar({
             </IconButton>
           </Tooltip>
         )}
+
+        {!admin && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.75}
+            sx={{
+              ml: { xs: 0, sm: 1 },
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Box
+              component="span"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "info.main",
+                bgcolor: (theme) => alpha(theme.palette.info.main, 0.12),
+                borderRadius: 1,
+                p: 0.30,
+              }}
+            >
+              <Users size={12} />
+            </Box>
+
+            <Typography
+              sx={{
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                color: "text.secondary",
+              }}
+            >
+              Active Viewers
+            </Typography>
+          </Stack>
+        )}
+
         <Box sx={{ flexGrow: 1 }} />
 
         {selectedCount > 0 && (
@@ -302,6 +348,12 @@ export default function FreeStockToolbar({
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={() => setMenuAnchor(null)}
+        sx={{
+          "& .MuiListItemIcon-root": {
+            minWidth: "auto",
+            mr: 0.85,
+          },
+        }}
       >
         {!admin && (
           <MenuItem
@@ -315,7 +367,7 @@ export default function FreeStockToolbar({
             <ListItemIcon>
               <LockKeyhole size={17} />
             </ListItemIcon>
-            <ListItemText>Reserve Selected</ListItemText>
+            <ListItemText>RESERVE SELECTED</ListItemText>
           </MenuItem>
         )}
 
@@ -330,7 +382,7 @@ export default function FreeStockToolbar({
           <ListItemIcon>
             <Unlock size={17} />
           </ListItemIcon>
-          <ListItemText>Release Reservations</ListItemText>{" "}
+          <ListItemText>RELEASE RESERVED</ListItemText>
         </MenuItem>
 
         {admin && (
@@ -338,7 +390,7 @@ export default function FreeStockToolbar({
             <ListItemIcon>
               <History size={17} />
             </ListItemIcon>
-            <ListItemText>Upload History</ListItemText>
+            <ListItemText>UPLOAD HISTORY</ListItemText>
           </MenuItem>
         )}
       </MuiMenu>

@@ -17,8 +17,16 @@ type Props = {
   title?: string;
   description?: React.ReactNode;
   confirmText?: string;
-  confirmColor?: "inherit" | "primary" | "secondary" | "success" | "error" | "info" | "warning";
+  confirmColor?:
+    | "inherit"
+    | "primary"
+    | "secondary"
+    | "success"
+    | "error"
+    | "info"
+    | "warning";
   requirePassword?: boolean;
+  disableTransition?: boolean;
 };
 
 export default function ConfirmDeleteDialog({
@@ -31,6 +39,7 @@ export default function ConfirmDeleteDialog({
   confirmText = "CONFIRM",
   confirmColor = "primary",
   requirePassword = false,
+  disableTransition = false,
 }: Props) {
   const [password, setPassword] = useState("");
 
@@ -48,11 +57,16 @@ export default function ConfirmDeleteDialog({
       onClose={onCancel}
       maxWidth="xs"
       fullWidth
+      transitionDuration={disableTransition ? 0 : undefined}
     >
       <DialogTitle
         sx={{
-          display: "flex", justifyContent: "center", alignItems: "center",
-          fontWeight: 700, fontSize: "20px", letterSpacing: 0.5,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontWeight: 700,
+          fontSize: "20px",
+          letterSpacing: 0.5,
           color: "error.main",
           pb: 1,
           position: "relative",
@@ -79,15 +93,19 @@ export default function ConfirmDeleteDialog({
         )}
       </DialogContent>
       <Divider />
-      <DialogActions sx={{ px: 3, pb: 2}}>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
         <CommonButton onClick={onCancel} disabled={loading}>
           CANCEL
         </CommonButton>
-        <CommonButton 
-          onClick={handleConfirm} 
+        <CommonButton
+          onClick={handleConfirm}
           disabled={loading || (requirePassword && !password)}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : confirmText}
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            confirmText
+          )}
         </CommonButton>
       </DialogActions>
     </Dialog>

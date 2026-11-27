@@ -77,6 +77,12 @@ export const API = {
     RESERVE: `${API_BASE_URL}/free-stock/reservations`,
     RELEASE: `${API_BASE_URL}/free-stock/reservations/release`,
   },
+    IBD_PRINT: {
+    UPLOADS: `${API_BASE_URL}/ibd-print/uploads`,
+    UPLOAD_BY_ID: (id: number) => `${API_BASE_URL}/ibd-print/uploads/${id}`,
+    PRINT: (id: number) => `${API_BASE_URL}/ibd-print/uploads/${id}/print`,  
+
+  },
   LOOKUP: {
     PRODUCTS: `${API_BASE_URL}/lookup/products`,
     PRODUCT_BY_ID: (id: string | number) =>
@@ -106,6 +112,13 @@ export const API = {
     BULK_TEMPLATE: `${API_BASE_URL}/lookup/bulk-template`,
     BULK_IMPORT: `${API_BASE_URL}/lookup/bulk-import`,
   },
+  LOCATIONS: {
+  LIST: `${API_BASE_URL}/locations`,
+  DELETE: `${API_BASE_URL}/locations`,
+  TEMPLATE: `${API_BASE_URL}/locations/template`,
+  UPLOAD_PREVIEW: `${API_BASE_URL}/locations/uploads/preview`,
+  UPLOAD: `${API_BASE_URL}/locations/uploads`,
+},
   ADMIN: {
     SALES_ORDERS: `${API_BASE_URL}/admin/sales-orders`,
     SALES_ORDER_BY_ID: (id: string | number) =>

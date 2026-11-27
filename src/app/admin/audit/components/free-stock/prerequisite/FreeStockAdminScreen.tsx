@@ -24,8 +24,17 @@ import FreeStockBulkReservationDialog from "./FreeStockBulkReservationDialog";
 import FreeStockReserveDialog from "./FreeStockReserveDialog";
 import FreeStockReleaseDialog from "./FreeStockReleaseDialog";
 import FreeStockUploadHistory from "./FreeStockUploadHistory";
-import FreeStockError from "./FreeStockError";
+import { FreeStockApiError } from "../../../utils/free-stock/freeStockErrors";
 
+const errorText = (error: Error | null) => {
+  if (!error) return "";
+  if (error.message === "Failed to fetch") {
+    return "Unable to reach the server. Please try again.";
+  }
+  return error instanceof FreeStockApiError && error.details.length > 0
+    ? `${error.message}\n${error.details.join("\n")}`
+    : error.message;
+};
 export default function FreeStockAdminScreen({
   role = "ADMIN",
 }: {
@@ -58,6 +67,17 @@ export default function FreeStockAdminScreen({
   useEffect(() => {
     setSelected([]);
   }, [filters, data]);
+  // One toast for all errors; identical messages (e.g. server down) show once
+  useEffect(() => {
+    const messages = Array.from(
+      new Set(
+        [stock.error, actionError, distinctSoError]
+          .map(errorText)
+          .filter(Boolean),
+      ),
+    );
+    if (messages.length) showGlobalMessage(messages.join("\n"), "error");
+  }, [stock.error, actionError, distinctSoError]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -174,15 +194,6 @@ export default function FreeStockAdminScreen({
             onHistory={setHistory}
           />
         </Box>
-
-        {(stock.error || actionError || distinctSoError) && (
-          <Box sx={{ px: 2 }}>
-            <FreeStockError error={stock.error} />
-            <FreeStockError error={actionError} />
-            <FreeStockError error={distinctSoError} />
-          </Box>
-        )}
-
         {data?.groupedBy === "SO_NUMBER" ? (
           <FreeStockGroupedTable
             role={role}

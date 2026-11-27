@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Typography } from "@mui/material";
+import FreeStockMetricCard from "../free-stock/prerequisite/FreeStockMetricCard";
 
 type Props = {
   ydNumber?: string | null;
@@ -9,14 +10,37 @@ type Props = {
   skipReason?: string | null;
 };
 
-export default function OperatorAuditEvidence({ ydNumber, soNumber, operatorRemarks, skipReason }: Props) {
+export default function OperatorAuditEvidence({
+  ydNumber,
+  soNumber,
+  operatorRemarks,
+  skipReason,
+}: Props) {
   if (!ydNumber && !soNumber && !operatorRemarks && !skipReason) return null;
+
   return (
-    <Box sx={{ mt: 0.5, maxWidth: 360, whiteSpace: "normal", overflowWrap: "anywhere" }}>
-      {ydNumber && <Typography variant="caption" component="div">YD: {ydNumber}</Typography>}
-      {soNumber && <Typography variant="caption" component="div">SO: {soNumber}</Typography>}
-      {operatorRemarks && <Typography variant="caption" component="div" color="text.secondary">Operator remarks: {operatorRemarks}</Typography>}
-      {skipReason && <Typography variant="caption" component="div" color="warning.main" fontWeight={600}>Skipped: {skipReason}</Typography>}
-    </Box>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: 1,
+
+        "& .MuiPaper-root p:first-of-type": {
+          fontSize: 11,
+          fontWeight: 700,
+          color: "text.primary",
+          letterSpacing: "0.04em",
+          lineHeight: 1.4,
+          mb: 0.25,
+        },
+        "& .MuiPaper-root p:last-of-type": {
+          fontSize: 14,
+          fontWeight: 500,
+          color: "text.primary",
+          lineHeight: 1.4,
+          whiteSpace: "pre-wrap",
+        },
+      }}
+    ></Box>
   );
 }

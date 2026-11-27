@@ -1,4 +1,6 @@
 "use client";
+
+import { useEffect, useRef } from "react";
 import {
   alpha,
   Box,
@@ -18,7 +20,7 @@ import {
   useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { LockOpen } from "lucide-react";
+import { LockOpen, Users } from "lucide-react";
 import { getFreeStockTableColumns } from "../../../utils/free-stock/freeStockColumns";
 import type { FreeStockRole, FreeStockRow } from "../../../types/freeStock";
 import { stockCell } from "../../../utils/free-stock/freeStockFormat";
@@ -64,6 +66,14 @@ export default function FreeStockTable({
   onStockChanged,
 }: Props) {
   const theme = useTheme();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [page, size]);
+
   const columns = getFreeStockTableColumns(role);
   const visibleOpenRows =
     role === "SALES"
@@ -84,6 +94,7 @@ export default function FreeStockTable({
     selectable.length > 0 && selectable.every((id) => selected.includes(id));
   // Same header cell style as the Audit Planning table
   const headCellSx = {
+    backgroundColor: theme.palette.primary.main,
     fontWeight: 600,
     color: theme.palette.primary.contrastText,
     textTransform: "uppercase" as const,
@@ -101,6 +112,10 @@ export default function FreeStockTable({
       }}
     >
       <TableContainer
+        ref={scrollContainerRef}
+        role="region"
+        aria-label="Free Stock table"
+        tabIndex={0}
         component={Paper}
         elevation={0}
         sx={{
@@ -108,10 +123,12 @@ export default function FreeStockTable({
           width: "100%",
           maxWidth: "100%",
           minWidth: 0,
-          overflowX: "auto",
+          maxHeight: "60dvh",
+          overflow: "auto",
         }}
       >
         <Table
+          stickyHeader
           sx={{
             width: "100%",
             minWidth: { xs: 1700, xl: 1500 },
@@ -190,7 +207,6 @@ export default function FreeStockTable({
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                     }}
-                    title={column.label}
                   >
                     {column.label}
                   </Box>
@@ -241,35 +257,14 @@ export default function FreeStockTable({
                           "aria-label": `Select ${row.materialCode} ${row.batch}`,
                         }}
                       />
-                      <Tooltip
-                        title={
-                          row.status === "OPEN" && beingPreviewed.has(row.id)
-                            ? "Someone is previewing this stock - View details"
-                            : "View details"
-                        }
-                        arrow
-                      >
+                      <Tooltip title="View details" arrow>
                         <span>
                           <IconButton
                             aria-label={`View ${row.materialCode} ${row.batch}`}
                             size="small"
                             sx={{
                               p: 0.25,
-                              color:
-                                row.status === "OPEN" &&
-                                beingPreviewed.has(row.id)
-                                  ? "info.main"
-                                  : "inherit",
-                              ...(row.status === "OPEN" &&
-                                beingPreviewed.has(row.id) && {
-                                  bgcolor: alpha(theme.palette.info.main, 0.12),
-                                  "&:hover": {
-                                    bgcolor: alpha(
-                                      theme.palette.info.main,
-                                      0.2,
-                                    ),
-                                  },
-                                }),
+                              color: "inherit",
                             }}
                             disabled={loading}
                             onClick={() => onView(row.id)}
@@ -278,6 +273,32 @@ export default function FreeStockTable({
                           </IconButton>
                         </span>
                       </Tooltip>
+
+                      {role === "SALES" &&
+                        row.status === "OPEN" &&
+                        beingPreviewed.has(row.id) && (
+                          <Tooltip
+                            title="Another sales user is viewing this stock"
+                            arrow
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "info.main",
+                                bgcolor: alpha(theme.palette.info.main, 0.12),
+                                borderRadius: 0.75,
+                                p: 0.55,
+                                cursor: "default",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Users size={13} />
+                            </Box>
+                          </Tooltip>
+                        )}
                       {row.canRelease && (
                         <Tooltip title="Release reservation">
                           <span>

@@ -95,6 +95,12 @@ const AUDIT_MENU = [
     route: "/admin/audit/planning",
     icon: <ClipboardCheck size={16} />,
   },
+  {
+    label: "IBD PRINT",
+    value: "audit_ibd",
+    route: "/admin/audit/ibd",
+    icon: <ClipboardList size={16} />,
+  },
 ];
 
 const AUDIT_VALUES = AUDIT_MENU.map((a) => a.value);

@@ -185,3 +185,36 @@ export type EfficiencyRow = {
   bin2to3: BinMetric;
   bin4plus: BinMetric;
 };
+// Location Master Types
+
+export type LocationRow = {
+  id: number;
+  plantCode: string;
+  masterBarcode: string;
+  rackNumbers: string[];
+};
+
+export type RackLevel = {
+  plantCode: string;
+  rackNumber: string;
+};
+
+export type UploadPreviewRow = {
+  plantCode: string;
+  masterBarcode: string;
+  rackNumber: string;
+  rowNumber: number;
+  errors: string[];
+  status: "NEW" | "UNCHANGED" | "INVALID";
+};
+
+export type UploadPreview = {
+  canImport: boolean;
+  counts: {
+    added: number;
+    unchanged: number;
+    invalid: number;
+    total: number;
+  };
+  rows: UploadPreviewRow[];
+};

@@ -13,6 +13,7 @@ import AdminDashboardHeader, {
 const AUDIT_ROUTES: Record<string, string> = {
   audit_planning: "/admin/audit/planning",
   audit_history: "/admin/audit/history",
+  audit_ibd: "/admin/audit/ibd",
 };
 
 export default function AuditLayout({ children }: { children: ReactNode }) {
@@ -29,9 +30,12 @@ export default function AuditLayout({ children }: { children: ReactNode }) {
       setUserName("");
     }
   }, []);
-
   const selected = (
-    pathname.includes("/history") ? "audit_history" : "audit_planning"
+    pathname.includes("/history")
+      ? "audit_history"
+      : pathname.includes("/ibd")
+        ? "audit_ibd"
+        : "audit_planning"
   ) as ViewType;
 
   const setView: Dispatch<SetStateAction<ViewType>> = (next) => {

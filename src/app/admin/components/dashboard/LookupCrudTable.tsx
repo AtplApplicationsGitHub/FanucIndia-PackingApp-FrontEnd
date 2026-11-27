@@ -140,45 +140,48 @@ const LookupCrudTable: React.FC<Props> = ({
                   </Typography>
                 </TableCell>
               </TableRow>
-            ) : null}
-            {visibleRows.map((row, index) => (
-              <TableRow
-                key={row.id}
-                hover
-                sx={{
-                  backgroundColor:
-                    index % 2 === 1
-                      ? alpha(theme.palette.primary.main, 0.2)
-                      : "inherit",
-                }}
-              >
-                {keys.map((key) => (
-                  <TableCell key={key}>{formatValue(key, row[key])}</TableCell>
-                ))}
-                <TableCell align="center">
-                  <Box display="flex" justifyContent="center" gap={1}>
-                    <Tooltip title="Edit">
-                      <IconButton
-                        size="small"
-                        color="warning"
-                        onClick={() => onEdit(row)}
-                      >
-                        <Pencil size={18} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => onRequestDelete(row.id)}
-                      >
-                        <Trash2 size={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
+            ) : (
+              visibleRows.map((row, index) => (
+                <TableRow
+                  key={row.id}
+                  hover
+                  sx={{
+                    backgroundColor:
+                      index % 2 === 1
+                        ? alpha(theme.palette.primary.main, 0.2)
+                        : "inherit",
+                  }}
+                >
+                  {keys.map((key) => (
+                    <TableCell key={key}>
+                      {formatValue(key, row[key])}
+                    </TableCell>
+                  ))}
+                  <TableCell align="center">
+                    <Box display="flex" justifyContent="center" gap={1}>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          color="warning"
+                          onClick={() => onEdit(row)}
+                        >
+                          <Pencil size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => onRequestDelete(row.id)}
+                        >
+                          <Trash2 size={18} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>

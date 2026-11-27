@@ -45,6 +45,8 @@ import ClearIcon from "@mui/icons-material/Clear";
 import AdminManageUsersPanel from "@/app/admin/components/dashboard/UsersPanel";
 import { useAdminUsers } from "@/app/admin/components/hooks/useAdminUsers";
 import CommonButton from "@/common/components/CommonButton";
+import LocationPanel from "@/app/admin/components/dashboard/LocationPanel";
+import { useLocations } from "@/app/admin/components/hooks/useLocations";
 
 const SCHEMA_KEYS: Record<string, string[]> = {
   products: ["id", "name"],
@@ -76,7 +78,7 @@ const TYPE_TO_API_PATH: Record<string, string> = {
   materialBarcodes: "material-barcodes",
 };
 
-type MasterLookupKey = keyof typeof TYPE_TO_API_PATH | "users";
+type MasterLookupKey = keyof typeof TYPE_TO_API_PATH | "users" | "locations";
 
 const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Products", key: "products" },
@@ -87,6 +89,7 @@ const MASTER_LOOKUP_OPTIONS: { label: string; key: MasterLookupKey }[] = [
   { label: "Customers", key: "customers" },
   { label: "Printers", key: "printers" },
   { label: "Material Barcode", key: "materialBarcodes" },
+  { label: "Location", key: "locations" },
   { label: "Users", key: "users" },
 ];
 
@@ -157,6 +160,12 @@ export default function AdminMasterLookupPanel() {
   const usersState = useAdminUsers(showSnackbar);
   const { setModalOpen, setEditingUser } = usersState;
 
+  const locationsState = useLocations(
+    showSnackbar,
+    selectedType === "locations",
+    searchQuery,
+  );
+
   const handleSnackbarClose = () =>
     setSnackbar((prev) => ({ ...prev, open: false }));
 
@@ -168,7 +177,12 @@ export default function AdminMasterLookupPanel() {
   );
 
   const fetchData = React.useCallback(async () => {
-    if (!selectedType || selectedType === "users") return;
+    if (
+      !selectedType ||
+      selectedType === "users" ||
+      selectedType === "locations"
+    )
+      return;
     setLoading(true);
     setError("");
     try {
@@ -564,13 +578,15 @@ export default function AdminMasterLookupPanel() {
                   ? "Search users..."
                   : selectedType === "customers"
                     ? "Search name or address..."
-                    : `Search ${
-                        getSearchKeys()[0] === "erpCode"
-                          ? "ERP Code"
-                          : getSearchKeys()[0]
-                              .replace(/([A-Z])/g, " $1")
-                              .toLowerCase()
-                      }...`
+                    : selectedType === "locations"
+                      ? "Search plant, rack or barcode..."
+                      : `Search ${
+                          getSearchKeys()[0] === "erpCode"
+                            ? "ERP Code"
+                            : getSearchKeys()[0]
+                                .replace(/([A-Z])/g, " $1")
+                                .toLowerCase()
+                        }...`
               }
               inputProps={{ "aria-label": "search" }}
               value={localSearch}
@@ -604,7 +620,11 @@ export default function AdminMasterLookupPanel() {
             <>
               <Tooltip title="Download Template" arrow>
                 <IconButton
-                  onClick={handleDownloadBulk}
+                  onClick={
+                    selectedType === "locations"
+                      ? locationsState.downloadTemplate
+                      : handleDownloadBulk
+                  }
                   sx={{ color: "#10b981" }}
                 >
                   <Download size={20} />
@@ -619,14 +639,22 @@ export default function AdminMasterLookupPanel() {
                     hidden
                     accept=".xlsx"
                     ref={fileInputRef}
-                    onChange={handleUploadBulk}
+                    onChange={
+                      selectedType === "locations"
+                        ? locationsState.onFileSelected
+                        : handleUploadBulk
+                    }
                   />
                 </IconButton>
               </Tooltip>
 
               <Tooltip title="Refresh Data" arrow>
                 <IconButton
-                  onClick={fetchData}
+                  onClick={
+                    selectedType === "locations"
+                      ? locationsState.refresh
+                      : fetchData
+                  }
                   sx={{
                     color: "text.secondary",
                     "&:hover": { color: "primary.main" },
@@ -638,28 +666,32 @@ export default function AdminMasterLookupPanel() {
             </>
           )}
 
-          {/* Add New Button (Always Visible) */}
-          <Tooltip
-            title={selectedType === "users" ? "Add New User" : "Add New Record"}
-            arrow
-          >
-            <IconButton
-              onClick={() => {
-                if (selectedType === "users") {
-                  setEditingUser(null);
-                  setModalOpen(true); // <--- Triggers the User Modal instead of Master Modal
-                } else {
-                  openAddDialog();
-                }
-              }}
-              sx={{
-                color: "text.secondary",
-                "&:hover": { color: "primary.main" },
-              }}
+          {/* Add New Button (Hidden for Location) */}
+          {selectedType !== "locations" && (
+            <Tooltip
+              title={
+                selectedType === "users" ? "Add New User" : "Add New Record"
+              }
+              arrow
             >
-              <PlusCircle size={20} />
-            </IconButton>
-          </Tooltip>
+              <IconButton
+                onClick={() => {
+                  if (selectedType === "users") {
+                    setEditingUser(null);
+                    setModalOpen(true);
+                  } else {
+                    openAddDialog();
+                  }
+                }}
+                sx={{
+                  color: "text.secondary",
+                  "&:hover": { color: "primary.main" },
+                }}
+              >
+                <PlusCircle size={20} />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Order Delete Password (Users Tab Only) */}
           {selectedType === "users" && (
@@ -693,7 +725,10 @@ export default function AdminMasterLookupPanel() {
                 <IconButton
                   onClick={() => {
                     if (!usersState.users.length) {
-                      showSnackbar("No Terminal Operators to download.", "info");
+                      showSnackbar(
+                        "No Terminal Operators to download.",
+                        "info",
+                      );
                       return;
                     }
                     void usersState.downloadTerminalOperators(searchQuery);
@@ -729,7 +764,7 @@ export default function AdminMasterLookupPanel() {
         </Paper>
       </Box>
 
-      {/* 3. Table or Users Panel */}
+      {/* 3. Table, Users or Location Panel */}
       <Box sx={{ width: "100%" }}>
         {selectedType === "users" ? (
           <AdminManageUsersPanel
@@ -738,6 +773,8 @@ export default function AdminMasterLookupPanel() {
             searchQuery={searchQuery}
             roleFilter={showTerminalOperatorsOnly ? "USER" : undefined}
           />
+        ) : selectedType === "locations" ? (
+          <LocationPanel state={locationsState} />
         ) : (
           <>
             {error ? (
@@ -756,7 +793,7 @@ export default function AdminMasterLookupPanel() {
       </Box>
 
       {/* Dialogs */}
-      {selectedType !== "users" && (
+      {selectedType !== "users" && selectedType !== "locations" && (
         <>
           <LookupFormDialog
             open={dialogOpen}
@@ -895,7 +932,9 @@ export default function AdminMasterLookupPanel() {
               fullWidth
               variant="outlined"
               placeholder={
-                orderDeletePasswordFetching ? "Loading..." : "Order Delete Password"
+                orderDeletePasswordFetching
+                  ? "Loading..."
+                  : "Order Delete Password"
               }
               value={orderDeletePassword}
               onChange={(e) => setOrderDeletePassword(e.target.value)}
